@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#F0F4F8">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <ImageButton
+            android:id="@+id/btnPrevDay"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:contentDescription="Vorheriger Tag"
+            android:src="@android:drawable/ic_media_previous" />
+
+        <TextView
+            android:id="@+id/tvCurrentDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Datum"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#1A237E"/>
+
+        <ImageButton
+            android:id="@+id/btnNextDay"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:contentDescription="Nächster Tag"
+            android:src="@android:drawable/ic_media_next" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvTourList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/btnBackFromTour"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Zurück zum Hauptmenü"
+        style="@style/Widget.MaterialComponents.Button.TextButton"/>
+
+</LinearLayout>

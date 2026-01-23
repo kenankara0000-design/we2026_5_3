@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "102823713826",
+    "firebase_url": "https://tourplaner2026-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "tourplaner2026",
+    "storage_bucket": "tourplaner2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:102823713826:android:0ade32edb853d5b5463e7b",
+        "android_client_info": {
+          "package_name": "com.example.we2026_4"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXob132MRd3SlGBRGYGcIcER03ibnLWiE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:102823713826:android:087b06731930e29e463e7b",
+        "android_client_info": {
+          "package_name": "com.example.we2026_5"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXob132MRd3SlGBRGYGcIcER03ibnLWiE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

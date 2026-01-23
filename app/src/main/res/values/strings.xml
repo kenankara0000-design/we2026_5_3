@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">we2026_5</string>
+    <string name="menu_kunden">Kunden Manager</string>
+    <string name="menu_touren">Touren Planer</string>
+    <string name="menu_neu">Neuer Kunde</string>
+    <string name="save_success">Kunde erfolgreich gespeichert</string>
+    <string name="delete_confirm">Bist du sicher, dass du diesen Kunden löschen möchtest?</string>
+    <string name="back">Zurück</string>
+    <string name="search_hint">Suchen...</string>
+</resources>
