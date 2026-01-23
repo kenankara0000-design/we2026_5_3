@@ -1,0 +1,22 @@
+PROJEKT-MANIFEST: A1.0.0.0
+==========================
+PROJEKT-NAME: we2026_5
+FIREBASE-STORAGE: gs://tourplaner2026.firebasestorage.app
+
+FUNKTIONALE LOGIK-REGELEIN (STRIKT):
+------------------------------------
+1. TOUREN-FILTER: 
+   - ÜBERFÄLLIG: (Rot markiert) Oben, wenn Termin < Heute und nicht erledigt.
+   - AKTUELL: Mittig, tagesaktuelle Kunden.
+   - ERLEDIGT: Ganz unten, wenn Abholung UND Auslieferung = true.
+2. URALUBS-LOGIK: Nur Termine im Zeitraum (urlaubVon bis urlaubBis) ausblenden.
+3. VERSCHIEBUNG: Einzel-Termin-Verschiebung Standard; optional Folge-Termine mit verschieben.
+4. FOTO-SYSTEM: Thumbnails in der Übersicht, Vergrößerung bei Klick. Speicherort: Firebase Storage.
+5. NAVIGATION: Direkter Intent zu Google Maps aus der Kundenübersicht.
+6. LÖSCH-SCHUTZ: Löschen nur im Bearbeitungsmodus mit Sicherheitsabfrage.
+
+KI-ARBEITSWEISE:
+----------------
+- Immer Chunk-Verfahren für Datei-Download nutzen.
+- Vor jeder Ausgabe: Vergleich mit Original-Chunk (Design- & Funktionsgarantie).
+- Bei notwendigen Manifest-Updates: Proaktiv den Nutzer informieren.
