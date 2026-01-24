@@ -24,7 +24,6 @@ class TourPlannerActivity : AppCompatActivity() {
         binding = ActivityTourPlannerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Adapter wird jetzt korrekt mit der einfachen Methode erstellt.
         adapter = CustomerAdapter(listOf()) { customer ->
             val intent = Intent(this, CustomerDetailActivity::class.java).apply {
                 putExtra("CUSTOMER_ID", customer.id)
@@ -65,20 +64,17 @@ class TourPlannerActivity : AppCompatActivity() {
     }
 
     private fun loadTourData(selectedTimestamp: Long) {
-        tourDataListener?.remove() // Wichtig: Alten Listener entfernen, um Speicherlecks zu vermeiden.
-        tourDataListener = db.collection("customers").addSnapshotListener { snapshot, _ ->
-            val allCustomers = snapshot?.toObjects(Customer::class.java) ?: listOf()
+        tourDataListener?.remove()
+        tourDataListener = db.collection("customers").addSnapshotListener { snapshot, error ->
+            if (error != null || snapshot == null) return@addSnapshotListener
+
+            val allCustomers = snapshot.toObjects(Customer::class.java)
             val viewDateStart = getStartOfDay(selectedTimestamp)
 
             val filteredList = allCustomers.filter { customer ->
                 val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
                 val faelligAm = customerFaelligAm(customer)
                 val istAnDiesemTagFaellig = faelligAm >= viewDateStart && faelligAm < viewDateStart + TimeUnit.DAYS.toMillis(1)
-                
-                // Ein Kunde wird angezeigt, wenn:
-                // 1. Er an diesem Tag fällig ist (und nicht erledigt)
-                // 2. Er überfällig ist (Fälligkeit in der Vergangenheit)
-                // UND er nicht im Urlaub ist.
 
                 if (isDone && !istAnDiesemTagFaellig) return@filter false
 
@@ -92,7 +88,6 @@ class TourPlannerActivity : AppCompatActivity() {
                 { customerFaelligAm(it) }
             ))
 
-            // Ruft die korrekte 'updateData'-Methode mit Datum auf
             adapter.updateData(filteredList, viewDateStart)
         }
     }

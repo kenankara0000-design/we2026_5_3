@@ -23,7 +23,6 @@ class CustomerManagerActivity : AppCompatActivity() {
         binding = ActivityCustomerManagerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Adapter wird jetzt korrekt mit der einfachen Methode erstellt.
         adapter = CustomerAdapter(listOf()) { customer ->
             val intent = Intent(this, CustomerDetailActivity::class.java).apply {
                 putExtra("CUSTOMER_ID", customer.id)
@@ -57,11 +56,11 @@ class CustomerManagerActivity : AppCompatActivity() {
 
     private fun loadCustomers() {
         customerListener = db.collection("customers").orderBy("name").addSnapshotListener { snapshot, error ->
-            if (error != null) {
+            if (error != null || snapshot == null) {
                 return@addSnapshotListener
             }
 
-            allCustomers = snapshot?.toObjects(Customer::class.java) ?: listOf()
+            allCustomers = snapshot.toObjects(Customer::class.java)
             filterList(binding.etSearch.text.toString())
         }
     }
@@ -75,7 +74,6 @@ class CustomerManagerActivity : AppCompatActivity() {
                 it.adresse.contains(query, ignoreCase = true)
             }
         }
-        // Ruft die korrekte updateData-Methode ohne Datum auf
         adapter.updateData(filtered)
     }
 }
