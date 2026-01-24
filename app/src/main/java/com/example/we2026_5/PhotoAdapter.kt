@@ -6,27 +6,42 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.we2026_5.R // Dieser Import verbindet den Code mit deinen XML-Dateien
-import java.io.File
 
-class PhotoAdapter(private val photos: List<File>) : RecyclerView.Adapter<PhotoAdapter.PhotoViewHolder>() {
+class PhotoAdapter(
+    private var photoUrls: List<String>,
+    private val onPhotoClick: (String) -> Unit
+) : RecyclerView.Adapter<PhotoAdapter.PhotoViewHolder>() {
 
-    class PhotoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    inner class PhotoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val ivThumbnail: ImageView = view.findViewById(R.id.ivThumbnail)
+        init {
+            itemView.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onPhotoClick(photoUrls[position])
+                }
+            }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoViewHolder {
-        // Falls R.layout.item_photo rot bleibt, bitte Schritt 4 (unten) ausführen
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_photo, parent, false)
         return PhotoViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: PhotoViewHolder, position: Int) {
-        val photoFile = photos[position]
+        val photoUrl = photoUrls[position]
         Glide.with(holder.itemView.context)
-            .load(photoFile)
+            .load(photoUrl)
+            .centerCrop()
+            .placeholder(R.drawable.ic_launcher_background) // Platzhalter-Icon
             .into(holder.ivThumbnail)
     }
 
-    override fun getItemCount(): Int = photos.size
+    override fun getItemCount(): Int = photoUrls.size
+
+    fun updatePhotos(newUrls: List<String>) {
+        photoUrls = newUrls
+        notifyDataSetChanged()
+    }
 }
