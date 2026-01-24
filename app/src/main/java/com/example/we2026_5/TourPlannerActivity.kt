@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.we2026_5.databinding.ActivityTourPlannerBinding
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -16,23 +17,24 @@ class TourPlannerActivity : AppCompatActivity() {
     private val db = FirebaseFirestore.getInstance()
     private lateinit var adapter: CustomerAdapter
     private var viewDate = Calendar.getInstance()
+    private var tourDataListener: ListenerRegistration? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTourPlannerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Adapter Initialisierung
+        // Adapter wird jetzt korrekt mit der einfachen Methode erstellt.
         adapter = CustomerAdapter(listOf()) { customer ->
-            val intent = Intent(this, CustomerDetailActivity::class.java)
-            intent.putExtra("CUSTOMER_ID", customer.id)
+            val intent = Intent(this, CustomerDetailActivity::class.java).apply {
+                putExtra("CUSTOMER_ID", customer.id)
+            }
             startActivity(intent)
         }
 
         binding.rvTourList.layoutManager = LinearLayoutManager(this)
         binding.rvTourList.adapter = adapter
 
-        // Datum wechseln (Punkt 5)
         binding.btnPrevDay.setOnClickListener {
             viewDate.add(Calendar.DAY_OF_YEAR, -1)
             updateDisplay()
@@ -44,8 +46,16 @@ class TourPlannerActivity : AppCompatActivity() {
         }
 
         binding.btnBackFromTour.setOnClickListener { finish() }
+    }
 
+    override fun onStart() {
+        super.onStart()
         updateDisplay()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        tourDataListener?.remove()
     }
 
     private fun updateDisplay() {
@@ -55,39 +65,35 @@ class TourPlannerActivity : AppCompatActivity() {
     }
 
     private fun loadTourData(selectedTimestamp: Long) {
-        db.collection("customers").addSnapshotListener { snapshot, _ ->
+        tourDataListener?.remove() // Wichtig: Alten Listener entfernen, um Speicherlecks zu vermeiden.
+        tourDataListener = db.collection("customers").addSnapshotListener { snapshot, _ ->
             val allCustomers = snapshot?.toObjects(Customer::class.java) ?: listOf()
-            val gewaehltesDatumStart = getStartOfDay(selectedTimestamp)
-            val gewaehltesDatumEnde = gewaehltesDatumStart + TimeUnit.DAYS.toMillis(1)
+            val viewDateStart = getStartOfDay(selectedTimestamp)
 
-            // Filter & Sortierung (Punkte 2, 5, 8, 9)
             val filteredList = allCustomers.filter { customer ->
-                // 1. Urlaubs-Check (Punkt 8): Ist der gewählte Tag im Urlaubszeitraum?
-                val imUrlaub = if (customer.urlaubVon > 0 && customer.urlaubBis > 0) {
-                    gewaehltesDatumStart in customer.urlaubVon..customer.urlaubBis
-                } else {
-                    false
-                }
+                val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
+                val faelligAm = customerFaelligAm(customer)
+                val istAnDiesemTagFaellig = faelligAm >= viewDateStart && faelligAm < viewDateStart + TimeUnit.DAYS.toMillis(1)
+                
+                // Ein Kunde wird angezeigt, wenn:
+                // 1. Er an diesem Tag fällig ist (und nicht erledigt)
+                // 2. Er überfällig ist (Fälligkeit in der Vergangenheit)
+                // UND er nicht im Urlaub ist.
 
-                // 2. Fälligkeits-Check
-                val faelligAm = if (customer.verschobenAufDatum > 0) {
-                    customer.verschobenAufDatum
-                } else {
-                    customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
-                }
+                if (isDone && !istAnDiesemTagFaellig) return@filter false
 
-                // Nur anzeigen wenn: Nicht im Urlaub UND (heute fällig ODER überfällig)
-                !imUrlaub && faelligAm < gewaehltesDatumEnde
+                val imUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && viewDateStart in customer.urlaubVon..customer.urlaubBis
+                if (imUrlaub) return@filter false
+
+                faelligAm < viewDateStart + TimeUnit.DAYS.toMillis(1)
             }.sortedWith(compareBy(
-                // Erledigte nach unten (Punkt 2)
-                { it.auslieferungErfolgt && it.abholungErfolgt },
-                // Überfällige nach oben (Punkt 5)
-                { if (customerFaelligAm(it) < gewaehltesDatumStart) 0 else 1 },
-                // Dann nach tatsächlichem Datum
+                { it.abholungErfolgt && it.auslieferungErfolgt }, 
+                { customerFaelligAm(it) < viewDateStart },
                 { customerFaelligAm(it) }
             ))
 
-            adapter.updateData(filteredList)
+            // Ruft die korrekte 'updateData'-Methode mit Datum auf
+            adapter.updateData(filteredList, viewDateStart)
         }
     }
 
@@ -97,12 +103,12 @@ class TourPlannerActivity : AppCompatActivity() {
     }
 
     private fun getStartOfDay(ts: Long): Long {
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = ts
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        return cal.timeInMillis
+        return Calendar.getInstance().apply {
+            timeInMillis = ts
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
     }
 }

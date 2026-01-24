@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.we2026_5.databinding.ActivityAddCustomerBinding
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class AddCustomerActivity : AppCompatActivity() {
 
@@ -38,6 +39,12 @@ class AddCustomerActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            val intervall = binding.etIntervallTage.text.toString().toIntOrNull() ?: 7
+
+            // **KORRIGIERTE LOGIK:** Berechnet den "letzten Termin" so, dass der Kunde
+            // am ausgewählten Startdatum fällig ist.
+            val letzterTermin = selectedStartDate - TimeUnit.DAYS.toMillis(intervall.toLong())
+
             val customerId = db.collection("customers").document().id
             val customer = Customer(
                 id = customerId,
@@ -45,8 +52,8 @@ class AddCustomerActivity : AppCompatActivity() {
                 adresse = binding.etAdresse.text.toString().trim(),
                 telefon = binding.etTelefon.text.toString().trim(),
                 notizen = binding.etNotizen.text.toString().trim(),
-                intervallTage = binding.etIntervallTage.text.toString().toIntOrNull() ?: 7,
-                letzterTermin = selectedStartDate,
+                intervallTage = intervall,
+                letzterTermin = letzterTermin, // Korrigierter Wert wird hier verwendet
                 istImUrlaub = false
             )
 
