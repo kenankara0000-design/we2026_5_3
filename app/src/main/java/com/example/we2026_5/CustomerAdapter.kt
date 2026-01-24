@@ -32,11 +32,9 @@ class CustomerAdapter(
 
         resetStyles(holder)
 
-        // Wenn ein Datum gesetzt ist (vom Touren-Planer), zeige den Status an.
         if (displayedDateMillis != null) {
             applyStatusStyles(holder, customer)
         } else {
-            // Sonst (in der Kundenliste), blende Status-Elemente aus.
             holder.binding.ivStatusAbholung.visibility = View.GONE
             holder.binding.ivStatusAuslieferung.visibility = View.GONE
             holder.binding.tvStatusLabel.visibility = View.GONE
