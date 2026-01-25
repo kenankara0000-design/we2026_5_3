@@ -51,6 +51,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateTourCount() {
+        // Alten Listener entfernen um Memory Leak zu vermeiden
+        tourCountListener?.remove()
+        
         tourCountListener = db.collection("customers").addSnapshotListener { snapshot, error ->
             if (error != null || snapshot == null) return@addSnapshotListener
 
@@ -58,7 +61,10 @@ class MainActivity : AppCompatActivity() {
             val heute = System.currentTimeMillis()
             val count = all.count { customer ->
                 val faelligAm = customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
-                heute >= faelligAm && !customer.istImUrlaub
+                // istImUrlaub konsistent berechnen wie in TourPlannerActivity
+                val imUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && 
+                               heute in customer.urlaubVon..customer.urlaubBis
+                heute >= faelligAm && !imUrlaub
             }
             binding.btnTouren.text = "Tour Planner ($count fällig)"
         }

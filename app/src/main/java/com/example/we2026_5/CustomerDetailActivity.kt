@@ -7,7 +7,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
@@ -25,7 +24,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.storage.FirebaseStorage
 import java.io.File
-import java.text.SimpleDateFormat
 import java.util.*
 
 class CustomerDetailActivity : AppCompatActivity() {
@@ -154,9 +152,16 @@ class CustomerDetailActivity : AppCompatActivity() {
     }
 
     private fun startCamera() {
-        val tmpFile = File.createTempFile("IMG_${System.currentTimeMillis()}_", ".jpg", getExternalFilesDir(Environment.DIRECTORY_PICTURES))
-        latestTmpUri = FileProvider.getUriForFile(this, "${applicationContext.packageName}.provider", tmpFile)
-        takePictureLauncher.launch(latestTmpUri)
+        val picturesDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        if (picturesDir == null) {
+            Toast.makeText(this, "Speicherort nicht verfügbar", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        val tmpFile = File.createTempFile("IMG_${System.currentTimeMillis()}_", ".jpg", picturesDir)
+        // FileProvider Authority muss mit AndroidManifest.xml übereinstimmen
+        latestTmpUri = FileProvider.getUriForFile(this, "${applicationContext.packageName}.fileprovider", tmpFile)
+        latestTmpUri?.let { takePictureLauncher.launch(it) }
     }
 
     private fun uploadImage(uri: Uri) {
@@ -258,11 +263,16 @@ class CustomerDetailActivity : AppCompatActivity() {
     }
 
     private fun handleAuslieferung() {
-        currentCustomer?.takeIf { !it.auslieferungErfolgt }?.let { customer ->
-            updateCustomerData(mapOf("auslieferungErfolgt" to true), "Auslieferung registriert")
-            if (customer.abholungErfolgt) { // Wenn Abholung schon war
-                resetTourCycle()
-            }
+        val customer = currentCustomer ?: return
+        if (customer.auslieferungErfolgt) return
+        
+        // Race Condition vermeiden: currentCustomer direkt verwenden
+        val wasAbholungErfolgt = customer.abholungErfolgt
+        updateCustomerData(mapOf("auslieferungErfolgt" to true), "Auslieferung registriert")
+        
+        // Wenn Abholung schon war, Tour-Zyklus zurücksetzen
+        if (wasAbholungErfolgt) {
+            resetTourCycle()
         }
     }
 

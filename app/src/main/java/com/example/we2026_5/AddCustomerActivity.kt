@@ -20,13 +20,16 @@ class AddCustomerActivity : AppCompatActivity() {
         binding = ActivityAddCustomerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        updateDateButtonText(selectedStartDate)
+
         binding.btnPickDate.setOnClickListener {
             val cal = Calendar.getInstance()
+            cal.timeInMillis = selectedStartDate
             DatePickerDialog(this, { _, y, m, d ->
                 val picked = Calendar.getInstance()
                 picked.set(y, m, d, 0, 0, 0)
                 selectedStartDate = picked.timeInMillis
-                binding.btnPickDate.text = "$d.${m + 1}.$y"
+                updateDateButtonText(selectedStartDate)
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
         }
 
@@ -39,11 +42,22 @@ class AddCustomerActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val intervall = binding.etIntervallTage.text.toString().toIntOrNull() ?: 7
-
-            // **KORRIGIERTE LOGIK:** Berechnet den "letzten Termin" so, dass der Kunde
-            // am ausgewählten Startdatum fällig ist.
-            val letzterTermin = selectedStartDate - TimeUnit.DAYS.toMillis(intervall.toLong())
+            val intervallInput = binding.etIntervallTage.text.toString().toIntOrNull() ?: 7
+            // Validierung: Intervall muss mindestens 1 Tag sein und maximal 365 Tage
+            val intervall = when {
+                intervallInput < 1 -> {
+                    binding.etIntervallTage.error = "Intervall muss mindestens 1 Tag sein"
+                    return@setOnClickListener
+                }
+                intervallInput > 365 -> {
+                    binding.etIntervallTage.error = "Intervall darf maximal 365 Tage sein"
+                    return@setOnClickListener
+                }
+                else -> intervallInput
+            }
+            
+            val ersterTermin = selectedStartDate
+            val letzterTermin = ersterTermin - TimeUnit.DAYS.toMillis(intervall.toLong())
 
             val customerId = db.collection("customers").document().id
             val customer = Customer(
@@ -53,16 +67,24 @@ class AddCustomerActivity : AppCompatActivity() {
                 telefon = binding.etTelefon.text.toString().trim(),
                 notizen = binding.etNotizen.text.toString().trim(),
                 intervallTage = intervall,
-                letzterTermin = letzterTermin, // Korrigierter Wert wird hier verwendet
+                letzterTermin = letzterTermin, 
                 istImUrlaub = false
             )
 
-            // OFFLINE-LOGIK: Wir schicken es ab und schließen SOFORT.
-            // Firebase kümmert sich im Hintergrund um den Rest.
             db.collection("customers").document(customerId).set(customer)
-
-            Toast.makeText(this, "Kunde lokal gespeichert!", Toast.LENGTH_SHORT).show()
-            finish()
+                .addOnSuccessListener {
+                    Toast.makeText(this, "Kunde gespeichert", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+                .addOnFailureListener { 
+                    Toast.makeText(this, "Fehler beim Speichern", Toast.LENGTH_SHORT).show()
+                }
         }
+    }
+
+    private fun updateDateButtonText(dateInMillis: Long) {
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = dateInMillis
+        binding.btnPickDate.text = "${cal.get(Calendar.DAY_OF_MONTH)}.${cal.get(Calendar.MONTH) + 1}.${cal.get(Calendar.YEAR)}"
     }
 }

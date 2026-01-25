@@ -74,7 +74,6 @@ class CustomerManagerActivity : AppCompatActivity() {
                 it.adresse.contains(query, ignoreCase = true)
             }
         }
-        // Ruft die korrekte updateData-Methode ohne Datum auf
         adapter.updateData(filtered)
     }
 }

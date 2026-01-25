@@ -104,6 +104,198 @@
                 android:background="#DDDDDD"
                 android:layout_marginVertical="16dp"/>
 
+            <!-- Kundeninformationen (View Mode) -->
+            <LinearLayout
+                android:id="@+id/groupTextViews"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Adresse:"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <TextView
+                    android:id="@+id/tvDetailAdresse"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Adresse"
+                    android:textSize="16sp"
+                    android:padding="8dp"
+                    android:background="#E0E0E0"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginBottom="12dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Telefon:"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <TextView
+                    android:id="@+id/tvDetailTelefon"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Telefon"
+                    android:textSize="16sp"
+                    android:padding="8dp"
+                    android:background="#E0E0E0"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginBottom="12dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Notizen:"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <TextView
+                    android:id="@+id/tvDetailNotizen"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Notizen"
+                    android:textSize="16sp"
+                    android:padding="8dp"
+                    android:background="#E0E0E0"
+                    android:minHeight="100dp"/>
+            </LinearLayout>
+
+            <!-- Kundeninformationen (Edit Mode) -->
+            <LinearLayout
+                android:id="@+id/groupEditTexts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Name:"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <EditText
+                    android:id="@+id/etDetailName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Name"
+                    android:padding="8dp"
+                    android:background="#FFFFFF"
+                    android:layout_marginBottom="12dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Adresse:"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <EditText
+                    android:id="@+id/etDetailAdresse"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Adresse"
+                    android:padding="8dp"
+                    android:background="#FFFFFF"
+                    android:layout_marginBottom="12dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Telefon:"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <EditText
+                    android:id="@+id/etDetailTelefon"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Telefon"
+                    android:inputType="phone"
+                    android:padding="8dp"
+                    android:background="#FFFFFF"
+                    android:layout_marginBottom="12dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Notizen:"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <EditText
+                    android:id="@+id/etDetailNotizen"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Notizen"
+                    android:inputType="textMultiLine"
+                    android:minLines="3"
+                    android:gravity="top"
+                    android:padding="8dp"
+                    android:background="#FFFFFF"/>
+            </LinearLayout>
+
+            <!-- Action Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="3"
+                android:layout_marginBottom="16dp">
+
+                <Button
+                    android:id="@+id/btnEditCustomer"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Bearbeiten"
+                    android:layout_marginEnd="4dp"/>
+
+                <Button
+                    android:id="@+id/btnSaveCustomer"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Speichern"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:visibility="gone"
+                    android:backgroundTint="#28A745"/>
+
+                <Button
+                    android:id="@+id/btnDeleteCustomer"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Löschen"
+                    android:layout_marginStart="4dp"
+                    android:visibility="gone"
+                    android:backgroundTint="#DC3545"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#DDDDDD"
+                android:layout_marginVertical="16dp"/>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -130,4 +322,12 @@
 
         </LinearLayout>
     </ScrollView>
+
+    <!-- Progress Bar -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"/>
 </LinearLayout>
