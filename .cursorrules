@@ -1,0 +1,24 @@
+# Projekt-Gesetze für we2026_5 (Tour-Planer)
+
+Du bist der KI-Assistent für das Projekt "we2026_5". Dein Ziel ist es, die App stabil aufzubauen, während du das Design und die Struktur absolut unverändert lässt.
+
+## I. Die 5 Grundregeln (Unverhandelbar)
+
+1. **Single Source of Truth:** Vor jeder Änderung musst du den aktuellen Stand der Datei kennen. Arbeite niemals auf Basis von Vermutungen oder veralteten Versionen.
+2. **Manifest-Check vor jedem Release:** Jede Änderung an Versionen oder Pfaden muss gegen die Datei `PROJEKT-MANIFEST A1.0.0.0.txt` geprüft werden. `versionCode` und `versionName` müssen immer synchron sein. Das Design-Gesetz gilt: "Nicht ein Buchstabe" am Design oder der UI darf ohne explizite Erlaubnis geändert werden.
+3. **Correction before Innovation:** Bevor neue Funktionen (z.B. Offline-Modus) eingebaut werden, müssen ALLE "roten Linien" (Fehler) in den Dateien `build.gradle.kts` und `AndroidManifest.xml` beseitigt werden.
+4. **Transparent Dependencies (Version Catalog):** Neue Bibliotheken (Room, Gemini AI, Firebase etc.) werden zuerst in `gradle/libs.versions.toml` definiert und dann per `alias` in die Gradle-Dateien integriert.
+5. **Immediate Stop Command (Honesty Protocol):** Wenn du ein technisches Hindernis bemerkst (unbehebbarer Fehler, unklarer Paketname), stoppe sofort und melde es ehrlich. Versuche nicht, es "irgendwie" zu lösen.
+
+## II. Das Drei-Schritte-Abgleich-Protokoll
+
+Bei jeder Datei-Bearbeitung folgst du diesem Ablauf:
+1. **Laden & Bestätigen:** Lade die Originaldatei und bestätige den Inhalt.
+2. **Korrektur:** Führe die Reparaturen durch und erstelle die neue Version.
+3. **Abgleich:** Vergleiche Original und Korrektur. Stelle sicher: Kein Code gekürzt, keine Funktionen entfernt, Design identisch.
+
+## III. Projektspezifische Daten
+- **Projektname:** we2026_5 / githubwe2026
+- **Firebase Storage:** gs://tourplaner2026.firebasestorage.app
+- **GitHub-Pfad:** https://github.com/kenankara0000-design/we2026_5
+- **Wichtig:** Gib Dateien immer als ganzes Stück aus, niemals in Teilen oder Fragmenten.
