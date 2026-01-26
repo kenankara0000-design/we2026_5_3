@@ -8,6 +8,7 @@ package com.example.we2026_5
 data class KundenListe(
     val id: String = "",
     val name: String = "", // z.B. "Borna P", "Kitzscher P"
+    val listeArt: String = "Gewerbe", // "Gewerbe", "Privat" oder "Liste"
     val intervalle: List<ListeIntervall> = emptyList(), // Liste der Intervalle (bis zu 12)
     val erstelltAm: Long = System.currentTimeMillis(),
     

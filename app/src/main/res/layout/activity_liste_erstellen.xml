@@ -51,7 +51,46 @@
                 android:hint="Listen-Name (z.B. Borna P)"
                 android:inputType="textPersonName"
                 android:padding="12dp"
-                android:layout_marginBottom="20dp"/>
+                android:layout_marginBottom="12dp"/>
+
+            <!-- Liste-Art -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Liste-Art:"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <RadioGroup
+                android:id="@+id/rgListeArt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="20dp">
+
+                <RadioButton
+                    android:id="@+id/rbGewerbe"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Gewerbe"
+                    android:checked="true"/>
+
+                <RadioButton
+                    android:id="@+id/rbPrivat"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Privat"/>
+
+                <RadioButton
+                    android:id="@+id/rbListe"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Liste"/>
+            </RadioGroup>
 
             <!-- Intervalle-Verwaltung -->
             <androidx.cardview.widget.CardView

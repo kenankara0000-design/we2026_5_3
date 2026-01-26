@@ -82,6 +82,18 @@
         android:letterSpacing="0.02"/>
 
     <Button
+        android:id="@+id/btnNeuKunde"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:text="+ Neu Kunde"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="20dp"
+        android:backgroundTint="@color/primary_blue"
+        android:textColor="@color/white"
+        style="@style/Widget.Material3.Button.ElevatedButton"/>
+
+    <Button
         android:id="@+id/btnKunden"
         android:layout_width="match_parent"
         android:layout_height="80dp"

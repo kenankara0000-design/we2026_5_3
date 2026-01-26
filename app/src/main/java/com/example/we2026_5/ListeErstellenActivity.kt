@@ -68,10 +68,19 @@ class ListeErstellenActivity : AppCompatActivity() {
             CoroutineScope(Dispatchers.Main).launch {
                 val listeId = UUID.randomUUID().toString()
                 
+                // Liste-Art bestimmen
+                val listeArt = when {
+                    binding.rbGewerbe.isChecked -> "Gewerbe"
+                    binding.rbPrivat.isChecked -> "Privat"
+                    binding.rbListe.isChecked -> "Liste"
+                    else -> "Gewerbe"
+                }
+                
                 // Liste mit Intervalle erstellen
                 val neueListe = KundenListe(
                     id = listeId,
                     name = name,
+                    listeArt = listeArt,
                     intervalle = intervalle.toList(),
                     erstelltAm = System.currentTimeMillis()
                 )

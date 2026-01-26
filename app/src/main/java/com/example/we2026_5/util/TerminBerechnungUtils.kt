@@ -79,6 +79,7 @@ object TerminBerechnungUtils {
                 startDatum = intervall.abholungDatum,
                 wiederholen = intervall.wiederholen,
                 intervallTage = intervall.intervallTage,
+                intervallAnzahl = intervall.intervallAnzahl,
                 startDatumStart = startDatumStart,
                 endDatum = endDatum,
                 geloeschteTermine = geloeschteTermine,
@@ -95,6 +96,7 @@ object TerminBerechnungUtils {
                 startDatum = intervall.auslieferungDatum,
                 wiederholen = intervall.wiederholen,
                 intervallTage = intervall.intervallTage,
+                intervallAnzahl = intervall.intervallAnzahl,
                 startDatumStart = startDatumStart,
                 endDatum = endDatum,
                 geloeschteTermine = geloeschteTermine,
@@ -115,6 +117,7 @@ object TerminBerechnungUtils {
         startDatum: Long,
         wiederholen: Boolean,
         intervallTage: Int,
+        intervallAnzahl: Int = 0, // 0 = unbegrenzt
         startDatumStart: Long,
         endDatum: Long,
         geloeschteTermine: List<Long>,
@@ -149,8 +152,13 @@ object TerminBerechnungUtils {
             val intervallTageSafe = intervallTage.coerceIn(1, 365)
             var versuche = 0
             val maxVersuche = 1000 // Sicherheit gegen Endlosschleifen
+            var durchgefuehrteAnzahl = 0 // Zähler für durchgeführte Wiederholungen (nur nicht-gelöschte)
             
-            while (aktuellesDatum <= endDatum && versuche < maxVersuche) {
+            // Wenn intervallAnzahl > 0, dann maxVersuche auf intervallAnzahl begrenzen
+            // Beachte: intervallAnzahl zählt nur nicht-gelöschte Termine
+            val maxWiederholungen = if (intervallAnzahl > 0) intervallAnzahl else Int.MAX_VALUE
+            
+            while (aktuellesDatum <= endDatum && versuche < maxVersuche && durchgefuehrteAnzahl < maxWiederholungen) {
                 // Prüfe ob verschoben
                 val verschoben = istTerminVerschoben(aktuellesDatum, verschobeneTermine, intervallId)
                 val finalDatum = verschoben?.verschobenAufDatum ?: aktuellesDatum
@@ -165,9 +173,11 @@ object TerminBerechnungUtils {
                             verschoben = verschoben != null,
                             originalDatum = if (verschoben != null) aktuellesDatum else null
                         ))
+                        durchgefuehrteAnzahl++ // Zähle nur nicht-gelöschte Termine
                     }
                 }
                 
+                // Nächstes Datum berechnen
                 aktuellesDatum += TimeUnit.DAYS.toMillis(intervallTageSafe.toLong())
                 versuche++
             }
@@ -215,7 +225,8 @@ object TerminBerechnungUtils {
                     abholungDatum = listeIntervall.abholungDatum,
                     auslieferungDatum = listeIntervall.auslieferungDatum,
                     wiederholen = listeIntervall.wiederholen,
-                    intervallTage = listeIntervall.intervallTage
+                    intervallTage = listeIntervall.intervallTage,
+                    intervallAnzahl = listeIntervall.intervallAnzahl
                 )
                 val termine = berechneTermineFuerIntervall(
                     intervall = customerIntervall,
@@ -234,7 +245,8 @@ object TerminBerechnungUtils {
                     abholungDatum = customer.abholungDatum,
                     auslieferungDatum = customer.auslieferungDatum,
                     wiederholen = customer.wiederholen,
-                    intervallTage = customer.intervallTage
+                    intervallTage = customer.intervallTage,
+                    intervallAnzahl = 0 // Alte Struktur hat keine Anzahl
                 )
                 val termine = berechneTermineFuerIntervall(
                     intervall = altesIntervall,

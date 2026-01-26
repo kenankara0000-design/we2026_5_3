@@ -255,6 +255,26 @@ class CustomerAdapter(
     private fun bindCustomerViewHolder(holder: CustomerViewHolder, customer: Customer) {
         holder.binding.tvItemName.text = customer.name
         holder.binding.tvItemAdresse.text = customer.adresse
+        
+        // Kunden-Art anzeigen
+        holder.binding.tvItemKundenArt.text = customer.kundenArt
+        holder.binding.tvItemKundenArt.visibility = View.VISIBLE
+        
+        // Telefon anzeigen (wenn vorhanden)
+        if (customer.telefon.isNotBlank()) {
+            holder.binding.tvItemTelefon.text = "📞 ${customer.telefon}"
+            holder.binding.tvItemTelefon.visibility = View.VISIBLE
+        } else {
+            holder.binding.tvItemTelefon.visibility = View.GONE
+        }
+        
+        // Notizen anzeigen (wenn vorhanden)
+        if (customer.notizen.isNotBlank()) {
+            holder.binding.tvItemNotizen.text = "📝 ${customer.notizen}"
+            holder.binding.tvItemNotizen.visibility = View.VISIBLE
+        } else {
+            holder.binding.tvItemNotizen.visibility = View.GONE
+        }
 
         // Nächstes Tour-Datum berechnen und anzeigen
         // Verwende getFaelligAm() um sowohl neue (intervalle) als auch alte Struktur zu unterstützen

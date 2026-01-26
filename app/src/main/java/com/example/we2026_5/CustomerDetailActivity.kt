@@ -23,6 +23,7 @@ import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.databinding.ActivityCustomerDetailBinding
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
+import java.util.Calendar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,6 +43,13 @@ class CustomerDetailActivity : AppCompatActivity() {
 
     private lateinit var photoAdapter: PhotoAdapter
     private var latestTmpUri: Uri? = null
+    
+    // Intervalle-Verwaltung
+    private val intervalle = mutableListOf<CustomerIntervall>()
+    private lateinit var intervallAdapter: IntervallAdapter
+    private lateinit var intervallViewAdapter: IntervallViewAdapter // Read-Only für View-Mode
+    private var aktuellesIntervallPosition: Int = -1
+    private var aktuellesDatumTyp: Boolean = true // true = Abholung, false = Auslieferung
 
     private val takePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { isSuccess ->
         if (isSuccess) {
@@ -86,6 +94,33 @@ class CustomerDetailActivity : AppCompatActivity() {
         binding.rvPhotoThumbnails.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.rvPhotoThumbnails.adapter = photoAdapter
 
+        // Intervall-Adapter initialisieren
+        intervallAdapter = IntervallAdapter(
+            intervalle = intervalle.toMutableList(),
+            onIntervallChanged = { neueIntervalle ->
+                intervalle.clear()
+                intervalle.addAll(neueIntervalle)
+            },
+            onDatumSelected = { position, isAbholung ->
+                aktuellesIntervallPosition = position
+                aktuellesDatumTyp = isAbholung
+                showDatumPicker(position, isAbholung)
+            }
+        )
+        binding.rvDetailIntervalle.layoutManager = LinearLayoutManager(this)
+        binding.rvDetailIntervalle.adapter = intervallAdapter
+
+        // Intervall-View-Adapter für Read-Only-Anzeige im View-Mode
+        intervallViewAdapter = IntervallViewAdapter(emptyList())
+        binding.rvDetailIntervalleView.layoutManager = LinearLayoutManager(this)
+        binding.rvDetailIntervalleView.adapter = intervallViewAdapter
+
+        // Intervall hinzufügen Button
+        binding.btnDetailIntervallHinzufuegen.setOnClickListener {
+            val neuesIntervall = CustomerIntervall()
+            intervallAdapter.addIntervall(neuesIntervall)
+        }
+
         binding.btnDetailBack.setOnClickListener { finish() }
         binding.tvDetailAdresse.setOnClickListener { startNavigation() }
         binding.tvDetailTelefon.setOnClickListener { startPhoneCall() }
@@ -114,6 +149,41 @@ class CustomerDetailActivity : AppCompatActivity() {
             binding.etDetailAdresse.setText(currentCustomer?.adresse)
             binding.etDetailTelefon.setText(currentCustomer?.telefon)
             binding.etDetailNotizen.setText(currentCustomer?.notizen)
+            
+            // Kunden-Art RadioButton setzen
+            currentCustomer?.let { customer ->
+                when (customer.kundenArt) {
+                    "Gewerblich" -> binding.rgDetailKundenArt.check(binding.rbDetailGewerblich.id)
+                    "Privat" -> binding.rgDetailKundenArt.check(binding.rbDetailPrivat.id)
+                    "Liste" -> binding.rgDetailKundenArt.check(binding.rbDetailListe.id)
+                    else -> binding.rgDetailKundenArt.check(binding.rbDetailGewerblich.id)
+                }
+                
+                // Intervall-Card Sichtbarkeit basierend auf Kunden-Art
+                val sollIntervallAnzeigen = customer.kundenArt == "Gewerblich" || customer.kundenArt == "Liste"
+                binding.cardDetailIntervall.visibility = if (sollIntervallAnzeigen) View.VISIBLE else View.GONE
+                
+                // Listener für Kunden-Art-Änderung
+                binding.rgDetailKundenArt.setOnCheckedChangeListener { _, checkedId ->
+                    val neueKundenArt = when (checkedId) {
+                        binding.rbDetailGewerblich.id -> "Gewerblich"
+                        binding.rbDetailPrivat.id -> "Privat"
+                        binding.rbDetailListe.id -> "Liste"
+                        else -> "Gewerblich"
+                    }
+                    // Intervall-Card anzeigen/ausblenden basierend auf neuer Kunden-Art
+                    binding.cardDetailIntervall.visibility = if (neueKundenArt == "Gewerblich" || neueKundenArt == "Liste") {
+                        View.VISIBLE
+                    } else {
+                        View.GONE
+                    }
+                }
+                
+                // Intervalle laden und anzeigen
+                intervalle.clear()
+                intervalle.addAll(customer.intervalle)
+                intervallAdapter.updateIntervalle(intervalle.toList())
+            }
             
             // Google Maps Button für Adress-Auswahl
             binding.btnSelectLocation.setOnClickListener {
@@ -155,12 +225,39 @@ class CustomerDetailActivity : AppCompatActivity() {
                 binding.btnSaveCustomer.alpha = 0.6f
             }
             
+            // Kunden-Art bestimmen
+            val kundenArt = when (binding.rgDetailKundenArt.checkedRadioButtonId) {
+                binding.rbDetailGewerblich.id -> "Gewerblich"
+                binding.rbDetailPrivat.id -> "Privat"
+                binding.rbDetailListe.id -> "Liste"
+                else -> "Gewerblich"
+            }
+            
+            // Intervalle aktualisieren (nur für Gewerblich und Liste)
+            val customerIntervalle = if ((kundenArt == "Gewerblich" || kundenArt == "Liste") && intervalle.isNotEmpty()) {
+                intervalle.toList()
+            } else {
+                currentCustomer?.intervalle ?: emptyList()
+            }
+            
             val updatedData = mapOf(
                 "name" to name,
                 "adresse" to adresse,
                 "telefon" to telefon,
                 "notizen" to binding.etDetailNotizen.text.toString().trim(),
-                "wochentag" to 0 // Wochentag wird nicht mehr verwendet
+                "kundenArt" to kundenArt,
+                "wochentag" to 0, // Wochentag wird nicht mehr verwendet
+                "intervalle" to customerIntervalle.map { 
+                    mapOf(
+                        "id" to it.id,
+                        "abholungDatum" to it.abholungDatum,
+                        "auslieferungDatum" to it.auslieferungDatum,
+                        "wiederholen" to it.wiederholen,
+                        "intervallTage" to it.intervallTage,
+                        "intervallAnzahl" to it.intervallAnzahl,
+                        "erstelltAm" to it.erstelltAm
+                    )
+                }
             )
             
             // Optimistische UI-Aktualisierung: UI sofort aktualisieren
@@ -171,7 +268,9 @@ class CustomerDetailActivity : AppCompatActivity() {
                     adresse = adresse,
                     telefon = telefon,
                     notizen = binding.etDetailNotizen.text.toString().trim(),
-                    wochentag = 0 // Wochentag wird nicht mehr verwendet
+                    kundenArt = kundenArt,
+                    wochentag = 0, // Wochentag wird nicht mehr verwendet
+                    intervalle = customerIntervalle
                 )
                 currentCustomer = updatedCustomer
                 // UI sofort aktualisieren (optimistisch), aber Button sichtbar lassen
@@ -438,10 +537,60 @@ class CustomerDetailActivity : AppCompatActivity() {
 
     private fun updateUi(customer: Customer) {
         binding.tvDetailName.text = customer.name
+        binding.tvDetailKundenArt.text = customer.kundenArt
         binding.tvDetailAdresse.text = customer.adresse
         binding.tvDetailTelefon.text = customer.telefon
         binding.tvDetailNotizen.text = customer.notizen
         photoAdapter.updatePhotos(customer.fotoUrls)
+        
+        // Intervalle im View-Mode anzeigen (nur für Gewerblich und Liste)
+        val sollIntervallAnzeigen = customer.kundenArt == "Gewerblich" || customer.kundenArt == "Liste"
+        if (sollIntervallAnzeigen && customer.intervalle.isNotEmpty()) {
+            binding.cardDetailIntervallView.visibility = View.VISIBLE
+            intervallViewAdapter.updateIntervalle(customer.intervalle)
+        } else {
+            binding.cardDetailIntervallView.visibility = View.GONE
+        }
+    }
+    
+    private fun showDatumPicker(position: Int, isAbholung: Boolean) {
+        val cal = Calendar.getInstance()
+        val intervall = intervalle.getOrNull(position) ?: return
+        
+        // Aktuelles Datum oder Intervall-Datum verwenden
+        val initialDatum = if (isAbholung && intervall.abholungDatum > 0) {
+            cal.timeInMillis = intervall.abholungDatum
+            intervall.abholungDatum
+        } else if (!isAbholung && intervall.auslieferungDatum > 0) {
+            cal.timeInMillis = intervall.auslieferungDatum
+            intervall.auslieferungDatum
+        } else {
+            System.currentTimeMillis()
+        }
+        
+        cal.timeInMillis = initialDatum
+        
+        DatePickerDialog(
+            this,
+            DatePickerDialog.OnDateSetListener { _, year: Int, month: Int, dayOfMonth: Int ->
+                cal.set(year, month, dayOfMonth, 0, 0, 0)
+                cal.set(Calendar.MILLISECOND, 0)
+                val selectedDatum = cal.timeInMillis
+                
+                // Intervall aktualisieren
+                val updatedIntervall = if (isAbholung) {
+                    intervall.copy(abholungDatum = selectedDatum)
+                } else {
+                    intervall.copy(auslieferungDatum = selectedDatum)
+                }
+                
+                intervalle[position] = updatedIntervall
+                intervallAdapter.updateIntervalle(intervalle.toList())
+            },
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
     
     private fun showImageInDialog(url: String) {

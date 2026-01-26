@@ -103,6 +103,13 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Privat"/>
+
+            <RadioButton
+                android:id="@+id/rbListe"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Liste"/>
         </RadioGroup>
 
         <!-- Intervall-Erstellung (nur für Gewerblich-Kunden) -->

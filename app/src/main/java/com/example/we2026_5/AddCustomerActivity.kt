@@ -63,9 +63,10 @@ class AddCustomerActivity : AppCompatActivity() {
         // Kunden-Art ändern: Intervall-Card anzeigen/ausblenden
         binding.rgKundenArt.setOnCheckedChangeListener { _, checkedId ->
             val isGewerblich = checkedId == binding.rbGewerblich.id
+            val isListe = checkedId == binding.rbListe.id
             
-            // Intervall-Card nur anzeigen für Gewerblich-Kunden
-            binding.cardIntervall.visibility = if (isGewerblich) {
+            // Intervall-Card anzeigen für Gewerblich-Kunden und Liste-Kunden
+            binding.cardIntervall.visibility = if (isGewerblich || isListe) {
                 android.view.View.VISIBLE
             } else {
                 android.view.View.GONE
@@ -84,7 +85,11 @@ class AddCustomerActivity : AppCompatActivity() {
             val telefon = binding.etTelefon.text.toString().trim()
 
             // Kunden-Art bestimmen
-            val kundenArt = if (binding.rbPrivat.isChecked) "Privat" else "Gewerblich"
+            val kundenArt = when {
+                binding.rbPrivat.isChecked -> "Privat"
+                binding.rbListe.isChecked -> "Liste"
+                else -> "Gewerblich"
+            }
             
             // Button sofort deaktivieren und visuelles Feedback geben
             binding.btnSaveCustomer.isEnabled = false
@@ -94,8 +99,8 @@ class AddCustomerActivity : AppCompatActivity() {
             CoroutineScope(Dispatchers.Main).launch {
                 val customerId = java.util.UUID.randomUUID().toString()
                 
-                // NEUE STRUKTUR: Intervalle für Gewerblich-Kunden
-                val customerIntervalle = if (kundenArt == "Gewerblich" && intervalle.isNotEmpty()) {
+                // NEUE STRUKTUR: Intervalle für Gewerblich-Kunden und Liste-Kunden
+                val customerIntervalle = if ((kundenArt == "Gewerblich" || kundenArt == "Liste") && intervalle.isNotEmpty()) {
                     intervalle.toList()
                 } else {
                     emptyList()

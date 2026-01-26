@@ -20,15 +20,15 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/tvListeName"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Liste Name"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"/>
+        <TextView
+            android:id="@+id/tvListeName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Liste Name"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"/>
 
             <ImageButton
                 android:id="@+id/btnLoeschen"
@@ -39,6 +39,16 @@
                 android:contentDescription="Liste löschen"
                 android:tint="@color/status_overdue"/>
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvListeArt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gewerbe"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:textStyle="italic"
+            android:layout_marginTop="4dp"/>
 
         <TextView
             android:id="@+id/tvIntervallInfo"

@@ -136,6 +136,40 @@
             android:textSize="14sp"
             android:layout_marginTop="4dp"/>
 
+        <TextView
+            android:id="@+id/tvItemKundenArt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gewerblich"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:textStyle="italic"
+            android:layout_marginTop="2dp"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/tvItemTelefon"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:layout_marginTop="4dp"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/tvItemNotizen"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:textStyle="italic"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:layout_marginTop="4dp"
+            android:visibility="gone"/>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

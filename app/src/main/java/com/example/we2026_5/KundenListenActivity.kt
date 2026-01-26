@@ -194,6 +194,10 @@ class KundenListenActivity : AppCompatActivity() {
             val liste = listen[position]
             holder.binding.tvListeName.text = liste.name
             
+            // Liste-Art anzeigen
+            holder.binding.tvListeArt.text = "Liste-Art: ${liste.listeArt}"
+            holder.binding.tvListeArt.visibility = View.VISIBLE
+            
             val anzahlKunden = kundenProListe[liste.id] ?: 0
             holder.binding.tvIntervallInfo.text = "$anzahlKunden Kunde(n)"
             

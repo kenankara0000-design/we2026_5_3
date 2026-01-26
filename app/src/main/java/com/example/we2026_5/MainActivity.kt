@@ -32,6 +32,10 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.btnNeuKunde.setOnClickListener {
+            startActivity(Intent(this, AddCustomerActivity::class.java))
+        }
+
         binding.btnKunden.setOnClickListener {
             startActivity(Intent(this, CustomerManagerActivity::class.java))
         }

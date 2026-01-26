@@ -79,11 +79,18 @@ class IntervallAdapter(
             binding.switchWiederholen.isChecked = intervall.wiederholen
             binding.etIntervallTage.isEnabled = intervall.wiederholen
             binding.etIntervallTage.setText(intervall.intervallTage.toString())
+            
+            // Intervall-Anzahl
+            binding.layoutIntervallAnzahl.visibility = if (intervall.wiederholen) android.view.View.VISIBLE else android.view.View.GONE
+            binding.etIntervallAnzahl.isEnabled = intervall.wiederholen
+            binding.etIntervallAnzahl.setText(if (intervall.intervallAnzahl > 0) intervall.intervallAnzahl.toString() else "")
 
             // Wiederholen-Switch Listener
             binding.switchWiederholen.setOnCheckedChangeListener { _, isChecked ->
                 intervalle[position] = intervall.copy(wiederholen = isChecked)
                 binding.etIntervallTage.isEnabled = isChecked
+                binding.layoutIntervallAnzahl.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
+                binding.etIntervallAnzahl.isEnabled = isChecked
                 onIntervallChanged(intervalle.toList())
             }
 
@@ -92,6 +99,15 @@ class IntervallAdapter(
                 if (!hasFocus) {
                     val tage = binding.etIntervallTage.text.toString().toIntOrNull() ?: 7
                     intervalle[position] = intervall.copy(intervallTage = tage.coerceIn(1, 365))
+                    onIntervallChanged(intervalle.toList())
+                }
+            }
+            
+            // Intervall-Anzahl Listener
+            binding.etIntervallAnzahl.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) {
+                    val anzahl = binding.etIntervallAnzahl.text.toString().toIntOrNull() ?: 0
+                    intervalle[position] = intervall.copy(intervallAnzahl = anzahl.coerceAtLeast(0))
                     onIntervallChanged(intervalle.toList())
                 }
             }

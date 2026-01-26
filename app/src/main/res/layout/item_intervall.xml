@@ -107,5 +107,33 @@
                 android:enabled="false"/>
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            android:id="@+id/layoutIntervallAnzahl">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Anzahl:"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginEnd="8dp"/>
+
+            <EditText
+                android:id="@+id/etIntervallAnzahl"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Anzahl (0 = unbegrenzt)"
+                android:inputType="number"
+                android:padding="8dp"
+                android:enabled="false"/>
+        </LinearLayout>
+
     </LinearLayout>
 </androidx.cardview.widget.CardView>

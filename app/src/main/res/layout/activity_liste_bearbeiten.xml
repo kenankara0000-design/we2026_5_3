@@ -41,11 +41,234 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
+
+            <!-- Bearbeitungs-Button -->
+            <Button
+                android:id="@+id/btnEditListe"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Liste bearbeiten"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Liste-Informationen (View Mode) -->
+            <LinearLayout
+                android:id="@+id/groupListView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Liste-Name:"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <TextView
+                    android:id="@+id/tvListeNameView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Liste Name"
+                    android:textSize="16sp"
+                    android:padding="8dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginBottom="8dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Liste-Art:"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <TextView
+                    android:id="@+id/tvListeArtView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Gewerbe"
+                    android:textSize="16sp"
+                    android:padding="8dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginBottom="8dp"/>
+
+                <!-- Intervalle-Anzeige (View Mode) -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardListeIntervallView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:visibility="gone"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="@color/surface_white">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Termin-Intervalle"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/primary_blue_dark"
+                            android:layout_marginBottom="8dp"/>
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvListeIntervalleView"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+
+            <!-- Liste-Informationen (Edit Mode) -->
+            <LinearLayout
+                android:id="@+id/groupListEdit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Liste-Name:"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <EditText
+                    android:id="@+id/etListeNameEdit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Listen-Name"
+                    android:padding="8dp"
+                    android:background="#FFFFFF"
+                    android:layout_marginBottom="12dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Liste-Art:"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <RadioGroup
+                    android:id="@+id/rgListeArtEdit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <RadioButton
+                        android:id="@+id/rbGewerbeEdit"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Gewerbe"/>
+
+                    <RadioButton
+                        android:id="@+id/rbPrivatEdit"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Privat"/>
+
+                    <RadioButton
+                        android:id="@+id/rbListeEdit"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Liste"/>
+                </RadioGroup>
+
+                <!-- Intervalle-Verwaltung -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardListeIntervall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="@color/surface_white">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Intervalle"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/primary_blue_dark"
+                            android:layout_marginBottom="8dp"/>
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvListeIntervalle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"/>
+
+                        <Button
+                            android:id="@+id/btnListeIntervallHinzufuegen"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="+ Intervall hinzufügen"
+                            android:backgroundTint="@color/primary_blue"
+                            android:textColor="@color/white"
+                            android:padding="12dp"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+
+                    <Button
+                        android:id="@+id/btnSaveListe"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Speichern"
+                        android:layout_marginEnd="4dp"
+                        android:visibility="gone"/>
+
+                    <Button
+                        android:id="@+id/btnDeleteListe"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Löschen"
+                        android:layout_marginStart="4dp"
+                        android:visibility="gone"
+                        android:backgroundTint="#DC3545"/>
+                </LinearLayout>
+            </LinearLayout>
 
             <!-- Kunden in dieser Liste -->
             <TextView
@@ -115,6 +338,7 @@
                 android:layout_gravity="center"
                 android:visibility="gone"/>
         </LinearLayout>
+        </ScrollView>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </LinearLayout>
