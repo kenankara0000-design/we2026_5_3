@@ -21,7 +21,7 @@
         android:id="@+id/btnKunden"
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:text="Kunden Liste"
+        android:text="Kunden"
         android:textSize="16sp"
         android:textStyle="bold"
         android:layout_marginBottom="20dp"
@@ -54,10 +54,10 @@
         style="@style/Widget.Material3.Button.ElevatedButton"/>
 
     <Button
-        android:id="@+id/btnListeErstellen"
+        android:id="@+id/btnKundenListen"
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:text="📋 Liste erstellen"
+        android:text="📋 Kunden Listen"
         android:textSize="16sp"
         android:textStyle="bold"
         android:backgroundTint="@color/primary_blue_light"

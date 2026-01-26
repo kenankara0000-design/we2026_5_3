@@ -205,16 +205,10 @@ class AddCustomerActivity : AppCompatActivity() {
                 else -> reihenfolgeInput
             }
             
-            // Wochentag bestimmen: Für Privat-Kunden aus Liste, sonst aus Abholungsdatum
+            // Wochentag bestimmen: Aus Abholungsdatum berechnen (für Kunden in Listen wird Wochentag nicht verwendet)
             val calAbholung = Calendar.getInstance()
             calAbholung.timeInMillis = selectedAbholungDatum
-            val abholungWochentag = if (kundenArt == "Privat" && selectedListeId.isNotEmpty()) {
-                // Wochentag aus Liste holen
-                val liste = alleListen.find { it.id == selectedListeId }
-                liste?.abholungWochentag ?: (calAbholung.get(Calendar.DAY_OF_WEEK) + 5) % 7
-            } else {
-                (calAbholung.get(Calendar.DAY_OF_WEEK) + 5) % 7
-            }
+            val abholungWochentag = (calAbholung.get(Calendar.DAY_OF_WEEK) + 5) % 7
             
             // Duplikat-Prüfung: Wochentag + Reihenfolge (nur wenn wiederholen aktiviert)
             CoroutineScope(Dispatchers.Main).launch {
@@ -272,11 +266,11 @@ class AddCustomerActivity : AppCompatActivity() {
                     // Termine: Für Kunden in Listen werden Daten der Liste verwendet (0 = wird ignoriert)
                     abholungDatum = if (liste != null) 0 else selectedAbholungDatum,
                     auslieferungDatum = if (liste != null) 0 else selectedAuslieferungDatum,
-                    wiederholen = liste?.wiederholen ?: wiederholen,
-                    // Wiederholungs-Felder
-                    intervallTage = if (liste != null && liste.wiederholen) 7 else intervall, // Listen wiederholen wöchentlich
+                    wiederholen = if (liste != null) true else wiederholen, // Kunden in Listen wiederholen immer
+                    // Wiederholungs-Felder: Für Listen-Kunden werden Intervalle von der Liste verwaltet
+                    intervallTage = if (liste != null) 0 else intervall,
                     letzterTermin = if (liste != null) 0 else letzterTermin,
-                    wochentag = if (liste != null) liste.abholungWochentag else (if (wiederholen) abholungWochentag else 0),
+                    wochentag = if (liste != null) 0 else (if (wiederholen) abholungWochentag else 0),
                     reihenfolge = if (liste != null || wiederholen) reihenfolge else 1,
                     istImUrlaub = false
                 )
@@ -516,12 +510,46 @@ class AddCustomerActivity : AppCompatActivity() {
             .setPositiveButton("Erstellen") { _, _ ->
                 if (selectedAbholungWT >= 0 && selectedAuslieferungWT >= 0) {
                     val listeId = java.util.UUID.randomUUID().toString()
+                    
+                    // Wochentag in Datum umwandeln (nächster Wochentag)
+                    val cal = Calendar.getInstance()
+                    val heuteWochentag = (cal.get(Calendar.DAY_OF_WEEK) + 5) % 7 // 0=Montag
+                    
+                    // Abholungsdatum: Nächster ausgewählter Wochentag
+                    var tageBisAbholung = selectedAbholungWT - heuteWochentag
+                    if (tageBisAbholung <= 0) tageBisAbholung += 7
+                    cal.add(Calendar.DAY_OF_YEAR, tageBisAbholung)
+                    cal.set(Calendar.HOUR_OF_DAY, 0)
+                    cal.set(Calendar.MINUTE, 0)
+                    cal.set(Calendar.SECOND, 0)
+                    cal.set(Calendar.MILLISECOND, 0)
+                    val abholungDatum = cal.timeInMillis
+                    
+                    // Auslieferungsdatum: Nächster ausgewählter Wochentag
+                    cal.timeInMillis = System.currentTimeMillis()
+                    val heuteWochentag2 = (cal.get(Calendar.DAY_OF_WEEK) + 5) % 7
+                    var tageBisAuslieferung = selectedAuslieferungWT - heuteWochentag2
+                    if (tageBisAuslieferung <= 0) tageBisAuslieferung += 7
+                    cal.add(Calendar.DAY_OF_YEAR, tageBisAuslieferung)
+                    cal.set(Calendar.HOUR_OF_DAY, 0)
+                    cal.set(Calendar.MINUTE, 0)
+                    cal.set(Calendar.SECOND, 0)
+                    cal.set(Calendar.MILLISECOND, 0)
+                    val auslieferungDatum = cal.timeInMillis
+                    
+                    // Standard-Intervall erstellen (wöchentlich)
+                    val standardIntervall = com.example.we2026_5.ListeIntervall(
+                        abholungDatum = abholungDatum,
+                        auslieferungDatum = auslieferungDatum,
+                        wiederholen = true,
+                        intervallTage = 7 // Wöchentlich
+                    )
+                    
                     val neueListe = com.example.we2026_5.KundenListe(
                         id = listeId,
                         name = listeName,
-                        abholungWochentag = selectedAbholungWT,
-                        auslieferungWochentag = selectedAuslieferungWT,
-                        wiederholen = true // Standard: Listen werden wöchentlich wiederholt
+                        intervalle = listOf(standardIntervall),
+                        erstelltAm = System.currentTimeMillis()
                     )
                     
                     CoroutineScope(Dispatchers.Main).launch {

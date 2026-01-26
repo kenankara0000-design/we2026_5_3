@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
 import com.example.we2026_5.KundenListe
+import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.ListItem
 import com.example.we2026_5.SectionType
 import com.example.we2026_5.data.repository.CustomerRepository
@@ -60,11 +61,12 @@ class TourPlannerViewModel(
                     if (listeId.isEmpty()) return@forEach
                     val liste = allListen.find { it.id == listeId } ?: return@forEach
                     
-                    // Prüfe ob Abholung oder Auslieferung an diesem Wochentag fällig ist
-                    val istAbholungTag = liste.abholungWochentag == viewDateWochentag
-                    val istAuslieferungTag = liste.auslieferungWochentag == viewDateWochentag
+                    // Prüfe ob mindestens ein Intervall an diesem Datum fällig ist
+                    val istFaellig = liste.intervalle.any { intervall ->
+                        isIntervallFaelligAm(intervall, viewDateStart)
+                    }
                     
-                    if (istAbholungTag || istAuslieferungTag) {
+                    if (istFaellig) {
                         // Filtere Kunden die an diesem Tag fällig sind
                         val fälligeKunden = kunden.filter { customer ->
                             val faelligAm = customerFaelligAm(customer, liste)
@@ -182,41 +184,17 @@ class TourPlannerViewModel(
     }
     
     private fun customerFaelligAm(c: Customer, liste: KundenListe? = null): Long {
-        // Für Privat-Kunden in Listen: Daten der Liste verwenden
-        if (c.kundenArt == "Privat" && c.listeId.isNotEmpty() && liste != null) {
+        // Für Kunden in Listen: Daten der Liste verwenden
+        if (c.listeId.isNotEmpty() && liste != null) {
             // Wenn verschoben, verschobenes Datum verwenden
             if (c.verschobenAufDatum > 0) return c.verschobenAufDatum
             
-            // Für Listen-Kunden: Nächsten Wochentag der Liste berechnen
-            val heute = Calendar.getInstance()
-            heute.set(Calendar.HOUR_OF_DAY, 0)
-            heute.set(Calendar.MINUTE, 0)
-            heute.set(Calendar.SECOND, 0)
-            heute.set(Calendar.MILLISECOND, 0)
-            
-            val heuteWochentag = (heute.get(Calendar.DAY_OF_WEEK) + 5) % 7 // 0=Montag
-            
-            // Wenn heute der Abholungstag ist, heute zurückgeben
-            if (liste.abholungWochentag == heuteWochentag) {
-                return heute.timeInMillis
-            }
-            
-            // Nächsten Abholungstag berechnen
-            var tageBisAbholung = liste.abholungWochentag - heuteWochentag
-            if (tageBisAbholung <= 0) tageBisAbholung += 7 // Nächste Woche
-            
-            val naechsterAbholungTag = Calendar.getInstance()
-            naechsterAbholungTag.timeInMillis = heute.timeInMillis
-            naechsterAbholungTag.add(Calendar.DAY_OF_YEAR, tageBisAbholung)
-            naechsterAbholungTag.set(Calendar.HOUR_OF_DAY, 0)
-            naechsterAbholungTag.set(Calendar.MINUTE, 0)
-            naechsterAbholungTag.set(Calendar.SECOND, 0)
-            naechsterAbholungTag.set(Calendar.MILLISECOND, 0)
-            
-            return naechsterAbholungTag.timeInMillis
+            // Nächstes Datum aus den Intervallen der Liste berechnen
+            val naechstesDatum = getNaechstesListeDatum(liste)
+            return naechstesDatum ?: System.currentTimeMillis()
         }
         
-        // Für Gewerblich-Kunden: Normale Logik
+        // Für Kunden ohne Liste: Normale Logik
         return c.getFaelligAm()
     }
     
@@ -259,10 +237,12 @@ class TourPlannerViewModel(
                         if (listeId.isEmpty()) return@forEach
                         val liste = allListen.find { it.id == listeId } ?: return@forEach
                         
-                        val istAbholungTag = liste.abholungWochentag == dayWochentag
-                        val istAuslieferungTag = liste.auslieferungWochentag == dayWochentag
+                        // Prüfe ob mindestens ein Intervall an diesem Datum fällig ist
+                        val istFaellig = liste.intervalle.any { intervall ->
+                            isIntervallFaelligAm(intervall, dayStart)
+                        }
                         
-                        if (istAbholungTag || istAuslieferungTag) {
+                        if (istFaellig) {
                             val fälligeKunden = kunden.filter { customer ->
                                 val faelligAm = customerFaelligAm(customer, liste)
                                 val faelligAmImUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && 
@@ -371,5 +351,97 @@ class TourPlannerViewModel(
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
+    }
+    
+    /**
+     * Prüft ob ein Intervall an einem bestimmten Datum fällig ist
+     */
+    private fun isIntervallFaelligAm(intervall: ListeIntervall, datum: Long): Boolean {
+        val datumStart = getStartOfDay(datum)
+        val abholungStart = getStartOfDay(intervall.abholungDatum)
+        val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
+        
+        if (!intervall.wiederholen) {
+            // Einmaliges Intervall: Prüfe ob Datum genau Abholungs- oder Auslieferungsdatum ist
+            return datumStart == abholungStart || datumStart == auslieferungStart
+        }
+        
+        // Wiederholendes Intervall: Prüfe ob Datum auf einem Wiederholungszyklus liegt
+        val intervallTage = intervall.intervallTage.coerceIn(1, 365)
+        
+        // Prüfe Abholungsdatum
+        if (datumStart >= abholungStart) {
+            val tageSeitAbholung = TimeUnit.MILLISECONDS.toDays(datumStart - abholungStart)
+            if (tageSeitAbholung % intervallTage == 0L && datumStart == abholungStart + TimeUnit.DAYS.toMillis(tageSeitAbholung)) {
+                return true
+            }
+        }
+        
+        // Prüfe Auslieferungsdatum
+        if (datumStart >= auslieferungStart) {
+            val tageSeitAuslieferung = TimeUnit.MILLISECONDS.toDays(datumStart - auslieferungStart)
+            if (tageSeitAuslieferung % intervallTage == 0L && datumStart == auslieferungStart + TimeUnit.DAYS.toMillis(tageSeitAuslieferung)) {
+                return true
+            }
+        }
+        
+        return false
+    }
+    
+    /**
+     * Berechnet das nächste fällige Datum für einen Kunden in einer Liste
+     */
+    private fun getNaechstesListeDatum(liste: KundenListe, abDatum: Long = System.currentTimeMillis()): Long? {
+        val abDatumStart = getStartOfDay(abDatum)
+        var naechstesDatum: Long? = null
+        
+        // Durch alle Intervalle iterieren und das nächste Datum finden
+        liste.intervalle.forEach { intervall ->
+            if (!intervall.wiederholen) {
+                // Einmaliges Intervall
+                val abholungStart = getStartOfDay(intervall.abholungDatum)
+                val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
+                
+                if (abholungStart >= abDatumStart && (naechstesDatum == null || abholungStart < naechstesDatum!!)) {
+                    naechstesDatum = abholungStart
+                }
+                if (auslieferungStart >= abDatumStart && (naechstesDatum == null || auslieferungStart < naechstesDatum!!)) {
+                    naechstesDatum = auslieferungStart
+                }
+            } else {
+                // Wiederholendes Intervall
+                val intervallTage = intervall.intervallTage.coerceIn(1, 365)
+                val abholungStart = getStartOfDay(intervall.abholungDatum)
+                val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
+                
+                // Nächstes Abholungsdatum
+                if (abDatumStart >= abholungStart) {
+                    val tageSeitAbholung = TimeUnit.MILLISECONDS.toDays(abDatumStart - abholungStart)
+                    val naechsteAbholung = abholungStart + TimeUnit.DAYS.toMillis((tageSeitAbholung / intervallTage + 1) * intervallTage)
+                    if (naechstesDatum == null || naechsteAbholung < naechstesDatum!!) {
+                        naechstesDatum = naechsteAbholung
+                    }
+                } else {
+                    if (naechstesDatum == null || abholungStart < naechstesDatum!!) {
+                        naechstesDatum = abholungStart
+                    }
+                }
+                
+                // Nächstes Auslieferungsdatum
+                if (abDatumStart >= auslieferungStart) {
+                    val tageSeitAuslieferung = TimeUnit.MILLISECONDS.toDays(abDatumStart - auslieferungStart)
+                    val naechsteAuslieferung = auslieferungStart + TimeUnit.DAYS.toMillis((tageSeitAuslieferung / intervallTage + 1) * intervallTage)
+                    if (naechstesDatum == null || naechsteAuslieferung < naechstesDatum!!) {
+                        naechstesDatum = naechsteAuslieferung
+                    }
+                } else {
+                    if (naechstesDatum == null || auslieferungStart < naechstesDatum!!) {
+                        naechstesDatum = auslieferungStart
+                    }
+                }
+            }
+        }
+        
+        return naechstesDatum
     }
 }

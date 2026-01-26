@@ -8,6 +8,7 @@ import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.databinding.ActivityMainBinding
 import com.google.firebase.auth.FirebaseAuth
 import java.util.concurrent.TimeUnit
+import java.util.Calendar
 import org.koin.android.ext.android.inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,8 +46,8 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, AddCustomerActivity::class.java))
         }
 
-        binding.btnListeErstellen.setOnClickListener {
-            startActivity(Intent(this, ListeErstellenActivity::class.java))
+        binding.btnKundenListen.setOnClickListener {
+            startActivity(Intent(this, KundenListenActivity::class.java))
         }
 
         binding.btnStatistiken.setOnClickListener {
@@ -67,14 +68,34 @@ class MainActivity : AppCompatActivity() {
                 val existingNamen = existingListen.map { it.name }
                 val fehlendeListen = standardListenNamen.filter { it !in existingNamen }
                 
-                // Fehlende Listen erstellen (mit Standard-Wochentagen: Di=Abholung, Do=Auslieferung)
+                // Fehlende Listen erstellen (mit Standard-Intervall: Di=Abholung, Do=Auslieferung, wöchentlich)
                 fehlendeListen.forEach { listenName ->
                     val listeId = java.util.UUID.randomUUID().toString()
+                    
+                    // Standard-Intervall: Dienstag Abholung, Donnerstag Auslieferung, wöchentlich
+                    val cal = Calendar.getInstance()
+                    cal.set(Calendar.DAY_OF_WEEK, Calendar.TUESDAY)
+                    cal.set(Calendar.HOUR_OF_DAY, 0)
+                    cal.set(Calendar.MINUTE, 0)
+                    cal.set(Calendar.SECOND, 0)
+                    cal.set(Calendar.MILLISECOND, 0)
+                    val abholungDatum = cal.timeInMillis
+                    
+                    cal.set(Calendar.DAY_OF_WEEK, Calendar.THURSDAY)
+                    val auslieferungDatum = cal.timeInMillis
+                    
+                    val standardIntervall = com.example.we2026_5.ListeIntervall(
+                        abholungDatum = abholungDatum,
+                        auslieferungDatum = auslieferungDatum,
+                        wiederholen = true,
+                        intervallTage = 7 // Wöchentlich
+                    )
+                    
                     val neueListe = com.example.we2026_5.KundenListe(
                         id = listeId,
                         name = listenName,
-                        abholungWochentag = 1, // Dienstag
-                        auslieferungWochentag = 3 // Donnerstag
+                        intervalle = listOf(standardIntervall),
+                        erstelltAm = System.currentTimeMillis()
                     )
                     listeRepository.saveListe(neueListe)
                 }
