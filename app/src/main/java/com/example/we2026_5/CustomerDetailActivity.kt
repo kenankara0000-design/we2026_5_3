@@ -141,6 +141,26 @@ class CustomerDetailActivity : AppCompatActivity() {
     }
 
     private fun handleSave() {
+        val name = binding.etDetailName.text.toString().trim()
+        if (name.isEmpty()) {
+            binding.etDetailName.error = "Name fehlt"
+            return
+        }
+
+        // Adresse-Validierung
+        val adresse = binding.etDetailAdresse.text.toString().trim()
+        if (adresse.isNotEmpty() && !ValidationHelper.isValidAddress(adresse)) {
+            binding.etDetailAdresse.error = "Adresse sollte Straße und Hausnummer enthalten"
+            return
+        }
+
+        // Telefon-Validierung
+        val telefon = binding.etDetailTelefon.text.toString().trim()
+        if (telefon.isNotEmpty() && !ValidationHelper.isValidPhoneNumber(telefon)) {
+            binding.etDetailTelefon.error = "Ungültiges Telefonnummer-Format"
+            return
+        }
+
         val intervallInput = binding.etDetailIntervall.text.toString().toIntOrNull() ?: 7
         val intervall = when {
             intervallInput < 1 -> {
@@ -163,17 +183,37 @@ class CustomerDetailActivity : AppCompatActivity() {
             else -> reihenfolgeInput
         }
 
-        val updatedData = mapOf(
-            "name" to binding.etDetailName.text.toString(),
-            "adresse" to binding.etDetailAdresse.text.toString(),
-            "telefon" to binding.etDetailTelefon.text.toString(),
-            "intervallTage" to intervall,
-            "notizen" to binding.etDetailNotizen.text.toString(),
-            "wochentag" to selectedWochentag,
-            "reihenfolge" to reihenfolge
-        )
-        updateCustomerData(updatedData, "Änderungen gespeichert")
-        toggleEditMode(false)
+        // Duplikat-Prüfung: Wochentag + Reihenfolge (nur wenn sich geändert hat)
+        CoroutineScope(Dispatchers.Main).launch {
+            val existingCustomer = ValidationHelper.checkDuplicateReihenfolge(
+                repository = repository,
+                wochentag = selectedWochentag,
+                reihenfolge = reihenfolge,
+                excludeCustomerId = customerId
+            )
+            
+            if (existingCustomer != null) {
+                runOnUiThread {
+                    binding.etDetailReihenfolge.error = "Reihenfolge $reihenfolge ist bereits von ${existingCustomer.name} belegt"
+                    Toast.makeText(this@CustomerDetailActivity, 
+                        "Kunde '${existingCustomer.name}' hat bereits Reihenfolge $reihenfolge am ${getWochentagName(selectedWochentag)}", 
+                        Toast.LENGTH_LONG).show()
+                }
+                return@launch
+            }
+
+            val updatedData = mapOf(
+                "name" to name,
+                "adresse" to adresse,
+                "telefon" to telefon,
+                "intervallTage" to intervall,
+                "notizen" to binding.etDetailNotizen.text.toString().trim(),
+                "wochentag" to selectedWochentag,
+                "reihenfolge" to reihenfolge
+            )
+            updateCustomerData(updatedData, "Änderungen gespeichert")
+            toggleEditMode(false)
+        }
     }
 
     private fun showDeleteConfirmation() {

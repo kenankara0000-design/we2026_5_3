@@ -33,6 +33,7 @@ class TourPlannerActivity : AppCompatActivity() {
     private lateinit var adapter: CustomerAdapter
     private var viewDate = Calendar.getInstance()
     private lateinit var gestureDetector: GestureDetectorCompat
+    private lateinit var networkMonitor: NetworkMonitor
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -105,9 +106,32 @@ class TourPlannerActivity : AppCompatActivity() {
             viewDate = Calendar.getInstance()
             updateDisplay()
         }
+
+        binding.btnMapView.setOnClickListener {
+            val intent = Intent(this, MapViewActivity::class.java)
+            startActivity(intent)
+        }
+        
+        // Pull-to-Refresh
+        binding.swipeRefresh.setOnRefreshListener {
+            loadTourData(viewDate.timeInMillis)
+            binding.swipeRefresh.isRefreshing = false
+        }
+        
+        // Offline-Status-Monitoring
+        networkMonitor = NetworkMonitor(this)
+        networkMonitor.startMonitoring()
+        networkMonitor.isOnline.observe(this) { isOnline ->
+            binding.tvOfflineStatus.visibility = if (isOnline) View.GONE else View.VISIBLE
+        }
         
         // Swipe-Gesten für Datum-Wechsel einrichten
         setupSwipeGestures()
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        networkMonitor.stopMonitoring()
     }
     
     private fun setupSwipeGestures() {

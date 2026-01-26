@@ -68,6 +68,20 @@ class AddCustomerActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            // Adresse-Validierung
+            val adresse = binding.etAdresse.text.toString().trim()
+            if (adresse.isNotEmpty() && !ValidationHelper.isValidAddress(adresse)) {
+                binding.etAdresse.error = "Adresse sollte Straße und Hausnummer enthalten"
+                return@setOnClickListener
+            }
+
+            // Telefon-Validierung
+            val telefon = binding.etTelefon.text.toString().trim()
+            if (telefon.isNotEmpty() && !ValidationHelper.isValidPhoneNumber(telefon)) {
+                binding.etTelefon.error = "Ungültiges Telefonnummer-Format"
+                return@setOnClickListener
+            }
+
             val intervallInput = binding.etIntervallTage.text.toString().toIntOrNull() ?: 7
             // Validierung: Intervall muss mindestens 1 Tag sein und maximal 365 Tage
             val intervall = when {
@@ -91,29 +105,48 @@ class AddCustomerActivity : AppCompatActivity() {
                 else -> reihenfolgeInput
             }
             
-            // Button deaktivieren während Speichern
-            binding.btnSaveCustomer.isEnabled = false
-            binding.btnSaveCustomer.text = "Speichere..."
-            
-            val ersterTermin = selectedStartDate
-            val letzterTermin = ersterTermin - TimeUnit.DAYS.toMillis(intervall.toLong())
-
-            val customerId = java.util.UUID.randomUUID().toString()
-            val customer = Customer(
-                id = customerId,
-                name = name,
-                adresse = binding.etAdresse.text.toString().trim(),
-                telefon = binding.etTelefon.text.toString().trim(),
-                notizen = binding.etNotizen.text.toString().trim(),
-                intervallTage = intervall,
-                letzterTermin = letzterTermin, 
-                istImUrlaub = false,
-                wochentag = selectedWochentag,
-                reihenfolge = reihenfolge
-            )
-
-            // Speichern mit Retry-Logik
+            // Duplikat-Prüfung: Wochentag + Reihenfolge
             CoroutineScope(Dispatchers.Main).launch {
+                val existingCustomer = ValidationHelper.checkDuplicateReihenfolge(
+                    repository = repository,
+                    wochentag = selectedWochentag,
+                    reihenfolge = reihenfolge
+                )
+                
+                if (existingCustomer != null) {
+                    runOnUiThread {
+                        binding.etReihenfolge.error = "Reihenfolge $reihenfolge ist bereits von ${existingCustomer.name} belegt"
+                        Toast.makeText(this@AddCustomerActivity, 
+                            "Kunde '${existingCustomer.name}' hat bereits Reihenfolge $reihenfolge am ${getWochentagName(selectedWochentag)}", 
+                            Toast.LENGTH_LONG).show()
+                    }
+                    return@launch
+                }
+                
+                // Button deaktivieren während Speichern
+                runOnUiThread {
+                    binding.btnSaveCustomer.isEnabled = false
+                    binding.btnSaveCustomer.text = "Speichere..."
+                }
+                
+                val ersterTermin = selectedStartDate
+                val letzterTermin = ersterTermin - TimeUnit.DAYS.toMillis(intervall.toLong())
+
+                val customerId = java.util.UUID.randomUUID().toString()
+                val customer = Customer(
+                    id = customerId,
+                    name = name,
+                    adresse = adresse,
+                    telefon = telefon,
+                    notizen = binding.etNotizen.text.toString().trim(),
+                    intervallTage = intervall,
+                    letzterTermin = letzterTermin, 
+                    istImUrlaub = false,
+                    wochentag = selectedWochentag,
+                    reihenfolge = reihenfolge
+                )
+
+                // Speichern mit Retry-Logik
                 val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
                     operation = { 
                         repository.saveCustomer(customer)
@@ -133,7 +166,7 @@ class AddCustomerActivity : AppCompatActivity() {
                     // Button wieder aktivieren bei Fehler
                     runOnUiThread {
                         binding.btnSaveCustomer.isEnabled = true
-                        binding.btnSaveCustomer.text = "Kunde JETZT Speichern"
+                        binding.btnSaveCustomer.text = "Speichern"
                     }
                 }
             }
@@ -149,6 +182,19 @@ class AddCustomerActivity : AppCompatActivity() {
     private fun selectWochentag(tag: Int) {
         selectedWochentag = tag
         updateWochentagButtons()
+    }
+    
+    private fun getWochentagName(tag: Int): String {
+        return when (tag) {
+            0 -> "Montag"
+            1 -> "Dienstag"
+            2 -> "Mittwoch"
+            3 -> "Donnerstag"
+            4 -> "Freitag"
+            5 -> "Samstag"
+            6 -> "Sonntag"
+            else -> "Unbekannt"
+        }
     }
     
     private fun updateWochentagButtons() {

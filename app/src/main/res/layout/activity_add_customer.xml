@@ -71,15 +71,6 @@
             android:padding="12dp"
             android:layout_marginBottom="12dp"/>
 
-        <EditText
-            android:id="@+id/etIntervallTage"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Intervall in Tagen (Standard: 7)"
-            android:inputType="number"
-            android:padding="12dp"
-            android:layout_marginBottom="12dp"/>
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -106,6 +97,95 @@
             android:gravity="top"
             android:padding="12dp"
             android:layout_marginBottom="20dp"/>
+
+        <!-- Tour-Planung: Intervall und Start-Datum -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+                <!-- Links: Alle X Tage -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginEnd="12dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🔄"
+                            android:textSize="20sp"
+                            android:layout_marginEnd="6dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Alle X Tage"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary"/>
+                    </LinearLayout>
+
+                    <EditText
+                        android:id="@+id/etIntervallTage"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Tage eingeben"
+                        android:inputType="number"
+                        android:padding="12dp"
+                        android:background="@android:drawable/edit_text"/>
+                </LinearLayout>
+
+                <!-- Rechts: Erster Termin -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="12dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📅"
+                            android:textSize="20sp"
+                            android:layout_marginEnd="6dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Erster Termin"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary"/>
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btnPickDate"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Datum wählen"
+                        android:minHeight="48dp"/>
+                </LinearLayout>
+        </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"
@@ -259,26 +339,11 @@
                 android:backgroundTint="@color/weekend_orange"/>
         </LinearLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Start-Datum wählen:"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"/>
-
-        <Button
-            android:id="@+id/btnPickDate"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:text="Datum auswählen"
-            android:layout_marginBottom="24dp"/>
-
         <Button
             android:id="@+id/btnSaveCustomer"
             android:layout_width="match_parent"
             android:layout_height="65dp"
-            android:text="Kunde JETZT Speichern"
+            android:text="Speichern"
             android:backgroundTint="@color/primary_blue"
             android:textColor="#FFFFFF"
             android:layout_marginBottom="12dp"/>

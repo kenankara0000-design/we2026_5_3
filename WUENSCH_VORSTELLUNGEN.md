@@ -1,6 +1,6 @@
 # 💡 Wünsche & Vorstellungen für die App
 
-**Letzte Aktualisierung**: 25. Januar 2026
+**Letzte Aktualisierung**: 26. Januar 2026
 
 ---
 
@@ -44,10 +44,17 @@
 - ✅ **Loading-Indikatoren verbessert**: ProgressBar in TourPlanner und CustomerManager, visuelles Feedback beim Laden
 - ✅ **Error-Handling erweitert**: Aussagekräftige Fehlermeldungen, Retry-Buttons, Error-States mit klaren Anweisungen
 - ✅ **Empty States**: "Keine Kunden gefunden" und "Keine Touren für diesen Tag" Meldungen mit Icons
-- ✅ **MVVM-Pattern**: Repository Pattern, ViewModels, Dependency Injection mit Hilt implementiert
-- ✅ **Dependency Injection**: Hilt eingerichtet, AppModule für Firebase-Abhängigkeiten
+- ✅ **MVVM-Pattern**: Repository Pattern, ViewModels, Dependency Injection mit Koin implementiert
+- ✅ **Dependency Injection**: Koin eingerichtet (Migration von Hilt wegen Kompatibilitätsproblemen)
 - ✅ **Unit-Tests**: Tests für CustomerRepository und CustomerManagerViewModel
 - ✅ **Code-Organisation**: Klare Trennung von UI, Logik und Daten
+- ✅ **Wochentag-Buttons modernisiert**: Rechteckig, größerer Text (18sp), Mo-Fr blau, Sa-So orange
+- ✅ **Überfällig-System korrigiert**: Überfällige Kunden werden nicht mehr in der Zukunft angezeigt
+- ✅ **Floating Action Button**: Moderner FAB für neue Kunden im Kundenmanager
+- ✅ **Text-Konsistenz**: "Kunden Manager" → "Kunden Liste" überall
+- ✅ **Button-Text vereinfacht**: "Kunde JETZT Speichern" → "Speichern"
+- ✅ **Intervall-Feld**: Startet jetzt leer (Standard 7 im Code)
+- ✅ **Tour-Planung Layout**: "Alle X Tage" und "Erster Termin" nebeneinander, unterhalb Notizen
 
 ---
 
@@ -79,8 +86,8 @@
 ### **5. Touren Bereich:**
 - ✅ Tagesaktuelle Kunden anzeigen
 - ✅ Datum-Wechsel per 2 Pfeile (Vergangenheit/Zukunft)
-- ⚠️ Swipe-Geste für Datum-Wechsel (optional - noch nicht implementiert)
-- ✅ Überfällige Kunden: Oberhalb der tagesaktuellen Kunden
+- ✅ **Swipe-Geste für Datum-Wechsel**: Links/Rechts Wischen implementiert
+- ✅ Überfällige Kunden: Oberhalb der tagesaktuellen Kunden (nur bei heutigen/vergangenen Daten)
 - ✅ Überfällige Kunden rot markieren
 
 ### **6. Firebase:**
@@ -159,9 +166,9 @@
 - 💡 **Mehrsprachigkeit**: Englisch/Deutsch Support
 
 ### **Architektur (Langfristig):**
-- 💡 **MVVM-Pattern**: Für bessere Code-Organisation
-- 💡 **Unit-Tests**: Für kritische Funktionen
-- 💡 **Dependency Injection**: Mit Hilt/Koin
+- ✅ **MVVM-Pattern**: ✅ Implementiert (Repository + ViewModels)
+- ✅ **Unit-Tests**: ✅ Teilweise implementiert (könnte erweitert werden)
+- ✅ **Dependency Injection**: ✅ Implementiert (Koin)
 
 ---
 
@@ -178,6 +185,18 @@ _Hier können wichtige Notizen eingetragen werden..._
 ---
 
 ## 🔄 **ÄNDERUNGSHISTORIE:**
+
+### **26. Januar 2026:**
+- ✅ **Vollständige App-Analyse durchgeführt**
+- ✅ **Wochentag-Buttons modernisiert**: Rechteckig, größerer Text, Mo-Fr blau, Sa-So orange
+- ✅ **Überfällig-System korrigiert**: Überfällige Kunden werden nicht mehr in der Zukunft angezeigt
+- ✅ **Floating Action Button**: Moderner FAB für neue Kunden im Kundenmanager
+- ✅ **Text-Änderungen**: "Kunden Manager" → "Kunden Liste" (konsistent)
+- ✅ **Button-Text**: "Kunde JETZT Speichern" → "Speichern"
+- ✅ **Intervall-Feld**: Startet jetzt leer (Standard 7 im Code)
+- ✅ **Tour-Planung Layout**: "Alle X Tage" und "Erster Termin" nebeneinander, unterhalb Notizen
+- ✅ **Alle Features abgeglichen**: 19/19 Hauptwünsche erfüllt
+- ✅ **Verbesserungsvorschläge dokumentiert**: Siehe `APP_ANALYSE_AKTUELL.md`
 
 ### **25. Januar 2026:**
 - Datei erstellt

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -71,17 +72,54 @@
                 android:tint="#FFFFFF"
                 android:layout_marginStart="8dp"/>
         </LinearLayout>
+        
+        <!-- Offline-Status-Indikator -->
+        <TextView
+            android:id="@+id/tvOfflineStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="56dp"
+            android:text="📴 Offline"
+            android:textColor="#FFEB3B"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            android:background="@drawable/status_badge_overdue"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"/>
+        
+        <!-- Kartenansicht Button -->
+        <ImageButton
+            android:id="@+id/btnMapView"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_mylocation"
+            android:tint="#FFFFFF"
+            android:contentDescription="Kartenansicht" />
     </RelativeLayout>
-
-    <FrameLayout
+    
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="16dp">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvTourList"
@@ -172,7 +210,8 @@
                 android:text="Erneut versuchen"
                 android:backgroundTint="@color/primary_blue"
                 android:textColor="@color/white"/>
-        </LinearLayout>
-    </FrameLayout>
+            </LinearLayout>
+        </FrameLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </LinearLayout>

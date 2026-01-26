@@ -39,6 +39,10 @@ class MainActivity : AppCompatActivity() {
         binding.btnNeuerKunde.setOnClickListener {
             startActivity(Intent(this, AddCustomerActivity::class.java))
         }
+
+        binding.btnStatistiken.setOnClickListener {
+            startActivity(Intent(this, StatisticsActivity::class.java))
+        }
     }
 
     override fun onStart() {

@@ -40,6 +40,10 @@ class CustomerAdapter(
     private var expandedSections = mutableSetOf<SectionType>() // Standardmäßig eingeklappt
     var onSectionToggle: ((SectionType) -> Unit)? = null
     
+    // Multi-Select für Bulk-Operationen
+    private var isMultiSelectMode = false
+    private val selectedCustomers = mutableSetOf<String>() // Customer IDs
+    
     // Callbacks für Firebase-Operationen (statt direkter Firebase-Aufrufe)
     var onAbholung: ((Customer) -> Unit)? = null
     var onAuslieferung: ((Customer) -> Unit)? = null
@@ -47,6 +51,7 @@ class CustomerAdapter(
     var onVerschieben: ((Customer, Long, Boolean) -> Unit)? = null // customer, newDate, alleVerschieben
     var onUrlaub: ((Customer, Long, Long) -> Unit)? = null // customer, von, bis
     var onRueckgaengig: ((Customer) -> Unit)? = null
+    var onBulkMarkDone: ((List<Customer>) -> Unit)? = null // Für Bulk-Operationen
     
     // Drag & Drop Support
     fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
@@ -236,7 +241,66 @@ class CustomerAdapter(
         holder.binding.btnUrlaub.setOnClickListener { showUrlaubDialog(customer) }
         holder.binding.btnRueckgaengig.setOnClickListener { handleRueckgaengig(customer) }
 
-        holder.itemView.setOnClickListener { onClick(customer) }
+        // Multi-Select oder normaler Click
+        holder.itemView.setOnClickListener {
+            if (isMultiSelectMode) {
+                toggleCustomerSelection(customer.id, holder)
+            } else {
+                onClick(customer)
+            }
+        }
+        
+        // Long-Press für Multi-Select aktivieren
+        holder.itemView.setOnLongClickListener {
+            if (!isMultiSelectMode) {
+                enableMultiSelectMode()
+                toggleCustomerSelection(customer.id, holder)
+            }
+            true
+        }
+        
+        // Multi-Select Visualisierung
+        if (isMultiSelectMode) {
+            holder.binding.itemContainer.alpha = if (selectedCustomers.contains(customer.id)) 0.7f else 1.0f
+            holder.binding.itemContainer.setBackgroundColor(
+                if (selectedCustomers.contains(customer.id)) 
+                    ContextCompat.getColor(context, R.color.primary_blue_light)
+                else 
+                    Color.WHITE
+            )
+        } else {
+            holder.binding.itemContainer.alpha = 1.0f
+            resetStyles(holder)
+        }
+    }
+    
+    fun enableMultiSelectMode() {
+        isMultiSelectMode = true
+        selectedCustomers.clear()
+        notifyDataSetChanged()
+    }
+    
+    fun disableMultiSelectMode() {
+        isMultiSelectMode = false
+        selectedCustomers.clear()
+        notifyDataSetChanged()
+    }
+    
+    fun getSelectedCustomers(): List<Customer> {
+        return items.filterIsInstance<ListItem.CustomerItem>()
+            .map { it.customer }
+            .filter { selectedCustomers.contains(it.id) }
+    }
+    
+    fun hasSelectedCustomers(): Boolean = selectedCustomers.isNotEmpty()
+    
+    private fun toggleCustomerSelection(customerId: String, holder: CustomerViewHolder) {
+        if (selectedCustomers.contains(customerId)) {
+            selectedCustomers.remove(customerId)
+        } else {
+            selectedCustomers.add(customerId)
+        }
+        notifyItemChanged(holder.adapterPosition)
     }
 
     private fun startNavigation(adresse: String) {

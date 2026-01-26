@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/background_light">
 
     <!-- Header mit Zurück-Button -->
@@ -27,47 +27,94 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Kunden Manager"
+            android:text="Kunden Liste"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <Button
+        <!-- Offline-Status-Indikator -->
+        <TextView
+            android:id="@+id/tvOfflineStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="56dp"
+            android:text="📴 Offline"
+            android:textColor="#FFEB3B"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            android:background="@drawable/status_badge_overdue"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"/>
+
+        <ImageButton
+            android:id="@+id/btnBulkSelect"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_toStartOf="@id/btnExport"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_agenda"
+            android:tint="#FFFFFF"
+            android:contentDescription="Mehrfachauswahl" />
+
+        <ImageButton
+            android:id="@+id/btnExport"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_toStartOf="@id/btnNewCustomer"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_share"
+            android:tint="#FFFFFF"
+            android:contentDescription="Exportieren" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btnNewCustomer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:layout_marginEnd="8dp"
-            android:text="+ Neu"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:minHeight="48dp"
-            android:minWidth="80dp" />
-    </RelativeLayout>
+            android:src="@android:drawable/ic_input_add"
+            android:contentDescription="Neuen Kunden erstellen"
+            app:tint="#FFFFFF"
+            app:backgroundTint="@color/primary_blue_light"
+            app:elevation="4dp"
+            app:pressedTranslationZ="8dp" />
+        </RelativeLayout>
 
-    <LinearLayout
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="match_parent">
 
-        <EditText
-            android:id="@+id/etSearch"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Kunden suchen..."
-            android:drawableStart="@android:drawable/ic_menu_search"
-            android:padding="12dp"
-            android:background="@color/surface_white"
-            android:layout_marginBottom="12dp"/>
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1">
+            <EditText
+                android:id="@+id/etSearch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Kunden suchen..."
+                android:drawableStart="@android:drawable/ic_menu_search"
+                android:padding="12dp"
+                android:background="@color/surface_white"
+                android:layout_marginBottom="12dp"/>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvCustomerList"
@@ -160,6 +207,50 @@
             </LinearLayout>
         </FrameLayout>
 
+        </LinearLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    
+    <!-- Bulk-Action Bar (wird bei Multi-Select angezeigt) -->
+    <LinearLayout
+        android:id="@+id/bulkActionBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:background="@color/primary_blue"
+        android:padding="8dp"
+        android:visibility="gone"
+        android:gravity="center_vertical"
+        android:elevation="8dp">
+        
+        <TextView
+            android:id="@+id/tvSelectedCount"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="0 ausgewählt"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"/>
+        
+        <Button
+            android:id="@+id/btnBulkDone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Als erledigt markieren"
+            android:textSize="12sp"
+            android:backgroundTint="@color/status_done"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="8dp"/>
+        
+        <Button
+            android:id="@+id/btnBulkCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Abbrechen"
+            android:textSize="12sp"
+            android:backgroundTint="@color/light_gray"
+            android:textColor="#FFFFFF"/>
     </LinearLayout>
 
-</LinearLayout>
+</RelativeLayout>
