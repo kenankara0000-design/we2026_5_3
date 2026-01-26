@@ -667,6 +667,20 @@ class TourPlannerActivity : AppCompatActivity() {
     }
     
     private fun calculateAbholungDatum(customer: Customer, viewDateStart: Long): Long {
+        // NEUE STRUKTUR: Verwende Intervalle-Liste wenn vorhanden
+        if (customer.intervalle.isNotEmpty()) {
+            val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                customer = customer,
+                startDatum = viewDateStart - java.util.concurrent.TimeUnit.DAYS.toMillis(1),
+                tageVoraus = 2 // Nur 2 Tage (gestern, heute, morgen)
+            )
+            // Prüfe ob am angezeigten Tag ein Abholungstermin vorhanden ist
+            return termine.firstOrNull { 
+                it.typ == com.example.we2026_5.TerminTyp.ABHOLUNG &&
+                com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart
+            }?.datum ?: 0L
+        }
+        
         // Für Listen-Kunden: Prüfe ob heute ein Abholungstag ist
         if (customer.listeId.isNotEmpty()) {
             // Lade Liste synchron (vereinfacht - könnte verbessert werden)
@@ -725,6 +739,20 @@ class TourPlannerActivity : AppCompatActivity() {
     }
     
     private fun calculateAuslieferungDatum(customer: Customer, viewDateStart: Long): Long {
+        // NEUE STRUKTUR: Verwende Intervalle-Liste wenn vorhanden
+        if (customer.intervalle.isNotEmpty()) {
+            val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                customer = customer,
+                startDatum = viewDateStart - java.util.concurrent.TimeUnit.DAYS.toMillis(1),
+                tageVoraus = 2 // Nur 2 Tage (gestern, heute, morgen)
+            )
+            // Prüfe ob am angezeigten Tag ein Auslieferungstermin vorhanden ist
+            return termine.firstOrNull { 
+                it.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG &&
+                com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart
+            }?.datum ?: 0L
+        }
+        
         // Ähnlich wie Abholungsdatum
         if (customer.listeId.isNotEmpty()) {
             var liste: com.example.we2026_5.KundenListe? = null

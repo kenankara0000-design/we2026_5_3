@@ -184,23 +184,7 @@ class TourPlannerViewModel(
                         // Kunden in Sections kategorisieren
                         kundenInListe.forEach { customer ->
                             val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-                            val faelligAm = customerFaelligAm(customer, liste, viewDateStart)
-                            
-                            // Überfällig: Prüfe ob EINER der Termine (Abholung ODER Auslieferung) überfällig ist
-                            val abholungUeberfaellig = !customer.abholungErfolgt && customer.abholungDatum > 0 && 
-                                                       getStartOfDay(customer.abholungDatum) < heuteStart
-                            val auslieferungUeberfaellig = !customer.auslieferungErfolgt && customer.auslieferungDatum > 0 && 
-                                                          getStartOfDay(customer.auslieferungDatum) < heuteStart
-                            
-                            // Für wiederholende Kunden: Prüfe ob fälliges Datum überfällig ist
-                            val wiederholendUeberfaellig = customer.wiederholen && !isDone && faelligAm < heuteStart
-                            
-                            // Überfällig wenn: EINER der Termine überfällig ist UND angezeigtes Datum >= überfälliges Datum
-                            val isOverdue = !isDone && (
-                                (abholungUeberfaellig && viewDateStart >= getStartOfDay(customer.abholungDatum)) ||
-                                (auslieferungUeberfaellig && viewDateStart >= getStartOfDay(customer.auslieferungDatum)) ||
-                                (wiederholendUeberfaellig && viewDateStart >= faelligAm)
-                            )
+                            val isOverdue = istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)
                             
                             when {
                                 isDone -> doneListenKunden.add(customer)
@@ -218,24 +202,7 @@ class TourPlannerViewModel(
                 
                 filteredGewerblich.forEach { customer ->
                     val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-                    val faelligAm = customerFaelligAm(customer, null, viewDateStart)
-                    
-                    // Überfällig: Prüfe ob EINER der Termine (Abholung ODER Auslieferung) überfällig ist
-                    // Ein Termin ist überfällig, wenn er vor heute fällig war und noch nicht erledigt wurde
-                    val abholungUeberfaellig = !customer.abholungErfolgt && customer.abholungDatum > 0 && 
-                                             getStartOfDay(customer.abholungDatum) < heuteStart
-                    val auslieferungUeberfaellig = !customer.auslieferungErfolgt && customer.auslieferungDatum > 0 && 
-                                                  getStartOfDay(customer.auslieferungDatum) < heuteStart
-                    
-                    // Für wiederholende Kunden: Prüfe ob fälliges Datum überfällig ist
-                    val wiederholendUeberfaellig = customer.wiederholen && !isDone && faelligAm < heuteStart
-                    
-                    // Überfällig wenn: EINER der Termine überfällig ist UND angezeigtes Datum >= überfälliges Datum
-                    val isOverdue = !isDone && (
-                        (abholungUeberfaellig && viewDateStart >= getStartOfDay(customer.abholungDatum)) ||
-                        (auslieferungUeberfaellig && viewDateStart >= getStartOfDay(customer.auslieferungDatum)) ||
-                        (wiederholendUeberfaellig && viewDateStart >= faelligAm)
-                    )
+                    val isOverdue = istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)
                     
                     when {
                         isDone -> doneGewerblich.add(customer)
@@ -296,6 +263,21 @@ class TourPlannerViewModel(
     }
     
     private fun customerFaelligAm(c: Customer, liste: KundenListe? = null, abDatum: Long = System.currentTimeMillis()): Long {
+        // NEUE STRUKTUR: Verwende Intervalle-Liste wenn vorhanden
+        if (c.intervalle.isNotEmpty()) {
+            val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                customer = c,
+                liste = liste,
+                startDatum = abDatum,
+                tageVoraus = 365
+            )
+            // Nächstes fälliges Datum ab dem angezeigten Datum
+            val naechstesTermin = termine.firstOrNull { 
+                it.datum >= getStartOfDay(abDatum)
+            }
+            return naechstesTermin?.datum ?: 0L
+        }
+        
         // Für Kunden in Listen: Daten der Liste verwenden
         if (c.listeId.isNotEmpty() && liste != null) {
             // Wenn verschoben, verschobenes Datum verwenden
@@ -396,6 +378,57 @@ class TourPlannerViewModel(
             return faelligAm + TimeUnit.DAYS.toMillis(1) // Fallback: nächster Tag
         }
         return faelligAm
+    }
+    
+    /**
+     * Prüft ob ein Kunde überfällig ist und ob er an einem bestimmten Datum angezeigt werden soll
+     * Unterstützt sowohl neue (intervalle) als auch alte Struktur
+     */
+    private fun istKundeUeberfaellig(
+        customer: Customer,
+        liste: KundenListe? = null,
+        viewDateStart: Long,
+        heuteStart: Long
+    ): Boolean {
+        val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
+        if (isDone) return false
+        
+        // NEUE STRUKTUR: Verwende Intervalle-Liste
+        if (customer.intervalle.isNotEmpty() || (customer.listeId.isNotEmpty() && liste != null)) {
+            val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                customer = customer,
+                liste = liste,
+                startDatum = heuteStart - java.util.concurrent.TimeUnit.DAYS.toMillis(365), // 365 Tage zurück
+                tageVoraus = 730 // 365 zurück + 365 voraus
+            )
+            
+            // Prüfe ob ein Termin überfällig ist und am angezeigten Datum sichtbar sein soll
+            return termine.any { termin ->
+                val istUeberfaellig = com.example.we2026_5.util.TerminBerechnungUtils.istUeberfaellig(
+                    terminDatum = termin.datum,
+                    aktuellesDatum = heuteStart,
+                    erledigt = false // Wird separat geprüft
+                )
+                val sollAnzeigen = com.example.we2026_5.util.TerminBerechnungUtils.sollUeberfaelligAnzeigen(
+                    terminDatum = termin.datum,
+                    anzeigeDatum = viewDateStart,
+                    aktuellesDatum = heuteStart
+                )
+                istUeberfaellig && sollAnzeigen
+            }
+        }
+        
+        // ALTE STRUKTUR: Rückwärtskompatibilität
+        val faelligAm = customerFaelligAm(customer, liste, viewDateStart)
+        val abholungUeberfaellig = !customer.abholungErfolgt && customer.abholungDatum > 0 && 
+                                   getStartOfDay(customer.abholungDatum) < heuteStart
+        val auslieferungUeberfaellig = !customer.auslieferungErfolgt && customer.auslieferungDatum > 0 && 
+                                      getStartOfDay(customer.auslieferungDatum) < heuteStart
+        val wiederholendUeberfaellig = customer.wiederholen && faelligAm < heuteStart && faelligAm > 0
+        
+        return (abholungUeberfaellig && viewDateStart >= getStartOfDay(customer.abholungDatum)) ||
+               (auslieferungUeberfaellig && viewDateStart >= getStartOfDay(customer.auslieferungDatum)) ||
+               (wiederholendUeberfaellig && viewDateStart >= faelligAm)
     }
     
     /**
@@ -504,12 +537,12 @@ class TourPlannerViewModel(
                                 if (faelligAmImUrlaub) return@filter false
                                 
                                 val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-                                val isOverdue = !isDone && faelligAm < heuteStart
+                                val isOverdue = istKundeUeberfaellig(customer, liste, dayStart, heuteStart)
                                 
                                 // Überfällige Termine: Zeige sie ab dem überfälligen Tag bis sie erledigt sind
                                 if (isOverdue) {
-                                    // Zeige überfällige Termine ab dem Tag, an dem sie überfällig wurden
-                                    return@filter dayStart >= faelligAm
+                                    // Helper-Funktion prüft bereits ob angezeigt werden soll
+                                    return@filter true
                                 }
                                 
                                 // Normale Termine: Prüfe ob Termin am angezeigten Datum oder innerhalb von 365 Tagen liegt
@@ -548,12 +581,12 @@ class TourPlannerViewModel(
                         if (faelligAmImUrlaub) return@filter false
                         
                         val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-                        val isOverdue = !isDone && faelligAm < heuteStart
+                        val isOverdue = istKundeUeberfaellig(customer, null, dayStart, heuteStart)
                         
                         // Überfällige Termine: Zeige sie ab dem überfälligen Tag bis sie erledigt sind
                         if (isOverdue) {
                             // Zeige überfällige Termine ab dem Tag, an dem sie überfällig wurden
-                            return@filter dayStart >= faelligAm
+                            return@filter true // Helper-Funktion prüft bereits ob angezeigt werden soll
                         }
                         
                         // Normale Termine: Prüfe ob Termin am angezeigten Datum oder innerhalb von 365 Tagen liegt
@@ -567,23 +600,7 @@ class TourPlannerViewModel(
                     
                     filteredGewerblich.forEach { customer ->
                         val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-                        val faelligAm = customerFaelligAm(customer, null, dayStart)
-                        
-                        // Überfällig: Prüfe ob EINER der Termine (Abholung ODER Auslieferung) überfällig ist
-                        val abholungUeberfaellig = !customer.abholungErfolgt && customer.abholungDatum > 0 && 
-                                                 getStartOfDay(customer.abholungDatum) < heuteStart
-                        val auslieferungUeberfaellig = !customer.auslieferungErfolgt && customer.auslieferungDatum > 0 && 
-                                                      getStartOfDay(customer.auslieferungDatum) < heuteStart
-                        
-                        // Für wiederholende Kunden: Prüfe ob fälliges Datum überfällig ist
-                        val wiederholendUeberfaellig = customer.wiederholen && !isDone && faelligAm < heuteStart
-                        
-                        // Überfällig wenn: EINER der Termine überfällig ist UND angezeigtes Datum >= überfälliges Datum
-                        val isOverdue = !isDone && (
-                            (abholungUeberfaellig && dayStart >= getStartOfDay(customer.abholungDatum)) ||
-                            (auslieferungUeberfaellig && dayStart >= getStartOfDay(customer.auslieferungDatum)) ||
-                            (wiederholendUeberfaellig && dayStart >= faelligAm)
-                        )
+                        val isOverdue = istKundeUeberfaellig(customer, null, dayStart, heuteStart)
                         
                         when {
                             isDone -> doneGewerblich.add(customer)

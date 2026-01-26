@@ -1,5 +1,6 @@
 package com.example.we2026_5
 
+import android.app.DatePickerDialog
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -20,26 +21,22 @@ class AddCustomerActivity : AppCompatActivity() {
     private val listeRepository: KundenListeRepository by inject()
     private var alleListen = listOf<com.example.we2026_5.KundenListe>()
     private var selectedListeId: String = ""
+    private var intervalle = mutableListOf<CustomerIntervall>()
+    private lateinit var intervallAdapter: IntervallAdapter
+    private var aktuellesIntervallPosition: Int = -1
+    private var aktuellesDatumTyp: Boolean = true // true = Abholung, false = Auslieferung
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddCustomerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Liste-Auswahl Switch: Liste aktivieren/deaktivieren
-        binding.switchListeAktivieren.setOnCheckedChangeListener { _, isChecked ->
-            binding.layoutListeAuswahl.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
-            binding.cardListeAuswahl.visibility = android.view.View.VISIBLE // Card immer sichtbar
-            
-            // Reihenfolge-Feld nur anzeigen wenn Liste aktiviert ist
-            binding.etReihenfolge.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
-            
-            if (isChecked) {
-                loadListen()
-            } else {
-                selectedListeId = ""
-            }
+        // Gesuchter Name aus Intent übernehmen (falls vorhanden)
+        val customerName = intent.getStringExtra("CUSTOMER_NAME")
+        if (!customerName.isNullOrEmpty()) {
+            binding.etName.setText(customerName)
         }
+
 
         // Liste-Spinner
         binding.spinnerListe.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
@@ -67,6 +64,67 @@ class AddCustomerActivity : AppCompatActivity() {
         
         // Card immer sichtbar machen
         binding.cardListeAuswahl.visibility = android.view.View.VISIBLE
+
+        // Intervall-Card initial ausblenden (wird bei Bedarf angezeigt)
+        binding.cardIntervall.visibility = android.view.View.GONE
+
+        // Intervall-Adapter initialisieren
+        intervallAdapter = IntervallAdapter(
+            intervalle = intervalle,
+            onIntervallChanged = { neueIntervalle ->
+                intervalle.clear()
+                intervalle.addAll(neueIntervalle)
+            },
+            onDatumSelected = { position, isAbholung ->
+                aktuellesIntervallPosition = position
+                aktuellesDatumTyp = isAbholung
+                showDatumPicker(position, isAbholung)
+            }
+        )
+        binding.rvIntervalle.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
+        binding.rvIntervalle.adapter = intervallAdapter
+
+        // Intervall hinzufügen Button
+        binding.btnIntervallHinzufuegen.setOnClickListener {
+            val neuesIntervall = CustomerIntervall()
+            intervallAdapter.addIntervall(neuesIntervall)
+        }
+
+        // Kunden-Art ändern: Intervall-Card anzeigen/ausblenden
+        binding.rgKundenArt.setOnCheckedChangeListener { _, checkedId ->
+            val isGewerblich = checkedId == binding.rbGewerblich.id
+            val listeAktiviert = binding.switchListeAktivieren.isChecked
+            
+            // Intervall-Card nur anzeigen für Gewerblich-Kunden ohne Liste
+            binding.cardIntervall.visibility = if (isGewerblich && !listeAktiviert) {
+                android.view.View.VISIBLE
+            } else {
+                android.view.View.GONE
+            }
+        }
+
+        // Liste-Auswahl Switch: Intervall-Card anzeigen/ausblenden
+        binding.switchListeAktivieren.setOnCheckedChangeListener { _, isChecked ->
+            binding.layoutListeAuswahl.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
+            binding.cardListeAuswahl.visibility = android.view.View.VISIBLE // Card immer sichtbar
+            
+            // Reihenfolge-Feld nur anzeigen wenn Liste aktiviert ist
+            binding.etReihenfolge.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
+            
+            // Intervall-Card ausblenden wenn Liste aktiviert
+            val isGewerblich = binding.rbGewerblich.isChecked
+            binding.cardIntervall.visibility = if (isGewerblich && !isChecked) {
+                android.view.View.VISIBLE
+            } else {
+                android.view.View.GONE
+            }
+            
+            if (isChecked) {
+                loadListen()
+            } else {
+                selectedListeId = ""
+            }
+        }
 
         binding.btnSaveCustomer.setOnClickListener {
             val name = binding.etName.text.toString().trim()
@@ -140,6 +198,14 @@ class AddCustomerActivity : AppCompatActivity() {
                 }
                 
                 val customerId = java.util.UUID.randomUUID().toString()
+                
+                // NEUE STRUKTUR: Intervalle für Gewerblich-Kunden ohne Liste
+                val customerIntervalle = if (kundenArt == "Gewerblich" && !listeAktiviert && intervalle.isNotEmpty()) {
+                    intervalle.toList()
+                } else {
+                    emptyList()
+                }
+                
                 val customer = Customer(
                     id = customerId,
                     name = name,
@@ -149,53 +215,41 @@ class AddCustomerActivity : AppCompatActivity() {
                     // Kunden-Art und Liste
                     kundenArt = kundenArt,
                     listeId = if (listeAktiviert && selectedListeId.isNotEmpty()) selectedListeId else "",
-                    // Termine: Für Kunden in Listen werden Daten der Liste verwendet (0 = wird ignoriert)
-                    abholungDatum = if (liste != null) 0 else 0,
-                    auslieferungDatum = if (liste != null) 0 else 0,
-                    wiederholen = if (liste != null) true else false,
-                    // Wiederholungs-Felder: Für Listen-Kunden werden Intervalle von der Liste verwaltet
-                    intervallTage = if (liste != null) 0 else 0,
-                    letzterTermin = if (liste != null) 0 else 0,
+                    // NEUE STRUKTUR: Intervalle-Liste
+                    intervalle = customerIntervalle,
+                    // ALTE STRUKTUR: Für Rückwärtskompatibilität (wird ignoriert wenn intervalle vorhanden)
+                    abholungDatum = if (liste != null || customerIntervalle.isNotEmpty()) 0 else 0,
+                    auslieferungDatum = if (liste != null || customerIntervalle.isNotEmpty()) 0 else 0,
+                    wiederholen = if (liste != null) true else (customerIntervalle.any { it.wiederholen }),
+                    intervallTage = if (liste != null || customerIntervalle.isNotEmpty()) 0 else 7,
+                    letzterTermin = if (liste != null || customerIntervalle.isNotEmpty()) 0 else 0,
                     wochentag = 0, // Wochentag wird nicht mehr verwendet
                     reihenfolge = reihenfolge, // Wird bereits korrekt berechnet (1 wenn keine Liste, sonst eingegebener Wert)
                     istImUrlaub = false
                 )
 
                 // Speichern mit Retry-Logik
-                android.util.Log.d("AddCustomer", "Starting save operation for customer: ${customer.name}")
                 var success: Boolean? = null
                 try {
-                    // WICHTIG: saveCustomer() gibt Boolean zurück (true/false)
-                    // executeSuspendWithRetryAndToast gibt T? zurück, also Boolean?
-                    // Bei Erfolg: true, bei Fehler: false oder null
-                    android.util.Log.d("AddCustomer", "Calling executeSuspendWithRetryAndToast...")
                     success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
                         operation = { 
-                            android.util.Log.d("AddCustomer", "Inside operation, calling saveCustomer...")
-                            val result = repository.saveCustomer(customer)
-                            android.util.Log.d("AddCustomer", "saveCustomer returned: $result")
-                            result
+                            repository.saveCustomer(customer)
                         },
                         context = this@AddCustomerActivity,
                         errorMessage = "Fehler beim Speichern. Bitte erneut versuchen.",
                         maxRetries = 3
                     )
-                    android.util.Log.d("AddCustomer", "executeSuspendWithRetryAndToast returned: success=$success, type=${success?.javaClass?.simpleName}")
                 } catch (e: Exception) {
                     android.util.Log.e("AddCustomer", "Exception in save operation", e)
                     success = null
                 }
                 
                 // Prüfen ob erfolgreich
-                // success kann sein: true (Erfolg), false (Fehler in saveCustomer), null (alle Retries fehlgeschlagen)
-                android.util.Log.d("AddCustomer", "Checking success: success=$success")
                 val saveSuccessful = (success == true)
-                android.util.Log.d("AddCustomer", "Save successful: $saveSuccessful, will close activity: $saveSuccessful")
                 
-                // UI-Update auf Main-Thread (auch wenn wir bereits im Main-Thread sind, sicherheitshalber)
+                // UI-Update auf Main-Thread
                 runOnUiThread {
                     if (saveSuccessful) {
-                        android.util.Log.d("AddCustomer", "Updating UI for success")
                         // Erfolg: Button-Text ändern und dann Activity schließen
                         binding.btnSaveCustomer.text = "✓ Gespeichert!"
                         binding.btnSaveCustomer.backgroundTintList = android.content.res.ColorStateList.valueOf(
@@ -203,19 +257,13 @@ class AddCustomerActivity : AppCompatActivity() {
                         )
                         binding.btnSaveCustomer.alpha = 1.0f
                         
-                        android.util.Log.d("AddCustomer", "Scheduling finish() in 800ms")
                         // Kurz warten, damit der Benutzer das Feedback sieht, dann Activity schließen
                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            android.util.Log.d("AddCustomer", "Handler executed, isFinishing: $isFinishing")
                             if (!isFinishing) {
-                                android.util.Log.d("AddCustomer", "Calling finish()")
                                 finish()
-                            } else {
-                                android.util.Log.d("AddCustomer", "Activity already finishing, not calling finish()")
                             }
                         }, 800)
                     } else {
-                        android.util.Log.d("AddCustomer", "Save failed, resetting button")
                         // Fehler: Button wieder aktivieren
                         binding.btnSaveCustomer.isEnabled = true
                         binding.btnSaveCustomer.text = "Speichern"
@@ -379,6 +427,46 @@ class AddCustomerActivity : AppCompatActivity() {
             }
             .setNegativeButton("Abbrechen", null)
             .show()
+    }
+    
+    private fun showDatumPicker(position: Int, isAbholung: Boolean) {
+        val cal = Calendar.getInstance()
+        val intervall = intervalle.getOrNull(position) ?: return
+        
+        // Aktuelles Datum oder Intervall-Datum verwenden
+        val initialDatum = if (isAbholung && intervall.abholungDatum > 0) {
+            cal.timeInMillis = intervall.abholungDatum
+            intervall.abholungDatum
+        } else if (!isAbholung && intervall.auslieferungDatum > 0) {
+            cal.timeInMillis = intervall.auslieferungDatum
+            intervall.auslieferungDatum
+        } else {
+            System.currentTimeMillis()
+        }
+        
+        cal.timeInMillis = initialDatum
+        
+        DatePickerDialog(
+            this,
+            DatePickerDialog.OnDateSetListener { _, year: Int, month: Int, dayOfMonth: Int ->
+                cal.set(year, month, dayOfMonth, 0, 0, 0)
+                cal.set(Calendar.MILLISECOND, 0)
+                val selectedDatum = cal.timeInMillis
+                
+                // Intervall aktualisieren
+                val updatedIntervall = if (isAbholung) {
+                    intervall.copy(abholungDatum = selectedDatum)
+                } else {
+                    intervall.copy(auslieferungDatum = selectedDatum)
+                }
+                
+                intervalle[position] = updatedIntervall
+                intervallAdapter.updateIntervalle(intervalle.toList())
+            },
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
     
 }

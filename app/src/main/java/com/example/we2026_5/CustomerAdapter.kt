@@ -372,7 +372,9 @@ class CustomerAdapter(
         val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
         if (displayedDateMillis != null) {
             val heuteStart = getStartOfDay(System.currentTimeMillis())
-            val viewDateStart = displayedDateMillis?.let { getStartOfDay(it) } ?: heuteStart
+            val viewDateStart = displayedDateMillis?.let { 
+                com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(it) 
+            } ?: com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
             
             // Im TourPlanner: Buttons anzeigen mit Farben basierend auf Status
             val activeColor = ContextCompat.getColor(context, R.color.button_active) // Orange
@@ -421,8 +423,14 @@ class CustomerAdapter(
                 holder.binding.btnAuslieferung.setTextColor(if (lButtonAktiv) ContextCompat.getColor(context, R.color.white) else ContextCompat.getColor(context, R.color.white).let { Color.argb(128, Color.red(it), Color.green(it), Color.blue(it)) })
             }
             
-            // V (Verschieben): Nur aktiv wenn verschobenAufDatum > 0
-            val vButtonAktiv = customer.verschobenAufDatum > 0
+            // V (Verschieben): Aktiv wenn verschobenAufDatum > 0 ODER verschobeneTermine vorhanden
+            // Prüfe ob am angezeigten Tag ein verschobener Termin vorhanden ist
+            val hatVerschobenenTerminHeute = customer.verschobeneTermine.any { verschoben ->
+                val originalStart = com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(verschoben.originalDatum)
+                val verschobenStart = com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(verschoben.verschobenAufDatum)
+                originalStart == viewDateStart || verschobenStart == viewDateStart
+            }
+            val vButtonAktiv = customer.verschobenAufDatum > 0 || hatVerschobenenTerminHeute
             
             holder.binding.btnVerschieben.visibility = if (!isDone && vButtonAktiv) View.VISIBLE else View.GONE
             // V-Button: Immer hellroter Hintergrund
@@ -430,8 +438,21 @@ class CustomerAdapter(
             // Textfarbe: Weiß wenn aktiv, sonst etwas transparenter
             holder.binding.btnVerschieben.setTextColor(if (vButtonAktiv) ContextCompat.getColor(context, R.color.white) else ContextCompat.getColor(context, R.color.white).let { Color.argb(128, Color.red(it), Color.green(it), Color.blue(it)) })
             
-            // U (Urlaub): Nur aktiv wenn urlaubVon > 0 und urlaubBis > 0
-            val uButtonAktiv = customer.urlaubVon > 0 && customer.urlaubBis > 0
+            // U (Urlaub): Aktiv wenn urlaubVon > 0 und urlaubBis > 0 UND ein Termin am angezeigten Tag im Urlaub liegt
+            val hatTerminImUrlaub = if (customer.urlaubVon > 0 && customer.urlaubBis > 0) {
+                val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                    customer = customer,
+                    startDatum = viewDateStart - java.util.concurrent.TimeUnit.DAYS.toMillis(1),
+                    tageVoraus = 2
+                )
+                termine.any { termin ->
+                    com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(termin.datum) == viewDateStart &&
+                    com.example.we2026_5.util.TerminBerechnungUtils.istTerminImUrlaub(termin.datum, customer.urlaubVon, customer.urlaubBis)
+                }
+            } else {
+                false
+            }
+            val uButtonAktiv = customer.urlaubVon > 0 && customer.urlaubBis > 0 && hatTerminImUrlaub
             
             holder.binding.btnUrlaub.visibility = if (!isDone && uButtonAktiv) View.VISIBLE else View.GONE
             // U-Button: Immer oranger Hintergrund
