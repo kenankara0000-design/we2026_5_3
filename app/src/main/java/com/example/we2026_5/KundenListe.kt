@@ -9,7 +9,18 @@ data class KundenListe(
     val id: String = "",
     val name: String = "", // z.B. "Borna P", "Kitzscher P"
     val intervalle: List<ListeIntervall> = emptyList(), // Liste der Intervalle (bis zu 12)
-    val erstelltAm: Long = System.currentTimeMillis()
+    val erstelltAm: Long = System.currentTimeMillis(),
+    
+    // Status (ähnlich wie bei Customer)
+    val abholungErfolgt: Boolean = false,
+    val auslieferungErfolgt: Boolean = false,
+    val urlaubVon: Long = 0,
+    val urlaubBis: Long = 0,
+    
+    // Verschieben-Logik - ERWEITERT für einzelne Termine
+    val verschobeneTermine: List<VerschobenerTermin> = emptyList(), // NEUE Logik: Einzelne Termine verschieben
+    
+    val geloeschteTermine: List<Long> = listOf() // Liste von gelöschten Termin-Daten (für einzelne Termin-Löschungen)
 ) {
     // Rückwärtskompatibilität: Alte Felder für Migration
     @Deprecated("Verwende intervalle statt abholungWochentag")

@@ -92,7 +92,7 @@ class TourPlannerActivity : AppCompatActivity() {
         binding.rvWeekView.layoutManager = LinearLayoutManager(this)
         binding.rvWeekView.adapter = weekAdapter
         
-        // Drag & Drop für Kunden-Reihenfolge
+        // Drag & Drop für Kunden
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0
         ) {

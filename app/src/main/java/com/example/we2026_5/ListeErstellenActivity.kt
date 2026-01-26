@@ -1,5 +1,6 @@
 package com.example.we2026_5
 
+import android.app.DatePickerDialog
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -16,6 +17,12 @@ class ListeErstellenActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityListeErstellenBinding
     private val listeRepository: KundenListeRepository by inject()
+    
+    // Intervalle-Verwaltung
+    private val intervalle = mutableListOf<ListeIntervall>()
+    private lateinit var intervallAdapter: ListeIntervallAdapter
+    private var aktuellesIntervallPosition: Int = -1
+    private var aktuellesDatumTyp: Boolean = true // true = Abholung, false = Auslieferung
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,6 +30,28 @@ class ListeErstellenActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.btnBack.setOnClickListener { finish() }
+        
+        // Intervall-Adapter initialisieren
+        intervallAdapter = ListeIntervallAdapter(
+            intervalle = intervalle.toMutableList(),
+            onIntervallChanged = { neueIntervalle ->
+                intervalle.clear()
+                intervalle.addAll(neueIntervalle)
+            },
+            onDatumSelected = { position, isAbholung ->
+                aktuellesIntervallPosition = position
+                aktuellesDatumTyp = isAbholung
+                showDatumPicker(position, isAbholung)
+            }
+        )
+        binding.rvIntervalle.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
+        binding.rvIntervalle.adapter = intervallAdapter
+
+        // Intervall hinzufügen Button
+        binding.btnIntervallHinzufuegen.setOnClickListener {
+            val neuesIntervall = ListeIntervall()
+            intervallAdapter.addIntervall(neuesIntervall)
+        }
 
         binding.btnSaveListe.setOnClickListener {
             val name = binding.etListeName.text.toString().trim()
@@ -39,11 +68,11 @@ class ListeErstellenActivity : AppCompatActivity() {
             CoroutineScope(Dispatchers.Main).launch {
                 val listeId = UUID.randomUUID().toString()
                 
-                // Liste ohne Intervalle erstellen
+                // Liste mit Intervalle erstellen
                 val neueListe = KundenListe(
                     id = listeId,
                     name = name,
-                    intervalle = emptyList(), // Keine Intervalle mehr
+                    intervalle = intervalle.toList(),
                     erstelltAm = System.currentTimeMillis()
                 )
 
@@ -84,5 +113,53 @@ class ListeErstellenActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+    
+    private fun showDatumPicker(position: Int, isAbholung: Boolean) {
+        val cal = Calendar.getInstance()
+        val currentYear = cal.get(Calendar.YEAR)
+        val currentMonth = cal.get(Calendar.MONTH)
+        val currentDay = cal.get(Calendar.DAY_OF_MONTH)
+        
+        // Prüfe ob bereits ein Datum gesetzt ist
+        val intervall = intervalle.getOrNull(position) ?: ListeIntervall()
+        val aktuellesDatum = if (isAbholung) intervall.abholungDatum else intervall.auslieferungDatum
+        
+        if (aktuellesDatum > 0) {
+            cal.timeInMillis = aktuellesDatum
+            cal.set(Calendar.YEAR, cal.get(Calendar.YEAR))
+            cal.set(Calendar.MONTH, cal.get(Calendar.MONTH))
+            cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH))
+        }
+        
+        val datePickerDialog = DatePickerDialog(
+            this,
+            DatePickerDialog.OnDateSetListener { _, year: Int, month: Int, dayOfMonth: Int ->
+                val selectedCal = Calendar.getInstance()
+                selectedCal.set(year, month, dayOfMonth)
+                val selectedTimestamp = selectedCal.timeInMillis
+                
+                // Aktualisiere das Intervall
+                val updatedIntervall = if (isAbholung) {
+                    intervall.copy(abholungDatum = selectedTimestamp)
+                } else {
+                    intervall.copy(auslieferungDatum = selectedTimestamp)
+                }
+                
+                // Aktualisiere die Liste
+                if (position < intervalle.size) {
+                    intervalle[position] = updatedIntervall
+                } else {
+                    intervalle.add(updatedIntervall)
+                }
+                
+                intervallAdapter.updateIntervalle(intervalle.toList())
+            },
+            if (aktuellesDatum > 0) cal.get(Calendar.YEAR) else currentYear,
+            if (aktuellesDatum > 0) cal.get(Calendar.MONTH) else currentMonth,
+            if (aktuellesDatum > 0) cal.get(Calendar.DAY_OF_MONTH) else currentDay
+        )
+        
+        datePickerDialog.show()
     }
 }

@@ -20,7 +20,7 @@ object ExportHelper {
             
             FileWriter(file).use { writer ->
                 // Header
-                writer.append("Name,Adresse,Telefon,Reihenfolge,Intervall,Letzter Termin,Status\n")
+                writer.append("Name,Adresse,Telefon,Intervall,Letzter Termin,Status\n")
                 
                 // Daten
                 customers.forEach { customer ->
@@ -40,7 +40,6 @@ object ExportHelper {
                     writer.append("\"${customer.name}\",")
                     writer.append("\"${customer.adresse}\",")
                     writer.append("\"${customer.telefon}\",")
-                    writer.append("${customer.reihenfolge},")
                     writer.append("${customer.intervallTage},")
                     writer.append("$letzterTermin,")
                     writer.append("$status\n")
@@ -71,7 +70,6 @@ object ExportHelper {
                     writer.append("${index + 1}. ${customer.name}\n")
                     writer.append("   Adresse: ${customer.adresse}\n")
                     writer.append("   Telefon: ${customer.telefon}\n")
-                    writer.append("   Reihenfolge: ${customer.reihenfolge}\n")
                     writer.append("\n")
                 }
             }

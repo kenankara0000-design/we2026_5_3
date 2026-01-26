@@ -30,7 +30,6 @@ data class Customer(
     val letzterTermin: Long = 0,
     @Deprecated("Wird nicht mehr verwendet")
     val wochentag: Int = 0, // 0=Montag, 1=Dienstag, ..., 6=Sonntag (wird von Liste übernommen für Privat-Kunden)
-    val reihenfolge: Int = 1, // Reihenfolge der Abholung an diesem Tag (1, 2, 3, ...)
     
     // Status
     val abholungErfolgt: Boolean = false,

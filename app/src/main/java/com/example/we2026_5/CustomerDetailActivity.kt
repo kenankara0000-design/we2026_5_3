@@ -114,7 +114,6 @@ class CustomerDetailActivity : AppCompatActivity() {
             binding.etDetailAdresse.setText(currentCustomer?.adresse)
             binding.etDetailTelefon.setText(currentCustomer?.telefon)
             binding.etDetailNotizen.setText(currentCustomer?.notizen)
-            binding.etDetailReihenfolge.setText(currentCustomer?.reihenfolge?.toString() ?: "1")
             
             // Google Maps Button für Adress-Auswahl
             binding.btnSelectLocation.setOnClickListener {
@@ -122,7 +121,6 @@ class CustomerDetailActivity : AppCompatActivity() {
             }
         } else {
             binding.tvDetailName.text = currentCustomer?.name
-            binding.tvDetailReihenfolge.text = (currentCustomer?.reihenfolge ?: 1).toString()
         }
     }
 
@@ -147,35 +145,8 @@ class CustomerDetailActivity : AppCompatActivity() {
             return
         }
 
-        val reihenfolgeInput = binding.etDetailReihenfolge.text.toString().toIntOrNull() ?: 1
-        val reihenfolge = when {
-            reihenfolgeInput < 1 -> {
-                binding.etDetailReihenfolge.error = "Reihenfolge muss mindestens 1 sein"
-                return
-            }
-            else -> reihenfolgeInput
-        }
-
-        // Duplikat-Prüfung: Reihenfolge (nur wenn sich geändert hat)
+        // Button sofort deaktivieren und visuelles Feedback geben
         CoroutineScope(Dispatchers.Main).launch {
-            val existingCustomer = ValidationHelper.checkDuplicateReihenfolge(
-                repository = repository,
-                wochentag = 0, // Wochentag wird nicht mehr verwendet
-                reihenfolge = reihenfolge,
-                excludeCustomerId = customerId
-            )
-            
-            if (existingCustomer != null) {
-                runOnUiThread {
-                    binding.etDetailReihenfolge.error = "Reihenfolge $reihenfolge ist bereits von ${existingCustomer.name} belegt"
-                    Toast.makeText(this@CustomerDetailActivity, 
-                        "Kunde '${existingCustomer.name}' hat bereits Reihenfolge $reihenfolge", 
-                        Toast.LENGTH_LONG).show()
-                }
-                return@launch
-            }
-
-            // Button sofort deaktivieren und visuelles Feedback geben
             // WICHTIG: Button muss sichtbar bleiben, damit das Feedback sichtbar ist!
             runOnUiThread {
                 binding.btnSaveCustomer.visibility = View.VISIBLE  // Explizit sichtbar machen
@@ -189,8 +160,7 @@ class CustomerDetailActivity : AppCompatActivity() {
                 "adresse" to adresse,
                 "telefon" to telefon,
                 "notizen" to binding.etDetailNotizen.text.toString().trim(),
-                "wochentag" to 0, // Wochentag wird nicht mehr verwendet
-                "reihenfolge" to reihenfolge
+                "wochentag" to 0 // Wochentag wird nicht mehr verwendet
             )
             
             // Optimistische UI-Aktualisierung: UI sofort aktualisieren
@@ -201,8 +171,7 @@ class CustomerDetailActivity : AppCompatActivity() {
                     adresse = adresse,
                     telefon = telefon,
                     notizen = binding.etDetailNotizen.text.toString().trim(),
-                    wochentag = 0, // Wochentag wird nicht mehr verwendet
-                    reihenfolge = reihenfolge
+                    wochentag = 0 // Wochentag wird nicht mehr verwendet
                 )
                 currentCustomer = updatedCustomer
                 // UI sofort aktualisieren (optimistisch), aber Button sichtbar lassen
@@ -472,7 +441,6 @@ class CustomerDetailActivity : AppCompatActivity() {
         binding.tvDetailAdresse.text = customer.adresse
         binding.tvDetailTelefon.text = customer.telefon
         binding.tvDetailNotizen.text = customer.notizen
-        binding.tvDetailReihenfolge.text = customer.reihenfolge.toString()
         photoAdapter.updatePhotos(customer.fotoUrls)
     }
     
