@@ -37,7 +37,9 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:clipToPadding="true">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -108,23 +110,25 @@
             android:id="@+id/cardListeAuswahl"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@color/surface_white">
+            app:cardElevation="1dp"
+            app:cardBackgroundColor="@color/surface_white"
+            android:clipToPadding="true"
+            android:clipChildren="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="12dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="8dp">
 
                     <TextView
                         android:layout_width="0dp"
@@ -147,7 +151,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:visibility="gone">
+                    android:visibility="gone"
+                    android:layout_marginTop="4dp">
 
                     <Spinner
                         android:id="@+id/spinnerListe"
@@ -186,17 +191,19 @@
             android:id="@+id/cardIntervall"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             android:visibility="gone"
             app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@color/surface_white">
+            app:cardElevation="1dp"
+            app:cardBackgroundColor="@color/surface_white"
+            android:clipToPadding="true"
+            android:clipChildren="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="12dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -205,7 +212,7 @@
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/primary_blue_dark"
-                    android:layout_marginBottom="12dp"/>
+                    android:layout_marginBottom="8dp"/>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -213,7 +220,7 @@
                     android:text="Erstellen Sie Intervalle für wiederkehrende Termine. Jedes Intervall kann eigene Abholungs- und Auslieferungsdaten haben."
                     android:textSize="12sp"
                     android:textColor="@color/text_secondary"
-                    android:layout_marginBottom="12dp"/>
+                    android:layout_marginBottom="8dp"/>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvIntervalle"
