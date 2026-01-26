@@ -356,6 +356,8 @@ class CustomerAdapter(
     
     fun hasSelectedCustomers(): Boolean = selectedCustomers.isNotEmpty()
     
+    fun isMultiSelectModeEnabled(): Boolean = isMultiSelectMode
+    
     private fun toggleCustomerSelection(customerId: String, holder: CustomerViewHolder) {
         if (selectedCustomers.contains(customerId)) {
             selectedCustomers.remove(customerId)

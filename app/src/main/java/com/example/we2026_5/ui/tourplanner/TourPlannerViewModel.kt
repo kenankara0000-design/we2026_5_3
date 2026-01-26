@@ -50,37 +50,11 @@ class TourPlannerViewModel(
                 }
                 val viewDateWochentag = (calViewDate.get(Calendar.DAY_OF_WEEK) + 5) % 7
                 
-                // Kunden nach Art trennen
-                val privatKunden = allCustomers.filter { it.kundenArt == "Privat" }
-                val gewerblichKunden = allCustomers.filter { it.kundenArt == "Gewerblich" }
+                // Alle Kunden nach Listen gruppieren (sowohl Privat als auch Gewerblich)
+                val kundenNachListen = allCustomers.filter { it.listeId.isNotEmpty() }.groupBy { it.listeId }
+                val kundenOhneListe = allCustomers.filter { it.listeId.isEmpty() }
                 
-                // Privat-Kunden nach Listen gruppieren
-                val kundenNachListen = privatKunden.groupBy { it.listeId }
-                
-                // Gewerblich-Kunden filtern (alte Logik)
-                val filteredGewerblich = gewerblichKunden.filter { customer ->
-                    if (customer.wiederholen && customer.wochentag != viewDateWochentag) return@filter false
-                    if (!customer.wiederholen) {
-                        // Einmaliger Termin: Prüfe ob Abholungsdatum an diesem Tag liegt
-                        val abholungAm = getStartOfDay(customer.abholungDatum)
-                        val auslieferungAm = getStartOfDay(customer.auslieferungDatum)
-                        if (abholungAm != viewDateStart && auslieferungAm != viewDateStart) return@filter false
-                    }
-                    
-                    val faelligAm = customerFaelligAm(customer)
-                    val faelligAmImUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && 
-                                           faelligAm in customer.urlaubVon..customer.urlaubBis
-                    if (faelligAmImUrlaub) return@filter false
-                    
-                    val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-                    val isOverdue = !isDone && faelligAm < heuteStart
-                    
-                    if (isOverdue && viewDateStart > heuteStart) return@filter false
-                    
-                    faelligAm <= viewDateStart + TimeUnit.DAYS.toMillis(1)
-                }
-                
-                // Privat-Kunden filtern: Prüfe ob Liste an diesem Tag fällig ist
+                // Kunden in Listen filtern: Prüfe ob Liste an diesem Tag fällig ist
                 val listenMitKunden = mutableMapOf<String, List<Customer>>()
                 kundenNachListen.forEach { (listeId, kunden) ->
                     if (listeId.isEmpty()) return@forEach
@@ -112,10 +86,34 @@ class TourPlannerViewModel(
                     }
                 }
                 
+                // Gewerblich-Kunden ohne Liste filtern (alte Logik)
+                val gewerblichKundenOhneListe = kundenOhneListe.filter { it.kundenArt == "Gewerblich" }
+                val filteredGewerblich = gewerblichKundenOhneListe.filter { customer ->
+                    if (customer.wiederholen && customer.wochentag != viewDateWochentag) return@filter false
+                    if (!customer.wiederholen) {
+                        // Einmaliger Termin: Prüfe ob Abholungsdatum an diesem Tag liegt
+                        val abholungAm = getStartOfDay(customer.abholungDatum)
+                        val auslieferungAm = getStartOfDay(customer.auslieferungDatum)
+                        if (abholungAm != viewDateStart && auslieferungAm != viewDateStart) return@filter false
+                    }
+                    
+                    val faelligAm = customerFaelligAm(customer)
+                    val faelligAmImUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && 
+                                           faelligAm in customer.urlaubVon..customer.urlaubBis
+                    if (faelligAmImUrlaub) return@filter false
+                    
+                    val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
+                    val isOverdue = !isDone && faelligAm < heuteStart
+                    
+                    if (isOverdue && viewDateStart > heuteStart) return@filter false
+                    
+                    faelligAm <= viewDateStart + TimeUnit.DAYS.toMillis(1)
+                }
+                
                 // Liste mit Items erstellen
                 val items = mutableListOf<ListItem>()
                 
-                // Privat-Kunden nach Listen gruppiert anzeigen
+                // Kunden nach Listen gruppiert anzeigen (sowohl Privat als auch Gewerblich)
                 allListen.sortedBy { it.name }.forEach { liste ->
                     val kundenInListe = listenMitKunden[liste.id] ?: return@forEach
                     if (kundenInListe.isNotEmpty()) {
@@ -252,12 +250,9 @@ class TourPlannerViewModel(
                     
                     val dayItems = mutableListOf<ListItem>()
                     
-                    // Kunden nach Art trennen
-                    val privatKunden = allCustomers.filter { it.kundenArt == "Privat" }
-                    val gewerblichKunden = allCustomers.filter { it.kundenArt == "Gewerblich" }
-                    
-                    // Privat-Kunden nach Listen gruppieren
-                    val kundenNachListen = privatKunden.groupBy { it.listeId }
+                    // Alle Kunden nach Listen gruppieren (sowohl Privat als auch Gewerblich)
+                    val kundenNachListen = allCustomers.filter { it.listeId.isNotEmpty() }.groupBy { it.listeId }
+                    val kundenOhneListe = allCustomers.filter { it.listeId.isEmpty() }
                     val listenMitKunden = mutableMapOf<String, List<Customer>>()
                     
                     kundenNachListen.forEach { (listeId, kunden) ->
@@ -288,7 +283,7 @@ class TourPlannerViewModel(
                         }
                     }
                     
-                    // Privat-Kunden nach Listen gruppiert anzeigen
+                    // Kunden nach Listen gruppiert anzeigen (sowohl Privat als auch Gewerblich)
                     allListen.sortedBy { it.name }.forEach { liste ->
                         val kundenInListe = listenMitKunden[liste.id] ?: return@forEach
                         if (kundenInListe.isNotEmpty()) {
@@ -297,8 +292,9 @@ class TourPlannerViewModel(
                         }
                     }
                     
-                    // Gewerblich-Kunden filtern
-                    val filteredGewerblich = gewerblichKunden.filter { customer ->
+                    // Gewerblich-Kunden ohne Liste filtern
+                    val gewerblichKundenOhneListe = kundenOhneListe.filter { it.kundenArt == "Gewerblich" }
+                    val filteredGewerblich = gewerblichKundenOhneListe.filter { customer ->
                         if (customer.wiederholen && customer.wochentag != dayWochentag) return@filter false
                         if (!customer.wiederholen) {
                             val abholungAm = getStartOfDay(customer.abholungDatum)

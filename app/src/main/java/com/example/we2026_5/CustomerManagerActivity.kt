@@ -65,11 +65,13 @@ class CustomerManagerActivity : AppCompatActivity() {
         binding.btnBulkSelect.setOnClickListener {
             adapter.enableMultiSelectMode()
             updateBulkActionBar()
+            updateButtonStates()
         }
 
         binding.btnBulkCancel.setOnClickListener {
             adapter.disableMultiSelectMode()
             updateBulkActionBar()
+            updateButtonStates()
         }
 
         binding.btnBulkDone.setOnClickListener {
@@ -102,6 +104,9 @@ class CustomerManagerActivity : AppCompatActivity() {
         
         // ViewModel Observer einrichten
         observeViewModel()
+        
+        // Initial: Button-Zustände setzen
+        updateButtonStates()
     }
     
     override fun onDestroy() {
@@ -114,6 +119,7 @@ class CustomerManagerActivity : AppCompatActivity() {
         viewModel.filteredCustomers.observe(this) { customers ->
             adapter.updateData(customers.map { ListItem.CustomerItem(it) })
             updateBulkActionBar()
+            updateButtonStates()
             
             // Empty State anzeigen wenn keine Kunden vorhanden
             if (customers.isEmpty()) {
@@ -230,6 +236,16 @@ class CustomerManagerActivity : AppCompatActivity() {
         }
     }
     
+    private fun updateButtonStates() {
+        val isMultiSelectActive = adapter.hasSelectedCustomers() || adapter.isMultiSelectModeEnabled()
+        binding.btnBulkSelect.isSelected = isMultiSelectActive
+        if (isMultiSelectActive) {
+            binding.btnBulkSelect.background = resources.getDrawable(com.example.we2026_5.R.drawable.button_icon_active, theme)
+        } else {
+            binding.btnBulkSelect.background = resources.getDrawable(com.example.we2026_5.R.drawable.button_icon_pressed, theme)
+        }
+    }
+    
     private fun markBulkAsDone(customers: List<Customer>) {
         AlertDialog.Builder(this)
             .setTitle("Mehrere Kunden als erledigt markieren?")
@@ -245,6 +261,7 @@ class CustomerManagerActivity : AppCompatActivity() {
                     }
                     adapter.disableMultiSelectMode()
                     updateBulkActionBar()
+                    updateButtonStates()
                     Toast.makeText(this@CustomerManagerActivity, "${customers.size} Kunden als erledigt markiert", Toast.LENGTH_SHORT).show()
                 }
             }

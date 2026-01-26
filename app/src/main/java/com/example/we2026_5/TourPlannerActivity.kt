@@ -132,6 +132,7 @@ class TourPlannerActivity : AppCompatActivity() {
                 viewDate.add(Calendar.DAY_OF_YEAR, -1)
             }
             updateDisplay()
+            updateTodayButtonState()
         }
 
         binding.btnNextDay.setOnClickListener {
@@ -141,11 +142,13 @@ class TourPlannerActivity : AppCompatActivity() {
                 viewDate.add(Calendar.DAY_OF_YEAR, 1)
             }
             updateDisplay()
+            updateTodayButtonState()
         }
 
         binding.btnToday.setOnClickListener {
             viewDate = Calendar.getInstance()
             updateDisplay()
+            updateTodayButtonState()
         }
 
         binding.btnMapView.setOnClickListener {
@@ -316,14 +319,35 @@ class TourPlannerActivity : AppCompatActivity() {
             binding.btnPrevDay.contentDescription = "Vorherige Woche"
             binding.btnNextDay.contentDescription = "Nächste Woche"
             binding.btnToggleView.contentDescription = "Tagesansicht"
+            // Aktiver Zustand für Wochenansicht-Button
+            binding.btnToggleView.isSelected = true
+            binding.btnToggleView.background = resources.getDrawable(com.example.we2026_5.R.drawable.button_icon_active, theme)
         } else {
             binding.rvTourList.visibility = View.VISIBLE
             binding.rvWeekView.visibility = View.GONE
             binding.btnPrevDay.contentDescription = "Vorheriger Tag"
             binding.btnNextDay.contentDescription = "Nächster Tag"
             binding.btnToggleView.contentDescription = "Wochenansicht"
+            // Inaktiver Zustand für Wochenansicht-Button
+            binding.btnToggleView.isSelected = false
+            binding.btnToggleView.background = resources.getDrawable(com.example.we2026_5.R.drawable.button_icon_pressed, theme)
         }
+        updateTodayButtonState()
         updateDisplay()
+    }
+    
+    private fun updateTodayButtonState() {
+        val heute = Calendar.getInstance()
+        val istHeute = viewDate.get(Calendar.YEAR) == heute.get(Calendar.YEAR) &&
+                       viewDate.get(Calendar.DAY_OF_YEAR) == heute.get(Calendar.DAY_OF_YEAR) &&
+                       !isWeekView
+        
+        binding.btnToday.isSelected = istHeute
+        if (istHeute) {
+            binding.btnToday.background = resources.getDrawable(com.example.we2026_5.R.drawable.button_icon_active, theme)
+        } else {
+            binding.btnToday.background = resources.getDrawable(com.example.we2026_5.R.drawable.button_icon_pressed, theme)
+        }
     }
 
     private fun loadTourData(selectedTimestamp: Long) {

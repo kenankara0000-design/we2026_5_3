@@ -79,34 +79,34 @@
         
         <ImageButton
             android:id="@+id/btnBulkSelect"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:layout_marginEnd="12dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="16dp"
             android:background="@drawable/button_icon_pressed"
             android:src="@drawable/ic_checklist"
             android:contentDescription="Mehrfachauswahl"
-            android:padding="12dp" />
+            android:padding="14dp" />
 
         <ImageButton
             android:id="@+id/btnExport"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:layout_marginEnd="12dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="16dp"
             android:background="@drawable/button_icon_pressed"
             android:src="@drawable/ic_share"
             android:contentDescription="Exportieren"
-            android:padding="12dp" />
+            android:padding="14dp" />
         
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btnNewCustomer"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:src="@android:drawable/ic_input_add"
             android:contentDescription="Neuen Kunden erstellen"
             app:tint="#FFFFFF"
-            app:backgroundTint="@color/primary_blue_light"
-            app:elevation="4dp"
-            app:pressedTranslationZ="8dp" />
+            app:backgroundTint="@color/status_warning"
+            app:elevation="6dp"
+            app:pressedTranslationZ="10dp" />
     </LinearLayout>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

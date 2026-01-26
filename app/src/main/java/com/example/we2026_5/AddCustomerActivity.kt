@@ -57,6 +57,7 @@ class AddCustomerActivity : AppCompatActivity() {
         updateAuslieferungDateButtonText(System.currentTimeMillis())
         selectedAbholungDatum = System.currentTimeMillis()
         selectedAuslieferungDatum = System.currentTimeMillis()
+        updateWochentagAnzeige()
 
         // Abholungsdatum-Picker
         binding.btnPickAbholungDate.setOnClickListener {
@@ -67,6 +68,7 @@ class AddCustomerActivity : AppCompatActivity() {
                 picked.set(y, m, d, 0, 0, 0)
                 selectedAbholungDatum = picked.timeInMillis
                 updateAbholungDateButtonText(selectedAbholungDatum)
+                updateWochentagAnzeige()
                 
                 // Wochentag automatisch basierend auf Abholungsdatum setzen (wenn wiederholen aktiviert)
                 if (binding.cbWiederholen.isChecked) {
@@ -86,6 +88,7 @@ class AddCustomerActivity : AppCompatActivity() {
                 picked.set(y, m, d, 0, 0, 0)
                 selectedAuslieferungDatum = picked.timeInMillis
                 updateAuslieferungDateButtonText(selectedAuslieferungDatum)
+                updateWochentagAnzeige()
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
         }
 
@@ -94,18 +97,19 @@ class AddCustomerActivity : AppCompatActivity() {
             binding.layoutWiederholung.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
         }
 
-        // Kunden-Art RadioButtons: Liste-Auswahl sichtbar/unsichtbar machen
-        binding.rgKundenArt.setOnCheckedChangeListener { _, checkedId ->
-            val isPrivat = checkedId == binding.rbPrivat.id
-            binding.layoutListeAuswahl.visibility = if (isPrivat) android.view.View.VISIBLE else android.view.View.GONE
+        // Liste-Auswahl Switch: Liste aktivieren/deaktivieren
+        binding.switchListeAktivieren.setOnCheckedChangeListener { _, isChecked ->
+            binding.layoutListeAuswahl.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
+            binding.cardListeAuswahl.visibility = android.view.View.VISIBLE // Card immer sichtbar
             
-            // Liste-Spinner füllen wenn Privat gewählt
-            if (isPrivat) {
+            if (isChecked) {
                 loadListen()
+            } else {
+                selectedListeId = ""
             }
             
-            // Datums-Felder ausblenden wenn Privat (werden von Liste übernommen)
-            updateDatumsFelderSichtbarkeit(isPrivat && selectedListeId.isNotEmpty())
+            // Datums-Felder ausblenden wenn Liste aktiviert (werden von Liste übernommen)
+            updateDatumsFelderSichtbarkeit(isChecked && selectedListeId.isNotEmpty())
         }
 
         // Liste-Spinner
@@ -132,8 +136,11 @@ class AddCustomerActivity : AppCompatActivity() {
 
         binding.btnBack.setOnClickListener { finish() }
         
-        // Initial: Listen laden (falls später Privat gewählt wird)
+        // Initial: Listen laden (für beide Kunden-Arten verfügbar)
         loadListen()
+        
+        // Card immer sichtbar machen
+        binding.cardListeAuswahl.visibility = android.view.View.VISIBLE
 
         binding.btnSaveCustomer.setOnClickListener {
             val name = binding.etName.text.toString().trim()
@@ -148,9 +155,10 @@ class AddCustomerActivity : AppCompatActivity() {
 
             // Kunden-Art bestimmen
             val kundenArt = if (binding.rbPrivat.isChecked) "Privat" else "Gewerblich"
+            val listeAktiviert = binding.switchListeAktivieren.isChecked
 
-            // Validierung: Abholungsdatum muss gesetzt sein (nur für Gewerblich oder Privat ohne Liste)
-            if (kundenArt == "Gewerblich" || (kundenArt == "Privat" && selectedListeId.isEmpty())) {
+            // Validierung: Abholungsdatum muss gesetzt sein (nur wenn keine Liste aktiviert)
+            if (!listeAktiviert || selectedListeId.isEmpty()) {
                 if (selectedAbholungDatum == 0L) {
                     Toast.makeText(this, "Bitte wählen Sie ein Abholungsdatum", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
@@ -163,9 +171,9 @@ class AddCustomerActivity : AppCompatActivity() {
                 }
             }
 
-            // Validierung: Wenn Privat, muss eine Liste ausgewählt sein
-            if (kundenArt == "Privat" && selectedListeId.isEmpty()) {
-                Toast.makeText(this, "Bitte wählen Sie eine Liste für Privat-Kunden", Toast.LENGTH_SHORT).show()
+            // Validierung: Wenn Liste aktiviert, muss eine Liste ausgewählt sein
+            if (listeAktiviert && selectedListeId.isEmpty()) {
+                Toast.makeText(this, "Bitte wählen Sie eine Liste aus", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -244,8 +252,8 @@ class AddCustomerActivity : AppCompatActivity() {
                     0 // Nicht verwendet bei einmaligen Terminen
                 }
 
-                // Für Privat-Kunden in Listen: Daten der Liste verwenden (keine eigenen Daten)
-                val liste = if (kundenArt == "Privat" && selectedListeId.isNotEmpty()) {
+                // Für Kunden in Listen: Daten der Liste verwenden (keine eigenen Daten)
+                val liste = if (listeAktiviert && selectedListeId.isNotEmpty()) {
                     alleListen.find { it.id == selectedListeId }
                 } else {
                     null
@@ -260,8 +268,8 @@ class AddCustomerActivity : AppCompatActivity() {
                     notizen = binding.etNotizen.text.toString().trim(),
                     // Kunden-Art und Liste
                     kundenArt = kundenArt,
-                    listeId = if (kundenArt == "Privat") selectedListeId else "",
-                    // Termine: Für Privat-Kunden in Listen werden Daten der Liste verwendet (0 = wird ignoriert)
+                    listeId = if (listeAktiviert && selectedListeId.isNotEmpty()) selectedListeId else "",
+                    // Termine: Für Kunden in Listen werden Daten der Liste verwendet (0 = wird ignoriert)
                     abholungDatum = if (liste != null) 0 else selectedAbholungDatum,
                     auslieferungDatum = if (liste != null) 0 else selectedAuslieferungDatum,
                     wiederholen = liste?.wiederholen ?: wiederholen,
@@ -318,6 +326,49 @@ class AddCustomerActivity : AppCompatActivity() {
         val cal = Calendar.getInstance()
         cal.timeInMillis = dateInMillis
         binding.btnPickAuslieferungDate.text = "${cal.get(Calendar.DAY_OF_MONTH)}.${cal.get(Calendar.MONTH) + 1}.${cal.get(Calendar.YEAR)}"
+    }
+    
+    private fun updateWochentagAnzeige() {
+        // Abholung Wochentag
+        if (selectedAbholungDatum > 0) {
+            val calAbholung = Calendar.getInstance()
+            calAbholung.timeInMillis = selectedAbholungDatum
+            val dayOfWeek = calAbholung.get(Calendar.DAY_OF_WEEK)
+            val wochentagName = getWochentagKurzName(dayOfWeek)
+            binding.tvAbholungWochentag.text = "📦 $wochentagName"
+            binding.tvAbholungWochentag.visibility = android.view.View.VISIBLE
+        } else {
+            binding.tvAbholungWochentag.visibility = android.view.View.GONE
+        }
+        
+        // Auslieferung Wochentag
+        if (selectedAuslieferungDatum > 0) {
+            val calAuslieferung = Calendar.getInstance()
+            calAuslieferung.timeInMillis = selectedAuslieferungDatum
+            val dayOfWeek = calAuslieferung.get(Calendar.DAY_OF_WEEK)
+            val wochentagName = getWochentagKurzName(dayOfWeek)
+            binding.tvAuslieferungWochentag.text = "🚚 $wochentagName"
+            binding.tvAuslieferungWochentag.visibility = android.view.View.VISIBLE
+        } else {
+            binding.tvAuslieferungWochentag.visibility = android.view.View.GONE
+        }
+        
+        // Layout sichtbar machen, wenn mindestens ein Wochentag angezeigt wird
+        val hasAnyWochentag = selectedAbholungDatum > 0 || selectedAuslieferungDatum > 0
+        binding.layoutWochentagAnzeige.visibility = if (hasAnyWochentag) android.view.View.VISIBLE else android.view.View.GONE
+    }
+    
+    private fun getWochentagKurzName(dayOfWeek: Int): String {
+        return when (dayOfWeek) {
+            Calendar.MONDAY -> "Mo"
+            Calendar.TUESDAY -> "Di"
+            Calendar.WEDNESDAY -> "Mi"
+            Calendar.THURSDAY -> "Do"
+            Calendar.FRIDAY -> "Fr"
+            Calendar.SATURDAY -> "Sa"
+            Calendar.SUNDAY -> "So"
+            else -> ""
+        }
     }
     
     private fun selectWochentag(tag: Int) {
@@ -501,5 +552,10 @@ class AddCustomerActivity : AppCompatActivity() {
         // Auch Wiederholen-Checkbox ausblenden wenn Liste ausgewählt (Liste hat eigenes wiederholen-Feld)
         binding.cbWiederholen.visibility = if (ausblenden) android.view.View.GONE else android.view.View.VISIBLE
         binding.layoutWiederholung.visibility = if (ausblenden) android.view.View.GONE else android.view.View.VISIBLE
+        
+        // Info-Text anzeigen wenn Liste aktiviert
+        if (ausblenden) {
+            // Optional: Info-Text hinzufügen, dass Daten von Liste übernommen werden
+        }
     }
 }
