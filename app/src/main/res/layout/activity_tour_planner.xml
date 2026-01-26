@@ -14,22 +14,46 @@
         android:padding="8dp"
         android:elevation="6dp">
 
+        <!-- Zurück-Button links -->
         <ImageButton
             android:id="@+id/btnBackFromTour"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_menu_revert"
             android:tint="#FFFFFF"
             android:contentDescription="Zurück" />
 
+        <!-- Offline-Status-Indikator (unter Zurück-Button) -->
+        <TextView
+            android:id="@+id/tvOfflineStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/btnBackFromTour"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="2dp"
+            android:text="📴 Offline"
+            android:textColor="#FFEB3B"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            android:background="@drawable/status_badge_overdue"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"/>
+        
+        <!-- Mitte: Datum-Navigation -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:orientation="horizontal"
             android:gravity="center_vertical"
+            android:layout_toEndOf="@id/btnBackFromTour"
+            android:layout_toStartOf="@id/rightButtonsContainer"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp">
 
@@ -43,24 +67,16 @@
                 android:tint="#FFFFFF"
                 android:layout_marginEnd="8dp"/>
 
-            <ImageButton
-                android:id="@+id/btnToday"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_today"
-                android:tint="#FFFFFF"
-                android:contentDescription="Heute"
-                android:layout_marginEnd="8dp"/>
-
             <TextView
                 android:id="@+id/tvCurrentDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Datum"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#FFFFFF" />
+                android:textColor="#FFFFFF"
+                android:minWidth="120dp"
+                android:gravity="center" />
 
             <ImageButton
                 android:id="@+id/btnNextDay"
@@ -73,37 +89,36 @@
                 android:layout_marginStart="8dp"/>
         </LinearLayout>
         
-        <!-- Offline-Status-Indikator -->
-        <TextView
-            android:id="@+id/tvOfflineStatus"
+        <!-- Rechts: Kartenansicht und Heute Button -->
+        <LinearLayout
+            android:id="@+id/rightButtonsContainer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="56dp"
-            android:text="📴 Offline"
-            android:textColor="#FFEB3B"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:visibility="gone"
-            android:background="@drawable/status_badge_overdue"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"/>
-        
-        <!-- Kartenansicht Button -->
-        <ImageButton
-            android:id="@+id/btnMapView"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:layout_marginEnd="8dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_mylocation"
-            android:tint="#FFFFFF"
-            android:contentDescription="Kartenansicht" />
+            android:layout_marginEnd="4dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            
+            <ImageButton
+                android:id="@+id/btnMapView"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginEnd="6dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_mylocation"
+                android:tint="#FFFFFF"
+                android:contentDescription="Kartenansicht" />
+            
+            <ImageButton
+                android:id="@+id/btnToday"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_today"
+                android:tint="#FFFFFF"
+                android:contentDescription="Heute" />
+        </LinearLayout>
     </RelativeLayout>
     
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

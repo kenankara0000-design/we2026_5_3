@@ -24,10 +24,11 @@ import java.util.concurrent.TimeUnit
 sealed class ListItem {
     data class CustomerItem(val customer: Customer) : ListItem()
     data class SectionHeader(val title: String, val count: Int, val sectionType: SectionType) : ListItem()
+    data class ListeHeader(val listeName: String, val kundenCount: Int, val listeId: String) : ListItem()
 }
 
 enum class SectionType {
-    OVERDUE, DONE
+    OVERDUE, DONE, LISTE
 }
 
 class CustomerAdapter(
@@ -74,15 +75,20 @@ class CustomerAdapter(
     companion object {
         private const val VIEW_TYPE_CUSTOMER = 0
         private const val VIEW_TYPE_SECTION_HEADER = 1
+        private const val VIEW_TYPE_LISTE_HEADER = 2
     }
+    
+    private var expandedListen = mutableSetOf<String>() // Liste IDs die expanded sind
 
     inner class CustomerViewHolder(val binding: ItemCustomerBinding) : RecyclerView.ViewHolder(binding.root)
     inner class SectionHeaderViewHolder(val binding: ItemSectionHeaderBinding) : RecyclerView.ViewHolder(binding.root)
+    inner class ListeHeaderViewHolder(val binding: ItemSectionHeaderBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun getItemViewType(position: Int): Int {
         return when (items[position]) {
             is ListItem.CustomerItem -> VIEW_TYPE_CUSTOMER
             is ListItem.SectionHeader -> VIEW_TYPE_SECTION_HEADER
+            is ListItem.ListeHeader -> VIEW_TYPE_LISTE_HEADER
         }
     }
 
@@ -96,6 +102,10 @@ class CustomerAdapter(
                 val binding = ItemSectionHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
                 SectionHeaderViewHolder(binding)
             }
+            VIEW_TYPE_LISTE_HEADER -> {
+                val binding = ItemSectionHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                ListeHeaderViewHolder(binding)
+            }
             else -> throw IllegalArgumentException("Unknown view type")
         }
     }
@@ -103,13 +113,31 @@ class CustomerAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val item = items[position]) {
             is ListItem.CustomerItem -> {
-                // Kunde nur anzeigen wenn Section erweitert ist (für überfällige/erledigte)
-                if (shouldShowCustomer(item.customer)) {
-                    bindCustomerViewHolder(holder as CustomerViewHolder, item.customer)
-                    holder.itemView.visibility = View.VISIBLE
+                // Prüfe ob Kunde zu einer Liste gehört
+                val prevItem = if (position > 0) items[position - 1] else null
+                val isInListe = prevItem is ListItem.ListeHeader && item.customer.listeId == prevItem.listeId
+                
+                if (isInListe) {
+                    // Kunde gehört zu einer Liste: nur anzeigen wenn Liste expanded ist
+                    val listeHeader = prevItem as ListItem.ListeHeader
+                    if (expandedListen.contains(listeHeader.listeId)) {
+                        bindCustomerViewHolder(holder as CustomerViewHolder, item.customer)
+                        holder.itemView.visibility = View.VISIBLE
+                    } else {
+                        holder.itemView.visibility = View.GONE
+                    }
                 } else {
-                    holder.itemView.visibility = View.GONE
+                    // Gewerblich-Kunde oder nicht in Liste: normale Logik
+                    if (shouldShowCustomer(item.customer)) {
+                        bindCustomerViewHolder(holder as CustomerViewHolder, item.customer)
+                        holder.itemView.visibility = View.VISIBLE
+                    } else {
+                        holder.itemView.visibility = View.GONE
+                    }
                 }
+            }
+            is ListItem.ListeHeader -> {
+                bindListeHeaderViewHolder(holder as ListeHeaderViewHolder, item)
             }
             is ListItem.SectionHeader -> bindSectionHeaderViewHolder(holder as SectionHeaderViewHolder, item)
         }
@@ -136,6 +164,9 @@ class CustomerAdapter(
                 holder.binding.ivExpandCollapse.setColorFilter(ContextCompat.getColor(context, R.color.section_done_text))
                 holder.binding.tvSectionCount.setTextColor(ContextCompat.getColor(context, R.color.section_done_text))
             }
+            SectionType.LISTE -> {
+                // Wird nicht für SectionHeader verwendet, nur für ListeHeader
+            }
         }
         
         // Click-Listener auf das gesamte Item setzen
@@ -152,6 +183,37 @@ class CustomerAdapter(
         holder.binding.ivExpandCollapse.setOnClickListener {
             toggleSection(header.sectionType)
         }
+    }
+    
+    private fun bindListeHeaderViewHolder(holder: ListeHeaderViewHolder, header: ListItem.ListeHeader) {
+        holder.binding.tvSectionTitle.text = header.listeName
+        holder.binding.tvSectionCount.text = "(${header.kundenCount})"
+        
+        val isExpanded = expandedListen.contains(header.listeId)
+        holder.binding.ivExpandCollapse.rotation = if (isExpanded) 180f else 0f
+        
+        // Design für Liste-Header (andere Farbe als normale Sections)
+        holder.binding.cardSectionHeader.setCardBackgroundColor(ContextCompat.getColor(context, R.color.primary_blue))
+        holder.binding.tvSectionTitle.setTextColor(ContextCompat.getColor(context, R.color.white))
+        holder.binding.ivExpandCollapse.setColorFilter(ContextCompat.getColor(context, R.color.white))
+        holder.binding.tvSectionCount.setTextColor(ContextCompat.getColor(context, R.color.white))
+        
+        holder.itemView.setOnClickListener {
+            toggleListe(header.listeId)
+        }
+        
+        holder.binding.tvSectionTitle.setOnClickListener {
+            toggleListe(header.listeId)
+        }
+    }
+    
+    private fun toggleListe(listeId: String) {
+        if (expandedListen.contains(listeId)) {
+            expandedListen.remove(listeId)
+        } else {
+            expandedListen.add(listeId)
+        }
+        notifyDataSetChanged()
     }
     
     private fun toggleSection(sectionType: SectionType) {
@@ -360,6 +422,12 @@ class CustomerAdapter(
     override fun getItemCount() = items.size
 
     fun updateData(newList: List<ListItem>, date: Long? = null) {
+        // Alle Listen standardmäßig expanded machen
+        newList.forEach { item ->
+            if (item is ListItem.ListeHeader) {
+                expandedListen.add(item.listeId)
+            }
+        }
         items = newList.toMutableList()
         displayedDateMillis = date
         notifyDataSetChanged()

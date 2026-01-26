@@ -5,15 +5,18 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
+import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListItem
 import com.example.we2026_5.SectionType
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.data.repository.KundenListeRepository
 import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 class TourPlannerViewModel(
-    private val repository: CustomerRepository
+    private val repository: CustomerRepository,
+    private val listeRepository: KundenListeRepository
 ) : ViewModel() {
     
     private val _tourItems = MutableLiveData<List<ListItem>>()
@@ -34,6 +37,7 @@ class TourPlannerViewModel(
         viewModelScope.launch {
             try {
                 val allCustomers = repository.getAllCustomers()
+                val allListen = listeRepository.getAllListen()
                 val viewDateStart = getStartOfDay(selectedTimestamp)
                 val heuteStart = getStartOfDay(System.currentTimeMillis())
                 
@@ -43,9 +47,22 @@ class TourPlannerViewModel(
                 }
                 val viewDateWochentag = (calViewDate.get(Calendar.DAY_OF_WEEK) + 5) % 7
                 
-                // Kunden filtern
-                val filteredCustomers = allCustomers.filter { customer ->
-                    if (customer.wochentag != viewDateWochentag) return@filter false
+                // Kunden nach Art trennen
+                val privatKunden = allCustomers.filter { it.kundenArt == "Privat" }
+                val gewerblichKunden = allCustomers.filter { it.kundenArt == "Gewerblich" }
+                
+                // Privat-Kunden nach Listen gruppieren
+                val kundenNachListen = privatKunden.groupBy { it.listeId }
+                
+                // Gewerblich-Kunden filtern (alte Logik)
+                val filteredGewerblich = gewerblichKunden.filter { customer ->
+                    if (customer.wiederholen && customer.wochentag != viewDateWochentag) return@filter false
+                    if (!customer.wiederholen) {
+                        // Einmaliger Termin: Prüfe ob Abholungsdatum an diesem Tag liegt
+                        val abholungAm = getStartOfDay(customer.abholungDatum)
+                        val auslieferungAm = getStartOfDay(customer.auslieferungDatum)
+                        if (abholungAm != viewDateStart && auslieferungAm != viewDateStart) return@filter false
+                    }
                     
                     val faelligAm = customerFaelligAm(customer)
                     val faelligAmImUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && 
@@ -55,55 +72,90 @@ class TourPlannerViewModel(
                     val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
                     val isOverdue = !isDone && faelligAm < heuteStart
                     
-                    // Überfällige Kunden NUR anzeigen, wenn das angezeigte Datum heute oder in der Vergangenheit ist
                     if (isOverdue && viewDateStart > heuteStart) return@filter false
                     
-                    // Kunden anzeigen, die an diesem Tag fällig sind (Termin liegt an diesem Tag)
                     faelligAm <= viewDateStart + TimeUnit.DAYS.toMillis(1)
                 }
                 
-                // Kunden in Gruppen einteilen
-                val overdueCustomers = mutableListOf<Customer>()
-                val normalCustomers = mutableListOf<Customer>()
-                val doneCustomers = mutableListOf<Customer>()
+                // Privat-Kunden filtern: Prüfe ob Liste an diesem Tag fällig ist
+                val listenMitKunden = mutableMapOf<String, List<Customer>>()
+                kundenNachListen.forEach { (listeId, kunden) ->
+                    if (listeId.isEmpty()) return@forEach
+                    val liste = allListen.find { it.id == listeId } ?: return@forEach
+                    
+                    // Prüfe ob Abholung oder Auslieferung an diesem Wochentag fällig ist
+                    val istAbholungTag = liste.abholungWochentag == viewDateWochentag
+                    val istAuslieferungTag = liste.auslieferungWochentag == viewDateWochentag
+                    
+                    if (istAbholungTag || istAuslieferungTag) {
+                        // Filtere Kunden die an diesem Tag fällig sind
+                        val fälligeKunden = kunden.filter { customer ->
+                            val faelligAm = customerFaelligAm(customer)
+                            val faelligAmImUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && 
+                                                   faelligAm in customer.urlaubVon..customer.urlaubBis
+                            if (faelligAmImUrlaub) return@filter false
+                            
+                            val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
+                            val isOverdue = !isDone && faelligAm < heuteStart
+                            
+                            if (isOverdue && viewDateStart > heuteStart) return@filter false
+                            
+                            faelligAm <= viewDateStart + TimeUnit.DAYS.toMillis(1)
+                        }
+                        
+                        if (fälligeKunden.isNotEmpty()) {
+                            listenMitKunden[listeId] = fälligeKunden.sortedBy { it.reihenfolge }
+                        }
+                    }
+                }
                 
-                filteredCustomers.forEach { customer ->
+                // Liste mit Items erstellen
+                val items = mutableListOf<ListItem>()
+                
+                // Privat-Kunden nach Listen gruppiert anzeigen
+                allListen.sortedBy { it.name }.forEach { liste ->
+                    val kundenInListe = listenMitKunden[liste.id] ?: return@forEach
+                    if (kundenInListe.isNotEmpty()) {
+                        items.add(ListItem.ListeHeader(liste.name, kundenInListe.size, liste.id))
+                        // Kunden werden nur angezeigt wenn Liste expanded ist (wird im Adapter gehandhabt)
+                        kundenInListe.forEach { items.add(ListItem.CustomerItem(it)) }
+                    }
+                }
+                
+                // Gewerblich-Kunden (alte Logik)
+                val overdueGewerblich = mutableListOf<Customer>()
+                val normalGewerblich = mutableListOf<Customer>()
+                val doneGewerblich = mutableListOf<Customer>()
+                
+                filteredGewerblich.forEach { customer ->
                     val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
                     val faelligAm = customerFaelligAm(customer)
-                    
-                    // Überfällig: Termin liegt in der Vergangenheit UND Kunde ist nicht erledigt
-                    // WICHTIG: Überfällige Kunden nur anzeigen, wenn das angezeigte Datum in der Vergangenheit oder heute ist
-                    // Nicht in der Zukunft anzeigen! (viewDateStart <= heuteStart)
                     val isOverdue = !isDone && faelligAm < heuteStart && viewDateStart <= heuteStart
                     
                     when {
-                        isDone -> doneCustomers.add(customer)
-                        isOverdue -> overdueCustomers.add(customer)
-                        else -> normalCustomers.add(customer)
+                        isDone -> doneGewerblich.add(customer)
+                        isOverdue -> overdueGewerblich.add(customer)
+                        else -> normalGewerblich.add(customer)
                     }
                 }
                 
-                // Sortierung nach Reihenfolge
-                overdueCustomers.sortBy { it.reihenfolge }
-                normalCustomers.sortBy { it.reihenfolge }
-                doneCustomers.sortBy { it.reihenfolge }
+                overdueGewerblich.sortBy { it.reihenfolge }
+                normalGewerblich.sortBy { it.reihenfolge }
+                doneGewerblich.sortBy { it.reihenfolge }
                 
-                // Liste mit Section Headers erstellen
-                val items = mutableListOf<ListItem>()
-                
-                if (overdueCustomers.isNotEmpty()) {
-                    items.add(ListItem.SectionHeader("ÜBERFÄLLIG", overdueCustomers.size, SectionType.OVERDUE))
+                if (overdueGewerblich.isNotEmpty()) {
+                    items.add(ListItem.SectionHeader("ÜBERFÄLLIG", overdueGewerblich.size, SectionType.OVERDUE))
                     if (isSectionExpanded(SectionType.OVERDUE)) {
-                        overdueCustomers.forEach { items.add(ListItem.CustomerItem(it)) }
+                        overdueGewerblich.forEach { items.add(ListItem.CustomerItem(it)) }
                     }
                 }
                 
-                normalCustomers.forEach { items.add(ListItem.CustomerItem(it)) }
+                normalGewerblich.forEach { items.add(ListItem.CustomerItem(it)) }
                 
-                if (doneCustomers.isNotEmpty()) {
-                    items.add(ListItem.SectionHeader("ERLEDIGT", doneCustomers.size, SectionType.DONE))
+                if (doneGewerblich.isNotEmpty()) {
+                    items.add(ListItem.SectionHeader("ERLEDIGT", doneGewerblich.size, SectionType.DONE))
                     if (isSectionExpanded(SectionType.DONE)) {
-                        doneCustomers.forEach { items.add(ListItem.CustomerItem(it)) }
+                        doneGewerblich.forEach { items.add(ListItem.CustomerItem(it)) }
                     }
                 }
                 
@@ -129,8 +181,7 @@ class TourPlannerViewModel(
     }
     
     private fun customerFaelligAm(c: Customer): Long {
-        return if (c.verschobenAufDatum > 0) c.verschobenAufDatum
-        else c.letzterTermin + TimeUnit.DAYS.toMillis(c.intervallTage.toLong())
+        return c.getFaelligAm()
     }
     
     private fun getStartOfDay(ts: Long): Long {

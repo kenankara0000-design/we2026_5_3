@@ -1,6 +1,7 @@
 package com.example.we2026_5.di
 
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.ui.customermanager.CustomerManagerViewModel
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -21,8 +22,9 @@ val appModule = module {
     
     // Repository
     single { CustomerRepository(get()) }
+    single { KundenListeRepository(get()) }
     
     // ViewModels
     viewModel { CustomerManagerViewModel(get()) }
-    viewModel { TourPlannerViewModel(get()) }
+    viewModel { TourPlannerViewModel(get(), get()) }
 }

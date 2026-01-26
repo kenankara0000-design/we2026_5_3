@@ -186,7 +186,29 @@ _Hier können wichtige Notizen eingetragen werden..._
 
 ## 🔄 **ÄNDERUNGSHISTORIE:**
 
-### **26. Januar 2026:**
+### **26. Januar 2026 (Nachmittag):**
+- ✅ **Kunden-Art System implementiert**: 
+  - RadioButtons für "Privat" und "Gewerblich" in AddCustomerActivity
+  - Customer-Modell erweitert um `kundenArt` und `listeId` Felder
+  - Privat-Kunden werden Listen zugeordnet
+- ✅ **Listen-System für Privat-Kunden**:
+  - Neues `KundenListe` Datenmodell erstellt
+  - `KundenListeRepository` für CRUD-Operationen
+  - Jede Liste hat feste Wochentage für Abholung und Auslieferung
+  - Standard-Listen werden automatisch erstellt (Borna P, Kitzscher P, Rötha P, Regis P, Neukieritzsch P)
+- ✅ **UI-Anpassungen**:
+  - Liste-Auswahl Spinner (nur bei Privat-Kunden sichtbar)
+  - Button "Neue Liste erstellen" mit Dialog für Name und Wochentage
+  - Reihenfolge-Text entfernt aus UI
+- ✅ **Tour Planner erweitert**:
+  - Privat-Kunden werden nach Listen gruppiert als Sections angezeigt
+  - Listen-Header mit Expand/Collapse-Funktion
+  - Gewerblich-Kunden werden separat angezeigt (alte Logik)
+  - `ListItem.ListeHeader` für Listen-Sections hinzugefügt
+- ✅ **Dependency Injection erweitert**: `KundenListeRepository` zu AppModule hinzugefügt
+- ✅ **TourPlannerViewModel angepasst**: Unterstützt jetzt Listen-Gruppierung
+
+### **26. Januar 2026 (Vormittag):**
 - ✅ **Vollständige App-Analyse durchgeführt**
 - ✅ **Wochentag-Buttons modernisiert**: Rechteckig, größerer Text, Mo-Fr blau, Sa-So orange
 - ✅ **Überfällig-System korrigiert**: Überfällige Kunden werden nicht mehr in der Zukunft angezeigt
