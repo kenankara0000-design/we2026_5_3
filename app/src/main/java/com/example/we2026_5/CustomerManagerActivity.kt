@@ -1,6 +1,7 @@
 package com.example.we2026_5
 
 import android.content.Intent
+import com.example.we2026_5.ListItem
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -23,17 +24,26 @@ class CustomerManagerActivity : AppCompatActivity() {
         binding = ActivityCustomerManagerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        adapter = CustomerAdapter(listOf()) { customer ->
-            val intent = Intent(this, CustomerDetailActivity::class.java).apply {
-                putExtra("CUSTOMER_ID", customer.id)
+        adapter = CustomerAdapter(
+            items = allCustomers.map { ListItem.CustomerItem(it) },
+            context = this,
+            onClick = { customer ->
+                val intent = Intent(this, CustomerDetailActivity::class.java).apply {
+                    putExtra("CUSTOMER_ID", customer.id)
+                }
+                startActivity(intent)
             }
-            startActivity(intent)
-        }
+        )
 
         binding.rvCustomerList.layoutManager = LinearLayoutManager(this)
         binding.rvCustomerList.adapter = adapter
 
         binding.btnBackFromManager.setOnClickListener { finish() }
+
+        binding.btnNewCustomer.setOnClickListener {
+            val intent = Intent(this, AddCustomerActivity::class.java)
+            startActivity(intent)
+        }
 
         binding.etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -74,6 +84,6 @@ class CustomerManagerActivity : AppCompatActivity() {
                 it.adresse.contains(query, ignoreCase = true)
             }
         }
-        adapter.updateData(filtered)
+        adapter.updateData(filtered.map { ListItem.CustomerItem(it) })
     }
 }

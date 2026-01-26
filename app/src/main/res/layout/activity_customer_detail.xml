@@ -5,16 +5,19 @@
     android:orientation="vertical"
     android:background="#F5F5F5">
 
+    <!-- Header mit Zurück-Button -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:background="#007BFF"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:elevation="4dp">
 
         <ImageButton
             android:id="@+id/btnDetailBack"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_menu_revert"
             android:tint="#FFFFFF"
@@ -41,62 +44,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:weightSum="2"
-                android:layout_marginBottom="8dp">
-
-                <Button
-                    android:id="@+id/btnAbholung"
-                    android:layout_width="0dp"
-                    android:layout_height="60dp"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="4dp"
-                    android:text="Abholung"
-                    android:backgroundTint="#28A745"
-                    android:textColor="#FFFFFF" />
-
-                <Button
-                    android:id="@+id/btnAuslieferung"
-                    android:layout_width="0dp"
-                    android:layout_height="60dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="4dp"
-                    android:text="Auslieferung"
-                    android:backgroundTint="#FFC107"
-                    android:textColor="#000000" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:weightSum="2"
-                android:layout_marginBottom="16dp">
-
-                <Button
-                    android:id="@+id/btnVerschieben"
-                    android:layout_width="0dp"
-                    android:layout_height="60dp"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="4dp"
-                    android:text="Verschieben"
-                    android:backgroundTint="#17A2B8"
-                    android:textColor="#FFFFFF" />
-
-                <Button
-                    android:id="@+id/btnUrlaub"
-                    android:layout_width="0dp"
-                    android:layout_height="60dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="4dp"
-                    android:text="Urlaub"
-                    android:backgroundTint="#6C757D"
-                    android:textColor="#FFFFFF" />
-            </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
@@ -150,6 +97,24 @@
                     android:background="#E0E0E0"
                     android:clickable="true"
                     android:focusable="true"
+                    android:layout_marginBottom="12dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Intervall (Tage):"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <TextView
+                    android:id="@+id/tvDetailIntervall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="7"
+                    android:textSize="16sp"
+                    android:padding="8dp"
+                    android:background="#E0E0E0"
                     android:layout_marginBottom="12dp"/>
 
                 <TextView
@@ -228,6 +193,24 @@
                     android:layout_height="wrap_content"
                     android:hint="Telefon"
                     android:inputType="phone"
+                    android:padding="8dp"
+                    android:background="#FFFFFF"
+                    android:layout_marginBottom="12dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Intervall (Tage):"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <EditText
+                    android:id="@+id/etDetailIntervall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Intervall in Tagen"
+                    android:inputType="number"
                     android:padding="8dp"
                     android:background="#FFFFFF"
                     android:layout_marginBottom="12dp"/>

@@ -23,6 +23,9 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
 
@@ -82,10 +85,6 @@ class CustomerDetailActivity : AppCompatActivity() {
         binding.tvDetailAdresse.setOnClickListener { startNavigation() }
         binding.tvDetailTelefon.setOnClickListener { startPhoneCall() }
 
-        binding.btnAbholung.setOnClickListener { handleAbholung() }
-        binding.btnAuslieferung.setOnClickListener { handleAuslieferung() }
-        binding.btnVerschieben.setOnClickListener { showVerschiebenDialog() }
-        binding.btnUrlaub.setOnClickListener { showUrlaubDialog() }
         binding.btnTakePhoto.setOnClickListener { checkCameraPermissionAndStart() }
 
         binding.btnEditCustomer.setOnClickListener { toggleEditMode(true) }
@@ -109,6 +108,7 @@ class CustomerDetailActivity : AppCompatActivity() {
             binding.etDetailName.setText(currentCustomer?.name)
             binding.etDetailAdresse.setText(currentCustomer?.adresse)
             binding.etDetailTelefon.setText(currentCustomer?.telefon)
+            binding.etDetailIntervall.setText(currentCustomer?.intervallTage?.toString() ?: "7")
             binding.etDetailNotizen.setText(currentCustomer?.notizen)
         } else {
             binding.tvDetailName.text = currentCustomer?.name
@@ -116,10 +116,24 @@ class CustomerDetailActivity : AppCompatActivity() {
     }
 
     private fun handleSave() {
+        val intervallInput = binding.etDetailIntervall.text.toString().toIntOrNull() ?: 7
+        val intervall = when {
+            intervallInput < 1 -> {
+                binding.etDetailIntervall.error = "Intervall muss mindestens 1 Tag sein"
+                return
+            }
+            intervallInput > 365 -> {
+                binding.etDetailIntervall.error = "Intervall darf maximal 365 Tage sein"
+                return
+            }
+            else -> intervallInput
+        }
+
         val updatedData = mapOf(
             "name" to binding.etDetailName.text.toString(),
             "adresse" to binding.etDetailAdresse.text.toString(),
             "telefon" to binding.etDetailTelefon.text.toString(),
+            "intervallTage" to intervall,
             "notizen" to binding.etDetailNotizen.text.toString()
         )
         updateCustomerData(updatedData, "Änderungen gespeichert")
@@ -136,12 +150,21 @@ class CustomerDetailActivity : AppCompatActivity() {
     }
 
     private fun handleDelete() {
-        db.collection("customers").document(customerId).delete()
-            .addOnSuccessListener {
-                Toast.makeText(this, "Kunde gelöscht", Toast.LENGTH_LONG).show()
+        CoroutineScope(Dispatchers.Main).launch {
+            val success = FirebaseRetryHelper.executeWithRetryAndToast(
+                operation = { 
+                    db.collection("customers").document(customerId).delete()
+                },
+                context = this@CustomerDetailActivity,
+                errorMessage = "Fehler beim Löschen. Bitte erneut versuchen.",
+                maxRetries = 3
+            )
+            
+            if (success != null) {
+                Toast.makeText(this@CustomerDetailActivity, "Kunde gelöscht", Toast.LENGTH_LONG).show()
                 finish()
             }
-            .addOnFailureListener { e -> Toast.makeText(this, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show() }
+        }
     }
     
     private fun checkCameraPermissionAndStart() {
@@ -166,25 +189,64 @@ class CustomerDetailActivity : AppCompatActivity() {
 
     private fun uploadImage(uri: Uri) {
         binding.progressBar.visibility = View.VISIBLE
-        val storageRef = storage.reference.child("customer_photos/${customerId}/${System.currentTimeMillis()}.jpg")
-        storageRef.putFile(uri)
-            .addOnSuccessListener { 
-                storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
-                    addPhotoUrlToCustomer(downloadUri.toString())
-                    binding.progressBar.visibility = View.GONE
+        
+        // Bild komprimieren und dann hochladen
+        CoroutineScope(Dispatchers.Main).launch {
+            val compressedFile = ImageUtils.compressImage(this@CustomerDetailActivity, uri)
+            
+            if (compressedFile == null) {
+                binding.progressBar.visibility = View.GONE
+                Toast.makeText(this@CustomerDetailActivity, "Fehler beim Komprimieren des Bildes", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            
+            val storageRef = storage.reference.child("customer_photos/${customerId}/${System.currentTimeMillis()}.jpg")
+            val compressedUri = Uri.fromFile(compressedFile)
+            
+            // Upload mit Retry-Logik
+            val uploadTask = FirebaseRetryHelper.executeWithRetryAndToast(
+                operation = { storageRef.putFile(compressedUri) },
+                context = this@CustomerDetailActivity,
+                errorMessage = "Upload fehlgeschlagen. Bitte erneut versuchen.",
+                maxRetries = 3
+            )
+            
+            if (uploadTask != null) {
+                // Download-URL mit Retry-Logik abrufen
+                val downloadUrl = FirebaseRetryHelper.executeWithRetryAndToast(
+                    operation = { storageRef.downloadUrl },
+                    context = this@CustomerDetailActivity,
+                    errorMessage = "Fehler beim Abrufen der Download-URL.",
+                    maxRetries = 3
+                )
+                
+                downloadUrl?.let { url ->
+                    addPhotoUrlToCustomer(url.toString())
                 }
             }
-            .addOnFailureListener { e ->
-                binding.progressBar.visibility = View.GONE
-                Toast.makeText(this, "Upload fehlgeschlagen: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+            
+            // Temporäres File löschen
+            compressedFile.delete()
+            binding.progressBar.visibility = View.GONE
+        }
     }
 
     private fun addPhotoUrlToCustomer(url: String) {
-        db.collection("customers").document(customerId)
-            .update("fotoUrls", FieldValue.arrayUnion(url))
-            .addOnSuccessListener { Toast.makeText(this, "Foto hinzugefügt", Toast.LENGTH_SHORT).show() }
-            .addOnFailureListener { e -> Toast.makeText(this, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show() }
+        CoroutineScope(Dispatchers.Main).launch {
+            val success = FirebaseRetryHelper.executeWithRetryAndToast(
+                operation = { 
+                    db.collection("customers").document(customerId)
+                        .update("fotoUrls", FieldValue.arrayUnion(url))
+                },
+                context = this@CustomerDetailActivity,
+                errorMessage = "Fehler beim Speichern der Foto-URL.",
+                maxRetries = 3
+            )
+            
+            if (success != null) {
+                Toast.makeText(this@CustomerDetailActivity, "Foto hinzugefügt", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun startNavigation() {
@@ -238,6 +300,7 @@ class CustomerDetailActivity : AppCompatActivity() {
         binding.tvDetailName.text = customer.name
         binding.tvDetailAdresse.text = customer.adresse
         binding.tvDetailTelefon.text = customer.telefon
+        binding.tvDetailIntervall.text = "${customer.intervallTage} Tage"
         binding.tvDetailNotizen.text = customer.notizen
         photoAdapter.updatePhotos(customer.fotoUrls)
     }
@@ -256,77 +319,22 @@ class CustomerDetailActivity : AppCompatActivity() {
         builder.create().show()
     }
 
-    private fun handleAbholung() {
-        currentCustomer?.takeIf { !it.abholungErfolgt }?.let {
-            updateCustomerData(mapOf("abholungErfolgt" to true), "Abholung registriert")
-        }
-    }
-
-    private fun handleAuslieferung() {
-        val customer = currentCustomer ?: return
-        if (customer.auslieferungErfolgt) return
-        
-        // Race Condition vermeiden: currentCustomer direkt verwenden
-        val wasAbholungErfolgt = customer.abholungErfolgt
-        updateCustomerData(mapOf("auslieferungErfolgt" to true), "Auslieferung registriert")
-        
-        // Wenn Abholung schon war, Tour-Zyklus zurücksetzen
-        if (wasAbholungErfolgt) {
-            resetTourCycle()
-        }
-    }
-
-    private fun resetTourCycle() {
-        val resetData = mapOf(
-            "letzterTermin" to System.currentTimeMillis(),
-            "abholungErfolgt" to false,
-            "auslieferungErfolgt" to false,
-            "verschobenAufDatum" to 0
-        )
-        updateCustomerData(resetData, "Tour für diesen Kunden abgeschlossen!")
-    }
-
-    private fun showVerschiebenDialog() {
-        val cal = Calendar.getInstance()
-        DatePickerDialog(this, { _, year, month, dayOfMonth ->
-            val picked = Calendar.getInstance().apply { set(year, month, dayOfMonth, 0, 0, 0) }
-            updateCustomerData(mapOf("verschobenAufDatum" to picked.timeInMillis), "Termin verschoben")
-        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
-    }
-
-    private fun showUrlaubDialog() {
-        val cal = Calendar.getInstance()
-        var urlaubVon: Long = 0
-
-        val dateSetListenerVon = DatePickerDialog.OnDateSetListener { _, year, month, day ->
-            val pickedVon = Calendar.getInstance().apply { set(year, month, day, 0, 0, 0) }
-            urlaubVon = pickedVon.timeInMillis
-
-            val dateSetListenerBis = DatePickerDialog.OnDateSetListener { _, y, m, d ->
-                val pickedBis = Calendar.getInstance().apply { set(y, m, d, 23, 59, 59) }
-                if (pickedBis.timeInMillis >= urlaubVon) {
-                    updateCustomerData(mapOf("urlaubVon" to urlaubVon, "urlaubBis" to pickedBis.timeInMillis), "Urlaub eingetragen")
-                } else {
-                    Toast.makeText(this, "Enddatum muss nach Startdatum sein!", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            DatePickerDialog(this, dateSetListenerBis, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).apply {
-                setTitle("Urlaub bis")
-                show()
-            }
-        }
-
-        DatePickerDialog(this, dateSetListenerVon, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).apply {
-            setTitle("Urlaub von")
-            show()
-        }
-    }
 
     private fun updateCustomerData(data: Map<String, Any>, toastMessage: String) {
-        db.collection("customers").document(customerId).update(data)
-            .addOnSuccessListener { Toast.makeText(this, toastMessage, Toast.LENGTH_SHORT).show() }
-            .addOnFailureListener { e -> Toast.makeText(this, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show() }
+        CoroutineScope(Dispatchers.Main).launch {
+            val success = FirebaseRetryHelper.executeWithRetryAndToast(
+                operation = { 
+                    db.collection("customers").document(customerId).update(data)
+                },
+                context = this@CustomerDetailActivity,
+                errorMessage = "Fehler beim Speichern. Bitte erneut versuchen.",
+                maxRetries = 3
+            )
+            
+            if (success != null) {
+                Toast.makeText(this@CustomerDetailActivity, toastMessage, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     override fun onStop() {

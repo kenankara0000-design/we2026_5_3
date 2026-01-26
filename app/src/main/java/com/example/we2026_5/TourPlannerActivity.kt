@@ -24,15 +24,26 @@ class TourPlannerActivity : AppCompatActivity() {
         binding = ActivityTourPlannerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        adapter = CustomerAdapter(listOf()) { customer ->
-            val intent = Intent(this, CustomerDetailActivity::class.java).apply {
-                putExtra("CUSTOMER_ID", customer.id)
+        adapter = CustomerAdapter(
+            items = listOf(),
+            context = this,
+            onClick = { customer ->
+                val intent = Intent(this, CustomerDetailActivity::class.java).apply {
+                    putExtra("CUSTOMER_ID", customer.id)
+                }
+                startActivity(intent)
             }
-            startActivity(intent)
-        }
+        )
 
         binding.rvTourList.layoutManager = LinearLayoutManager(this)
         binding.rvTourList.adapter = adapter
+        
+        // Callback für Section-Toggle setzen
+        adapter.onSectionToggle = { sectionType ->
+            loadTourData(viewDate.timeInMillis) // Daten neu laden wenn Section getoggelt wird
+        }
+
+        binding.btnBackFromTour.setOnClickListener { finish() }
 
         binding.btnPrevDay.setOnClickListener {
             viewDate.add(Calendar.DAY_OF_YEAR, -1)
@@ -44,7 +55,10 @@ class TourPlannerActivity : AppCompatActivity() {
             updateDisplay()
         }
 
-        binding.btnBackFromTour.setOnClickListener { finish() }
+        binding.btnToday.setOnClickListener {
+            viewDate = Calendar.getInstance()
+            updateDisplay()
+        }
     }
 
     override fun onStart() {
@@ -71,24 +85,64 @@ class TourPlannerActivity : AppCompatActivity() {
             val allCustomers = snapshot.toObjects(Customer::class.java)
             val viewDateStart = getStartOfDay(selectedTimestamp)
 
-            val filteredList = allCustomers.filter { customer ->
+            val heuteStart = getStartOfDay(System.currentTimeMillis())
+            
+            val filteredCustomers = allCustomers.filter { customer ->
+                val faelligAm = customerFaelligAm(customer)
+
+                // Urlaub-Logik: Nur Termine im Urlaubszeitraum als Urlaub behandeln
+                val faelligAmImUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && 
+                                       faelligAm in customer.urlaubVon..customer.urlaubBis
+                if (faelligAmImUrlaub) return@filter false
+
+                // Alle Kunden anzeigen, die fällig sind oder waren (auch zukünftige Termine für erledigte Kunden)
+                // Erledigte Kunden zeigen auch zukünftige Termine
+                faelligAm <= viewDateStart + TimeUnit.DAYS.toMillis(1) || 
+                (customer.abholungErfolgt && customer.auslieferungErfolgt && faelligAm > viewDateStart)
+            }
+            
+            // Kunden in Gruppen einteilen
+            val overdueCustomers = mutableListOf<Customer>()
+            val normalCustomers = mutableListOf<Customer>()
+            val doneCustomers = mutableListOf<Customer>()
+            
+            filteredCustomers.forEach { customer ->
                 val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
                 val faelligAm = customerFaelligAm(customer)
-                val istAnDiesemTagFaellig = faelligAm >= viewDateStart && faelligAm < viewDateStart + TimeUnit.DAYS.toMillis(1)
+                // Überfällig: Termin liegt in der Vergangenheit UND Kunde ist nicht erledigt
+                // Keine Beschränkung auf viewDateStart, damit auch in Vergangenheit sichtbar
+                val isOverdue = !isDone && faelligAm < heuteStart
+                
+                when {
+                    isDone -> doneCustomers.add(customer)
+                    isOverdue -> overdueCustomers.add(customer)
+                    else -> normalCustomers.add(customer)
+                }
+            }
+            
+            // Sortierung innerhalb der Gruppen
+            overdueCustomers.sortBy { customerFaelligAm(it) }
+            normalCustomers.sortBy { customerFaelligAm(it) }
+            doneCustomers.sortBy { customerFaelligAm(it) }
+            
+            // Liste mit Section Headers erstellen - Sections immer anzeigen, auch wenn leer
+            val items = mutableListOf<ListItem>()
+            
+            // Überfällig-Section immer anzeigen
+            items.add(ListItem.SectionHeader("ÜBERFÄLLIG", overdueCustomers.size, SectionType.OVERDUE))
+            if (adapter.isSectionExpanded(SectionType.OVERDUE)) {
+                overdueCustomers.forEach { items.add(ListItem.CustomerItem(it)) }
+            }
+            
+            normalCustomers.forEach { items.add(ListItem.CustomerItem(it)) }
+            
+            // Erledigt-Section immer anzeigen
+            items.add(ListItem.SectionHeader("ERLEDIGT", doneCustomers.size, SectionType.DONE))
+            if (adapter.isSectionExpanded(SectionType.DONE)) {
+                doneCustomers.forEach { items.add(ListItem.CustomerItem(it)) }
+            }
 
-                if (isDone && !istAnDiesemTagFaellig) return@filter false
-
-                val imUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && viewDateStart in customer.urlaubVon..customer.urlaubBis
-                if (imUrlaub) return@filter false
-
-                faelligAm < viewDateStart + TimeUnit.DAYS.toMillis(1)
-            }.sortedWith(compareBy(
-                { it.abholungErfolgt && it.auslieferungErfolgt }, 
-                { customerFaelligAm(it) < viewDateStart },
-                { customerFaelligAm(it) }
-            ))
-
-            adapter.updateData(filteredList, viewDateStart)
+            adapter.updateData(items, viewDateStart)
         }
     }
 

@@ -6,6 +6,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.we2026_5.databinding.ActivityAddCustomerBinding
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -56,6 +59,10 @@ class AddCustomerActivity : AppCompatActivity() {
                 else -> intervallInput
             }
             
+            // Button deaktivieren während Speichern
+            binding.btnSaveCustomer.isEnabled = false
+            binding.btnSaveCustomer.text = "Speichere..."
+            
             val ersterTermin = selectedStartDate
             val letzterTermin = ersterTermin - TimeUnit.DAYS.toMillis(intervall.toLong())
 
@@ -71,14 +78,26 @@ class AddCustomerActivity : AppCompatActivity() {
                 istImUrlaub = false
             )
 
-            db.collection("customers").document(customerId).set(customer)
-                .addOnSuccessListener {
-                    Toast.makeText(this, "Kunde gespeichert", Toast.LENGTH_SHORT).show()
+            // Speichern mit Retry-Logik
+            CoroutineScope(Dispatchers.Main).launch {
+                val success = FirebaseRetryHelper.executeWithRetryAndToast(
+                    operation = { 
+                        db.collection("customers").document(customerId).set(customer)
+                    },
+                    context = this@AddCustomerActivity,
+                    errorMessage = "Fehler beim Speichern. Bitte erneut versuchen.",
+                    maxRetries = 3
+                )
+                
+                if (success != null) {
+                    Toast.makeText(this@AddCustomerActivity, "Kunde erfolgreich gespeichert!", Toast.LENGTH_SHORT).show()
                     finish()
+                } else {
+                    // Button wieder aktivieren bei Fehler
+                    binding.btnSaveCustomer.isEnabled = true
+                    binding.btnSaveCustomer.text = "Kunde JETZT Speichern"
                 }
-                .addOnFailureListener { 
-                    Toast.makeText(this, "Fehler beim Speichern", Toast.LENGTH_SHORT).show()
-                }
+            }
         }
     }
 

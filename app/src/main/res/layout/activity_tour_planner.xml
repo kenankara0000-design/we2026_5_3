@@ -3,53 +3,86 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
     android:background="#F0F4F8">
+
+    <!-- Header mit Zurück-Button -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="#007BFF"
+        android:padding="8dp"
+        android:elevation="4dp">
+
+        <ImageButton
+            android:id="@+id/btnBackFromTour"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_revert"
+            android:tint="#FFFFFF"
+            android:contentDescription="Zurück" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp">
+
+            <ImageButton
+                android:id="@+id/btnPrevDay"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_media_previous"
+                android:contentDescription="Vorheriger Tag"
+                android:tint="#FFFFFF"
+                android:layout_marginEnd="8dp"/>
+
+            <ImageButton
+                android:id="@+id/btnToday"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_today"
+                android:tint="#FFFFFF"
+                android:contentDescription="Heute"
+                android:layout_marginEnd="8dp"/>
+
+            <TextView
+                android:id="@+id/tvCurrentDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Datum"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+
+            <ImageButton
+                android:id="@+id/btnNextDay"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_media_next"
+                android:contentDescription="Nächster Tag"
+                android:tint="#FFFFFF"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <ImageButton
-            android:id="@+id/btnPrevDay"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:contentDescription="Vorheriger Tag"
-            android:src="@android:drawable/ic_media_previous" />
-
-        <TextView
-            android:id="@+id/tvCurrentDate"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="Datum"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="#1A237E"/>
-
-        <ImageButton
-            android:id="@+id/btnNextDay"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:contentDescription="Nächster Tag"
-            android:src="@android:drawable/ic_media_next" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvTourList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
     </LinearLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvTourList"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-    <Button
-        android:id="@+id/btnBackFromTour"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Zurück zum Hauptmenü"
-        style="@style/Widget.MaterialComponents.Button.TextButton"/>
 
 </LinearLayout>
