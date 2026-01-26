@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F8F9FA">
+    android:background="@color/background_light">
 
     <!-- Header mit Zurück-Button -->
     <RelativeLayout
@@ -11,7 +11,7 @@
         android:layout_height="60dp"
         android:background="#007BFF"
         android:padding="8dp"
-        android:elevation="4dp">
+        android:elevation="6dp">
 
         <ImageButton
             android:id="@+id/btnBack"
@@ -79,6 +79,104 @@
             android:padding="12dp"
             android:layout_marginBottom="12dp"/>
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wochentag:"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <Button
+                android:id="@+id/btnMo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Mo"
+                android:layout_marginEnd="4dp"
+                android:backgroundTint="@color/primary_blue"/>
+
+            <Button
+                android:id="@+id/btnDi"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Di"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:backgroundTint="@color/primary_blue"/>
+
+            <Button
+                android:id="@+id/btnMi"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Mi"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:backgroundTint="@color/primary_blue"/>
+
+            <Button
+                android:id="@+id/btnDo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Do"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:backgroundTint="@color/primary_blue"/>
+
+            <Button
+                android:id="@+id/btnFr"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Fr"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:backgroundTint="@color/primary_blue"/>
+
+            <Button
+                android:id="@+id/btnSa"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Sa"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:backgroundTint="@color/primary_blue"/>
+
+            <Button
+                android:id="@+id/btnSo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="So"
+                android:layout_marginStart="4dp"
+                android:backgroundTint="@color/primary_blue"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reihenfolge (1 = erste Abholung, 2 = zweite, etc.):"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/etReihenfolge"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Reihenfolge (Standard: 1)"
+            android:inputType="number"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"/>
+
         <EditText
             android:id="@+id/etNotizen"
             android:layout_width="match_parent"
@@ -110,7 +208,7 @@
             android:layout_width="match_parent"
             android:layout_height="65dp"
             android:text="Kunde JETZT Speichern"
-            android:backgroundTint="#1A237E"
+            android:backgroundTint="@color/primary_blue"
             android:textColor="#FFFFFF"
             android:layout_marginBottom="12dp"/>
 

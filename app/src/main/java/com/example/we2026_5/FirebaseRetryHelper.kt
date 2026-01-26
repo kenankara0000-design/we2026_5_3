@@ -56,4 +56,37 @@ object FirebaseRetryHelper {
         }
         return result
     }
+    
+    /**
+     * Führt eine suspend-Funktion mit Retry-Logik aus und zeigt Toast bei Fehler
+     */
+    suspend fun <T> executeSuspendWithRetryAndToast(
+        operation: suspend () -> T,
+        context: android.content.Context,
+        errorMessage: String = "Fehler beim Speichern. Bitte erneut versuchen.",
+        maxRetries: Int = 3,
+        delayMs: Long = 1000
+    ): T? {
+        var lastException: Exception? = null
+        
+        repeat(maxRetries) { attempt ->
+            try {
+                val result = operation()
+                return result
+            } catch (e: Exception) {
+                lastException = e
+                if (attempt < maxRetries - 1) {
+                    // Warten vor erneutem Versuch
+                    kotlinx.coroutines.delay(delayMs * (attempt + 1)) // Exponential backoff
+                }
+            }
+        }
+        
+        // Alle Versuche fehlgeschlagen
+        lastException?.printStackTrace()
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+        }
+        return null
+    }
 }

@@ -4,39 +4,52 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="24dp"
-    android:background="#F5F5F5">
+    android:padding="32dp"
+    android:background="@color/background_light">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="TourPlaner 2026"
-        android:textSize="28sp"
+        android:textSize="32sp"
         android:textStyle="bold"
-        android:textColor="#333333"
-        android:layout_marginBottom="48dp"/>
+        android:textColor="@color/primary_blue_dark"
+        android:layout_marginBottom="56dp"
+        android:letterSpacing="0.02"/>
 
     <Button
         android:id="@+id/btnKunden"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="80dp"
         android:text="Kunden Manager"
-        android:layout_marginBottom="16dp"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="20dp"
+        android:backgroundTint="@color/primary_blue"
+        android:textColor="@color/white"
         style="@style/Widget.Material3.Button.ElevatedButton"/>
 
     <Button
         android:id="@+id/btnTouren"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="80dp"
         android:text="Touren Planer"
-        android:layout_marginBottom="16dp"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="20dp"
+        android:backgroundTint="@color/primary_blue"
+        android:textColor="@color/white"
         style="@style/Widget.Material3.Button.ElevatedButton"/>
 
     <Button
         android:id="@+id/btnNeuerKunde"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="80dp"
         android:text="+ Neuer Kunde"
-        style="@style/Widget.MaterialComponents.Button"/>
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="@color/primary_blue_light"
+        android:textColor="@color/white"
+        style="@style/Widget.Material3.Button.ElevatedButton"/>
 
 </LinearLayout>

@@ -14,5 +14,7 @@ data class Customer(
     val urlaubBis: Long = 0,
     val verschobenAufDatum: Long = 0,
     val fotoUrls: List<String> = listOf(),
-    val istImUrlaub: Boolean = false // Das hat gefehlt!
+    val istImUrlaub: Boolean = false,
+    val wochentag: Int = 0, // 0=Montag, 1=Dienstag, ..., 6=Sonntag
+    val reihenfolge: Int = 1 // Reihenfolge der Abholung an diesem Tag (1, 2, 3, ...)
 )

@@ -4,15 +4,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/surface_white">
 
     <LinearLayout
         android:id="@+id/itemContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="12dp">
+        android:padding="16dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -23,9 +24,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Kunden Name"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="#1A237E"/>
+                android:textColor="@color/primary_blue_dark"/>
         </RelativeLayout>
 
         <TextView
@@ -33,100 +34,142 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Musterstraße 1, 12345 Stadt"
-            android:textColor="#757575"
-            android:layout_marginTop="4dp"/>
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginTop="6dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvNextTour"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Nächste Tour: 01.02.2026"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textStyle="italic"/>
+
+            <Button
+                android:id="@+id/btnNavigation"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="📍"
+                android:textSize="18sp"
+                android:backgroundTint="@color/primary_blue"
+                android:textColor="@color/white"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="0dp"
+                android:visibility="gone"/>
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvStatusLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp"
-            android:background="#FFCDD2"
-            android:textColor="#B71C1C"
+            android:layout_marginTop="12dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:background="@drawable/status_badge_overdue"
+            android:textColor="@color/white"
             android:text="ÜBERFÄLLIG"
             android:visibility="gone"
-            android:textSize="12sp"
-            android:textStyle="bold"/>
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textAllCaps="true"/>
 
         <!-- Aktions-Buttons: A, L, V, U -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="8dp"
-            android:gravity="end">
+            android:layout_marginTop="12dp"
+            android:gravity="end"
+            android:paddingTop="8dp">
 
             <Button
                 android:id="@+id/btnAbholung"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:text="A"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:backgroundTint="#28A745"
-                android:textColor="#FFFFFF"
-                android:layout_marginEnd="4dp"
+                android:backgroundTint="@color/button_abholung"
+                android:textColor="@color/white"
+                android:layout_marginEnd="6dp"
                 android:minWidth="0dp"
                 android:minHeight="0dp"
-                android:padding="0dp"/>
+                android:padding="0dp"
+                />
 
             <Button
                 android:id="@+id/btnAuslieferung"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:text="L"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:backgroundTint="#FFC107"
-                android:textColor="#000000"
-                android:layout_marginEnd="4dp"
+                android:backgroundTint="@color/button_auslieferung"
+                android:textColor="@color/white"
+                android:layout_marginEnd="6dp"
                 android:minWidth="0dp"
                 android:minHeight="0dp"
-                android:padding="0dp"/>
+                android:padding="0dp"
+                />
 
             <Button
                 android:id="@+id/btnVerschieben"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:text="V"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:backgroundTint="#17A2B8"
-                android:textColor="#FFFFFF"
-                android:layout_marginEnd="4dp"
+                android:backgroundTint="@color/button_verschieben"
+                android:textColor="@color/white"
+                android:layout_marginEnd="6dp"
                 android:minWidth="0dp"
                 android:minHeight="0dp"
-                android:padding="0dp"/>
+                android:padding="0dp"
+                />
 
             <Button
                 android:id="@+id/btnUrlaub"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:text="U"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:backgroundTint="#6C757D"
-                android:textColor="#FFFFFF"
-                android:layout_marginEnd="4dp"
+                android:backgroundTint="@color/button_urlaub"
+                android:textColor="@color/white"
+                android:layout_marginEnd="6dp"
                 android:minWidth="0dp"
                 android:minHeight="0dp"
-                android:padding="0dp"/>
+                android:padding="0dp"
+                />
 
             <Button
                 android:id="@+id/btnRueckgaengig"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="48dp"
                 android:text="Rückgängig"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:backgroundTint="#DC3545"
-                android:textColor="#FFFFFF"
+                android:backgroundTint="@color/button_rueckgaengig"
+                android:textColor="@color/white"
                 android:minWidth="0dp"
                 android:minHeight="0dp"
-                android:padding="8dp"
-                android:visibility="gone"/>
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:visibility="gone"
+                />
         </LinearLayout>
 
     </LinearLayout>

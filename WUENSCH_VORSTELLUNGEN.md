@@ -16,6 +16,38 @@
 - ✅ **Login vereinfacht**: Anonyme Authentifizierung für Team-Nutzung (5-10 Personen) - kein Login mehr nötig!
 - ✅ **Anonymous Authentication aktiviert** in Firebase Console
 - ✅ **Section Header Click-Fix**: Überfällig/Erledigt Bereiche können jetzt aufgeklappt werden (Click-Handler verbessert)
+- ✅ **🎨 KOMPLETTES DESIGN-REFRESH**: Alle Design-Vorschläge umgesetzt!
+  - Primärfarbe: Lila → Modernes Blau (#1976D2)
+  - Button-Farben vereinheitlicht (Blau, Grün, Orange, Grau, Rot)
+  - Section Headers nach Status eingefärbt (Rot für Überfällig, Grün für Erledigt)
+  - Moderne Status-Badges mit abgerundeten Ecken
+  - Optimierte Schatten (2dp statt 4dp)
+  - Verbesserte Spacing und Padding
+  - Runde Buttons (48dp, cornerRadius 24dp)
+  - Alle Layouts modernisiert
+- ✅ **Foto-Funktion erweitert**: Jetzt möglich, Foto aus Galerie auszuwählen ODER mit Kamera aufzunehmen (Auswahl-Dialog)
+- ✅ **Nächstes Tour-Datum**: Wird jetzt in Kunden-Übersicht angezeigt
+- ✅ **Navigation-Button**: In Kunden-Übersicht hinzugefügt (öffnet Google Maps mit Adresse)
+- ✅ **Google Maps bei Bearbeitung**: Button zum Öffnen von Google Maps für Adress-Auswahl
+- ✅ **Section Headers modernisiert**: Neue Drawables mit Rahmen für moderneres Design
+- ✅ **AddCustomerActivity Fix**: Button-Problem behoben (finish() auf Main-Thread)
+- ✅ **Offline-Modus**: FirebaseConfig als Application-Klasse registriert für besseren Offline-Support
+- ✅ **Section Headers nur bei Bedarf**: Überfällig/Erledigt Bereiche werden nur angezeigt, wenn Kunden vorhanden sind
+- ✅ **CardView für Section Headers**: Moderneres Design mit CardView und abgerundeten Ecken
+- ✅ **Drag & Drop im Tour Planner**: Kunden können durch langes Drücken und Ziehen frei platziert werden
+- ✅ **7-Tage-Touren-System**: Jeder Kunde ist an einem Wochentag gebunden (Mo-So)
+- ✅ **Reihenfolge-System**: Jeder Kunde hat eine Reihenfolge-Nummer für seinen Wochentag (1, 2, 3, ...)
+- ✅ **Wochentag-Auswahl**: Bei Kunden-Erstellung und -Bearbeitung kann der Wochentag ausgewählt werden
+- ✅ **Sortierung nach Reihenfolge**: Im Tour Planner werden Kunden nach ihrer Reihenfolge sortiert (statt Fälligkeitsdatum)
+- ✅ **Wochentag-Filterung**: Im Tour Planner werden nur Kunden angezeigt, die am angezeigten Wochentag Termine haben
+- ✅ **Swipe-Gesten für Datum-Wechsel**: Im Tour Planner kann durch Wischen nach links/rechts zwischen den Tagen gewechselt werden
+- ✅ **Loading-Indikatoren verbessert**: ProgressBar in TourPlanner und CustomerManager, visuelles Feedback beim Laden
+- ✅ **Error-Handling erweitert**: Aussagekräftige Fehlermeldungen, Retry-Buttons, Error-States mit klaren Anweisungen
+- ✅ **Empty States**: "Keine Kunden gefunden" und "Keine Touren für diesen Tag" Meldungen mit Icons
+- ✅ **MVVM-Pattern**: Repository Pattern, ViewModels, Dependency Injection mit Hilt implementiert
+- ✅ **Dependency Injection**: Hilt eingerichtet, AppModule für Firebase-Abhängigkeiten
+- ✅ **Unit-Tests**: Tests für CustomerRepository und CustomerManagerViewModel
+- ✅ **Code-Organisation**: Klare Trennung von UI, Logik und Daten
 
 ---
 

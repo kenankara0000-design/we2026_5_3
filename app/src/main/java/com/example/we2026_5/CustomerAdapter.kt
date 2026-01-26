@@ -2,8 +2,10 @@ package com.example.we2026_5
 
 import android.app.DatePickerDialog
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,7 +15,6 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.we2026_5.databinding.ItemCustomerBinding
 import com.example.we2026_5.databinding.ItemSectionHeaderBinding
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,15 +31,40 @@ enum class SectionType {
 }
 
 class CustomerAdapter(
-    private var items: List<ListItem>,
+    private var items: MutableList<ListItem>,
     private val context: Context,
     private val onClick: (Customer) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var displayedDateMillis: Long? = null
-    private val db = FirebaseFirestore.getInstance()
     private var expandedSections = mutableSetOf<SectionType>() // Standardmäßig eingeklappt
     var onSectionToggle: ((SectionType) -> Unit)? = null
+    
+    // Callbacks für Firebase-Operationen (statt direkter Firebase-Aufrufe)
+    var onAbholung: ((Customer) -> Unit)? = null
+    var onAuslieferung: ((Customer) -> Unit)? = null
+    var onResetTourCycle: ((String) -> Unit)? = null
+    var onVerschieben: ((Customer, Long, Boolean) -> Unit)? = null // customer, newDate, alleVerschieben
+    var onUrlaub: ((Customer, Long, Long) -> Unit)? = null // customer, von, bis
+    var onRueckgaengig: ((Customer) -> Unit)? = null
+    
+    // Drag & Drop Support
+    fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
+        // Nur Kunden-Items verschieben, keine Section Headers
+        val fromItem = items[fromPosition]
+        val toItem = items[toPosition]
+        
+        // Prüfen ob beide Items Kunden sind (keine Section Headers)
+        if (fromItem !is ListItem.CustomerItem || toItem !is ListItem.CustomerItem) {
+            return false
+        }
+        
+        // Items tauschen
+        items.removeAt(fromPosition)
+        items.add(toPosition, fromItem)
+        notifyItemMoved(fromPosition, toPosition)
+        return true
+    }
 
     companion object {
         private const val VIEW_TYPE_CUSTOMER = 0
@@ -91,6 +117,22 @@ class CustomerAdapter(
         val isExpanded = expandedSections.contains(header.sectionType)
         holder.binding.ivExpandCollapse.rotation = if (isExpanded) 180f else 0f
         
+        // Hintergrund und Textfarbe nach Section-Typ setzen (moderneres Design mit CardView)
+        when (header.sectionType) {
+            SectionType.OVERDUE -> {
+                holder.binding.cardSectionHeader.setCardBackgroundColor(ContextCompat.getColor(context, R.color.section_overdue_bg))
+                holder.binding.tvSectionTitle.setTextColor(ContextCompat.getColor(context, R.color.section_overdue_text))
+                holder.binding.ivExpandCollapse.setColorFilter(ContextCompat.getColor(context, R.color.section_overdue_text))
+                holder.binding.tvSectionCount.setTextColor(ContextCompat.getColor(context, R.color.section_overdue_text))
+            }
+            SectionType.DONE -> {
+                holder.binding.cardSectionHeader.setCardBackgroundColor(ContextCompat.getColor(context, R.color.section_done_bg))
+                holder.binding.tvSectionTitle.setTextColor(ContextCompat.getColor(context, R.color.section_done_text))
+                holder.binding.ivExpandCollapse.setColorFilter(ContextCompat.getColor(context, R.color.section_done_text))
+                holder.binding.tvSectionCount.setTextColor(ContextCompat.getColor(context, R.color.section_done_text))
+            }
+        }
+        
         // Click-Listener auf das gesamte Item setzen
         holder.itemView.setOnClickListener {
             toggleSection(header.sectionType)
@@ -123,6 +165,24 @@ class CustomerAdapter(
         holder.binding.tvItemName.text = customer.name
         holder.binding.tvItemAdresse.text = customer.adresse
 
+        // Nächstes Tour-Datum berechnen und anzeigen (immer, auch in TourPlanner)
+        val naechsteTour = if (customer.verschobenAufDatum > 0) {
+            customer.verschobenAufDatum
+        } else {
+            customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
+        }
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = naechsteTour
+        val dateStr = "${cal.get(Calendar.DAY_OF_MONTH)}.${cal.get(Calendar.MONTH) + 1}.${cal.get(Calendar.YEAR)}"
+        holder.binding.tvNextTour.text = "Nächste Tour: $dateStr"
+        holder.binding.tvNextTour.visibility = View.VISIBLE
+
+        // Navigation-Button anzeigen wenn Adresse vorhanden (immer)
+        holder.binding.btnNavigation.visibility = if (customer.adresse.isNotBlank()) View.VISIBLE else View.GONE
+        holder.binding.btnNavigation.setOnClickListener {
+            startNavigation(customer.adresse)
+        }
+
         resetStyles(holder)
 
         if (displayedDateMillis != null) {
@@ -143,6 +203,24 @@ class CustomerAdapter(
             // Rückgängig-Button nur bei erledigten Kunden anzeigen
             holder.binding.btnRueckgaengig.visibility = if (isDone) View.VISIBLE else View.GONE
         } else {
+            // In CustomerManager: Nächstes Tour-Datum immer anzeigen
+            val naechsteTour = if (customer.verschobenAufDatum > 0) {
+                customer.verschobenAufDatum
+            } else {
+                customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
+            }
+            val cal = Calendar.getInstance()
+            cal.timeInMillis = naechsteTour
+            val dateStr = "${cal.get(Calendar.DAY_OF_MONTH)}.${cal.get(Calendar.MONTH) + 1}.${cal.get(Calendar.YEAR)}"
+            holder.binding.tvNextTour.text = "Nächste Tour: $dateStr"
+            holder.binding.tvNextTour.visibility = View.VISIBLE
+            
+            // Navigation-Button anzeigen wenn Adresse vorhanden
+            holder.binding.btnNavigation.visibility = if (customer.adresse.isNotBlank()) View.VISIBLE else View.GONE
+            holder.binding.btnNavigation.setOnClickListener {
+                startNavigation(customer.adresse)
+            }
+            
             holder.binding.tvStatusLabel.visibility = View.GONE
             // Buttons in CustomerManager ausblenden
             holder.binding.btnAbholung.visibility = View.GONE
@@ -159,6 +237,17 @@ class CustomerAdapter(
         holder.binding.btnRueckgaengig.setOnClickListener { handleRueckgaengig(customer) }
 
         holder.itemView.setOnClickListener { onClick(customer) }
+    }
+
+    private fun startNavigation(adresse: String) {
+        val gmmIntentUri = Uri.parse("google.navigation:q=$adresse")
+        val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+        mapIntent.setPackage("com.google.android.apps.maps")
+        try {
+            context.startActivity(mapIntent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Google Maps ist nicht installiert.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun resetStyles(holder: CustomerViewHolder) {
@@ -183,20 +272,22 @@ class CustomerAdapter(
         when {
             isDone -> {
                 holder.binding.tvStatusLabel.text = "ERLEDIGT"
-                holder.binding.tvStatusLabel.setBackgroundColor(Color.GRAY)
+                holder.binding.tvStatusLabel.setBackgroundResource(R.drawable.status_badge_done)
+                holder.binding.tvStatusLabel.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white))
                 holder.binding.itemContainer.setBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.light_gray))
                 holder.binding.itemContainer.alpha = 0.6f
             }
             showAsOverdue -> {
                 holder.binding.tvStatusLabel.text = "ÜBERFÄLLIG"
-                holder.binding.tvStatusLabel.setBackgroundColor(Color.TRANSPARENT)
-                holder.binding.tvStatusLabel.setTextColor(Color.RED)
-                holder.binding.tvItemName.setTextColor(Color.RED)
+                holder.binding.tvStatusLabel.setBackgroundResource(R.drawable.status_badge_overdue)
+                holder.binding.tvStatusLabel.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white))
+                holder.binding.tvItemName.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.status_overdue))
                 holder.binding.tvItemName.setTypeface(null, Typeface.BOLD)
             }
             customer.verschobenAufDatum > 0 -> {
                 holder.binding.tvStatusLabel.text = "VERSCHOBEN"
-                holder.binding.tvStatusLabel.setBackgroundColor(Color.BLUE)
+                holder.binding.tvStatusLabel.setBackgroundResource(R.drawable.status_badge_verschoben)
+                holder.binding.tvStatusLabel.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white))
             }
             else -> holder.binding.tvStatusLabel.visibility = View.GONE
         }
@@ -205,7 +296,7 @@ class CustomerAdapter(
     override fun getItemCount() = items.size
 
     fun updateData(newList: List<ListItem>, date: Long? = null) {
-        items = newList
+        items = newList.toMutableList()
         displayedDateMillis = date
         notifyDataSetChanged()
     }
@@ -242,65 +333,16 @@ class CustomerAdapter(
 
     private fun handleAbholung(customer: Customer) {
         if (customer.abholungErfolgt) return
-        CoroutineScope(Dispatchers.Main).launch {
-            val success = FirebaseRetryHelper.executeWithRetryAndToast(
-                operation = { 
-                    db.collection("customers").document(customer.id)
-                        .update("abholungErfolgt", true)
-                },
-                context = context,
-                errorMessage = "Fehler beim Registrieren der Abholung. Bitte erneut versuchen.",
-                maxRetries = 3
-            )
-            if (success != null) {
-                Toast.makeText(context, "Abholung registriert", Toast.LENGTH_SHORT).show()
-            }
-        }
+        onAbholung?.invoke(customer)
     }
 
     private fun handleAuslieferung(customer: Customer) {
         if (customer.auslieferungErfolgt) return
-        
-        val wasAbholungErfolgt = customer.abholungErfolgt
-        CoroutineScope(Dispatchers.Main).launch {
-            val success = FirebaseRetryHelper.executeWithRetryAndToast(
-                operation = { 
-                    db.collection("customers").document(customer.id)
-                        .update("auslieferungErfolgt", true)
-                },
-                context = context,
-                errorMessage = "Fehler beim Registrieren der Auslieferung. Bitte erneut versuchen.",
-                maxRetries = 3
-            )
-            if (success != null) {
-                Toast.makeText(context, "Auslieferung registriert", Toast.LENGTH_SHORT).show()
-                if (wasAbholungErfolgt) {
-                    resetTourCycle(customer.id)
-                }
-            }
-        }
+        onAuslieferung?.invoke(customer)
     }
 
     private fun resetTourCycle(customerId: String) {
-        val resetData = mapOf(
-            "letzterTermin" to System.currentTimeMillis(),
-            "abholungErfolgt" to false,
-            "auslieferungErfolgt" to false,
-            "verschobenAufDatum" to 0
-        )
-        CoroutineScope(Dispatchers.Main).launch {
-            val success = FirebaseRetryHelper.executeWithRetryAndToast(
-                operation = { 
-                    db.collection("customers").document(customerId).update(resetData)
-                },
-                context = context,
-                errorMessage = "Fehler beim Zurücksetzen. Bitte erneut versuchen.",
-                maxRetries = 3
-            )
-            if (success != null) {
-                Toast.makeText(context, "Tour abgeschlossen!", Toast.LENGTH_SHORT).show()
-            }
-        }
+        onResetTourCycle?.invoke(customerId)
     }
 
     private fun showVerschiebenDialog(customer: Customer) {
@@ -315,46 +357,11 @@ class CustomerAdapter(
                 .setMessage("Wie möchten Sie vorgehen?")
                 .setPositiveButton("Nur diesen Termin") { _, _ ->
                     // Nur diesen Termin verschieben
-                    CoroutineScope(Dispatchers.Main).launch {
-                        val success = FirebaseRetryHelper.executeWithRetryAndToast(
-                            operation = { 
-                                db.collection("customers").document(customer.id)
-                                    .update("verschobenAufDatum", newDate)
-                            },
-                            context = context,
-                            errorMessage = "Fehler beim Verschieben. Bitte erneut versuchen.",
-                            maxRetries = 3
-                        )
-                        if (success != null) {
-                            Toast.makeText(context, "Termin verschoben", Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                    onVerschieben?.invoke(customer, newDate, false)
                 }
                 .setNeutralButton("Alle zukünftigen Termine") { _, _ ->
                     // Alle zukünftigen Termine verschieben
-                    val aktuellerFaelligAm = if (customer.verschobenAufDatum > 0) customer.verschobenAufDatum
-                                             else customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
-                    val diff = newDate - aktuellerFaelligAm
-                    
-                    // letzterTermin anpassen, damit alle zukünftigen Termine verschoben werden
-                    val neuerLetzterTermin = customer.letzterTermin + diff
-                    CoroutineScope(Dispatchers.Main).launch {
-                        val success = FirebaseRetryHelper.executeWithRetryAndToast(
-                            operation = { 
-                                db.collection("customers").document(customer.id)
-                                    .update(mapOf(
-                                        "letzterTermin" to neuerLetzterTermin,
-                                        "verschobenAufDatum" to 0
-                                    ))
-                            },
-                            context = context,
-                            errorMessage = "Fehler beim Verschieben. Bitte erneut versuchen.",
-                            maxRetries = 3
-                        )
-                        if (success != null) {
-                            Toast.makeText(context, "Alle zukünftigen Termine verschoben", Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                    onVerschieben?.invoke(customer, newDate, true)
                 }
                 .setNegativeButton("Abbrechen", null)
                 .show()
@@ -368,23 +375,7 @@ class CustomerAdapter(
             .setTitle("Rückgängig machen")
             .setMessage("Möchten Sie die Erledigung wirklich rückgängig machen?")
             .setPositiveButton("Ja") { _, _ ->
-                val updates = mutableMapOf<String, Any>()
-                if (customer.abholungErfolgt) updates["abholungErfolgt"] = false
-                if (customer.auslieferungErfolgt) updates["auslieferungErfolgt"] = false
-                
-                CoroutineScope(Dispatchers.Main).launch {
-                    val success = FirebaseRetryHelper.executeWithRetryAndToast(
-                        operation = { 
-                            db.collection("customers").document(customer.id).update(updates)
-                        },
-                        context = context,
-                        errorMessage = "Fehler beim Rückgängigmachen. Bitte erneut versuchen.",
-                        maxRetries = 3
-                    )
-                    if (success != null) {
-                        Toast.makeText(context, "Rückgängig gemacht", Toast.LENGTH_SHORT).show()
-                    }
-                }
+                onRueckgaengig?.invoke(customer)
             }
             .setNegativeButton("Abbrechen", null)
             .show()
@@ -401,20 +392,7 @@ class CustomerAdapter(
             val dateSetListenerBis = DatePickerDialog.OnDateSetListener { _, y, m, d ->
                 val pickedBis = Calendar.getInstance().apply { set(y, m, d, 23, 59, 59) }
                 if (pickedBis.timeInMillis >= urlaubVon) {
-                    CoroutineScope(Dispatchers.Main).launch {
-                        val success = FirebaseRetryHelper.executeWithRetryAndToast(
-                            operation = { 
-                                db.collection("customers").document(customer.id)
-                                    .update(mapOf("urlaubVon" to urlaubVon, "urlaubBis" to pickedBis.timeInMillis))
-                            },
-                            context = context,
-                            errorMessage = "Fehler beim Eintragen des Urlaubs. Bitte erneut versuchen.",
-                            maxRetries = 3
-                        )
-                        if (success != null) {
-                            Toast.makeText(context, "Urlaub eingetragen", Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                    onUrlaub?.invoke(customer, urlaubVon, pickedBis.timeInMillis)
                 } else {
                     Toast.makeText(context, "Enddatum muss nach Startdatum sein!", Toast.LENGTH_SHORT).show()
                 }

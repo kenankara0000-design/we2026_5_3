@@ -18,9 +18,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.databinding.ActivityCustomerDetailBinding
 import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
@@ -28,16 +28,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
+import org.koin.android.ext.android.inject
 
 class CustomerDetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCustomerDetailBinding
-    private val db = FirebaseFirestore.getInstance()
-    private val storage = FirebaseStorage.getInstance()
+    private val repository: CustomerRepository by inject()
+    private val storage: FirebaseStorage by inject()
     private var customerListener: ListenerRegistration? = null
     private var currentCustomer: Customer? = null
     private lateinit var customerId: String
     private var isInEditMode = false
+    private var selectedWochentag: Int = 0
 
     private lateinit var photoAdapter: PhotoAdapter
     private var latestTmpUri: Uri? = null
@@ -46,6 +48,10 @@ class CustomerDetailActivity : AppCompatActivity() {
         if (isSuccess) {
             latestTmpUri?.let { uri -> uploadImage(uri) }
         }
+    }
+
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { uploadImage(it) }
     }
 
     private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -85,7 +91,7 @@ class CustomerDetailActivity : AppCompatActivity() {
         binding.tvDetailAdresse.setOnClickListener { startNavigation() }
         binding.tvDetailTelefon.setOnClickListener { startPhoneCall() }
 
-        binding.btnTakePhoto.setOnClickListener { checkCameraPermissionAndStart() }
+        binding.btnTakePhoto.setOnClickListener { showPhotoOptionsDialog() }
 
         binding.btnEditCustomer.setOnClickListener { toggleEditMode(true) }
         binding.btnSaveCustomer.setOnClickListener { handleSave() }
@@ -110,8 +116,27 @@ class CustomerDetailActivity : AppCompatActivity() {
             binding.etDetailTelefon.setText(currentCustomer?.telefon)
             binding.etDetailIntervall.setText(currentCustomer?.intervallTage?.toString() ?: "7")
             binding.etDetailNotizen.setText(currentCustomer?.notizen)
+            binding.etDetailReihenfolge.setText(currentCustomer?.reihenfolge?.toString() ?: "1")
+            
+            // Wochentag-Buttons initialisieren
+            selectedWochentag = currentCustomer?.wochentag ?: 0
+            updateWochentagButtons(selectedWochentag)
+            binding.btnDetailMo.setOnClickListener { selectWochentag(0) }
+            binding.btnDetailDi.setOnClickListener { selectWochentag(1) }
+            binding.btnDetailMi.setOnClickListener { selectWochentag(2) }
+            binding.btnDetailDo.setOnClickListener { selectWochentag(3) }
+            binding.btnDetailFr.setOnClickListener { selectWochentag(4) }
+            binding.btnDetailSa.setOnClickListener { selectWochentag(5) }
+            binding.btnDetailSo.setOnClickListener { selectWochentag(6) }
+            
+            // Google Maps Button für Adress-Auswahl
+            binding.btnSelectLocation.setOnClickListener {
+                openMapsForLocationSelection()
+            }
         } else {
             binding.tvDetailName.text = currentCustomer?.name
+            binding.tvDetailWochentag.text = getWochentagName(currentCustomer?.wochentag ?: 0)
+            binding.tvDetailReihenfolge.text = (currentCustomer?.reihenfolge ?: 1).toString()
         }
     }
 
@@ -128,13 +153,24 @@ class CustomerDetailActivity : AppCompatActivity() {
             }
             else -> intervallInput
         }
+        
+        val reihenfolgeInput = binding.etDetailReihenfolge.text.toString().toIntOrNull() ?: 1
+        val reihenfolge = when {
+            reihenfolgeInput < 1 -> {
+                binding.etDetailReihenfolge.error = "Reihenfolge muss mindestens 1 sein"
+                return
+            }
+            else -> reihenfolgeInput
+        }
 
         val updatedData = mapOf(
             "name" to binding.etDetailName.text.toString(),
             "adresse" to binding.etDetailAdresse.text.toString(),
             "telefon" to binding.etDetailTelefon.text.toString(),
             "intervallTage" to intervall,
-            "notizen" to binding.etDetailNotizen.text.toString()
+            "notizen" to binding.etDetailNotizen.text.toString(),
+            "wochentag" to selectedWochentag,
+            "reihenfolge" to reihenfolge
         )
         updateCustomerData(updatedData, "Änderungen gespeichert")
         toggleEditMode(false)
@@ -151,27 +187,44 @@ class CustomerDetailActivity : AppCompatActivity() {
 
     private fun handleDelete() {
         CoroutineScope(Dispatchers.Main).launch {
-            val success = FirebaseRetryHelper.executeWithRetryAndToast(
+            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
                 operation = { 
-                    db.collection("customers").document(customerId).delete()
+                    repository.deleteCustomer(customerId)
                 },
                 context = this@CustomerDetailActivity,
                 errorMessage = "Fehler beim Löschen. Bitte erneut versuchen.",
                 maxRetries = 3
             )
             
-            if (success != null) {
+            if (success == true) {
                 Toast.makeText(this@CustomerDetailActivity, "Kunde gelöscht", Toast.LENGTH_LONG).show()
                 finish()
             }
         }
     }
     
+    private fun showPhotoOptionsDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Foto hinzufügen")
+            .setItems(arrayOf("Kamera", "Galerie")) { _, which ->
+                when (which) {
+                    0 -> checkCameraPermissionAndStart() // Kamera
+                    1 -> pickImageFromGallery() // Galerie
+                }
+            }
+            .setNegativeButton("Abbrechen", null)
+            .show()
+    }
+
     private fun checkCameraPermissionAndStart() {
         when (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)) {
             PackageManager.PERMISSION_GRANTED -> startCamera()
             else -> cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
+    }
+
+    private fun pickImageFromGallery() {
+        pickImageLauncher.launch("image/*")
     }
 
     private fun startCamera() {
@@ -204,7 +257,7 @@ class CustomerDetailActivity : AppCompatActivity() {
             val compressedUri = Uri.fromFile(compressedFile)
             
             // Upload mit Retry-Logik
-            val uploadTask = FirebaseRetryHelper.executeWithRetryAndToast(
+            val uploadTask = FirebaseRetryHelper.executeWithRetryAndToast<com.google.firebase.storage.UploadTask.TaskSnapshot>(
                 operation = { storageRef.putFile(compressedUri) },
                 context = this@CustomerDetailActivity,
                 errorMessage = "Upload fehlgeschlagen. Bitte erneut versuchen.",
@@ -213,7 +266,7 @@ class CustomerDetailActivity : AppCompatActivity() {
             
             if (uploadTask != null) {
                 // Download-URL mit Retry-Logik abrufen
-                val downloadUrl = FirebaseRetryHelper.executeWithRetryAndToast(
+                val downloadUrl = FirebaseRetryHelper.executeWithRetryAndToast<android.net.Uri>(
                     operation = { storageRef.downloadUrl },
                     context = this@CustomerDetailActivity,
                     errorMessage = "Fehler beim Abrufen der Download-URL.",
@@ -233,17 +286,16 @@ class CustomerDetailActivity : AppCompatActivity() {
 
     private fun addPhotoUrlToCustomer(url: String) {
         CoroutineScope(Dispatchers.Main).launch {
-            val success = FirebaseRetryHelper.executeWithRetryAndToast(
+            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
                 operation = { 
-                    db.collection("customers").document(customerId)
-                        .update("fotoUrls", FieldValue.arrayUnion(url))
+                    repository.updateCustomer(customerId, mapOf("fotoUrls" to FieldValue.arrayUnion(url)))
                 },
                 context = this@CustomerDetailActivity,
                 errorMessage = "Fehler beim Speichern der Foto-URL.",
                 maxRetries = 3
             )
             
-            if (success != null) {
+            if (success == true) {
                 Toast.makeText(this@CustomerDetailActivity, "Foto hinzugefügt", Toast.LENGTH_SHORT).show()
             }
         }
@@ -265,6 +317,68 @@ class CustomerDetailActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun selectWochentag(tag: Int) {
+        selectedWochentag = tag
+        updateWochentagButtons(tag)
+    }
+    
+    private fun updateWochentagButtons(tag: Int) {
+        val buttons = listOf(
+            binding.btnDetailMo, binding.btnDetailDi, binding.btnDetailMi,
+            binding.btnDetailDo, binding.btnDetailFr, binding.btnDetailSa, binding.btnDetailSo
+        )
+        buttons.forEachIndexed { index, button ->
+            if (index == tag) {
+                button.alpha = 1.0f
+                button.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                    resources.getColor(com.example.we2026_5.R.color.primary_blue_dark, theme)
+                )
+            } else {
+                button.alpha = 0.6f
+                button.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                    resources.getColor(com.example.we2026_5.R.color.primary_blue, theme)
+                )
+            }
+        }
+    }
+    
+    private fun getWochentagName(tag: Int): String {
+        return when (tag) {
+            0 -> "Montag"
+            1 -> "Dienstag"
+            2 -> "Mittwoch"
+            3 -> "Donnerstag"
+            4 -> "Freitag"
+            5 -> "Samstag"
+            6 -> "Sonntag"
+            else -> "Unbekannt"
+        }
+    }
+
+    private fun openMapsForLocationSelection() {
+        val currentAddress = binding.etDetailAdresse.text.toString().trim()
+        val query = if (currentAddress.isNotBlank()) currentAddress else "Deutschland"
+        
+        // Google Maps öffnen mit Suchfunktion
+        val gmmIntentUri = Uri.parse("geo:0,0?q=$query")
+        val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+        mapIntent.setPackage("com.google.android.apps.maps")
+        
+        if (mapIntent.resolveActivity(packageManager) != null) {
+            // Starte Maps - Benutzer kann dann Adresse auswählen und kopieren
+            startActivity(mapIntent)
+            Toast.makeText(this, "Wählen Sie einen Ort in Google Maps aus und kopieren Sie die Adresse hierher ein.", Toast.LENGTH_LONG).show()
+        } else {
+            // Fallback: Browser öffnen
+            val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/maps/search/?api=1&query=$query"))
+            if (webIntent.resolveActivity(packageManager) != null) {
+                startActivity(webIntent)
+            } else {
+                Toast.makeText(this, "Google Maps ist nicht verfügbar.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     
     private fun startPhoneCall() {
         currentCustomer?.let {
@@ -279,21 +393,23 @@ class CustomerDetailActivity : AppCompatActivity() {
     }
 
     private fun loadCustomer() {
-        customerListener = db.collection("customers").document(customerId).addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                Toast.makeText(this, "Fehler: ${error.message}", Toast.LENGTH_SHORT).show()
-                return@addSnapshotListener
-            }
-            snapshot?.toObject(Customer::class.java)?.let {
-                currentCustomer = it
-                if (!isInEditMode) updateUi(it)
-            } ?: run {
-                if (!isFinishing) {
-                    Toast.makeText(this, "Kunde nicht mehr vorhanden.", Toast.LENGTH_SHORT).show()
-                    finish()
+        customerListener = repository.addCustomerListener(
+            customerId = customerId,
+            onUpdate = { customer ->
+                customer?.let {
+                    currentCustomer = it
+                    if (!isInEditMode) updateUi(it)
+                } ?: run {
+                    if (!isFinishing) {
+                        Toast.makeText(this, "Kunde nicht mehr vorhanden.", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
                 }
+            },
+            onError = { error ->
+                Toast.makeText(this, "Fehler: ${error.message}", Toast.LENGTH_SHORT).show()
             }
-        }
+        )
     }
 
     private fun updateUi(customer: Customer) {
@@ -322,16 +438,16 @@ class CustomerDetailActivity : AppCompatActivity() {
 
     private fun updateCustomerData(data: Map<String, Any>, toastMessage: String) {
         CoroutineScope(Dispatchers.Main).launch {
-            val success = FirebaseRetryHelper.executeWithRetryAndToast(
+            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
                 operation = { 
-                    db.collection("customers").document(customerId).update(data)
+                    repository.updateCustomer(customerId, data)
                 },
                 context = this@CustomerDetailActivity,
                 errorMessage = "Fehler beim Speichern. Bitte erneut versuchen.",
                 maxRetries = 3
             )
             
-            if (success != null) {
+            if (success == true) {
                 Toast.makeText(this@CustomerDetailActivity, toastMessage, Toast.LENGTH_SHORT).show()
             }
         }

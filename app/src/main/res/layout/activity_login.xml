@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:gravity="center"
     android:padding="24dp"
-    android:background="#F5F5F5">
+    android:background="@color/background_light">
 
     <TextView
         android:layout_width="wrap_content"
@@ -24,7 +24,7 @@
         android:inputType="textEmailAddress"
         android:padding="12dp"
         android:layout_marginBottom="16dp"
-        android:background="#FFFFFF"/>
+        android:background="@color/surface_white"/>
 
     <EditText
         android:id="@+id/etPassword"
@@ -34,14 +34,14 @@
         android:inputType="textPassword"
         android:padding="12dp"
         android:layout_marginBottom="24dp"
-        android:background="#FFFFFF"/>
+        android:background="@color/surface_white"/>
 
     <Button
         android:id="@+id/btnLogin"
         android:layout_width="match_parent"
         android:layout_height="70dp"
         android:text="Anmelden / Registrieren"
-        android:backgroundTint="#007BFF"
+        android:backgroundTint="@color/primary_blue"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
         android:textStyle="bold"/>

@@ -1,9 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_500">#6200EE</color>
-    <color name="status_overdue">#FF0000</color>
+    <!-- Primärfarben - Modernes Blau -->
+    <color name="primary_blue">#1976D2</color>
+    <color name="primary_blue_dark">#1565C0</color>
+    <color name="primary_blue_light">#42A5F5</color>
+    
+    <!-- Alte Primärfarbe (für Kompatibilität) -->
+    <color name="purple_500">#1976D2</color>
+    
+    <!-- Status-Farben -->
+    <color name="status_overdue">#E53935</color>
     <color name="status_done">#4CAF50</color>
+    <color name="status_warning">#FF9800</color>
+    <color name="status_info">#2196F3</color>
+    
+    <!-- Button-Farben -->
+    <color name="button_abholung">#1976D2</color>
+    <color name="button_auslieferung">#4CAF50</color>
+    <color name="button_verschieben">#FF9800</color>
+    <color name="button_urlaub">#757575</color>
+    <color name="button_rueckgaengig">#E53935</color>
+    
+    <!-- Neutrale Farben -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="light_gray">#D3D3D3</color>
+    <color name="background_light">#FAFAFA</color>
+    <color name="surface_white">#FFFFFF</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="divider">#E0E0E0</color>
+    
+    <!-- Section Header Hintergründe -->
+    <color name="section_overdue_bg">#FFEBEE</color>
+    <color name="section_overdue_text">#C62828</color>
+    <color name="section_done_bg">#E8F5E9</color>
+    <color name="section_done_text">#2E7D32</color>
 </resources>

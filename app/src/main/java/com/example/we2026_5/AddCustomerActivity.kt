@@ -4,24 +4,47 @@ import android.app.DatePickerDialog
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.databinding.ActivityAddCustomerBinding
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
+import org.koin.android.ext.android.inject
 
 class AddCustomerActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAddCustomerBinding
-    private val db = FirebaseFirestore.getInstance()
+    private val repository: CustomerRepository by inject()
     private var selectedStartDate: Long = System.currentTimeMillis()
+    private var selectedWochentag: Int = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 2 // 0=Montag
+    private val wochentagButtons = mutableListOf<android.widget.Button>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddCustomerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Wochentag-Buttons initialisieren
+        wochentagButtons.addAll(listOf(
+            binding.btnMo, binding.btnDi, binding.btnMi, binding.btnDo,
+            binding.btnFr, binding.btnSa, binding.btnSo
+        ))
+        
+        // Standard-Wochentag setzen (heute)
+        val heute = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+        selectedWochentag = (heute + 5) % 7 // Calendar.SUNDAY=1 -> 0=Montag
+        updateWochentagButtons()
+        
+        // Wochentag-Button Click-Handler
+        binding.btnMo.setOnClickListener { selectWochentag(0) }
+        binding.btnDi.setOnClickListener { selectWochentag(1) }
+        binding.btnMi.setOnClickListener { selectWochentag(2) }
+        binding.btnDo.setOnClickListener { selectWochentag(3) }
+        binding.btnFr.setOnClickListener { selectWochentag(4) }
+        binding.btnSa.setOnClickListener { selectWochentag(5) }
+        binding.btnSo.setOnClickListener { selectWochentag(6) }
 
         updateDateButtonText(selectedStartDate)
 
@@ -59,6 +82,15 @@ class AddCustomerActivity : AppCompatActivity() {
                 else -> intervallInput
             }
             
+            val reihenfolgeInput = binding.etReihenfolge.text.toString().toIntOrNull() ?: 1
+            val reihenfolge = when {
+                reihenfolgeInput < 1 -> {
+                    binding.etReihenfolge.error = "Reihenfolge muss mindestens 1 sein"
+                    return@setOnClickListener
+                }
+                else -> reihenfolgeInput
+            }
+            
             // Button deaktivieren während Speichern
             binding.btnSaveCustomer.isEnabled = false
             binding.btnSaveCustomer.text = "Speichere..."
@@ -66,7 +98,7 @@ class AddCustomerActivity : AppCompatActivity() {
             val ersterTermin = selectedStartDate
             val letzterTermin = ersterTermin - TimeUnit.DAYS.toMillis(intervall.toLong())
 
-            val customerId = db.collection("customers").document().id
+            val customerId = java.util.UUID.randomUUID().toString()
             val customer = Customer(
                 id = customerId,
                 name = name,
@@ -75,27 +107,34 @@ class AddCustomerActivity : AppCompatActivity() {
                 notizen = binding.etNotizen.text.toString().trim(),
                 intervallTage = intervall,
                 letzterTermin = letzterTermin, 
-                istImUrlaub = false
+                istImUrlaub = false,
+                wochentag = selectedWochentag,
+                reihenfolge = reihenfolge
             )
 
             // Speichern mit Retry-Logik
             CoroutineScope(Dispatchers.Main).launch {
-                val success = FirebaseRetryHelper.executeWithRetryAndToast(
+                val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
                     operation = { 
-                        db.collection("customers").document(customerId).set(customer)
+                        repository.saveCustomer(customer)
                     },
                     context = this@AddCustomerActivity,
                     errorMessage = "Fehler beim Speichern. Bitte erneut versuchen.",
                     maxRetries = 3
                 )
                 
-                if (success != null) {
+                if (success == true) {
                     Toast.makeText(this@AddCustomerActivity, "Kunde erfolgreich gespeichert!", Toast.LENGTH_SHORT).show()
-                    finish()
+                    // Sicherstellen, dass finish() auf Main-Thread aufgerufen wird
+                    runOnUiThread {
+                        finish()
+                    }
                 } else {
                     // Button wieder aktivieren bei Fehler
-                    binding.btnSaveCustomer.isEnabled = true
-                    binding.btnSaveCustomer.text = "Kunde JETZT Speichern"
+                    runOnUiThread {
+                        binding.btnSaveCustomer.isEnabled = true
+                        binding.btnSaveCustomer.text = "Kunde JETZT Speichern"
+                    }
                 }
             }
         }
@@ -105,5 +144,26 @@ class AddCustomerActivity : AppCompatActivity() {
         val cal = Calendar.getInstance()
         cal.timeInMillis = dateInMillis
         binding.btnPickDate.text = "${cal.get(Calendar.DAY_OF_MONTH)}.${cal.get(Calendar.MONTH) + 1}.${cal.get(Calendar.YEAR)}"
+    }
+    
+    private fun selectWochentag(tag: Int) {
+        selectedWochentag = tag
+        updateWochentagButtons()
+    }
+    
+    private fun updateWochentagButtons() {
+        wochentagButtons.forEachIndexed { index, button ->
+            if (index == selectedWochentag) {
+                button.alpha = 1.0f
+                button.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                    resources.getColor(com.example.we2026_5.R.color.primary_blue_dark, theme)
+                )
+            } else {
+                button.alpha = 0.6f
+                button.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                    resources.getColor(com.example.we2026_5.R.color.primary_blue, theme)
+                )
+            }
+        }
     }
 }
