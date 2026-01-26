@@ -1,7 +1,10 @@
 package com.example.we2026_5
 
+import com.google.firebase.database.Exclude
+import com.google.firebase.firestore.IgnoreExtraProperties
 import java.util.concurrent.TimeUnit
 
+@IgnoreExtraProperties
 data class Customer(
     val id: String = "",
     val name: String = "",
@@ -28,7 +31,11 @@ data class Customer(
     val verschobenAufDatum: Long = 0,
     val fotoUrls: List<String> = listOf(),
     val istImUrlaub: Boolean = false,
-    val geloeschteTermine: List<Long> = listOf() // Liste von gelöschten Termin-Daten (für einzelne Termin-Löschungen)
+    val geloeschteTermine: List<Long> = listOf(), // Liste von gelöschten Termin-Daten (für einzelne Termin-Löschungen)
+    // Dummy-Feld für Realtime Database - wird ignoriert beim Speichern/Laden
+    // Verhindert Warnung "No setter/field for faelligAm found"
+    @Exclude
+    private val faelligAm: Long = 0
 ) {
     /**
      * Berechnet das nächste Fälligkeitsdatum basierend auf letzterTermin und Intervall.

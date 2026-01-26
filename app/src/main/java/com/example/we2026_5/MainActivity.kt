@@ -2,24 +2,22 @@ package com.example.we2026_5
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import com.example.we2026_5.data.repository.CustomerRepository
-import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.databinding.ActivityMainBinding
 import com.google.firebase.auth.FirebaseAuth
-import java.util.concurrent.TimeUnit
-import java.util.Calendar
+import com.google.firebase.database.ValueEventListener
 import org.koin.android.ext.android.inject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val repository: CustomerRepository by inject()
-    private val listeRepository: KundenListeRepository by inject()
     private val auth = FirebaseAuth.getInstance()
+    private lateinit var networkMonitor: NetworkMonitor
+    private var customersListener: ValueEventListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,55 +48,25 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, StatisticsActivity::class.java))
         }
         
-        // Standard-Listen beim ersten Start erstellen
-        initializeStandardListen()
+        // Globaler NetworkMonitor für Offline-Status
+        networkMonitor = NetworkMonitor(this)
+        networkMonitor.startMonitoring()
+        
+        // Offline-Status beobachten
+        networkMonitor.isOnline.observe(this, Observer { isOnline ->
+            binding.tvOfflineStatus.visibility = if (isOnline) View.GONE else View.VISIBLE
+        })
+        
+        // Synchronisierungs-Status beobachten
+        networkMonitor.isSyncing.observe(this, Observer { isSyncing ->
+            binding.tvSyncStatus.visibility = if (isSyncing) View.VISIBLE else View.GONE
+        })
     }
     
-    private fun initializeStandardListen() {
-        CoroutineScope(Dispatchers.Main).launch {
-            try {
-                val existingListen = listeRepository.getAllListen()
-                val standardListenNamen = listOf("Borna P", "Kitzscher P", "Rötha P", "Regis P", "Neukieritzsch P")
-                
-                // Prüfen welche Listen fehlen
-                val existingNamen = existingListen.map { it.name }
-                val fehlendeListen = standardListenNamen.filter { it !in existingNamen }
-                
-                // Fehlende Listen erstellen (mit Standard-Intervall: Di=Abholung, Do=Auslieferung, wöchentlich)
-                fehlendeListen.forEach { listenName ->
-                    val listeId = java.util.UUID.randomUUID().toString()
-                    
-                    // Standard-Intervall: Dienstag Abholung, Donnerstag Auslieferung, wöchentlich
-                    val cal = Calendar.getInstance()
-                    cal.set(Calendar.DAY_OF_WEEK, Calendar.TUESDAY)
-                    cal.set(Calendar.HOUR_OF_DAY, 0)
-                    cal.set(Calendar.MINUTE, 0)
-                    cal.set(Calendar.SECOND, 0)
-                    cal.set(Calendar.MILLISECOND, 0)
-                    val abholungDatum = cal.timeInMillis
-                    
-                    cal.set(Calendar.DAY_OF_WEEK, Calendar.THURSDAY)
-                    val auslieferungDatum = cal.timeInMillis
-                    
-                    val standardIntervall = com.example.we2026_5.ListeIntervall(
-                        abholungDatum = abholungDatum,
-                        auslieferungDatum = auslieferungDatum,
-                        wiederholen = true,
-                        intervallTage = 7 // Wöchentlich
-                    )
-                    
-                    val neueListe = com.example.we2026_5.KundenListe(
-                        id = listeId,
-                        name = listenName,
-                        intervalle = listOf(standardIntervall),
-                        erstelltAm = System.currentTimeMillis()
-                    )
-                    listeRepository.saveListe(neueListe)
-                }
-            } catch (e: Exception) {
-                // Fehler ignorieren (kann beim ersten Start passieren)
-            }
-        }
+    override fun onDestroy() {
+        super.onDestroy()
+        networkMonitor.stopMonitoring()
+        customersListener?.let { repository.removeListener(it) }
     }
 
     override fun onStart() {
@@ -107,7 +75,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateTourCount() {
-        repository.addCustomersListener(
+        customersListener = repository.addCustomersListener(
             onUpdate = { customers ->
                 val heute = System.currentTimeMillis()
                 val count = customers.count { customer ->

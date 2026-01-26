@@ -1,58 +1,68 @@
 package com.example.we2026_5.data.repository
 
 import com.example.we2026_5.Customer
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 
 class CustomerRepository(
-    private val db: FirebaseFirestore
+    private val database: FirebaseDatabase
 ) {
+    private val customersRef: DatabaseReference = database.reference.child("customers")
     
     /**
      * Lädt alle Kunden als Flow (für LiveData/StateFlow)
      */
     fun getAllCustomersFlow(): Flow<List<Customer>> = callbackFlow {
-        val listener = db.collection("customers")
-            .orderBy("name")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val customers = mutableListOf<Customer>()
+                snapshot.children.forEach { child ->
+                    val customer = child.getValue(Customer::class.java)
+                    customer?.let { customers.add(it) }
                 }
-                
-                if (snapshot != null) {
-                    val customers = snapshot.toObjects(Customer::class.java)
-                    trySend(customers)
-                }
+                // Sortieren nach Name
+                customers.sortBy { it.name }
+                trySend(customers)
             }
+            
+            override fun onCancelled(error: DatabaseError) {
+                close(Exception(error.message))
+            }
+        }
         
-        awaitClose { listener.remove() }
+        customersRef.addValueEventListener(listener)
+        
+        awaitClose { customersRef.removeEventListener(listener) }
     }
     
     /**
      * Lädt alle Kunden einmalig
      */
     suspend fun getAllCustomers(): List<Customer> {
-        val snapshot = db.collection("customers")
-            .orderBy("name")
-            .get()
-            .await()
-        return snapshot.toObjects(Customer::class.java)
+        val snapshot = customersRef.get().await()
+        val customers = mutableListOf<Customer>()
+        snapshot.children.forEach { child ->
+            val customer = child.getValue(Customer::class.java)
+            customer?.let { customers.add(it) }
+        }
+        // Sortieren nach Name
+        return customers.sortedBy { it.name }
     }
     
     /**
      * Lädt einen einzelnen Kunden
      */
     suspend fun getCustomerById(customerId: String): Customer? {
-        val document = db.collection("customers")
-            .document(customerId)
-            .get()
-            .await()
-        return document.toObject(Customer::class.java)
+        val snapshot = customersRef.child(customerId).get().await()
+        return snapshot.getValue(Customer::class.java)
     }
     
     /**
@@ -60,12 +70,26 @@ class CustomerRepository(
      */
     suspend fun saveCustomer(customer: Customer): Boolean {
         return try {
-            db.collection("customers")
-                .document(customer.id)
-                .set(customer)
-                .await()
-            true
+            // Realtime Database speichert sofort lokal im Offline-Modus
+            val task = customersRef.child(customer.id).setValue(customer)
+            
+            // Versuchen, auf Abschluss zu warten, aber mit Timeout (2 Sekunden)
+            // Im Offline-Modus ist die lokale Speicherung bereits sofort erfolgt
+            try {
+                withTimeout(2000) {
+                    task.await()
+                }
+                android.util.Log.d("CustomerRepository", "Save completed successfully")
+                true
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                // Timeout: Realtime Database hat bereits lokal gespeichert (im Offline-Modus)
+                // Die Daten sind sicher lokal gespeichert, auch wenn Server-Verbindung fehlt
+                android.util.Log.d("CustomerRepository", "Save completed (timeout, but saved locally)")
+                true
+            }
         } catch (e: Exception) {
+            // Nur echte Fehler werden als Fehler behandelt
+            android.util.Log.e("CustomerRepository", "Error saving customer", e)
             false
         }
     }
@@ -75,12 +99,26 @@ class CustomerRepository(
      */
     suspend fun updateCustomer(customerId: String, updates: Map<String, Any>): Boolean {
         return try {
-            db.collection("customers")
-                .document(customerId)
-                .update(updates)
-                .await()
-            true
+            // Realtime Database speichert sofort lokal im Offline-Modus
+            val task = customersRef.child(customerId).updateChildren(updates)
+            
+            // Versuchen, auf Abschluss zu warten, aber mit Timeout (2 Sekunden)
+            // Im Offline-Modus ist die lokale Aktualisierung bereits sofort erfolgt
+            try {
+                withTimeout(2000) {
+                    task.await()
+                }
+                android.util.Log.d("CustomerRepository", "Update completed successfully")
+                true
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                // Timeout: Realtime Database hat bereits lokal aktualisiert (im Offline-Modus)
+                // Die Daten sind sicher lokal aktualisiert, auch wenn Server-Verbindung fehlt
+                android.util.Log.d("CustomerRepository", "Update completed (timeout, but updated locally)")
+                true
+            }
         } catch (e: Exception) {
+            // Nur echte Fehler werden als Fehler behandelt
+            android.util.Log.e("CustomerRepository", "Error updating customer", e)
             false
         }
     }
@@ -90,56 +128,85 @@ class CustomerRepository(
      */
     suspend fun deleteCustomer(customerId: String): Boolean {
         return try {
-            db.collection("customers")
-                .document(customerId)
-                .delete()
-                .await()
-            true
+            // Realtime Database speichert sofort lokal im Offline-Modus
+            val task = customersRef.child(customerId).removeValue()
+            
+            // Versuchen, auf Abschluss zu warten, aber mit Timeout (2 Sekunden)
+            // Im Offline-Modus ist die lokale Löschung bereits sofort erfolgt
+            try {
+                withTimeout(2000) {
+                    task.await()
+                }
+                android.util.Log.d("CustomerRepository", "Delete completed successfully")
+                true
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                // Timeout: Realtime Database hat bereits lokal gelöscht (im Offline-Modus)
+                // Die Daten sind sicher lokal gelöscht, auch wenn Server-Verbindung fehlt
+                android.util.Log.d("CustomerRepository", "Delete completed (timeout, but deleted locally)")
+                true
+            }
         } catch (e: Exception) {
+            // Nur echte Fehler werden als Fehler behandelt
+            android.util.Log.e("CustomerRepository", "Error deleting customer", e)
             false
         }
     }
     
     /**
-     * Erstellt einen Snapshot-Listener für Echtzeit-Updates
+     * Erstellt einen ValueEventListener für Echtzeit-Updates
      */
     fun addCustomersListener(
         onUpdate: (List<Customer>) -> Unit,
         onError: (Exception) -> Unit
-    ): ListenerRegistration {
-        return db.collection("customers")
-            .orderBy("name")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    onError(error)
-                    return@addSnapshotListener
+    ): ValueEventListener {
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val customers = mutableListOf<Customer>()
+                snapshot.children.forEach { child ->
+                    val customer = child.getValue(Customer::class.java)
+                    customer?.let { customers.add(it) }
                 }
-                
-                if (snapshot != null) {
-                    val customers = snapshot.toObjects(Customer::class.java)
-                    onUpdate(customers)
-                }
+                // Sortieren nach Name
+                customers.sortBy { it.name }
+                onUpdate(customers)
             }
+            
+            override fun onCancelled(error: DatabaseError) {
+                onError(Exception(error.message))
+            }
+        }
+        
+        customersRef.addValueEventListener(listener)
+        return listener
     }
     
     /**
-     * Erstellt einen Snapshot-Listener für einen einzelnen Kunden (Echtzeit-Updates)
+     * Erstellt einen ValueEventListener für einen einzelnen Kunden (Echtzeit-Updates)
      */
     fun addCustomerListener(
         customerId: String,
         onUpdate: (Customer?) -> Unit,
         onError: (Exception) -> Unit
-    ): ListenerRegistration {
-        return db.collection("customers")
-            .document(customerId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    onError(error)
-                    return@addSnapshotListener
-                }
-                
-                val customer = snapshot?.toObject(Customer::class.java)
+    ): ValueEventListener {
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val customer = snapshot.getValue(Customer::class.java)
                 onUpdate(customer)
             }
+            
+            override fun onCancelled(error: DatabaseError) {
+                onError(Exception(error.message))
+            }
+        }
+        
+        customersRef.child(customerId).addValueEventListener(listener)
+        return listener
+    }
+    
+    /**
+     * Entfernt einen Listener
+     */
+    fun removeListener(listener: ValueEventListener) {
+        customersRef.removeEventListener(listener)
     }
 }

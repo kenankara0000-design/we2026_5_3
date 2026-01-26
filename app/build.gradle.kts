@@ -68,6 +68,10 @@ dependencies {
     implementation("com.google.firebase:firebase-storage-ktx")
     implementation("com.google.firebase:firebase-crashlytics-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-database-ktx")
+    
+    // WorkManager für Offline-Upload-Queue
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
     
     // Koin Dependency Injection (kein Kapt/KSP nötig!)
     // In Koin 3.x ist ViewModel-Support bereits in koin-android enthalten

@@ -2,6 +2,7 @@ package com.example.we2026_5
 
 import android.Manifest
 import android.app.DatePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -20,8 +21,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.databinding.ActivityCustomerDetailBinding
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +35,7 @@ class CustomerDetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCustomerDetailBinding
     private val repository: CustomerRepository by inject()
     private val storage: FirebaseStorage by inject()
-    private var customerListener: ListenerRegistration? = null
+    private var customerListener: ValueEventListener? = null
     private var currentCustomer: Customer? = null
     private lateinit var customerId: String
     private var isInEditMode = false
@@ -248,6 +248,13 @@ class CustomerDetailActivity : AppCompatActivity() {
             .setTitle("Kunde löschen?")
             .setMessage("Möchten Sie diesen Kunden wirklich löschen? Alle Termine dieses Kunden werden ebenfalls gelöscht.")
             .setPositiveButton("Löschen") { _, _ ->
+                // Optimistische UI-Aktualisierung: Sofort benachrichtigen, dass Kunde gelöscht wurde
+                // Damit die Liste in CustomerManagerActivity sofort aktualisiert wird
+                val resultIntent = Intent().apply {
+                    putExtra("DELETED_CUSTOMER_ID", customerId)
+                }
+                setResult(CustomerManagerActivity.RESULT_CUSTOMER_DELETED, resultIntent)
+                
                 CoroutineScope(Dispatchers.Main).launch {
                     val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
                         operation = { 
@@ -261,12 +268,10 @@ class CustomerDetailActivity : AppCompatActivity() {
                     
                     if (success == true) {
                         Toast.makeText(this@CustomerDetailActivity, "Kunde und alle Termine gelöscht", Toast.LENGTH_LONG).show()
-                        // Result-Code setzen, um CustomerManagerActivity zu benachrichtigen
-                        val resultIntent = Intent().apply {
-                            putExtra("DELETED_CUSTOMER_ID", customerId)
-                        }
-                        setResult(CustomerManagerActivity.RESULT_CUSTOMER_DELETED, resultIntent)
                         finish()
+                    } else {
+                        // Bei Fehler: Result zurücksetzen
+                        setResult(RESULT_CANCELED)
                     }
                 }
             }
@@ -324,50 +329,59 @@ class CustomerDetailActivity : AppCompatActivity() {
                 return@launch
             }
             
-            val storageRef = storage.reference.child("customer_photos/${customerId}/${System.currentTimeMillis()}.jpg")
-            val compressedUri = Uri.fromFile(compressedFile)
-            
-            // Upload mit Retry-Logik
-            val uploadTask = FirebaseRetryHelper.executeWithRetryAndToast<com.google.firebase.storage.UploadTask.TaskSnapshot>(
-                operation = { storageRef.putFile(compressedUri) },
+            // Verwende StorageUploadManager für Offline-Unterstützung
+            com.example.we2026_5.util.StorageUploadManager.uploadImage(
                 context = this@CustomerDetailActivity,
-                errorMessage = "Upload fehlgeschlagen. Bitte erneut versuchen.",
-                maxRetries = 3
-            )
-            
-            if (uploadTask != null) {
-                // Download-URL mit Retry-Logik abrufen
-                val downloadUrl = FirebaseRetryHelper.executeWithRetryAndToast<android.net.Uri>(
-                    operation = { storageRef.downloadUrl },
-                    context = this@CustomerDetailActivity,
-                    errorMessage = "Fehler beim Abrufen der Download-URL.",
-                    maxRetries = 3
-                )
-                
-                downloadUrl?.let { url ->
-                    addPhotoUrlToCustomer(url.toString())
+                imageFile = compressedFile,
+                customerId = customerId,
+                onSuccess = { downloadUrl ->
+                    addPhotoUrlToCustomer(downloadUrl)
+                    binding.progressBar.visibility = View.GONE
+                    Toast.makeText(this@CustomerDetailActivity, "Bild erfolgreich hochgeladen", Toast.LENGTH_SHORT).show()
+                },
+                onError = { exception ->
+                    binding.progressBar.visibility = View.GONE
+                    // Prüfe ob offline - dann in Queue
+                    val isOffline = !isNetworkAvailable()
+                    if (isOffline) {
+                        Toast.makeText(this@CustomerDetailActivity, "Bild wird hochgeladen, sobald Internet verfügbar ist", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(this@CustomerDetailActivity, "Upload fehlgeschlagen: ${exception.message}", Toast.LENGTH_SHORT).show()
+                    }
                 }
-            }
-            
-            // Temporäres File löschen
-            compressedFile.delete()
-            binding.progressBar.visibility = View.GONE
+            )
         }
+    }
+    
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val network = connectivityManager.activeNetwork
+        val capabilities = network?.let { connectivityManager.getNetworkCapabilities(it) }
+        return capabilities?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
+               capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
     private fun addPhotoUrlToCustomer(url: String) {
         CoroutineScope(Dispatchers.Main).launch {
-            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                operation = { 
-                    repository.updateCustomer(customerId, mapOf("fotoUrls" to FieldValue.arrayUnion(url)))
-                },
-                context = this@CustomerDetailActivity,
-                errorMessage = "Fehler beim Speichern der Foto-URL.",
-                maxRetries = 3
-            )
-            
-            if (success == true) {
-                Toast.makeText(this@CustomerDetailActivity, "Foto hinzugefügt", Toast.LENGTH_SHORT).show()
+            // Realtime Database: Liste laden, erweitern und zurückschreiben
+            val customer = repository.getCustomerById(customerId)
+            if (customer != null) {
+                val updatedUrls = customer.fotoUrls.toMutableList()
+                if (!updatedUrls.contains(url)) {
+                    updatedUrls.add(url)
+                    val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
+                        operation = { 
+                            repository.updateCustomer(customerId, mapOf("fotoUrls" to updatedUrls))
+                        },
+                        context = this@CustomerDetailActivity,
+                        errorMessage = "Fehler beim Speichern der Foto-URL.",
+                        maxRetries = 3
+                    )
+                    
+                    if (success == true) {
+                        Toast.makeText(this@CustomerDetailActivity, "Foto hinzugefügt", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
     }
@@ -498,6 +512,6 @@ class CustomerDetailActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-        customerListener?.remove()
+        customerListener?.let { repository.removeListener(it) }
     }
 }

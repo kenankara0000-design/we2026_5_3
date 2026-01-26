@@ -162,17 +162,40 @@ class AddCustomerActivity : AppCompatActivity() {
                 )
 
                 // Speichern mit Retry-Logik
-                val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                    operation = { 
-                        repository.saveCustomer(customer)
-                    },
-                    context = this@AddCustomerActivity,
-                    errorMessage = "Fehler beim Speichern. Bitte erneut versuchen.",
-                    maxRetries = 3
-                )
+                android.util.Log.d("AddCustomer", "Starting save operation for customer: ${customer.name}")
+                var success: Boolean? = null
+                try {
+                    // WICHTIG: saveCustomer() gibt Boolean zurück (true/false)
+                    // executeSuspendWithRetryAndToast gibt T? zurück, also Boolean?
+                    // Bei Erfolg: true, bei Fehler: false oder null
+                    android.util.Log.d("AddCustomer", "Calling executeSuspendWithRetryAndToast...")
+                    success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
+                        operation = { 
+                            android.util.Log.d("AddCustomer", "Inside operation, calling saveCustomer...")
+                            val result = repository.saveCustomer(customer)
+                            android.util.Log.d("AddCustomer", "saveCustomer returned: $result")
+                            result
+                        },
+                        context = this@AddCustomerActivity,
+                        errorMessage = "Fehler beim Speichern. Bitte erneut versuchen.",
+                        maxRetries = 3
+                    )
+                    android.util.Log.d("AddCustomer", "executeSuspendWithRetryAndToast returned: success=$success, type=${success?.javaClass?.simpleName}")
+                } catch (e: Exception) {
+                    android.util.Log.e("AddCustomer", "Exception in save operation", e)
+                    success = null
+                }
                 
+                // Prüfen ob erfolgreich
+                // success kann sein: true (Erfolg), false (Fehler in saveCustomer), null (alle Retries fehlgeschlagen)
+                android.util.Log.d("AddCustomer", "Checking success: success=$success")
+                val saveSuccessful = (success == true)
+                android.util.Log.d("AddCustomer", "Save successful: $saveSuccessful, will close activity: $saveSuccessful")
+                
+                // UI-Update auf Main-Thread (auch wenn wir bereits im Main-Thread sind, sicherheitshalber)
                 runOnUiThread {
-                    if (success == true) {
+                    if (saveSuccessful) {
+                        android.util.Log.d("AddCustomer", "Updating UI for success")
                         // Erfolg: Button-Text ändern und dann Activity schließen
                         binding.btnSaveCustomer.text = "✓ Gespeichert!"
                         binding.btnSaveCustomer.backgroundTintList = android.content.res.ColorStateList.valueOf(
@@ -180,16 +203,24 @@ class AddCustomerActivity : AppCompatActivity() {
                         )
                         binding.btnSaveCustomer.alpha = 1.0f
                         
-                        // Kurz warten, damit der Benutzer das Feedback sieht
+                        android.util.Log.d("AddCustomer", "Scheduling finish() in 800ms")
+                        // Kurz warten, damit der Benutzer das Feedback sieht, dann Activity schließen
                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            finish()
+                            android.util.Log.d("AddCustomer", "Handler executed, isFinishing: $isFinishing")
+                            if (!isFinishing) {
+                                android.util.Log.d("AddCustomer", "Calling finish()")
+                                finish()
+                            } else {
+                                android.util.Log.d("AddCustomer", "Activity already finishing, not calling finish()")
+                            }
                         }, 800)
                     } else {
+                        android.util.Log.d("AddCustomer", "Save failed, resetting button")
                         // Fehler: Button wieder aktivieren
                         binding.btnSaveCustomer.isEnabled = true
                         binding.btnSaveCustomer.text = "Speichern"
                         binding.btnSaveCustomer.alpha = 1.0f
-                        // Toast wird bereits von FirebaseRetryHelper angezeigt
+                        // Toast wird bereits von FirebaseRetryHelper angezeigt (falls Fehler)
                     }
                 }
             }

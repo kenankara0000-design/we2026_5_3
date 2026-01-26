@@ -7,6 +7,70 @@
     android:padding="32dp"
     android:background="@color/background_light">
 
+    <!-- Offline-Status und Sync-Status (oben) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="16dp">
+        
+        <!-- Offline-Status -->
+        <LinearLayout
+            android:id="@+id/tvOfflineStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            android:background="@drawable/status_badge_overdue"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:layout_marginEnd="8dp">
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_offline"
+                android:layout_marginEnd="4dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Offline"
+                android:textColor="#FFEB3B"
+                android:textSize="10sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+        
+        <!-- Sync-Status -->
+        <LinearLayout
+            android:id="@+id/tvSyncStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            android:background="@drawable/status_badge_overdue"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp">
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_offline"
+                android:layout_marginEnd="4dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Synchronisiere..."
+                android:textColor="#2196F3"
+                android:textSize="10sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+    </LinearLayout>
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

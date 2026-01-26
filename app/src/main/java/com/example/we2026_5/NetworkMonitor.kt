@@ -7,28 +7,65 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.example.we2026_5.util.FirebaseSyncManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class NetworkMonitor(private val context: Context) {
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val _isOnline = MutableLiveData<Boolean>()
     val isOnline: LiveData<Boolean> = _isOnline
+    
+    private val _isSyncing = MutableLiveData<Boolean>()
+    val isSyncing: LiveData<Boolean> = _isSyncing
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
             _isOnline.postValue(true)
+            // Realtime Database synchronisiert automatisch
+            CoroutineScope(Dispatchers.IO).launch {
+                FirebaseSyncManager.setNetworkEnabled(true)
+                // Prüfe auf ausstehende Schreibvorgänge
+                checkPendingWrites()
+            }
         }
 
         override fun onLost(network: Network) {
             _isOnline.postValue(false)
+            // Realtime Database arbeitet automatisch offline
+            CoroutineScope(Dispatchers.IO).launch {
+                FirebaseSyncManager.setNetworkEnabled(false)
+            }
         }
 
         override fun onCapabilitiesChanged(
             network: Network,
             networkCapabilities: NetworkCapabilities
         ) {
-            val hasInternet = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+            val hasInternet = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
                              networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
             _isOnline.postValue(hasInternet)
+            
+            if (hasInternet) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    FirebaseSyncManager.setNetworkEnabled(true)
+                    checkPendingWrites()
+                }
+            } else {
+                CoroutineScope(Dispatchers.IO).launch {
+                    FirebaseSyncManager.setNetworkEnabled(false)
+                }
+            }
+        }
+    }
+    
+    private suspend fun checkPendingWrites() {
+        _isSyncing.postValue(true)
+        try {
+            FirebaseSyncManager.waitForSync()
+        } finally {
+            _isSyncing.postValue(false)
         }
     }
 
@@ -52,5 +89,13 @@ class NetworkMonitor(private val context: Context) {
         val isConnected = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
                          capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
         _isOnline.postValue(isConnected)
+        
+        // Realtime Database synchronisiert automatisch
+        CoroutineScope(Dispatchers.IO).launch {
+            FirebaseSyncManager.setNetworkEnabled(isConnected)
+            if (isConnected) {
+                checkPendingWrites()
+            }
+        }
     }
 }

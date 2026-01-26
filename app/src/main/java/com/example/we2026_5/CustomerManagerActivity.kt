@@ -33,6 +33,7 @@ class CustomerManagerActivity : AppCompatActivity() {
     private lateinit var adapter: CustomerAdapter
     private lateinit var networkMonitor: NetworkMonitor
     private var pressedHeaderButton: String? = null // "Auswählen", "Exportieren", "NeuerKunde"
+    private val deletedCustomerIds = mutableSetOf<String>() // Liste von gelöschten Kunden-IDs (optimistische UI-Aktualisierung)
     
     companion object {
         private const val REQUEST_CODE_CUSTOMER_DETAIL = 1001
@@ -136,18 +137,26 @@ class CustomerManagerActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_CUSTOMER_DETAIL) {
-            if (resultCode == RESULT_CUSTOMER_DELETED) {
+            val customerId = data?.getStringExtra("DELETED_CUSTOMER_ID")
+            
+            if (resultCode == RESULT_CUSTOMER_DELETED && customerId != null) {
                 // Kunde wurde gelöscht - Liste sofort aktualisieren
-                val deletedCustomerId = data?.getStringExtra("DELETED_CUSTOMER_ID")
-                if (deletedCustomerId != null) {
-                    // Optimistische UI-Aktualisierung: Kunde sofort aus Adapter entfernen
-                    adapter.removeCustomer(deletedCustomerId)
-                    // Dann Liste neu laden um sicherzustellen, dass alles synchron ist
-                    viewModel.loadCustomers()
-                } else {
-                    // Fallback: Liste neu laden
-                    viewModel.loadCustomers()
-                }
+                // Optimistische UI-Aktualisierung: Kunde sofort aus der Liste entfernen
+                // Dies erfolgt BEVOR die Löschung abgeschlossen ist, für sofortiges visuelles Feedback
+                deletedCustomerIds.add(customerId)
+                android.util.Log.d("CustomerManager", "Added customer $customerId to deleted list (optimistic update)")
+                
+                // Adapter sofort aktualisieren
+                adapter.removeCustomer(customerId)
+                
+                // Flow-Updates werden automatisch gefiltert, da deletedCustomerIds verwendet wird
+                // Wenn die Löschung erfolgreich ist, wird der Kunde auch aus Realtime Database entfernt
+                // und erscheint nicht mehr in zukünftigen Flow-Updates
+            } else if (resultCode == RESULT_CANCELED && customerId != null) {
+                // Löschung fehlgeschlagen - Kunde wieder zur Liste hinzufügen
+                deletedCustomerIds.remove(customerId)
+                android.util.Log.d("CustomerManager", "Removed customer $customerId from deleted list (deletion failed)")
+                // Flow wird automatisch aktualisiert und zeigt den Kunden wieder an
             }
         }
     }
@@ -160,12 +169,17 @@ class CustomerManagerActivity : AppCompatActivity() {
     private fun observeViewModel() {
         // Kunden-Liste beobachten
         viewModel.filteredCustomers.observe(this) { customers ->
-            adapter.updateData(customers.map { ListItem.CustomerItem(it) })
+            // Gelöschte Kunden aus der Liste filtern (optimistische UI-Aktualisierung)
+            val filteredCustomers = customers.filter { customer ->
+                !deletedCustomerIds.contains(customer.id)
+            }
+            
+            adapter.updateData(filteredCustomers.map { ListItem.CustomerItem(it) })
             updateBulkActionBar()
             updateButtonStates()
             
             // Empty State anzeigen wenn keine Kunden vorhanden
-            if (customers.isEmpty()) {
+            if (filteredCustomers.isEmpty()) {
                 binding.emptyStateLayout.visibility = View.VISIBLE
                 binding.rvCustomerList.visibility = View.GONE
             } else {

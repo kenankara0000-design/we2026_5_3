@@ -3,6 +3,7 @@ package com.example.we2026_5
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.net.Uri
 import android.os.Environment
 import kotlinx.coroutines.Dispatchers
@@ -28,38 +29,159 @@ object ImageUtils {
         maxWidth: Int = 1920,
         quality: Int = 85
     ): File? = withContext(Dispatchers.IO) {
+        var inputStream: InputStream? = null
+        var originalBitmap: Bitmap? = null
+        var outputStream: FileOutputStream? = null
+        
         try {
-            val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
-            val originalBitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream?.close()
+            // Uri öffnen
+            inputStream = context.contentResolver.openInputStream(uri)
+            if (inputStream == null) {
+                android.util.Log.e("ImageUtils", "Could not open input stream for URI: $uri")
+                return@withContext null
+            }
             
-            if (originalBitmap == null) return@withContext null
+            // Bitmap dekodieren mit Optionen für bessere Fehlerbehandlung
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = false
+                inSampleSize = 1
+            }
+            
+            originalBitmap = BitmapFactory.decodeStream(inputStream, null, options)
+            inputStream.close()
+            inputStream = null
+            
+            if (originalBitmap == null) {
+                android.util.Log.e("ImageUtils", "Could not decode bitmap from URI: $uri")
+                return@withContext null
+            }
+            
+            // Prüfe ob Bitmap recycelt wurde
+            if (originalBitmap.isRecycled) {
+                android.util.Log.e("ImageUtils", "Original bitmap is already recycled")
+                return@withContext null
+            }
             
             // Skalierung berechnen
             val width = originalBitmap.width
             val height = originalBitmap.height
-            val scale = if (width > maxWidth) maxWidth.toFloat() / width else 1.0f
+            val needsScaling = width > maxWidth
+            val scale = if (needsScaling) maxWidth.toFloat() / width else 1.0f
             val newWidth = (width * scale).toInt()
             val newHeight = (height * scale).toInt()
             
-            // Bild skalieren
-            val scaledBitmap = Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
-            originalBitmap.recycle()
-            
-            // Komprimiertes File erstellen
+            // Komprimiertes File erstellen (vor der Bitmap-Verarbeitung)
             val outputDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
                 ?: context.cacheDir
+            
+            // Stelle sicher, dass Verzeichnis existiert
+            if (!outputDir.exists()) {
+                outputDir.mkdirs()
+            }
+            
             val outputFile = File.createTempFile("compressed_${System.currentTimeMillis()}_", ".jpg", outputDir)
+            outputStream = FileOutputStream(outputFile)
             
-            val outputStream = FileOutputStream(outputFile)
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
-            outputStream.flush()
-            outputStream.close()
-            scaledBitmap.recycle()
+            // Bitmap für Komprimierung vorbereiten
+            val bitmapToCompress: Bitmap = if (needsScaling) {
+                // Skalierung nötig - erstelle skalierte Kopie
+                try {
+                    val scaled = Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
+                    if (scaled == null || scaled.isRecycled) {
+                        android.util.Log.e("ImageUtils", "Failed to create scaled bitmap")
+                        outputStream?.close()
+                        outputFile.delete()
+                        if (originalBitmap != null && !originalBitmap.isRecycled) {
+                            originalBitmap.recycle()
+                        }
+                        return@withContext null
+                    }
+                    // Original recyclen (skalierte Kopie ist unabhängig)
+                    if (!originalBitmap.isRecycled) {
+                        originalBitmap.recycle()
+                    }
+                    originalBitmap = null
+                    scaled
+                } catch (e: Exception) {
+                    android.util.Log.e("ImageUtils", "Error creating scaled bitmap", e)
+                    outputStream?.close()
+                    outputFile.delete()
+                    if (originalBitmap != null && !originalBitmap.isRecycled) {
+                        originalBitmap.recycle()
+                    }
+                    return@withContext null
+                }
+            } else {
+                // Keine Skalierung nötig - verwende Original direkt
+                originalBitmap
+            }
             
+            // Prüfe ob Bitmap für Komprimierung gültig ist
+            if (bitmapToCompress.isRecycled) {
+                android.util.Log.e("ImageUtils", "Bitmap to compress is already recycled")
+                outputStream?.close()
+                outputFile.delete()
+                if (bitmapToCompress != originalBitmap && !bitmapToCompress.isRecycled) {
+                    bitmapToCompress.recycle()
+                }
+                if (originalBitmap != null && !originalBitmap.isRecycled) {
+                    originalBitmap.recycle()
+                }
+                return@withContext null
+            }
+            
+            // Komprimieren
+            try {
+                val success = bitmapToCompress.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+                if (!success) {
+                    android.util.Log.e("ImageUtils", "Failed to compress bitmap")
+                    outputStream?.close()
+                    outputFile.delete()
+                    if (bitmapToCompress != originalBitmap && !bitmapToCompress.isRecycled) {
+                        bitmapToCompress.recycle()
+                    }
+                    if (originalBitmap != null && !originalBitmap.isRecycled) {
+                        originalBitmap.recycle()
+                    }
+                    return@withContext null
+                }
+                outputStream?.flush()
+                outputStream?.close()
+                outputStream = null
+            } catch (e: Exception) {
+                android.util.Log.e("ImageUtils", "Error during compression", e)
+                outputStream?.close()
+                outputFile.delete()
+                if (bitmapToCompress != originalBitmap && !bitmapToCompress.isRecycled) {
+                    bitmapToCompress.recycle()
+                }
+                if (originalBitmap != null && !originalBitmap.isRecycled) {
+                    originalBitmap.recycle()
+                }
+                return@withContext null
+            }
+            
+            // Bitmap recyclen (nur wenn es eine skalierte Kopie war)
+            if (bitmapToCompress != originalBitmap && !bitmapToCompress.isRecycled) {
+                bitmapToCompress.recycle()
+            } else if (originalBitmap != null && !originalBitmap.isRecycled) {
+                originalBitmap.recycle()
+            }
+            originalBitmap = null
+            
+            android.util.Log.d("ImageUtils", "Image compressed successfully: ${outputFile.absolutePath}")
             outputFile
         } catch (e: Exception) {
+            android.util.Log.e("ImageUtils", "Error compressing image", e)
             e.printStackTrace()
+            
+            // Cleanup bei Fehler
+            inputStream?.close()
+            if (originalBitmap != null && !originalBitmap.isRecycled) {
+                originalBitmap.recycle()
+            }
+            outputStream?.close()
+            
             null
         }
     }

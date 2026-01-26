@@ -1,335 +1,443 @@
-# 📊 Vollständige App-Analyse & Änderungsbericht
-
-**Datum**: 26. Januar 2026  
-**Version**: 1.1.0.0  
-**Status**: ✅ Produktionsreif mit neuen Features
+# Umfassende App-Analyse - we2026_5 (Tour-Planer)
+**Datum:** 26. Januar 2026  
+**Version:** 1.0 (A1.0.5.0)
 
 ---
 
-## 📋 **EXECUTIVE SUMMARY**
+## 📋 EXECUTIVE SUMMARY
 
-Die **TourPlaner 2026** App wurde umfassend analysiert und um ein neues **Listen-System für Privat-Kunden** erweitert. Die App unterstützt jetzt die Unterscheidung zwischen **Privat-** und **Gewerblich-Kunden**, wobei Privat-Kunden in vordefinierten Listen organisiert werden können. Jede Liste hat feste Wochentage für Abholung und Auslieferung.
-
-### **Hauptänderungen:**
-1. ✅ **Kunden-Art System**: Privat vs. Gewerblich
-2. ✅ **Listen-System**: Gruppierung von Privat-Kunden
-3. ✅ **Tour Planner**: Zeigt Listen als Sections
-4. ✅ **Standard-Listen**: Automatische Erstellung beim ersten Start
+Die App ist grundsätzlich funktionsfähig, nutzt jedoch **Firebase Firestore** statt **Firebase Realtime Database**, obwohl eine Realtime Database URL in der Konfiguration vorhanden ist. Die Offline-Funktionalität ist implementiert, hat aber einige Verbesserungspotenziale. Firebase Storage funktioniert für Bild-Uploads.
 
 ---
 
-## 🆕 **NEU IMPLEMENTIERTE FEATURES**
+## 🔍 1. FIREBASE KONFIGURATION & VERWENDUNG
 
-### **1. Kunden-Art System** ✅
+### 1.1 Firebase Realtime Database
+**Status:** ❌ **NICHT VERWENDET**
 
-#### **Beschreibung:**
-Beim Erstellen eines Kunden kann jetzt zwischen "Privat" und "Gewerblich" gewählt werden.
-
-#### **Technische Details:**
-- **Customer.kt**: 
-  - Neues Feld `kundenArt: String = "Gewerblich"`
-  - Neues Feld `listeId: String = ""` (nur für Privat-Kunden)
-- **UI (activity_add_customer.xml)**:
-  - RadioGroup mit zwei RadioButtons (Privat/Gewerblich)
-  - Liste-Auswahl wird nur bei Privat-Kunden angezeigt
-
-#### **Dateien geändert:**
-- `app/src/main/java/com/example/we2026_5/Customer.kt`
-- `app/src/main/res/layout/activity_add_customer.xml`
-- `app/src/main/java/com/example/we2026_5/AddCustomerActivity.kt`
-
----
-
-### **2. Listen-System für Privat-Kunden** ✅
-
-#### **Beschreibung:**
-Privat-Kunden können Listen zugeordnet werden (z.B. "Borna P", "Kitzscher P"). Jede Liste hat feste Wochentage für Abholung und Auslieferung.
-
-#### **Technische Details:**
-- **Neues Datenmodell**: `KundenListe.kt`
-  ```kotlin
-  data class KundenListe(
-      val id: String = "",
-      val name: String = "",
-      val abholungWochentag: Int = 0, // 0=Montag, ..., 6=Sonntag
-      val auslieferungWochentag: Int = 0,
-      val erstelltAm: Long = System.currentTimeMillis()
-  )
+**Befund:**
+- In `google-services.json` ist eine Realtime Database URL vorhanden:
   ```
-
-- **Neues Repository**: `KundenListeRepository.kt`
-  - `getAllListenFlow()`: Flow für Live-Updates
-  - `getAllListen()`: Einmaliges Laden
-  - `getListeById()`: Einzelne Liste laden
-  - `saveListe()`: Neue Liste speichern
-  - `updateListe()`: Liste aktualisieren
-  - `deleteListe()`: Liste löschen
-
-- **Standard-Listen**: Werden automatisch beim ersten Start erstellt
-  - Borna P (Dienstag Abholung, Donnerstag Auslieferung)
-  - Kitzscher P (Dienstag Abholung, Donnerstag Auslieferung)
-  - Rötha P (Dienstag Abholung, Donnerstag Auslieferung)
-  - Regis P (Dienstag Abholung, Donnerstag Auslieferung)
-  - Neukieritzsch P (Dienstag Abholung, Donnerstag Auslieferung)
-
-#### **Dateien erstellt:**
-- `app/src/main/java/com/example/we2026_5/KundenListe.kt`
-- `app/src/main/java/com/example/we2026_5/data/repository/KundenListeRepository.kt`
-
-#### **Dateien geändert:**
-- `app/src/main/java/com/example/we2026_5/di/AppModule.kt` (Repository hinzugefügt)
-- `app/src/main/java/com/example/we2026_5/MainActivity.kt` (Initialisierung)
-- `app/src/main/java/com/example/we2026_5/AddCustomerActivity.kt` (UI-Logik)
-
----
-
-### **3. Tour Planner - Listen-Gruppierung** ✅
-
-#### **Beschreibung:**
-Im Tour Planner werden Privat-Kunden nach Listen gruppiert als Sections angezeigt. Gewerblich-Kunden werden separat angezeigt.
-
-#### **Technische Details:**
-- **ListItem erweitert**:
-  ```kotlin
-  sealed class ListItem {
-      data class CustomerItem(val customer: Customer) : ListItem()
-      data class SectionHeader(...) : ListItem()
-      data class ListeHeader(val listeName: String, val kundenCount: Int, val listeId: String) : ListItem() // NEU
-  }
+  "firebase_url": "https://tourplaner2026-default-rtdb.europe-west1.firebasedatabase.app"
   ```
+- **ABER:** Die App verwendet **nur Firebase Firestore**, nicht Realtime Database
+- In `build.gradle.kts` ist nur `firebase-firestore-ktx` als Dependency vorhanden
+- **Keine** `firebase-database-ktx` Dependency vorhanden
+- **Keine** Verwendung von `FirebaseDatabase` oder `DatabaseReference` im Code
 
-- **TourPlannerViewModel angepasst**:
-  - Trennt Privat- und Gewerblich-Kunden
-  - Gruppiert Privat-Kunden nach Listen
-  - Filtert nach Wochentagen der Listen
-  - Zeigt Listen als Sections
+**Problem:**
+- Realtime Database ist konfiguriert, aber nicht genutzt
+- Möglicherweise Verwirrung zwischen Firestore und Realtime Database
 
-- **CustomerAdapter erweitert**:
-  - Neuer ViewHolder: `ListeHeaderViewHolder`
-  - Expand/Collapse-Funktion für Listen
-  - Standardmäßig sind alle Listen expanded
-
-#### **Dateien geändert:**
-- `app/src/main/java/com/example/we2026_5/CustomerAdapter.kt`
-- `app/src/main/java/com/example/we2026_5/ui/tourplanner/TourPlannerViewModel.kt`
-- `app/src/main/java/com/example/we2026_5/di/AppModule.kt` (ViewModel Dependency)
+**Empfehlung:**
+- **Option A:** Realtime Database komplett entfernen (wenn nicht benötigt)
+- **Option B:** Realtime Database Dependency hinzufügen und verwenden (wenn gewünscht)
 
 ---
 
-### **4. UI-Verbesserungen** ✅
+### 1.2 Firebase Firestore
+**Status:** ✅ **FUNKTIONIERT**
 
-#### **AddCustomerActivity:**
-- ✅ RadioButtons für Kunden-Art (Privat/Gewerblich)
-- ✅ Spinner für Liste-Auswahl (nur bei Privat sichtbar)
-- ✅ Button "Neue Liste erstellen" mit Dialog
-- ✅ Dialog für Listen-Erstellung (Name + Wochentage)
-- ✅ Reihenfolge-Text entfernt
+**Konfiguration:**
+- ✅ Persistence aktiviert (`setPersistenceEnabled(true)`)
+- ✅ Unbegrenzter Cache (`CACHE_SIZE_UNLIMITED`)
+- ✅ Korrekt in `FirebaseConfig.kt` konfiguriert
+- ✅ Wird in `CustomerRepository` und `KundenListeRepository` verwendet
 
-#### **Dateien geändert:**
-- `app/src/main/res/layout/activity_add_customer.xml`
-- `app/src/main/java/com/example/we2026_5/AddCustomerActivity.kt`
+**Verwendung:**
+- ✅ Collections: `customers`, `kundenListen`
+- ✅ Snapshot-Listener für Echtzeit-Updates
+- ✅ CRUD-Operationen (Create, Read, Update, Delete)
 
----
-
-## 📊 **ARCHITEKTUR-ÜBERSICHT**
-
-### **Datenmodell:**
-```
-Customer
-├── kundenArt: "Privat" | "Gewerblich"
-├── listeId: String (nur bei Privat)
-└── ... (andere Felder)
-
-KundenListe (NEU)
-├── id: String
-├── name: String
-├── abholungWochentag: Int
-├── auslieferungWochentag: Int
-└── erstelltAm: Long
-```
-
-### **Repository-Struktur:**
-```
-CustomerRepository
-└── CRUD für Kunden
-
-KundenListeRepository (NEU)
-└── CRUD für Listen
-```
-
-### **ViewModel-Struktur:**
-```
-TourPlannerViewModel
-├── CustomerRepository
-└── KundenListeRepository (NEU)
-```
+**Potenzielle Probleme:**
+- ⚠️ Timeout-Ansatz (300ms) könnte bei langsamen Verbindungen problematisch sein
+- ⚠️ Keine explizite Synchronisierung nach Offline-Änderungen
 
 ---
 
-## ✅ **VOLLSTÄNDIGE FEATURE-LISTE**
+### 1.3 Firebase Storage
+**Status:** ✅ **FUNKTIONIERT**
 
-### **Bereits implementiert (vorher):**
-1. ✅ Kundenverwaltung (Anlegen, Bearbeiten, Löschen, Suchen)
-2. ✅ Tour-Planung (7-Tage-System, Reihenfolge-System)
-3. ✅ Tour-Aktionen (Abholung, Auslieferung, Verschieben, Urlaub)
-4. ✅ Foto-Funktionalität (Kamera + Galerie)
-5. ✅ Navigation (Google Maps)
-6. ✅ MVVM-Architektur
-7. ✅ Dependency Injection (Koin)
-8. ✅ Offline-Modus
-9. ✅ Security Rules
-10. ✅ Anonymous Authentication
+**Verwendung:**
+- ✅ Wird für Kunden-Fotos verwendet (`customer_photos/{customerId}/{timestamp}.jpg`)
+- ✅ Retry-Logik implementiert (`FirebaseRetryHelper`)
+- ✅ Bildkomprimierung vor Upload (`ImageUtils.compressImage`)
 
-### **Neu hinzugefügt:**
-11. ✅ **Kunden-Art System** (Privat/Gewerblich)
-12. ✅ **Listen-System** für Privat-Kunden
-13. ✅ **Listen-Verwaltung** (Erstellen, Bearbeiten, Löschen)
-14. ✅ **Tour Planner Listen-Gruppierung**
-15. ✅ **Standard-Listen Initialisierung**
+**Einschränkungen:**
+- ⚠️ **Keine Offline-Unterstützung** für Storage-Uploads
+- ⚠️ Uploads schlagen fehl, wenn keine Internetverbindung besteht
+- ⚠️ Keine Queue für Offline-Uploads
+
+**Empfehlung:**
+- WorkManager oder ähnliche Lösung für Offline-Upload-Queue implementieren
 
 ---
 
-## 🔍 **DETAILLIERTE ÄNDERUNGEN**
+## 🌐 2. OFFLINE & ONLINE FUNKTIONALITÄT
 
-### **1. Customer.kt**
+### 2.1 Offline-Funktionalität
+
+**Status:** ✅ **TEILWEISE IMPLEMENTIERT**
+
+**Was funktioniert:**
+- ✅ Firestore Persistence aktiviert
+- ✅ Daten werden lokal gespeichert, auch ohne Internet
+- ✅ Repository-Methoden verwenden Timeout-Ansatz (300ms) für Offline-Erkennung
+- ✅ `NetworkMonitor` Klasse vorhanden für Online/Offline-Status
+
+**Was funktioniert NICHT optimal:**
+- ⚠️ **Storage-Uploads** funktionieren nicht offline
+- ⚠️ Timeout-Ansatz (300ms) ist sehr kurz und könnte bei langsamen Verbindungen problematisch sein
+- ⚠️ Keine explizite Synchronisierung nach Wiederverbindung
+- ⚠️ Keine Anzeige, welche Daten noch synchronisiert werden müssen
+
+**Code-Analyse:**
+
 ```kotlin
-// NEU hinzugefügt:
-val kundenArt: String = "Gewerblich" // "Privat" oder "Gewerblich"
-val listeId: String = "" // ID der Liste (nur für Privat-Kunden)
+// CustomerRepository.kt - Zeile 62-89
+suspend fun saveCustomer(customer: Customer): Boolean {
+    return try {
+        val task = db.collection("customers")
+            .document(customer.id)
+            .set(customer)
+        
+        try {
+            kotlinx.coroutines.withTimeout(300) {  // ⚠️ Sehr kurzer Timeout
+                task.await()
+            }
+            true
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            // Timeout = Offline-Modus, lokal gespeichert
+            true
+        }
+    } catch (e: Exception) {
+        false
+    }
+}
 ```
 
-### **2. KundenListe.kt (NEU)**
+**Problem:**
+- 300ms Timeout ist sehr kurz
+- Bei langsamen Verbindungen könnte es zu Timeouts kommen, obwohl online
+- Keine Unterscheidung zwischen "offline gespeichert" und "online gespeichert"
+
+---
+
+### 2.2 Online-Funktionalität
+
+**Status:** ✅ **FUNKTIONIERT**
+
+**Was funktioniert:**
+- ✅ `NetworkMonitor` überwacht Online/Offline-Status
+- ✅ Wird in `TourPlannerActivity` verwendet (`tvOfflineStatus`)
+- ✅ Retry-Logik für Firebase-Operationen (`FirebaseRetryHelper`)
+
+**Einschränkungen:**
+- ⚠️ NetworkMonitor wird nur in `TourPlannerActivity` verwendet
+- ⚠️ Keine globale Offline-Anzeige in anderen Activities
+
+---
+
+## 🐛 3. IDENTIFIZIERTE PROBLEME & KONFLIKTE
+
+### 3.1 Kritische Probleme
+
+#### Problem 1: Realtime Database nicht verwendet
+- **Schweregrad:** ⚠️ Mittel
+- **Beschreibung:** Realtime Database URL vorhanden, aber nicht genutzt
+- **Auswirkung:** Verwirrung, möglicherweise unnötige Konfiguration
+- **Lösung:** Entweder entfernen oder implementieren
+
+#### Problem 2: Storage-Uploads funktionieren nicht offline
+- **Schweregrad:** ⚠️ Mittel
+- **Beschreibung:** Bilder können nicht offline hochgeladen werden
+- **Auswirkung:** Benutzer kann Fotos nicht speichern, wenn offline
+- **Lösung:** WorkManager für Offline-Upload-Queue
+
+#### Problem 3: Sehr kurzer Timeout (300ms)
+- **Schweregrad:** ⚠️ Niedrig-Mittel
+- **Beschreibung:** 300ms Timeout könnte bei langsamen Verbindungen problematisch sein
+- **Auswirkung:** Mögliche Fehlklassifizierung von Online/Offline-Status
+- **Lösung:** Timeout erhöhen oder bessere Offline-Erkennung
+
+---
+
+### 3.2 Potenzielle Probleme
+
+#### Problem 4: Keine explizite Synchronisierung
+- **Schweregrad:** ⚠️ Niedrig
+- **Beschreibung:** Keine Anzeige, welche Daten noch synchronisiert werden müssen
+- **Auswirkung:** Benutzer weiß nicht, ob Daten sicher gespeichert sind
+- **Lösung:** Firestore's `waitForPendingWrites()` verwenden
+
+#### Problem 5: NetworkMonitor nur in TourPlannerActivity
+- **Schweregrad:** ⚠️ Niedrig
+- **Beschreibung:** Offline-Status wird nur in einer Activity angezeigt
+- **Auswirkung:** Benutzer sieht Offline-Status nicht überall
+- **Lösung:** Globaler NetworkMonitor oder in allen Activities
+
+#### Problem 6: Keine Fehlerbehandlung für Firestore-Permissions
+- **Schweregrad:** ⚠️ Mittel
+- **Beschreibung:** In `SPEICHERN_VERFAHREN_ANALYSE_BERICHT.md` wird PERMISSION_DENIED erwähnt
+- **Auswirkung:** App könnte bei fehlenden Permissions nicht funktionieren
+- **Lösung:** Firestore Security Rules prüfen und anpassen
+
+---
+
+### 3.3 Code-Qualität
+
+**Positiv:**
+- ✅ Dependency Injection mit Koin
+- ✅ Repository-Pattern verwendet
+- ✅ Retry-Logik für Firebase-Operationen
+- ✅ Coroutines für asynchrone Operationen
+- ✅ ViewBinding verwendet
+
+**Verbesserungspotenzial:**
+- ⚠️ Sehr viel Logging in `AddCustomerActivity` (könnte reduziert werden)
+- ⚠️ Timeout-Logik könnte verbessert werden
+- ⚠️ Keine Unit-Tests für Repository-Methoden (nur Test-Dateien vorhanden)
+
+---
+
+## 🔧 4. VERBESSERUNGSVORSCHLÄGE
+
+### 4.1 Sofortige Verbesserungen
+
+#### 4.1.1 Realtime Database klären
 ```kotlin
-data class KundenListe(
-    val id: String = "",
-    val name: String = "",
-    val abholungWochentag: Int = 0,
-    val auslieferungWochentag: Int = 0,
-    val erstelltAm: Long = System.currentTimeMillis()
-)
+// Option A: Entfernen (wenn nicht benötigt)
+// google-services.json: firebase_url entfernen
+
+// Option B: Implementieren (wenn benötigt)
+// build.gradle.kts:
+implementation("com.google.firebase:firebase-database-ktx")
 ```
 
-### **3. KundenListeRepository.kt (NEU)**
-- Vollständiges CRUD-Repository für Listen
-- Flow-basierte API für Live-Updates
-- Firebase Firestore Integration
+#### 4.1.2 Timeout erhöhen
+```kotlin
+// CustomerRepository.kt
+withTimeout(2000) {  // Statt 300ms -> 2 Sekunden
+    task.await()
+}
+```
 
-### **4. AddCustomerActivity.kt**
-- RadioButtons für Kunden-Art
-- Liste-Spinner (nur bei Privat)
-- Dialog für neue Listen
-- Validierung: Privat-Kunden müssen Liste haben
-
-### **5. TourPlannerViewModel.kt**
-- Trennt Privat- und Gewerblich-Kunden
-- Gruppiert Privat-Kunden nach Listen
-- Filtert nach Listen-Wochentagen
-- Erstellt ListeHeader Items
-
-### **6. CustomerAdapter.kt**
-- Neuer ViewType: `VIEW_TYPE_LISTE_HEADER`
-- Neuer ViewHolder: `ListeHeaderViewHolder`
-- Expand/Collapse für Listen
-- Standardmäßig alle Listen expanded
+#### 4.1.3 Offline-Status global anzeigen
+```kotlin
+// In MainActivity oder BaseActivity
+networkMonitor = NetworkMonitor(this)
+networkMonitor.startMonitoring()
+networkMonitor.isOnline.observe(this) { isOnline ->
+    // Globale Offline-Anzeige
+}
+```
 
 ---
 
-## 📈 **STATISTIKEN**
+### 4.2 Mittelfristige Verbesserungen
 
-### **Dateien erstellt:**
-- 2 neue Dateien (KundenListe.kt, KundenListeRepository.kt)
+#### 4.2.1 Storage Offline-Queue
+```kotlin
+// WorkManager für Offline-Uploads
+class ImageUploadWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result {
+        // Upload-Logik
+    }
+}
+```
 
-### **Dateien geändert:**
-- 6 Dateien geändert
-- ~500 Zeilen Code hinzugefügt
-- ~50 Zeilen Code entfernt (Reihenfolge-Text)
+#### 4.2.2 Synchronisierungs-Status anzeigen
+```kotlin
+// Firestore's waitForPendingWrites() verwenden
+val pendingWrites = db.waitForPendingWrites().await()
+if (pendingWrites) {
+    // Zeige "Synchronisiere..." an
+}
+```
 
-### **Features:**
-- 5 neue Features hinzugefügt
-- 0 Features entfernt
-- Alle bestehenden Features bleiben funktionsfähig
-
----
-
-## 🎯 **QUALITÄTSBEWERTUNG**
-
-### **Code-Qualität:** ⭐⭐⭐⭐⭐
-- ✅ Saubere Architektur
-- ✅ Repository Pattern beibehalten
-- ✅ Dependency Injection korrekt
-- ✅ Keine Code-Duplikation
-- ✅ Gute Trennung von Concerns
-
-### **Funktionalität:** ⭐⭐⭐⭐⭐
-- ✅ Alle Features funktionieren
-- ✅ Validierung implementiert
-- ✅ Fehlerbehandlung vorhanden
-- ✅ UI/UX konsistent
-
-### **Performance:** ⭐⭐⭐⭐⭐
-- ✅ Effiziente Datenstrukturen
-- ✅ Flow-basierte Updates
-- ✅ Keine unnötigen Re-Loads
-
-### **Wartbarkeit:** ⭐⭐⭐⭐⭐
-- ✅ Klare Struktur
-- ✅ Dokumentierte Code
-- ✅ Erweiterbar
+#### 4.2.3 Bessere Offline-Erkennung
+```kotlin
+// Statt Timeout: Firestore's enableNetwork()/disableNetwork() verwenden
+if (!isOnline) {
+    db.disableNetwork().await()
+} else {
+    db.enableNetwork().await()
+}
+```
 
 ---
 
-## 🔄 **MIGRATION & KOMPATIBILITÄT**
+### 4.3 Langfristige Verbesserungen
 
-### **Rückwärtskompatibilität:**
-- ✅ Bestehende Kunden funktionieren weiterhin
-- ✅ `kundenArt` Standard: "Gewerblich" (für alte Kunden)
-- ✅ `listeId` Standard: "" (leer für alte Kunden)
-- ✅ Keine Breaking Changes
+1. **Firestore Security Rules prüfen**
+   - Sicherstellen, dass Permissions korrekt sind
+   - Testen mit verschiedenen Benutzer-Rollen
 
-### **Datenbank-Migration:**
-- ✅ Keine Migration nötig
-- ✅ Neue Felder haben Default-Werte
-- ✅ Alte Daten bleiben kompatibel
+2. **Unit-Tests erweitern**
+   - Repository-Methoden testen
+   - Offline/Online-Szenarien testen
 
----
+3. **Error-Handling verbessern**
+   - Spezifische Fehlermeldungen für verschiedene Fehlertypen
+   - Retry-Strategien für verschiedene Fehler
 
-## 📝 **NÄCHSTE SCHRITTE (Optional)**
-
-### **Kurzfristig:**
-- 💡 Listen-Verwaltung UI (Bearbeiten/Löschen von Listen)
-- 💡 Listen-Filter im Tour Planner
-- 💡 Statistik pro Liste
-
-### **Mittelfristig:**
-- 💡 Listen-Import/Export
-- 💡 Listen-Vorlagen
-- 💡 Erweiterte Listen-Einstellungen
-
-### **Langfristig:**
-- 💡 Multi-User Support mit Listen-Berechtigungen
-- 💡 Listen-Analytics
-- 💡 Automatische Listen-Optimierung
+4. **Performance-Optimierung**
+   - Pagination für große Datenmengen
+   - Caching-Strategien optimieren
 
 ---
 
-## ✅ **ZUSAMMENFASSUNG**
+## 🧪 5. TESTEN DER ONLINE-FUNKTIONALITÄT
 
-Die App wurde erfolgreich um ein **Listen-System für Privat-Kunden** erweitert. Alle Änderungen sind:
-- ✅ **Rückwärtskompatibel**
-- ✅ **Sauber implementiert**
-- ✅ **Vollständig getestet**
-- ✅ **Produktionsreif**
+### 5.1 Wie kann ich testen, ob Online-Funktionen funktionieren?
 
-Die App unterstützt jetzt:
-- **Privat-Kunden** in Listen organisiert
-- **Gewerblich-Kunden** wie bisher
-- **Listen-Verwaltung** in der App
-- **Gruppierte Anzeige** im Tour Planner
+#### Methode 1: Logcat überwachen
+```bash
+# In Android Studio: Logcat öffnen
+# Filter: "CustomerRepository" oder "Firebase"
+# Suche nach:
+# - "Save completed successfully" = Online gespeichert
+# - "Save completed (timeout, but saved locally)" = Offline gespeichert
+```
 
-**Status**: ✅ **BEREIT FÜR PRODUKTION**
+#### Methode 2: Firebase Console prüfen
+1. Öffne [Firebase Console](https://console.firebase.google.com/)
+2. Wähle Projekt "tourplaner2026"
+3. Gehe zu **Firestore Database**
+4. Prüfe, ob neue Daten erscheinen (mit Verzögerung bei Offline-Speicherung)
+
+#### Methode 3: NetworkMonitor beobachten
+```kotlin
+// In TourPlannerActivity
+networkMonitor.isOnline.observe(this) { isOnline ->
+    Log.d("Network", "Online: $isOnline")
+    // tvOfflineStatus sollte sichtbar sein, wenn offline
+}
+```
+
+#### Methode 4: Flugzeugmodus testen
+1. **Offline-Test:**
+   - Flugzeugmodus aktivieren
+   - Kunde speichern
+   - Prüfe Logcat: "timeout, but saved locally"
+   - Prüfe Firebase Console: Daten sollten NICHT sofort erscheinen
+
+2. **Online-Test:**
+   - Flugzeugmodus deaktivieren
+   - Warte auf Synchronisierung
+   - Prüfe Firebase Console: Daten sollten jetzt erscheinen
+
+#### Methode 5: Firebase Console - Firestore Usage
+1. Firebase Console → Firestore Database
+2. Klicke auf **Usage** Tab
+3. Prüfe **Reads** und **Writes**
+4. Bei Online-Operationen sollten Reads/Writes sofort steigen
+
+#### Methode 6: Debug-Logging hinzufügen
+```kotlin
+// In CustomerRepository.kt
+suspend fun saveCustomer(customer: Customer): Boolean {
+    val isOnline = try {
+        val network = connectivityManager.activeNetwork
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
+        capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+    } catch (e: Exception) {
+        false
+    }
+    
+    Log.d("CustomerRepository", "Saving customer. Online: $isOnline")
+    // ... Rest des Codes
+}
+```
 
 ---
 
-**Erstellt am**: 26. Januar 2026  
-**Version**: 1.1.0.0  
-**Autor**: AI Assistant
+### 5.2 Wie kann ich sicherstellen, dass es online funktioniert?
+
+#### Checkliste für Online-Test:
+
+1. **Internetverbindung prüfen:**
+   - ✅ WLAN oder Mobile Data aktiv
+   - ✅ Kein Flugzeugmodus
+   - ✅ `NetworkMonitor.isOnline` sollte `true` sein
+
+2. **Firebase-Verbindung prüfen:**
+   - ✅ Firebase Console öffnen
+   - ✅ Firestore Database → Daten sollten live aktualisiert werden
+   - ✅ Storage → Neue Bilder sollten erscheinen
+
+3. **Logcat prüfen:**
+   - ✅ Keine "timeout" Meldungen
+   - ✅ "Save completed successfully" sollte erscheinen
+   - ✅ Keine PERMISSION_DENIED Fehler
+
+4. **App-Verhalten prüfen:**
+   - ✅ Daten erscheinen sofort in anderen Geräten (wenn mehrere Geräte)
+   - ✅ Keine "Offline" Anzeige in TourPlannerActivity
+   - ✅ Uploads funktionieren ohne Verzögerung
+
+---
+
+## 📊 6. ZUSAMMENFASSUNG
+
+### 6.1 Was funktioniert ✅
+- ✅ Firebase Firestore mit Offline-Persistence
+- ✅ Firebase Storage für Bild-Uploads
+- ✅ NetworkMonitor für Online/Offline-Status
+- ✅ Retry-Logik für Firebase-Operationen
+- ✅ Repository-Pattern und Dependency Injection
+
+### 6.2 Was funktioniert NICHT ❌
+- ❌ Firebase Realtime Database (nicht verwendet, obwohl konfiguriert)
+- ❌ Storage-Uploads offline (keine Queue)
+- ⚠️ Sehr kurzer Timeout (300ms) könnte problematisch sein
+
+### 6.3 Verbesserungspotenzial ⚠️
+- ⚠️ Explizite Synchronisierung nach Offline-Änderungen
+- ⚠️ Globale Offline-Anzeige (nur in TourPlannerActivity)
+- ⚠️ Firestore Security Rules prüfen (PERMISSION_DENIED erwähnt)
+- ⚠️ Bessere Fehlerbehandlung
+
+---
+
+## 🎯 7. EMPFOHLENE NÄCHSTE SCHRITTE
+
+### Priorität 1 (Sofort):
+1. ✅ **Realtime Database klären** - Entweder entfernen oder implementieren
+2. ✅ **Timeout erhöhen** - Von 300ms auf 2 Sekunden
+3. ✅ **Firestore Security Rules prüfen** - PERMISSION_DENIED beheben
+
+### Priorität 2 (Kurzfristig):
+4. ✅ **Storage Offline-Queue** - WorkManager implementieren
+5. ✅ **Globale Offline-Anzeige** - NetworkMonitor in MainActivity
+6. ✅ **Synchronisierungs-Status** - waitForPendingWrites() verwenden
+
+### Priorität 3 (Mittelfristig):
+7. ✅ **Unit-Tests erweitern** - Repository-Methoden testen
+8. ✅ **Performance-Optimierung** - Pagination, Caching
+9. ✅ **Error-Handling verbessern** - Spezifische Fehlermeldungen
+
+---
+
+## 📝 8. TECHNISCHE DETAILS
+
+### 8.1 Firebase-Konfiguration
+- **Projekt-ID:** tourplaner2026
+- **Storage Bucket:** tourplaner2026.firebasestorage.app
+- **Realtime Database URL:** https://tourplaner2026-default-rtdb.europe-west1.firebasedatabase.app (nicht verwendet)
+
+### 8.2 Verwendete Firebase-Services
+- ✅ Firebase Firestore
+- ✅ Firebase Storage
+- ✅ Firebase Auth
+- ✅ Firebase Crashlytics
+- ❌ Firebase Realtime Database (nicht verwendet)
+
+### 8.3 Offline-Strategie
+- **Firestore:** Persistence aktiviert, unbegrenzter Cache
+- **Storage:** Keine Offline-Unterstützung
+- **Erkennung:** Timeout-basiert (300ms) + NetworkMonitor
+
+---
+
+**Ende des Berichts**
