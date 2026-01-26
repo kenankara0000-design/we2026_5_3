@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="16dp"
+    android:layout_margin="6dp"
+    app:cardCornerRadius="12dp"
     app:cardElevation="2dp"
     app:cardBackgroundColor="@color/surface_white">
 
@@ -13,20 +13,115 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="12dp">
 
+        <!-- Kundenname und Buttons in einer Zeile -->
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp">
 
             <TextView
                 android:id="@+id/tvItemName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
                 android:text="Kunden Name"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary_blue_dark"/>
+
+            <!-- Buttons A L V U rechts ausgerichtet -->
+            <LinearLayout
+                android:id="@+id/buttonContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/btnAbholung"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="A"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:minWidth="52dp"
+                    android:minHeight="52dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="@drawable/button_alvu_border"
+                    android:textColor="@color/text_secondary"
+                    android:contentDescription="Abholung" />
+
+                <TextView
+                    android:id="@+id/btnAuslieferung"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="L"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:minWidth="52dp"
+                    android:minHeight="52dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="@drawable/button_alvu_border"
+                    android:textColor="@color/text_secondary"
+                    android:contentDescription="Auslieferung" />
+
+                <TextView
+                    android:id="@+id/btnVerschieben"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="V"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:minWidth="52dp"
+                    android:minHeight="52dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="@drawable/button_alvu_border"
+                    android:textColor="@color/text_secondary"
+                    android:contentDescription="Verschieben" />
+
+                <TextView
+                    android:id="@+id/btnUrlaub"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="U"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:minWidth="52dp"
+                    android:minHeight="52dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="@drawable/button_alvu_border"
+                    android:textColor="@color/text_secondary"
+                    android:contentDescription="Urlaub" />
+            </LinearLayout>
         </RelativeLayout>
 
         <TextView
@@ -36,13 +131,13 @@
             android:text="Musterstraße 1, 12345 Stadt"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
-            android:layout_marginTop="6dp"/>
+            android:layout_marginTop="4dp"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="4dp"
             android:gravity="center_vertical">
 
             <TextView
@@ -57,14 +152,14 @@
 
             <ImageButton
                 android:id="@+id/btnNavigation"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:src="@drawable/ic_location_on"
                 android:background="@drawable/button_icon_pressed"
                 android:backgroundTint="@color/primary_blue"
                 android:tint="#FFFFFF"
                 android:contentDescription="Navigation"
-                android:padding="12dp"
+                android:padding="10dp"
                 android:visibility="gone"/>
         </LinearLayout>
 
@@ -72,7 +167,7 @@
             android:id="@+id/tvStatusLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:paddingTop="6dp"
@@ -85,80 +180,27 @@
             android:textStyle="bold"
             android:textAllCaps="true"/>
 
-        <!-- Aktions-Buttons: A, L, V, U -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <!-- Rückgängig-Button (nur bei erledigten Kunden) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRueckgaengig"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="12dp"
-            android:gravity="end"
-            android:paddingTop="8dp">
-
-            <ImageButton
-                android:id="@+id/btnAbholung"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
-                android:src="@drawable/ic_pickup"
-                android:background="@drawable/button_icon_pressed"
-                android:backgroundTint="@color/button_abholung"
-                android:tint="#FFFFFF"
-                android:contentDescription="Abholung"
-                android:padding="12dp"
-                android:layout_marginEnd="8dp" />
-
-            <ImageButton
-                android:id="@+id/btnAuslieferung"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
-                android:src="@drawable/ic_delivery"
-                android:background="@drawable/button_icon_pressed"
-                android:backgroundTint="@color/button_auslieferung"
-                android:tint="#FFFFFF"
-                android:contentDescription="Auslieferung"
-                android:padding="12dp"
-                android:layout_marginEnd="8dp" />
-
-            <ImageButton
-                android:id="@+id/btnVerschieben"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
-                android:src="@drawable/ic_reschedule"
-                android:background="@drawable/button_icon_pressed"
-                android:backgroundTint="@color/button_verschieben"
-                android:tint="#FFFFFF"
-                android:contentDescription="Verschieben"
-                android:padding="12dp"
-                android:layout_marginEnd="8dp" />
-
-            <ImageButton
-                android:id="@+id/btnUrlaub"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
-                android:src="@drawable/ic_vacation"
-                android:background="@drawable/button_icon_pressed"
-                android:backgroundTint="@color/button_urlaub"
-                android:tint="#FFFFFF"
-                android:contentDescription="Urlaub"
-                android:padding="12dp"
-                android:layout_marginEnd="8dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnRueckgaengig"
-                android:layout_width="wrap_content"
-                android:layout_height="52dp"
-                android:text="Rückgängig"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:backgroundTint="@color/button_rueckgaengig"
-                android:textColor="#FFFFFF"
-                app:icon="@drawable/ic_undo"
-                app:iconGravity="textStart"
-                app:iconPadding="8dp"
-                app:cornerRadius="12dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:visibility="gone" />
-        </LinearLayout>
+            android:layout_gravity="end"
+            android:layout_marginTop="8dp"
+            android:text="Rückgängig"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:backgroundTint="@color/button_rueckgaengig"
+            android:textColor="#FFFFFF"
+            app:icon="@drawable/ic_undo"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            app:cornerRadius="12dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:visibility="gone" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

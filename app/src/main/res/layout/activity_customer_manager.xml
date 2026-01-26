@@ -68,34 +68,62 @@
     <LinearLayout
         android:id="@+id/buttonBar"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="wrap_content"
         android:layout_below="@id/headerLayout"
         android:background="@color/primary_blue"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
         android:elevation="6dp">
         
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBulkSelect"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/button_icon_pressed"
-            android:src="@drawable/ic_checklist"
-            android:contentDescription="Mehrfachauswahl"
-            android:padding="14dp" />
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Auswählen"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="normal"
+            app:icon="@drawable/ic_checklist"
+            app:iconGravity="textStart"
+            app:iconTint="#FFFFFF"
+            app:iconPadding="8dp"
+            app:cornerRadius="20dp"
+            app:backgroundTint="@color/button_blue"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:minHeight="48dp"
+            android:contentDescription="Mehrfachauswahl" />
 
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnExport"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/button_icon_pressed"
-            android:src="@drawable/ic_share"
-            android:contentDescription="Exportieren"
-            android:padding="14dp" />
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Exportieren"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="normal"
+            app:icon="@drawable/ic_share"
+            app:iconGravity="textStart"
+            app:iconTint="#FFFFFF"
+            app:iconPadding="8dp"
+            app:cornerRadius="20dp"
+            app:backgroundTint="@color/button_blue"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:minHeight="48dp"
+            android:contentDescription="Exportieren" />
         
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btnNewCustomer"
@@ -104,7 +132,7 @@
             android:src="@android:drawable/ic_input_add"
             android:contentDescription="Neuen Kunden erstellen"
             app:tint="#FFFFFF"
-            app:backgroundTint="@color/status_warning"
+            app:backgroundTint="@color/button_blue"
             app:elevation="6dp"
             app:pressedTranslationZ="10dp" />
     </LinearLayout>
@@ -119,7 +147,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="16dp">
 
             <EditText
                 android:id="@+id/etSearch"
@@ -129,7 +160,7 @@
                 android:drawableStart="@android:drawable/ic_menu_search"
                 android:padding="12dp"
                 android:background="@color/surface_white"
-                android:layout_marginBottom="12dp"/>
+                android:layout_marginBottom="4dp"/>
 
             <FrameLayout
                 android:layout_width="match_parent"

@@ -3,11 +3,14 @@ package com.example.we2026_5
 import android.content.Intent
 import android.os.Bundle
 import android.view.GestureDetector
+import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.GestureDetectorCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -30,12 +33,14 @@ class TourPlannerActivity : AppCompatActivity() {
     private lateinit var binding: ActivityTourPlannerBinding
     private val viewModel: TourPlannerViewModel by viewModel()
     private val repository: CustomerRepository by inject()
+    private val listeRepository: com.example.we2026_5.data.repository.KundenListeRepository by inject()
     private lateinit var adapter: CustomerAdapter
     private lateinit var weekAdapter: WeekViewAdapter
     private var viewDate = Calendar.getInstance()
     private var isWeekView = false
     private lateinit var gestureDetector: GestureDetectorCompat
     private lateinit var networkMonitor: NetworkMonitor
+    private var pressedHeaderButton: String? = null // "Karte", "Heute", "Woche"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -119,6 +124,7 @@ class TourPlannerActivity : AppCompatActivity() {
         
         // Initial: Tagesansicht
         updateViewMode()
+        updateHeaderButtonStates() // Initial Header-Button-Zustand setzen
         
         // ViewModel Observer einrichten
         observeViewModel()
@@ -146,20 +152,53 @@ class TourPlannerActivity : AppCompatActivity() {
         }
 
         binding.btnToday.setOnClickListener {
-            viewDate = Calendar.getInstance()
-            updateDisplay()
-            updateTodayButtonState()
+            pressedHeaderButton = "Heute"
+            updateHeaderButtonStates()
+            // Auf heute springen - immer ein neues Calendar-Objekt erstellen
+            val heute = Calendar.getInstance()
+            val heuteStart = Calendar.getInstance().apply {
+                set(Calendar.YEAR, heute.get(Calendar.YEAR))
+                set(Calendar.MONTH, heute.get(Calendar.MONTH))
+                set(Calendar.DAY_OF_MONTH, heute.get(Calendar.DAY_OF_MONTH))
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            
+            // Datum setzen
+            viewDate = heuteStart
+            
+            // Wenn Wochenansicht aktiv ist, zur Tagesansicht wechseln
+            if (isWeekView) {
+                isWeekView = false
+                updateViewMode()
+            } else {
+                // Tagesansicht: Datum aktualisieren und Daten neu laden
+                // Explizit loadTourData aufrufen, um sicherzustellen, dass Daten geladen werden
+                val heuteTimestamp = getStartOfDay(heuteStart.timeInMillis)
+                loadTourData(heuteTimestamp)
+                updateDisplay()
+                updateTodayButtonState()
+            }
         }
 
         binding.btnMapView.setOnClickListener {
+            pressedHeaderButton = "Karte"
+            updateHeaderButtonStates()
             val intent = Intent(this, MapViewActivity::class.java)
             startActivity(intent)
+            // Nach Rückkehr Button-Zustand zurücksetzen
+            pressedHeaderButton = null
+            updateHeaderButtonStates()
         }
         
         // Toggle zwischen Tag- und Wochenansicht
         binding.btnToggleView.setOnClickListener {
+            pressedHeaderButton = if (isWeekView) null else "Woche"
             isWeekView = !isWeekView
             updateViewMode()
+            updateHeaderButtonStates()
         }
         
         // Pull-to-Refresh
@@ -229,6 +268,11 @@ class TourPlannerActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         updateDisplay()
+        // Button-Zustand zurücksetzen wenn von MapViewActivity zurückgekehrt
+        if (pressedHeaderButton == "Karte") {
+            pressedHeaderButton = null
+            updateHeaderButtonStates()
+        }
     }
 
     private fun observeViewModel() {
@@ -319,34 +363,93 @@ class TourPlannerActivity : AppCompatActivity() {
             binding.btnPrevDay.contentDescription = "Vorherige Woche"
             binding.btnNextDay.contentDescription = "Nächste Woche"
             binding.btnToggleView.contentDescription = "Tagesansicht"
-            // Aktiver Zustand für Wochenansicht-Button
-            binding.btnToggleView.isSelected = true
-            binding.btnToggleView.background = resources.getDrawable(com.example.we2026_5.R.drawable.button_icon_active, theme)
         } else {
             binding.rvTourList.visibility = View.VISIBLE
             binding.rvWeekView.visibility = View.GONE
             binding.btnPrevDay.contentDescription = "Vorheriger Tag"
             binding.btnNextDay.contentDescription = "Nächster Tag"
             binding.btnToggleView.contentDescription = "Wochenansicht"
-            // Inaktiver Zustand für Wochenansicht-Button
-            binding.btnToggleView.isSelected = false
-            binding.btnToggleView.background = resources.getDrawable(com.example.we2026_5.R.drawable.button_icon_pressed, theme)
         }
-        updateTodayButtonState()
+        updateHeaderButtonStates() // Button-Zustände aktualisieren
         updateDisplay()
     }
     
     private fun updateTodayButtonState() {
-        val heute = Calendar.getInstance()
-        val istHeute = viewDate.get(Calendar.YEAR) == heute.get(Calendar.YEAR) &&
-                       viewDate.get(Calendar.DAY_OF_YEAR) == heute.get(Calendar.DAY_OF_YEAR) &&
-                       !isWeekView
+        // Diese Funktion wird jetzt von updateHeaderButtonStates() übernommen
+        // Behalten für Kompatibilität, aber Logik ist in updateHeaderButtonStates()
+        updateHeaderButtonStates()
+    }
+    
+    private fun updateHeaderButtonStates() {
+        // Farben definieren
+        val activeBackgroundColor = ContextCompat.getColor(this, R.color.status_warning) // Orange
+        val inactiveBackgroundColor = ContextCompat.getColor(this, R.color.button_blue) // Blau
+        val textColor = ContextCompat.getColor(this, R.color.white)
         
-        binding.btnToday.isSelected = istHeute
-        if (istHeute) {
-            binding.btnToday.background = resources.getDrawable(com.example.we2026_5.R.drawable.button_icon_active, theme)
-        } else {
-            binding.btnToday.background = resources.getDrawable(com.example.we2026_5.R.drawable.button_icon_pressed, theme)
+        // Button-Zeile bleibt immer blau
+        val barBackgroundColor = ContextCompat.getColor(this, R.color.primary_blue)
+        binding.buttonBar.setBackgroundColor(barBackgroundColor)
+        
+        when (pressedHeaderButton) {
+            "Karte" -> {
+                // Aktiver Button: Orange Hintergrund
+                binding.btnMapView.setBackgroundColor(activeBackgroundColor)
+                binding.btnMapView.setTextColor(textColor)
+                binding.btnMapView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                
+                // Inaktive Buttons: Blau Hintergrund
+                binding.btnToday.setBackgroundColor(inactiveBackgroundColor)
+                binding.btnToday.setTextColor(textColor)
+                binding.btnToday.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                
+                binding.btnToggleView.setBackgroundColor(inactiveBackgroundColor)
+                binding.btnToggleView.setTextColor(textColor)
+                binding.btnToggleView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+            }
+            "Heute" -> {
+                // Aktiver Button: Orange Hintergrund
+                binding.btnToday.setBackgroundColor(activeBackgroundColor)
+                binding.btnToday.setTextColor(textColor)
+                binding.btnToday.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                
+                // Inaktive Buttons: Blau Hintergrund
+                binding.btnMapView.setBackgroundColor(inactiveBackgroundColor)
+                binding.btnMapView.setTextColor(textColor)
+                binding.btnMapView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                
+                binding.btnToggleView.setBackgroundColor(inactiveBackgroundColor)
+                binding.btnToggleView.setTextColor(textColor)
+                binding.btnToggleView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+            }
+            "Woche" -> {
+                // Aktiver Button: Orange Hintergrund
+                binding.btnToggleView.setBackgroundColor(activeBackgroundColor)
+                binding.btnToggleView.setTextColor(textColor)
+                binding.btnToggleView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                
+                // Inaktive Buttons: Blau Hintergrund
+                binding.btnMapView.setBackgroundColor(inactiveBackgroundColor)
+                binding.btnMapView.setTextColor(textColor)
+                binding.btnMapView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                
+                binding.btnToday.setBackgroundColor(inactiveBackgroundColor)
+                binding.btnToday.setTextColor(textColor)
+                binding.btnToday.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+            }
+            else -> {
+                // Kein Button gedrückt: Alle blau
+                binding.btnMapView.setBackgroundColor(inactiveBackgroundColor)
+                binding.btnMapView.setTextColor(textColor)
+                binding.btnMapView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                
+                binding.btnToday.setBackgroundColor(inactiveBackgroundColor)
+                binding.btnToday.setTextColor(textColor)
+                binding.btnToday.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                
+                binding.btnToggleView.setBackgroundColor(inactiveBackgroundColor)
+                binding.btnToggleView.setTextColor(textColor)
+                binding.btnToggleView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+            }
         }
     }
 
@@ -400,6 +503,8 @@ class TourPlannerActivity : AppCompatActivity() {
                     )
                     if (success == true) {
                         android.widget.Toast.makeText(this@TourPlannerActivity, "Abholung registriert", android.widget.Toast.LENGTH_SHORT).show()
+                        // Button-Zustand zurücksetzen
+                        adapter.clearPressedButtons()
                         reloadCurrentView() // Daten neu laden
                     }
                 }
@@ -421,6 +526,8 @@ class TourPlannerActivity : AppCompatActivity() {
                     )
                     if (success == true) {
                         android.widget.Toast.makeText(this@TourPlannerActivity, "Auslieferung registriert", android.widget.Toast.LENGTH_SHORT).show()
+                        // Button-Zustand zurücksetzen
+                        adapter.clearPressedButtons()
                         if (wasAbholungErfolgt) {
                             resetTourCycle(customer.id)
                         } else {
@@ -471,6 +578,7 @@ class TourPlannerActivity : AppCompatActivity() {
                     android.widget.Toast.makeText(this@TourPlannerActivity, 
                         if (alleVerschieben) "Alle zukünftigen Termine verschoben" else "Termin verschoben", 
                         android.widget.Toast.LENGTH_SHORT).show()
+                    adapter.clearPressedButtons()
                     reloadCurrentView() // Daten neu laden
                 }
             }
@@ -492,6 +600,7 @@ class TourPlannerActivity : AppCompatActivity() {
                 )
                 if (success == true) {
                     android.widget.Toast.makeText(this@TourPlannerActivity, "Urlaub eingetragen", android.widget.Toast.LENGTH_SHORT).show()
+                    adapter.clearPressedButtons()
                     reloadCurrentView() // Daten neu laden
                 }
             }
@@ -516,6 +625,221 @@ class TourPlannerActivity : AppCompatActivity() {
                     android.widget.Toast.makeText(this@TourPlannerActivity, "Rückgängig gemacht", android.widget.Toast.LENGTH_SHORT).show()
                     reloadCurrentView() // Daten neu laden
                 }
+            }
+        }
+        
+        // Termin-Klick: Öffne Termin-Detail-Dialog
+        adapter.onTerminClick = { customer, terminDatum ->
+            showTerminDetailDialog(customer, terminDatum)
+        }
+        
+        // Callbacks für Datum-Berechnung (für A/L Button-Aktivierung)
+        adapter.getAbholungDatum = { customer ->
+            // Berechne Abholungsdatum für den angezeigten Tag
+            val viewDateStart = getStartOfDay(viewDate.timeInMillis)
+            calculateAbholungDatum(customer, viewDateStart)
+        }
+        
+        adapter.getAuslieferungDatum = { customer ->
+            // Berechne Auslieferungsdatum für den angezeigten Tag
+            val viewDateStart = getStartOfDay(viewDate.timeInMillis)
+            calculateAuslieferungDatum(customer, viewDateStart)
+        }
+    }
+    
+    private fun calculateAbholungDatum(customer: Customer, viewDateStart: Long): Long {
+        // Für Listen-Kunden: Prüfe ob heute ein Abholungstag ist
+        if (customer.listeId.isNotEmpty()) {
+            // Lade Liste synchron (vereinfacht - könnte verbessert werden)
+            var liste: com.example.we2026_5.KundenListe? = null
+            kotlinx.coroutines.runBlocking {
+                liste = listeRepository.getListeById(customer.listeId)
+            }
+            
+            if (liste != null) {
+                // Prüfe alle Intervalle der Liste
+                liste!!.intervalle.forEach { intervall ->
+                    if (isIntervallFaelligAm(intervall, viewDateStart)) {
+                        val abholungStart = getStartOfDay(intervall.abholungDatum)
+                        // Prüfe ob Abholungsdatum heute fällig ist
+                        if (abholungStart == viewDateStart) {
+                            return intervall.abholungDatum
+                        }
+                        // Für wiederholende Intervalle: Prüfe ob heute ein Wiederholungstag ist
+                        if (intervall.wiederholen) {
+                            val intervallTage = intervall.intervallTage.coerceIn(1, 365)
+                            val intervallTageLong = intervallTage.toLong()
+                            val tageSeitAbholung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(viewDateStart - abholungStart)
+                            if (tageSeitAbholung >= 0 && tageSeitAbholung % intervallTageLong == 0L) {
+                                return abholungStart + java.util.concurrent.TimeUnit.DAYS.toMillis(tageSeitAbholung)
+                            }
+                        }
+                    }
+                }
+            }
+            return 0L // Nicht fällig an diesem Tag
+        } else {
+            // Für Kunden ohne Liste
+            if (customer.verschobenAufDatum > 0) {
+                val verschobenStart = getStartOfDay(customer.verschobenAufDatum)
+                if (verschobenStart == viewDateStart) return customer.verschobenAufDatum
+            }
+            val abholungStart = getStartOfDay(customer.abholungDatum)
+            if (abholungStart == viewDateStart) return customer.abholungDatum
+            // Für wiederholende Termine
+            if (customer.wiederholen && customer.letzterTermin > 0) {
+                val naechsteAbholung = customer.letzterTermin + java.util.concurrent.TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
+                val naechsteAbholungStart = getStartOfDay(naechsteAbholung)
+                if (naechsteAbholungStart == viewDateStart) return naechsteAbholung
+            }
+            return 0L
+        }
+    }
+    
+    private fun calculateAuslieferungDatum(customer: Customer, viewDateStart: Long): Long {
+        // Ähnlich wie Abholungsdatum
+        if (customer.listeId.isNotEmpty()) {
+            var liste: com.example.we2026_5.KundenListe? = null
+            kotlinx.coroutines.runBlocking {
+                liste = listeRepository.getListeById(customer.listeId)
+            }
+            
+            if (liste != null) {
+                liste!!.intervalle.forEach { intervall ->
+                    if (isIntervallFaelligAm(intervall, viewDateStart)) {
+                        val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
+                        if (auslieferungStart == viewDateStart) {
+                            return intervall.auslieferungDatum
+                        }
+                        // Für wiederholende Intervalle
+                        if (intervall.wiederholen) {
+                            val intervallTage = intervall.intervallTage.coerceIn(1, 365)
+                            val intervallTageLong = intervallTage.toLong()
+                            val tageSeitAuslieferung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(viewDateStart - auslieferungStart)
+                            if (tageSeitAuslieferung >= 0 && tageSeitAuslieferung % intervallTageLong == 0L) {
+                                return auslieferungStart + java.util.concurrent.TimeUnit.DAYS.toMillis(tageSeitAuslieferung)
+                            }
+                        }
+                    }
+                }
+            }
+            return 0L
+        } else {
+            // Für Kunden ohne Liste
+            if (customer.verschobenAufDatum > 0) {
+                val verschobenStart = getStartOfDay(customer.verschobenAufDatum)
+                if (verschobenStart == viewDateStart) return customer.verschobenAufDatum
+            }
+            val auslieferungStart = getStartOfDay(customer.auslieferungDatum)
+            if (auslieferungStart == viewDateStart) return customer.auslieferungDatum
+            return 0L
+        }
+    }
+    
+    private fun isIntervallFaelligAm(intervall: com.example.we2026_5.ListeIntervall, datum: Long): Boolean {
+        val datumStart = getStartOfDay(datum)
+        val abholungStart = getStartOfDay(intervall.abholungDatum)
+        val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
+        
+        if (!intervall.wiederholen) {
+            // Einmaliges Intervall: Prüfe ob Datum genau Abholungs- oder Auslieferungsdatum ist
+            return datumStart == abholungStart || datumStart == auslieferungStart
+        }
+        
+        // Wiederholendes Intervall: Prüfe ob Datum auf einem Wiederholungszyklus liegt
+        val intervallTage = intervall.intervallTage.coerceIn(1, 365)
+        
+        // Prüfe Abholungsdatum
+        if (datumStart >= abholungStart) {
+            val tageSeitAbholung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(datumStart - abholungStart)
+            val intervallTageLong = intervallTage.toLong()
+            if (tageSeitAbholung <= 365 && tageSeitAbholung % intervallTageLong == 0L) {
+                return true
+            }
+        }
+        
+        // Prüfe Auslieferungsdatum
+        if (datumStart >= auslieferungStart) {
+            val tageSeitAuslieferung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(datumStart - auslieferungStart)
+            val intervallTageLong = intervallTage.toLong()
+            if (tageSeitAuslieferung <= 365 && tageSeitAuslieferung % intervallTageLong == 0L) {
+                return true
+            }
+        }
+        
+        return false
+    }
+    
+    private fun showTerminDetailDialog(customer: Customer, terminDatum: Long) {
+        val dialogView = LayoutInflater.from(this).inflate(com.example.we2026_5.R.layout.dialog_termin_detail, null)
+        val binding = com.example.we2026_5.databinding.DialogTerminDetailBinding.bind(dialogView)
+        
+        // Kundeninfos anzeigen
+        binding.tvKundenname.text = customer.name
+        binding.tvAdresse.text = customer.adresse
+        binding.tvTelefon.text = customer.telefon
+        binding.tvNotizen.text = customer.notizen.ifEmpty { "Keine Notizen" }
+        
+        // Termin-Datum formatieren
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = terminDatum
+        val dateStr = "${cal.get(Calendar.DAY_OF_MONTH)}.${cal.get(Calendar.MONTH) + 1}.${cal.get(Calendar.YEAR)}"
+        binding.tvTerminDatum.text = dateStr
+        
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+        
+        // Kunde anzeigen Button
+        binding.btnKundeAnzeigen.setOnClickListener {
+            dialog.dismiss()
+            val intent = Intent(this, CustomerDetailActivity::class.java).apply {
+                putExtra("CUSTOMER_ID", customer.id)
+            }
+            startActivity(intent)
+        }
+        
+        // Termin löschen Button
+        binding.btnTerminLoeschen.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Termin löschen?")
+                .setMessage("Möchten Sie diesen Termin wirklich löschen? Dies hat keine Auswirkung auf andere Termine.")
+                .setPositiveButton("Löschen") { _, _ ->
+                    loescheEinzelnenTermin(customer, terminDatum)
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Abbrechen", null)
+                .show()
+        }
+        
+        dialog.show()
+    }
+    
+    private fun loescheEinzelnenTermin(customer: Customer, terminDatum: Long) {
+        CoroutineScope(Dispatchers.Main).launch {
+            // Normalisiere das Datum auf Tagesanfang für Vergleich
+            val terminDatumStart = getStartOfDay(terminDatum)
+            
+            // Aktuelle gelöschte Termine holen und neues Datum hinzufügen
+            val aktuelleGeloeschteTermine = customer.geloeschteTermine.toMutableList()
+            if (!aktuelleGeloeschteTermine.contains(terminDatumStart)) {
+                aktuelleGeloeschteTermine.add(terminDatumStart)
+            }
+            
+            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
+                operation = {
+                    repository.updateCustomer(customer.id, mapOf(
+                        "geloeschteTermine" to aktuelleGeloeschteTermine
+                    ))
+                },
+                context = this@TourPlannerActivity,
+                errorMessage = "Fehler beim Löschen des Termins. Bitte erneut versuchen.",
+                maxRetries = 3
+            )
+            
+            if (success == true) {
+                android.widget.Toast.makeText(this@TourPlannerActivity, "Termin gelöscht", android.widget.Toast.LENGTH_SHORT).show()
+                reloadCurrentView() // Daten neu laden
             }
         }
     }

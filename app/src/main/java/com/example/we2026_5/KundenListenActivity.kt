@@ -41,8 +41,11 @@ class KundenListenActivity : AppCompatActivity() {
         adapter = ListenAdapter(
             listen = mutableListOf(),
             onListeClick = { liste ->
-                // Liste bearbeiten (könnte später implementiert werden)
-                Toast.makeText(this, "Bearbeiten: ${liste.name}", Toast.LENGTH_SHORT).show()
+                // Liste bearbeiten - öffne ListeBearbeitenActivity
+                val intent = Intent(this, ListeBearbeitenActivity::class.java).apply {
+                    putExtra("LISTE_ID", liste.id)
+                }
+                startActivity(intent)
             },
             onListeLoeschen = { liste ->
                 loescheListe(liste)
@@ -53,6 +56,11 @@ class KundenListenActivity : AppCompatActivity() {
         binding.rvListen.adapter = adapter
 
         binding.btnBack.setOnClickListener { finish() }
+
+        binding.btnNeueListe.setOnClickListener {
+            val intent = Intent(this, ListeErstellenActivity::class.java)
+            startActivity(intent)
+        }
 
         binding.fabNeueListe.setOnClickListener {
             val intent = Intent(this, ListeErstellenActivity::class.java)
@@ -145,7 +153,18 @@ class KundenListenActivity : AppCompatActivity() {
                             )
 
                             if (success != null) {
+                                // Liste sofort aus dem Adapter entfernen
+                                val position = adapter.listen.indexOfFirst { it.id == liste.id }
+                                if (position != -1) {
+                                    adapter.listen.removeAt(position)
+                                    adapter.notifyItemRemoved(position)
+                                    adapter.notifyItemRangeChanged(position, adapter.listen.size)
+                                }
+                                
+                                // Dann die Liste neu laden um sicherzustellen, dass alles synchron ist
                                 loadListen()
+                                
+                                Toast.makeText(this@KundenListenActivity, "Liste gelöscht", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
@@ -158,7 +177,7 @@ class KundenListenActivity : AppCompatActivity() {
     }
 
     inner class ListenAdapter(
-        private var listen: MutableList<KundenListe>,
+        var listen: MutableList<KundenListe>,
         private var kundenProListe: Map<String, Int> = emptyMap(),
         private val onListeClick: (KundenListe) -> Unit,
         private val onListeLoeschen: (KundenListe) -> Unit

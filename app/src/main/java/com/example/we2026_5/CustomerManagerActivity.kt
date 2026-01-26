@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.we2026_5.ListItem
@@ -31,6 +32,12 @@ class CustomerManagerActivity : AppCompatActivity() {
     private val repository: CustomerRepository by inject()
     private lateinit var adapter: CustomerAdapter
     private lateinit var networkMonitor: NetworkMonitor
+    private var pressedHeaderButton: String? = null // "Auswählen", "Exportieren", "NeuerKunde"
+    
+    companion object {
+        private const val REQUEST_CODE_CUSTOMER_DETAIL = 1001
+        const val RESULT_CUSTOMER_DELETED = 2001
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +51,7 @@ class CustomerManagerActivity : AppCompatActivity() {
                 val intent = Intent(this, CustomerDetailActivity::class.java).apply {
                     putExtra("CUSTOMER_ID", customer.id)
                 }
-                startActivity(intent)
+                startActivityForResult(intent, REQUEST_CODE_CUSTOMER_DETAIL)
             }
         )
 
@@ -54,15 +61,21 @@ class CustomerManagerActivity : AppCompatActivity() {
         binding.btnBackFromManager.setOnClickListener { finish() }
 
         binding.btnNewCustomer.setOnClickListener {
+            pressedHeaderButton = "NeuerKunde"
+            updateHeaderButtonStates()
             val intent = Intent(this, AddCustomerActivity::class.java)
             startActivity(intent)
         }
 
         binding.btnExport.setOnClickListener {
+            pressedHeaderButton = "Exportieren"
+            updateHeaderButtonStates()
             showExportDialog()
         }
 
         binding.btnBulkSelect.setOnClickListener {
+            pressedHeaderButton = "Auswählen"
+            updateHeaderButtonStates()
             adapter.enableMultiSelectMode()
             updateBulkActionBar()
             updateButtonStates()
@@ -107,6 +120,36 @@ class CustomerManagerActivity : AppCompatActivity() {
         
         // Initial: Button-Zustände setzen
         updateButtonStates()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Liste neu laden wenn Activity wieder sichtbar wird (z.B. nach Löschen eines Kunden)
+        viewModel.loadCustomers()
+        // Button-Zustand zurücksetzen wenn von AddCustomerActivity zurückgekehrt
+        if (pressedHeaderButton == "NeuerKunde") {
+            pressedHeaderButton = null
+            updateHeaderButtonStates()
+        }
+    }
+    
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_CUSTOMER_DETAIL) {
+            if (resultCode == RESULT_CUSTOMER_DELETED) {
+                // Kunde wurde gelöscht - Liste sofort aktualisieren
+                val deletedCustomerId = data?.getStringExtra("DELETED_CUSTOMER_ID")
+                if (deletedCustomerId != null) {
+                    // Optimistische UI-Aktualisierung: Kunde sofort aus Adapter entfernen
+                    adapter.removeCustomer(deletedCustomerId)
+                    // Dann Liste neu laden um sicherzustellen, dass alles synchron ist
+                    viewModel.loadCustomers()
+                } else {
+                    // Fallback: Liste neu laden
+                    viewModel.loadCustomers()
+                }
+            }
+        }
     }
     
     override fun onDestroy() {
@@ -237,12 +280,85 @@ class CustomerManagerActivity : AppCompatActivity() {
     }
     
     private fun updateButtonStates() {
-        val isMultiSelectActive = adapter.hasSelectedCustomers() || adapter.isMultiSelectModeEnabled()
-        binding.btnBulkSelect.isSelected = isMultiSelectActive
-        if (isMultiSelectActive) {
-            binding.btnBulkSelect.background = resources.getDrawable(com.example.we2026_5.R.drawable.button_icon_active, theme)
-        } else {
-            binding.btnBulkSelect.background = resources.getDrawable(com.example.we2026_5.R.drawable.button_icon_pressed, theme)
+        // Header-Button-Zustände aktualisieren
+        updateHeaderButtonStates()
+    }
+    
+    private fun updateHeaderButtonStates() {
+        // Farben definieren
+        val activeBackgroundColor = ContextCompat.getColor(this, R.color.status_warning) // Orange
+        val inactiveBackgroundColor = ContextCompat.getColor(this, R.color.button_blue) // Blau
+        val textColor = ContextCompat.getColor(this, R.color.white)
+        
+        // Button-Zeile bleibt immer blau
+        val barBackgroundColor = ContextCompat.getColor(this, R.color.primary_blue)
+        binding.buttonBar.setBackgroundColor(barBackgroundColor)
+        
+        when (pressedHeaderButton) {
+            "Auswählen" -> {
+                // Aktiver Button: Orange Hintergrund
+                binding.btnBulkSelect.setBackgroundColor(activeBackgroundColor)
+                binding.btnBulkSelect.setTextColor(textColor)
+                binding.btnBulkSelect.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                
+                // Inaktiver Button: Blau Hintergrund
+                binding.btnExport.setBackgroundColor(inactiveBackgroundColor)
+                binding.btnExport.setTextColor(textColor)
+                binding.btnExport.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                
+                // FAB: Blau wenn nicht aktiv
+                binding.btnNewCustomer.backgroundTintList = android.content.res.ColorStateList.valueOf(inactiveBackgroundColor)
+            }
+            "Exportieren" -> {
+                // Aktiver Button: Orange Hintergrund
+                binding.btnExport.setBackgroundColor(activeBackgroundColor)
+                binding.btnExport.setTextColor(textColor)
+                binding.btnExport.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                
+                // Inaktiver Button: Blau Hintergrund
+                binding.btnBulkSelect.setBackgroundColor(inactiveBackgroundColor)
+                binding.btnBulkSelect.setTextColor(textColor)
+                binding.btnBulkSelect.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                
+                // FAB: Blau wenn nicht aktiv
+                binding.btnNewCustomer.backgroundTintList = android.content.res.ColorStateList.valueOf(inactiveBackgroundColor)
+            }
+            "NeuerKunde" -> {
+                // FAB: Orange wenn aktiv
+                binding.btnNewCustomer.backgroundTintList = android.content.res.ColorStateList.valueOf(activeBackgroundColor)
+                
+                // Andere Buttons: Blau
+                binding.btnBulkSelect.setBackgroundColor(inactiveBackgroundColor)
+                binding.btnBulkSelect.setTextColor(textColor)
+                binding.btnBulkSelect.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                
+                binding.btnExport.setBackgroundColor(inactiveBackgroundColor)
+                binding.btnExport.setTextColor(textColor)
+                binding.btnExport.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+            }
+            else -> {
+                // Kein Button gedrückt: Prüfe ob Multi-Select aktiv ist
+                val isMultiSelectActive = adapter.hasSelectedCustomers() || adapter.isMultiSelectModeEnabled()
+                if (isMultiSelectActive) {
+                    // Multi-Select aktiv: Auswählen-Button orange
+                    binding.btnBulkSelect.setBackgroundColor(activeBackgroundColor)
+                    binding.btnBulkSelect.setTextColor(textColor)
+                    binding.btnBulkSelect.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                } else {
+                    // Multi-Select inaktiv: Auswählen-Button blau
+                    binding.btnBulkSelect.setBackgroundColor(inactiveBackgroundColor)
+                    binding.btnBulkSelect.setTextColor(textColor)
+                    binding.btnBulkSelect.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                }
+                
+                // Export-Button immer blau wenn nicht aktiv
+                binding.btnExport.setBackgroundColor(inactiveBackgroundColor)
+                binding.btnExport.setTextColor(textColor)
+                binding.btnExport.iconTint = android.content.res.ColorStateList.valueOf(textColor)
+                
+                // FAB: Blau wenn nicht aktiv
+                binding.btnNewCustomer.backgroundTintList = android.content.res.ColorStateList.valueOf(inactiveBackgroundColor)
+            }
         }
     }
     

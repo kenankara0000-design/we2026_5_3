@@ -102,43 +102,85 @@
     
     <!-- Button-Zeile unter Header -->
     <LinearLayout
+        android:id="@+id/buttonBar"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="wrap_content"
         android:background="@color/primary_blue"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
         android:elevation="6dp">
         
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnMapView"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/button_icon_pressed"
-            android:src="@drawable/ic_map"
-            android:contentDescription="Kartenansicht"
-            android:padding="14dp" />
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Karte"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="normal"
+            app:icon="@drawable/ic_map"
+            app:iconGravity="textStart"
+            app:iconTint="#FFFFFF"
+            app:iconPadding="8dp"
+            app:cornerRadius="20dp"
+            app:backgroundTint="@color/button_blue"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:minHeight="48dp"
+            android:contentDescription="Kartenansicht" />
         
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnToday"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/button_icon_pressed"
-            android:src="@drawable/ic_calendar_today"
-            android:contentDescription="Heute"
-            android:padding="14dp" />
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Heute"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="normal"
+            app:icon="@drawable/ic_calendar_today"
+            app:iconGravity="textStart"
+            app:iconTint="#FFFFFF"
+            app:iconPadding="8dp"
+            app:cornerRadius="20dp"
+            app:backgroundTint="@color/button_blue"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:minHeight="48dp"
+            android:contentDescription="Heute" />
         
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnToggleView"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:background="@drawable/button_icon_pressed"
-            android:src="@drawable/ic_view_week"
-            android:contentDescription="Wochenansicht"
-            android:padding="14dp" />
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Woche"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="normal"
+            app:icon="@drawable/ic_view_week"
+            app:iconGravity="textStart"
+            app:iconTint="#FFFFFF"
+            app:iconPadding="8dp"
+            app:cornerRadius="20dp"
+            app:backgroundTint="@color/button_blue"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:minHeight="48dp"
+            android:contentDescription="Wochenansicht" />
     </LinearLayout>
     
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

@@ -61,15 +61,16 @@ class TourPlannerViewModel(
                     if (listeId.isEmpty()) return@forEach
                     val liste = allListen.find { it.id == listeId } ?: return@forEach
                     
-                    // Prüfe ob mindestens ein Intervall an diesem Datum fällig ist
+                    // Prüfe ob mindestens ein Intervall an diesem Datum oder innerhalb von 365 Tagen fällig ist
                     val istFaellig = liste.intervalle.any { intervall ->
-                        isIntervallFaelligAm(intervall, viewDateStart)
+                        isIntervallFaelligAm(intervall, viewDateStart) || 
+                        isIntervallFaelligInZukunft(intervall, viewDateStart)
                     }
                     
                     if (istFaellig) {
-                        // Filtere Kunden die an diesem Tag fällig sind
+                        // Filtere Kunden die an diesem Tag oder innerhalb von 365 Tagen fällig sind
                         val fälligeKunden = kunden.filter { customer ->
-                            val faelligAm = customerFaelligAm(customer, liste)
+                            val faelligAm = customerFaelligAm(customer, liste, viewDateStart)
                             val faelligAmImUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && 
                                                    faelligAm in customer.urlaubVon..customer.urlaubBis
                             if (faelligAmImUrlaub) return@filter false
@@ -77,9 +78,15 @@ class TourPlannerViewModel(
                             val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
                             val isOverdue = !isDone && faelligAm < heuteStart
                             
-                            if (isOverdue && viewDateStart > heuteStart) return@filter false
+                            // Überfällige Termine: Zeige sie ab dem überfälligen Tag bis sie erledigt sind
+                            if (isOverdue) {
+                                // Zeige überfällige Termine ab dem Tag, an dem sie überfällig wurden
+                                return@filter viewDateStart >= faelligAm
+                            }
                             
-                            faelligAm <= viewDateStart + TimeUnit.DAYS.toMillis(1)
+                            // Normale Termine: Prüfe ob Termin am angezeigten Datum oder innerhalb von 365 Tagen liegt
+                            val tageBisTermin = TimeUnit.MILLISECONDS.toDays(faelligAm - viewDateStart)
+                            tageBisTermin >= -1 && tageBisTermin <= 365
                         }
                         
                         if (fälligeKunden.isNotEmpty()) {
@@ -99,7 +106,7 @@ class TourPlannerViewModel(
                         if (abholungAm != viewDateStart && auslieferungAm != viewDateStart) return@filter false
                     }
                     
-                    val faelligAm = customerFaelligAm(customer)
+                    val faelligAm = customerFaelligAm(customer, null, viewDateStart)
                     val faelligAmImUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && 
                                            faelligAm in customer.urlaubVon..customer.urlaubBis
                     if (faelligAmImUrlaub) return@filter false
@@ -107,9 +114,15 @@ class TourPlannerViewModel(
                     val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
                     val isOverdue = !isDone && faelligAm < heuteStart
                     
-                    if (isOverdue && viewDateStart > heuteStart) return@filter false
+                    // Überfällige Termine: Zeige sie ab dem überfälligen Tag bis sie erledigt sind
+                    if (isOverdue) {
+                        // Zeige überfällige Termine ab dem Tag, an dem sie überfällig wurden
+                        return@filter viewDateStart >= faelligAm
+                    }
                     
-                    faelligAm <= viewDateStart + TimeUnit.DAYS.toMillis(1)
+                    // Normale Termine: Prüfe ob Termin am angezeigten Datum oder innerhalb von 365 Tagen liegt
+                    val tageBisTermin = TimeUnit.MILLISECONDS.toDays(faelligAm - viewDateStart)
+                    tageBisTermin >= -1 && tageBisTermin <= 365
                 }
                 
                 // Liste mit Items erstellen
@@ -132,8 +145,9 @@ class TourPlannerViewModel(
                 
                 filteredGewerblich.forEach { customer ->
                     val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-                    val faelligAm = customerFaelligAm(customer)
-                    val isOverdue = !isDone && faelligAm < heuteStart && viewDateStart <= heuteStart
+                    val faelligAm = customerFaelligAm(customer, null, viewDateStart)
+                    // Überfällige Termine: Zeige sie ab dem überfälligen Tag bis sie erledigt sind (auch in der Zukunft)
+                    val isOverdue = !isDone && faelligAm < heuteStart && viewDateStart >= faelligAm
                     
                     when {
                         isDone -> doneGewerblich.add(customer)
@@ -183,19 +197,91 @@ class TourPlannerViewModel(
         return expandedSections.contains(sectionType)
     }
     
-    private fun customerFaelligAm(c: Customer, liste: KundenListe? = null): Long {
+    private fun customerFaelligAm(c: Customer, liste: KundenListe? = null, abDatum: Long = System.currentTimeMillis()): Long {
         // Für Kunden in Listen: Daten der Liste verwenden
         if (c.listeId.isNotEmpty() && liste != null) {
             // Wenn verschoben, verschobenes Datum verwenden
-            if (c.verschobenAufDatum > 0) return c.verschobenAufDatum
+            if (c.verschobenAufDatum > 0) {
+                val verschobenStart = getStartOfDay(c.verschobenAufDatum)
+                // Prüfe ob verschobenes Datum gelöscht wurde
+                if (c.geloeschteTermine.contains(verschobenStart)) {
+                    // Wenn verschobenes Datum gelöscht wurde, berechne nächstes Datum
+                    val naechstesDatum = getNaechstesListeDatum(liste, verschobenStart + TimeUnit.DAYS.toMillis(1))
+                    return naechstesDatum ?: abDatum
+                }
+                return c.verschobenAufDatum
+            }
             
-            // Nächstes Datum aus den Intervallen der Liste berechnen
-            val naechstesDatum = getNaechstesListeDatum(liste)
-            return naechstesDatum ?: System.currentTimeMillis()
+            // Nächstes Datum aus den Intervallen der Liste berechnen (ab dem angezeigten Datum)
+            val naechstesDatum = getNaechstesListeDatum(liste, abDatum, c.geloeschteTermine)
+            return naechstesDatum ?: abDatum
         }
         
         // Für Kunden ohne Liste: Normale Logik
-        return c.getFaelligAm()
+        val faelligAm = c.getFaelligAm()
+        val faelligAmStart = getStartOfDay(faelligAm)
+        // Prüfe ob Termin gelöscht wurde
+        if (c.geloeschteTermine.contains(faelligAmStart)) {
+            // Wenn Termin gelöscht wurde, berechne nächstes Datum
+            if (c.wiederholen && c.letzterTermin > 0) {
+                return c.letzterTermin + TimeUnit.DAYS.toMillis(c.intervallTage.toLong())
+            }
+            return faelligAm + TimeUnit.DAYS.toMillis(1) // Fallback: nächster Tag
+        }
+        return faelligAm
+    }
+    
+    /**
+     * Prüft ob ein Intervall innerhalb der nächsten 365 Tage fällig ist
+     */
+    private fun isIntervallFaelligInZukunft(intervall: ListeIntervall, abDatum: Long): Boolean {
+        val abDatumStart = getStartOfDay(abDatum)
+        val maxZukunft = abDatumStart + TimeUnit.DAYS.toMillis(365)
+        
+        if (!intervall.wiederholen) {
+            // Einmaliges Intervall: Prüfe ob innerhalb von 365 Tagen
+            val abholungStart = getStartOfDay(intervall.abholungDatum)
+            val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
+            return (abholungStart >= abDatumStart && abholungStart <= maxZukunft) ||
+                   (auslieferungStart >= abDatumStart && auslieferungStart <= maxZukunft)
+        }
+        
+        // Wiederholendes Intervall: Prüfe ob innerhalb von 365 Tagen ein Termin fällig ist
+        val intervallTage = intervall.intervallTage.coerceIn(1, 365)
+        val abholungStart = getStartOfDay(intervall.abholungDatum)
+        val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
+        
+        // Prüfe Abholungstermine
+        if (abDatumStart <= maxZukunft) {
+            var naechsteAbholung = if (abDatumStart >= abholungStart) {
+                val tageSeitAbholung = TimeUnit.MILLISECONDS.toDays(abDatumStart - abholungStart)
+                val naechsterZyklus = ((tageSeitAbholung / intervallTage) + 1) * intervallTage
+                abholungStart + TimeUnit.DAYS.toMillis(naechsterZyklus)
+            } else {
+                abholungStart
+            }
+            
+            if (naechsteAbholung <= maxZukunft) {
+                return true
+            }
+        }
+        
+        // Prüfe Auslieferungstermine
+        if (abDatumStart <= maxZukunft) {
+            var naechsteAuslieferung = if (abDatumStart >= auslieferungStart) {
+                val tageSeitAuslieferung = TimeUnit.MILLISECONDS.toDays(abDatumStart - auslieferungStart)
+                val naechsterZyklus = ((tageSeitAuslieferung / intervallTage) + 1) * intervallTage
+                auslieferungStart + TimeUnit.DAYS.toMillis(naechsterZyklus)
+            } else {
+                auslieferungStart
+            }
+            
+            if (naechsteAuslieferung <= maxZukunft) {
+                return true
+            }
+        }
+        
+        return false
     }
     
     fun loadWeekData(weekStartTimestamp: Long, isSectionExpanded: (SectionType) -> Boolean) {
@@ -237,14 +323,15 @@ class TourPlannerViewModel(
                         if (listeId.isEmpty()) return@forEach
                         val liste = allListen.find { it.id == listeId } ?: return@forEach
                         
-                        // Prüfe ob mindestens ein Intervall an diesem Datum fällig ist
+                        // Prüfe ob mindestens ein Intervall an diesem Tag oder innerhalb von 365 Tagen fällig ist
                         val istFaellig = liste.intervalle.any { intervall ->
-                            isIntervallFaelligAm(intervall, dayStart)
+                            isIntervallFaelligAm(intervall, dayStart) || 
+                            isIntervallFaelligInZukunft(intervall, dayStart)
                         }
                         
                         if (istFaellig) {
                             val fälligeKunden = kunden.filter { customer ->
-                                val faelligAm = customerFaelligAm(customer, liste)
+                                val faelligAm = customerFaelligAm(customer, liste, dayStart)
                                 val faelligAmImUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && 
                                                        faelligAm in customer.urlaubVon..customer.urlaubBis
                                 if (faelligAmImUrlaub) return@filter false
@@ -252,9 +339,15 @@ class TourPlannerViewModel(
                                 val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
                                 val isOverdue = !isDone && faelligAm < heuteStart
                                 
-                                if (isOverdue && dayStart > heuteStart) return@filter false
+                                // Überfällige Termine: Zeige sie ab dem überfälligen Tag bis sie erledigt sind
+                                if (isOverdue) {
+                                    // Zeige überfällige Termine ab dem Tag, an dem sie überfällig wurden
+                                    return@filter dayStart >= faelligAm
+                                }
                                 
-                                faelligAm <= dayStart + TimeUnit.DAYS.toMillis(1)
+                                // Normale Termine: Prüfe ob Termin am angezeigten Datum oder innerhalb von 365 Tagen liegt
+                                val tageBisTermin = TimeUnit.MILLISECONDS.toDays(faelligAm - dayStart)
+                                tageBisTermin >= -1 && tageBisTermin <= 365
                             }
                             
                             if (fälligeKunden.isNotEmpty()) {
@@ -282,7 +375,7 @@ class TourPlannerViewModel(
                             if (abholungAm != dayStart && auslieferungAm != dayStart) return@filter false
                         }
                         
-                        val faelligAm = customerFaelligAm(customer)
+                        val faelligAm = customerFaelligAm(customer, null, dayStart)
                         val faelligAmImUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && 
                                                faelligAm in customer.urlaubVon..customer.urlaubBis
                         if (faelligAmImUrlaub) return@filter false
@@ -290,9 +383,15 @@ class TourPlannerViewModel(
                         val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
                         val isOverdue = !isDone && faelligAm < heuteStart
                         
-                        if (isOverdue && dayStart > heuteStart) return@filter false
+                        // Überfällige Termine: Zeige sie ab dem überfälligen Tag bis sie erledigt sind
+                        if (isOverdue) {
+                            // Zeige überfällige Termine ab dem Tag, an dem sie überfällig wurden
+                            return@filter dayStart >= faelligAm
+                        }
                         
-                        faelligAm <= dayStart + TimeUnit.DAYS.toMillis(1)
+                        // Normale Termine: Prüfe ob Termin am angezeigten Datum oder innerhalb von 365 Tagen liegt
+                        val tageBisTermin = TimeUnit.MILLISECONDS.toDays(faelligAm - dayStart)
+                        tageBisTermin >= -1 && tageBisTermin <= 365
                     }
                     
                     val overdueGewerblich = mutableListOf<Customer>()
@@ -301,8 +400,9 @@ class TourPlannerViewModel(
                     
                     filteredGewerblich.forEach { customer ->
                         val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-                        val faelligAm = customerFaelligAm(customer)
-                        val isOverdue = !isDone && faelligAm < heuteStart && dayStart <= heuteStart
+                        val faelligAm = customerFaelligAm(customer, null, dayStart)
+                        // Überfällige Termine: Zeige sie ab dem überfälligen Tag bis sie erledigt sind (auch in der Zukunft)
+                        val isOverdue = !isDone && faelligAm < heuteStart && dayStart >= faelligAm
                         
                         when {
                             isDone -> doneGewerblich.add(customer)
@@ -355,6 +455,7 @@ class TourPlannerViewModel(
     
     /**
      * Prüft ob ein Intervall an einem bestimmten Datum fällig ist
+     * Berücksichtigt Termine für die nächsten 365 Tage
      */
     private fun isIntervallFaelligAm(intervall: ListeIntervall, datum: Long): Boolean {
         val datumStart = getStartOfDay(datum)
@@ -369,18 +470,38 @@ class TourPlannerViewModel(
         // Wiederholendes Intervall: Prüfe ob Datum auf einem Wiederholungszyklus liegt
         val intervallTage = intervall.intervallTage.coerceIn(1, 365)
         
-        // Prüfe Abholungsdatum
+        // Prüfe Abholungsdatum - generiere Termine für 365 Tage
         if (datumStart >= abholungStart) {
             val tageSeitAbholung = TimeUnit.MILLISECONDS.toDays(datumStart - abholungStart)
-            if (tageSeitAbholung % intervallTage == 0L && datumStart == abholungStart + TimeUnit.DAYS.toMillis(tageSeitAbholung)) {
+            // Prüfe ob das Datum auf einem Zyklus liegt (innerhalb von 365 Tagen)
+            if (tageSeitAbholung <= 365 && tageSeitAbholung % intervallTage == 0L) {
+                val erwartetesDatum = abholungStart + TimeUnit.DAYS.toMillis(tageSeitAbholung)
+                if (datumStart == erwartetesDatum) {
+                    return true
+                }
+            }
+        } else {
+            // Datum liegt vor dem Startdatum - prüfe ob es ein zukünftiger Termin ist (innerhalb von 365 Tagen)
+            val tageBisAbholung = TimeUnit.MILLISECONDS.toDays(abholungStart - datumStart)
+            if (tageBisAbholung <= 365 && datumStart == abholungStart) {
                 return true
             }
         }
         
-        // Prüfe Auslieferungsdatum
+        // Prüfe Auslieferungsdatum - generiere Termine für 365 Tage
         if (datumStart >= auslieferungStart) {
             val tageSeitAuslieferung = TimeUnit.MILLISECONDS.toDays(datumStart - auslieferungStart)
-            if (tageSeitAuslieferung % intervallTage == 0L && datumStart == auslieferungStart + TimeUnit.DAYS.toMillis(tageSeitAuslieferung)) {
+            // Prüfe ob das Datum auf einem Zyklus liegt (innerhalb von 365 Tagen)
+            if (tageSeitAuslieferung <= 365 && tageSeitAuslieferung % intervallTage == 0L) {
+                val erwartetesDatum = auslieferungStart + TimeUnit.DAYS.toMillis(tageSeitAuslieferung)
+                if (datumStart == erwartetesDatum) {
+                    return true
+                }
+            }
+        } else {
+            // Datum liegt vor dem Startdatum - prüfe ob es ein zukünftiger Termin ist (innerhalb von 365 Tagen)
+            val tageBisAuslieferung = TimeUnit.MILLISECONDS.toDays(auslieferungStart - datumStart)
+            if (tageBisAuslieferung <= 365 && datumStart == auslieferungStart) {
                 return true
             }
         }
@@ -391,57 +512,110 @@ class TourPlannerViewModel(
     /**
      * Berechnet das nächste fällige Datum für einen Kunden in einer Liste
      */
-    private fun getNaechstesListeDatum(liste: KundenListe, abDatum: Long = System.currentTimeMillis()): Long? {
+    private fun getNaechstesListeDatum(liste: KundenListe, abDatum: Long = System.currentTimeMillis(), geloeschteTermine: List<Long> = emptyList()): Long? {
         val abDatumStart = getStartOfDay(abDatum)
         var naechstesDatum: Long? = null
         
-        // Durch alle Intervalle iterieren und das nächste Datum finden
+        // Durch alle Intervalle iterieren und das nächste Datum finden (überspringe gelöschte Termine)
         liste.intervalle.forEach { intervall ->
             if (!intervall.wiederholen) {
                 // Einmaliges Intervall
                 val abholungStart = getStartOfDay(intervall.abholungDatum)
                 val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
                 
-                if (abholungStart >= abDatumStart && (naechstesDatum == null || abholungStart < naechstesDatum!!)) {
+                if (abholungStart >= abDatumStart && !geloeschteTermine.contains(abholungStart) && (naechstesDatum == null || abholungStart < naechstesDatum!!)) {
                     naechstesDatum = abholungStart
                 }
-                if (auslieferungStart >= abDatumStart && (naechstesDatum == null || auslieferungStart < naechstesDatum!!)) {
+                if (auslieferungStart >= abDatumStart && !geloeschteTermine.contains(auslieferungStart) && (naechstesDatum == null || auslieferungStart < naechstesDatum!!)) {
                     naechstesDatum = auslieferungStart
                 }
             } else {
-                // Wiederholendes Intervall
+                // Wiederholendes Intervall - überspringe gelöschte Termine
                 val intervallTage = intervall.intervallTage.coerceIn(1, 365)
                 val abholungStart = getStartOfDay(intervall.abholungDatum)
                 val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
                 
-                // Nächstes Abholungsdatum
+                // Nächstes Abholungsdatum (überspringe gelöschte)
+                var naechsteAbholung: Long? = null
                 if (abDatumStart >= abholungStart) {
                     val tageSeitAbholung = TimeUnit.MILLISECONDS.toDays(abDatumStart - abholungStart)
-                    val naechsteAbholung = abholungStart + TimeUnit.DAYS.toMillis((tageSeitAbholung / intervallTage + 1) * intervallTage)
-                    if (naechstesDatum == null || naechsteAbholung < naechstesDatum!!) {
-                        naechstesDatum = naechsteAbholung
+                    var zyklus = (tageSeitAbholung / intervallTage + 1).toInt()
+                    var versuche = 0
+                    while (versuche < 100) { // Max 100 Versuche
+                        val kandidat = abholungStart + TimeUnit.DAYS.toMillis((zyklus * intervallTage).toLong())
+                        val kandidatStart = getStartOfDay(kandidat)
+                        if (kandidatStart >= abDatumStart && !geloeschteTermine.contains(kandidatStart)) {
+                            naechsteAbholung = kandidatStart
+                            break
+                        }
+                        zyklus++
+                        versuche++
                     }
                 } else {
-                    if (naechstesDatum == null || abholungStart < naechstesDatum!!) {
-                        naechstesDatum = abholungStart
+                    if (!geloeschteTermine.contains(abholungStart)) {
+                        naechsteAbholung = abholungStart
+                    } else {
+                        var zyklus = 1
+                        var versuche = 0
+                        while (versuche < 100) {
+                            val kandidat = abholungStart + TimeUnit.DAYS.toMillis((zyklus * intervallTage).toLong())
+                            val kandidatStart = getStartOfDay(kandidat)
+                            if (kandidatStart >= abDatumStart && !geloeschteTermine.contains(kandidatStart)) {
+                                naechsteAbholung = kandidatStart
+                                break
+                            }
+                            zyklus++
+                            versuche++
+                        }
                     }
                 }
                 
-                // Nächstes Auslieferungsdatum
+                if (naechsteAbholung != null && (naechstesDatum == null || naechsteAbholung < naechstesDatum!!)) {
+                    naechstesDatum = naechsteAbholung
+                }
+                
+                // Nächstes Auslieferungsdatum (überspringe gelöschte)
+                var naechsteAuslieferung: Long? = null
                 if (abDatumStart >= auslieferungStart) {
                     val tageSeitAuslieferung = TimeUnit.MILLISECONDS.toDays(abDatumStart - auslieferungStart)
-                    val naechsteAuslieferung = auslieferungStart + TimeUnit.DAYS.toMillis((tageSeitAuslieferung / intervallTage + 1) * intervallTage)
-                    if (naechstesDatum == null || naechsteAuslieferung < naechstesDatum!!) {
-                        naechstesDatum = naechsteAuslieferung
+                    var zyklus = (tageSeitAuslieferung / intervallTage + 1).toInt()
+                    var versuche = 0
+                    while (versuche < 100) {
+                        val kandidat = auslieferungStart + TimeUnit.DAYS.toMillis((zyklus * intervallTage).toLong())
+                        val kandidatStart = getStartOfDay(kandidat)
+                        if (kandidatStart >= abDatumStart && !geloeschteTermine.contains(kandidatStart)) {
+                            naechsteAuslieferung = kandidatStart
+                            break
+                        }
+                        zyklus++
+                        versuche++
                     }
                 } else {
-                    if (naechstesDatum == null || auslieferungStart < naechstesDatum!!) {
-                        naechstesDatum = auslieferungStart
+                    if (!geloeschteTermine.contains(auslieferungStart)) {
+                        naechsteAuslieferung = auslieferungStart
+                    } else {
+                        var zyklus = 1
+                        var versuche = 0
+                        while (versuche < 100) {
+                            val kandidat = auslieferungStart + TimeUnit.DAYS.toMillis((zyklus * intervallTage).toLong())
+                            val kandidatStart = getStartOfDay(kandidat)
+                            if (kandidatStart >= abDatumStart && !geloeschteTermine.contains(kandidatStart)) {
+                                naechsteAuslieferung = kandidatStart
+                                break
+                            }
+                            zyklus++
+                            versuche++
+                        }
                     }
+                }
+                
+                if (naechsteAuslieferung != null && (naechstesDatum == null || naechsteAuslieferung < naechstesDatum!!)) {
+                    naechstesDatum = naechsteAuslieferung
                 }
             }
         }
         
         return naechstesDatum
     }
+    
 }

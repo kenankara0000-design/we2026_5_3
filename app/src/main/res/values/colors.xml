@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Primärfarben - Modernes Blau -->
-    <color name="primary_blue">#1976D2</color>
+    <color name="primary_blue">#1565C0</color> <!-- Dunkleres Blau für Container -->
     <color name="primary_blue_dark">#1565C0</color>
     <color name="primary_blue_light">#42A5F5</color>
+    <color name="button_blue">#42A5F5</color> <!-- Mittleres Blau für Buttons -->
     
     <!-- Alte Primärfarbe (für Kompatibilität) -->
     <color name="purple_500">#1976D2</color>
@@ -32,9 +33,12 @@
     <color name="light_gray">#D3D3D3</color>
     <color name="background_light">#FAFAFA</color>
     <color name="surface_white">#FFFFFF</color>
+    <color name="surface_light">#F5F5F5</color>
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>
     <color name="divider">#E0E0E0</color>
+    <color name="button_inactive">#BDBDBD</color>
+    <color name="button_active">#FF9800</color>
     
     <!-- Section Header Hintergründe -->
     <color name="section_overdue_bg">#FFEBEE</color>

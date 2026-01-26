@@ -226,21 +226,34 @@ class CustomerDetailActivity : AppCompatActivity() {
     }
 
     private fun handleDelete() {
-        CoroutineScope(Dispatchers.Main).launch {
-            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                operation = { 
-                    repository.deleteCustomer(customerId)
-                },
-                context = this@CustomerDetailActivity,
-                errorMessage = "Fehler beim Löschen. Bitte erneut versuchen.",
-                maxRetries = 3
-            )
-            
-            if (success == true) {
-                Toast.makeText(this@CustomerDetailActivity, "Kunde gelöscht", Toast.LENGTH_LONG).show()
-                finish()
+        AlertDialog.Builder(this)
+            .setTitle("Kunde löschen?")
+            .setMessage("Möchten Sie diesen Kunden wirklich löschen? Alle Termine dieses Kunden werden ebenfalls gelöscht.")
+            .setPositiveButton("Löschen") { _, _ ->
+                CoroutineScope(Dispatchers.Main).launch {
+                    val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
+                        operation = { 
+                            // Kunde löschen - alle Termine werden automatisch gelöscht, da sie Teil des Kunden-Objekts sind
+                            repository.deleteCustomer(customerId)
+                        },
+                        context = this@CustomerDetailActivity,
+                        errorMessage = "Fehler beim Löschen. Bitte erneut versuchen.",
+                        maxRetries = 3
+                    )
+                    
+                    if (success == true) {
+                        Toast.makeText(this@CustomerDetailActivity, "Kunde und alle Termine gelöscht", Toast.LENGTH_LONG).show()
+                        // Result-Code setzen, um CustomerManagerActivity zu benachrichtigen
+                        val resultIntent = Intent().apply {
+                            putExtra("DELETED_CUSTOMER_ID", customerId)
+                        }
+                        setResult(CustomerManagerActivity.RESULT_CUSTOMER_DELETED, resultIntent)
+                        finish()
+                    }
+                }
             }
-        }
+            .setNegativeButton("Abbrechen", null)
+            .show()
     }
     
     private fun showPhotoOptionsDialog() {

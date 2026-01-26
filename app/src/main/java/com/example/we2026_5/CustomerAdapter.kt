@@ -45,6 +45,9 @@ class CustomerAdapter(
     private var isMultiSelectMode = false
     private val selectedCustomers = mutableSetOf<String>() // Customer IDs
     
+    // Button-Zustand: Welcher Button wurde für welchen Kunden gedrückt
+    private val pressedButtons = mutableMapOf<String, String>() // customerId -> "A", "L", "V", "U"
+    
     // Callbacks für Firebase-Operationen (statt direkter Firebase-Aufrufe)
     var onAbholung: ((Customer) -> Unit)? = null
     var onAuslieferung: ((Customer) -> Unit)? = null
@@ -53,6 +56,10 @@ class CustomerAdapter(
     var onUrlaub: ((Customer, Long, Long) -> Unit)? = null // customer, von, bis
     var onRueckgaengig: ((Customer) -> Unit)? = null
     var onBulkMarkDone: ((List<Customer>) -> Unit)? = null // Für Bulk-Operationen
+    var onTerminClick: ((Customer, Long) -> Unit)? = null // customer, terminDatum - für Termin-Detail-Dialog
+    // Callbacks für Datum-Berechnung (für A/L Button-Aktivierung)
+    var getAbholungDatum: ((Customer) -> Long)? = null // Gibt Abholungsdatum für heute zurück
+    var getAuslieferungDatum: ((Customer) -> Long)? = null // Gibt Auslieferungsdatum für heute zurück
     
     // Drag & Drop Support
     fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
@@ -117,8 +124,11 @@ class CustomerAdapter(
                 val prevItem = if (position > 0) items[position - 1] else null
                 val isInListe = prevItem is ListItem.ListeHeader && item.customer.listeId == prevItem.listeId
                 
-                if (isInListe) {
-                    // Kunde gehört zu einer Liste: nur anzeigen wenn Liste expanded ist
+                // Im CustomerManager: Alle Kunden immer anzeigen (alphabetisch sortiert)
+                val isInCustomerManager = displayedDateMillis == null
+                
+                if (isInListe && !isInCustomerManager) {
+                    // Im TourPlanner: Kunde gehört zu einer Liste - nur anzeigen wenn Liste expanded ist
                     val listeHeader = prevItem as ListItem.ListeHeader
                     if (expandedListen.contains(listeHeader.listeId)) {
                         bindCustomerViewHolder(holder as CustomerViewHolder, item.customer)
@@ -127,7 +137,8 @@ class CustomerAdapter(
                         holder.itemView.visibility = View.GONE
                     }
                 } else {
-                    // Gewerblich-Kunde oder nicht in Liste: normale Logik
+                    // Im CustomerManager: Alle Kunden immer anzeigen
+                    // Im TourPlanner: Gewerblich-Kunde oder nicht in Liste
                     if (shouldShowCustomer(item.customer)) {
                         bindCustomerViewHolder(holder as CustomerViewHolder, item.customer)
                         holder.itemView.visibility = View.VISIBLE
@@ -137,9 +148,21 @@ class CustomerAdapter(
                 }
             }
             is ListItem.ListeHeader -> {
-                bindListeHeaderViewHolder(holder as ListeHeaderViewHolder, item)
+                // Im CustomerManager: Liste-Header ausblenden (alle Kunden untereinander)
+                if (displayedDateMillis == null) {
+                    holder.itemView.visibility = View.GONE
+                } else {
+                    bindListeHeaderViewHolder(holder as ListeHeaderViewHolder, item)
+                }
             }
-            is ListItem.SectionHeader -> bindSectionHeaderViewHolder(holder as SectionHeaderViewHolder, item)
+            is ListItem.SectionHeader -> {
+                // Im CustomerManager: Section-Header ausblenden (alle Kunden untereinander)
+                if (displayedDateMillis == null) {
+                    holder.itemView.visibility = View.GONE
+                } else {
+                    bindSectionHeaderViewHolder(holder as SectionHeaderViewHolder, item)
+                }
+            }
         }
     }
 
@@ -232,11 +255,24 @@ class CustomerAdapter(
         holder.binding.tvItemName.text = customer.name
         holder.binding.tvItemAdresse.text = customer.adresse
 
-        // Nächstes Tour-Datum berechnen und anzeigen (immer, auch in TourPlanner)
+        // Nächstes Tour-Datum berechnen und anzeigen
         val naechsteTour = if (customer.verschobenAufDatum > 0) {
             customer.verschobenAufDatum
+        } else if (customer.listeId.isNotEmpty()) {
+            // Für Kunden in Listen: Verwende abholungDatum oder aktuelles Datum
+            // (Die genaue Berechnung erfolgt im ViewModel, hier zeigen wir nur einen Platzhalter)
+            if (customer.abholungDatum > 0) {
+                customer.abholungDatum
+            } else {
+                System.currentTimeMillis()
+            }
         } else {
-            customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
+            // Für Kunden ohne Liste: Normale Berechnung
+            if (customer.wiederholen && customer.letzterTermin > 0) {
+                customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
+            } else {
+                customer.abholungDatum
+            }
         }
         val cal = Calendar.getInstance()
         cal.timeInMillis = naechsteTour
@@ -252,63 +288,58 @@ class CustomerAdapter(
 
         resetStyles(holder)
 
+        // Status-Styles anwenden wenn im TourPlanner
         if (displayedDateMillis != null) {
             applyStatusStyles(holder, customer)
-            
-            // Buttons nur bei fälligen Kunden anzeigen (nicht erledigt und fällig)
-            val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-            val faelligAm = if (customer.verschobenAufDatum > 0) customer.verschobenAufDatum 
-                           else customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
-            val displayedDateStart = displayedDateMillis ?: 0
-            val isFaellig = faelligAm <= displayedDateStart + TimeUnit.DAYS.toMillis(1)
-            val showButtons = !isDone && isFaellig
-            
-            holder.binding.btnAbholung.visibility = if (showButtons) View.VISIBLE else View.GONE
-            holder.binding.btnAuslieferung.visibility = if (showButtons) View.VISIBLE else View.GONE
-            holder.binding.btnVerschieben.visibility = if (showButtons) View.VISIBLE else View.GONE
-            holder.binding.btnUrlaub.visibility = if (showButtons) View.VISIBLE else View.GONE
-            // Rückgängig-Button nur bei erledigten Kunden anzeigen
-            holder.binding.btnRueckgaengig.visibility = if (isDone) View.VISIBLE else View.GONE
         } else {
-            // In CustomerManager: Nächstes Tour-Datum immer anzeigen
-            val naechsteTour = if (customer.verschobenAufDatum > 0) {
-                customer.verschobenAufDatum
-            } else {
-                customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
-            }
-            val cal = Calendar.getInstance()
-            cal.timeInMillis = naechsteTour
-            val dateStr = "${cal.get(Calendar.DAY_OF_MONTH)}.${cal.get(Calendar.MONTH) + 1}.${cal.get(Calendar.YEAR)}"
-            holder.binding.tvNextTour.text = "Nächste Tour: $dateStr"
-            holder.binding.tvNextTour.visibility = View.VISIBLE
-            
-            // Navigation-Button anzeigen wenn Adresse vorhanden
-            holder.binding.btnNavigation.visibility = if (customer.adresse.isNotBlank()) View.VISIBLE else View.GONE
-            holder.binding.btnNavigation.setOnClickListener {
-                startNavigation(customer.adresse)
-            }
-            
             holder.binding.tvStatusLabel.visibility = View.GONE
-            // Buttons in CustomerManager ausblenden
-            holder.binding.btnAbholung.visibility = View.GONE
-            holder.binding.btnAuslieferung.visibility = View.GONE
-            holder.binding.btnVerschieben.visibility = View.GONE
-            holder.binding.btnUrlaub.visibility = View.GONE
         }
 
-        // Button-Handler
-        holder.binding.btnAbholung.setOnClickListener { handleAbholung(customer) }
-        holder.binding.btnAuslieferung.setOnClickListener { handleAuslieferung(customer) }
-        holder.binding.btnVerschieben.setOnClickListener { showVerschiebenDialog(customer) }
-        holder.binding.btnUrlaub.setOnClickListener { showUrlaubDialog(customer) }
+        // Button-Handler (immer setzen)
+        holder.binding.btnAbholung.setOnClickListener { 
+            pressedButtons[customer.id] = "A"
+            handleAbholung(customer) 
+        }
+        holder.binding.btnAuslieferung.setOnClickListener { 
+            pressedButtons[customer.id] = "L"
+            handleAuslieferung(customer) 
+        }
+        holder.binding.btnVerschieben.setOnClickListener { 
+            pressedButtons[customer.id] = "V"
+            showVerschiebenDialog(customer) 
+        }
+        holder.binding.btnUrlaub.setOnClickListener { 
+            pressedButtons[customer.id] = "U"
+            showUrlaubDialog(customer) 
+        }
         holder.binding.btnRueckgaengig.setOnClickListener { handleRueckgaengig(customer) }
 
-        // Multi-Select oder normaler Click
-        holder.itemView.setOnClickListener {
-            if (isMultiSelectMode) {
-                toggleCustomerSelection(customer.id, holder)
-            } else {
-                onClick(customer)
+        // Termin-Klick: Wenn im TourPlanner, öffne Termin-Detail-Dialog
+        // Normale Klicks auf die Card werden nur im CustomerManager verwendet
+        if (displayedDateMillis != null) {
+            // Im TourPlanner: Klick auf Card öffnet Termin-Detail-Dialog
+            holder.itemView.setOnClickListener {
+                if (isMultiSelectMode) {
+                    toggleCustomerSelection(customer.id, holder)
+                } else {
+                    // Berechne das aktuelle Termin-Datum für diesen Kunden
+                    val terminDatum = if (customer.verschobenAufDatum > 0) {
+                        customer.verschobenAufDatum
+                    } else {
+                        // Berechne fälliges Datum basierend auf Customer-Daten
+                        customer.getFaelligAm()
+                    }
+                    onTerminClick?.invoke(customer, terminDatum)
+                }
+            }
+        } else {
+            // Im CustomerManager: Normaler Click öffnet CustomerDetailActivity
+            holder.itemView.setOnClickListener {
+                if (isMultiSelectMode) {
+                    toggleCustomerSelection(customer.id, holder)
+                } else {
+                    onClick(customer)
+                }
             }
         }
         
@@ -333,6 +364,90 @@ class CustomerAdapter(
         } else {
             holder.binding.itemContainer.alpha = 1.0f
             resetStyles(holder)
+        }
+        
+        // WICHTIG: Buttons-Sichtbarkeit und -Farben am ENDE setzen, damit sie nicht überschrieben werden
+        // Im TourPlanner: Buttons für ALLE nicht-erledigten Kunden anzeigen
+        val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
+        if (displayedDateMillis != null) {
+            val heuteStart = getStartOfDay(System.currentTimeMillis())
+            val viewDateStart = displayedDateMillis?.let { getStartOfDay(it) } ?: heuteStart
+            
+            // Im TourPlanner: Buttons anzeigen mit Farben basierend auf Status
+            val activeColor = ContextCompat.getColor(context, R.color.button_active) // Orange
+            val inactiveColor = ContextCompat.getColor(context, R.color.button_inactive) // Grau
+            
+            // Prüfe welche Buttons gedrückt wurden
+            val pressedButton = pressedButtons[customer.id]
+            
+            // A (Abholung): Nur aktiv wenn Abholungsdatum heute fällig ist
+            val abholungDatumHeute = getAbholungDatum?.invoke(customer) ?: 0L
+            val abholungFaelligHeute = abholungDatumHeute > 0 && getStartOfDay(abholungDatumHeute) == viewDateStart
+            val aButtonAktiv = abholungFaelligHeute && !customer.abholungErfolgt
+            
+            holder.binding.btnAbholung.visibility = if (!isDone) View.VISIBLE else View.GONE
+            // Hervorhebung: Wenn dieser Button gedrückt wurde, normal, sonst hervorgehoben
+            if (pressedButton == "A") {
+                // Gedrückter Button: Normal (kein Hintergrund)
+                holder.binding.btnAbholung.background = null
+            } else if (pressedButton != null) {
+                // Andere Buttons: Hervorgehoben mit Randung (nur wenn ein Button gedrückt wurde)
+                holder.binding.btnAbholung.background = ContextCompat.getDrawable(context, R.drawable.button_highlighted)
+            } else {
+                // Kein Button gedrückt: Normal
+                holder.binding.btnAbholung.background = null
+            }
+            holder.binding.btnAbholung.setTextColor(if (aButtonAktiv) activeColor else inactiveColor)
+            
+            // L (Auslieferung): Nur aktiv wenn Auslieferungsdatum heute fällig ist
+            val auslieferungDatumHeute = getAuslieferungDatum?.invoke(customer) ?: 0L
+            val auslieferungFaelligHeute = auslieferungDatumHeute > 0 && getStartOfDay(auslieferungDatumHeute) == viewDateStart
+            val lButtonAktiv = auslieferungFaelligHeute && !customer.auslieferungErfolgt
+            
+            holder.binding.btnAuslieferung.visibility = if (!isDone) View.VISIBLE else View.GONE
+            if (pressedButton == "L") {
+                holder.binding.btnAuslieferung.background = null
+            } else if (pressedButton != null) {
+                holder.binding.btnAuslieferung.background = ContextCompat.getDrawable(context, R.drawable.button_highlighted)
+            } else {
+                holder.binding.btnAuslieferung.background = null
+            }
+            holder.binding.btnAuslieferung.setTextColor(if (lButtonAktiv) activeColor else inactiveColor)
+            
+            // V (Verschieben): Nur aktiv wenn verschobenAufDatum > 0
+            val vButtonAktiv = customer.verschobenAufDatum > 0
+            
+            holder.binding.btnVerschieben.visibility = if (!isDone && vButtonAktiv) View.VISIBLE else View.GONE
+            if (pressedButton == "V") {
+                holder.binding.btnVerschieben.background = null
+            } else if (pressedButton != null) {
+                holder.binding.btnVerschieben.background = ContextCompat.getDrawable(context, R.drawable.button_highlighted)
+            } else {
+                holder.binding.btnVerschieben.background = null
+            }
+            holder.binding.btnVerschieben.setTextColor(if (vButtonAktiv) activeColor else inactiveColor)
+            
+            // U (Urlaub): Nur aktiv wenn urlaubVon > 0 und urlaubBis > 0
+            val uButtonAktiv = customer.urlaubVon > 0 && customer.urlaubBis > 0
+            
+            holder.binding.btnUrlaub.visibility = if (!isDone && uButtonAktiv) View.VISIBLE else View.GONE
+            if (pressedButton == "U") {
+                holder.binding.btnUrlaub.background = null
+            } else if (pressedButton != null) {
+                holder.binding.btnUrlaub.background = ContextCompat.getDrawable(context, R.drawable.button_highlighted)
+            } else {
+                holder.binding.btnUrlaub.background = null
+            }
+            holder.binding.btnUrlaub.setTextColor(if (uButtonAktiv) activeColor else inactiveColor)
+            
+            holder.binding.btnRueckgaengig.visibility = if (isDone) View.VISIBLE else View.GONE
+        } else {
+            // In CustomerManager: Buttons ausblenden
+            holder.binding.btnAbholung.visibility = View.GONE
+            holder.binding.btnAuslieferung.visibility = View.GONE
+            holder.binding.btnVerschieben.visibility = View.GONE
+            holder.binding.btnUrlaub.visibility = View.GONE
+            holder.binding.btnRueckgaengig.visibility = View.GONE
         }
     }
     
@@ -435,24 +550,54 @@ class CustomerAdapter(
         notifyDataSetChanged()
     }
     
+    /**
+     * Entfernt einen Kunden direkt aus dem Adapter (optimistische UI-Aktualisierung)
+     * Entfernt alle Vorkommen des Kunden (falls er mehrfach in der Liste ist)
+     */
+    fun removeCustomer(customerId: String) {
+        var removedCount = 0
+        var firstPosition = -1
+        
+        // Alle Vorkommen des Kunden finden und entfernen (rückwärts, um Indizes nicht zu verschieben)
+        for (i in items.size - 1 downTo 0) {
+            if (items[i] is ListItem.CustomerItem && (items[i] as ListItem.CustomerItem).customer.id == customerId) {
+                if (firstPosition == -1) {
+                    firstPosition = i
+                }
+                items.removeAt(i)
+                removedCount++
+            }
+        }
+        
+        if (removedCount > 0 && firstPosition != -1) {
+            // Benachrichtige über die Änderungen
+            notifyItemRangeRemoved(firstPosition, removedCount)
+            if (firstPosition < items.size) {
+                notifyItemRangeChanged(firstPosition, items.size - firstPosition)
+            }
+        }
+    }
+    
+    /**
+     * Setzt alle gedrückten Buttons zurück (nach erfolgreicher Aktion)
+     */
+    fun clearPressedButtons() {
+        pressedButtons.clear()
+        notifyDataSetChanged()
+    }
+    
     fun isSectionExpanded(sectionType: SectionType): Boolean {
         return expandedSections.contains(sectionType)
     }
     
     fun shouldShowCustomer(customer: Customer): Boolean {
-        val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-        val heuteStart = getStartOfDay(System.currentTimeMillis())
-        val displayedDateStart = displayedDateMillis ?: 0
-        val faelligAm = if (customer.verschobenAufDatum > 0) customer.verschobenAufDatum 
-                       else customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
-        // Überfällig: Termin liegt in der Vergangenheit UND Kunde ist nicht erledigt
-        val isOverdue = !isDone && faelligAm < heuteStart
-        
-        return when {
-            isDone -> isSectionExpanded(SectionType.DONE)
-            isOverdue -> isSectionExpanded(SectionType.OVERDUE)
-            else -> true // Normale Kunden immer anzeigen
+        // Im TourPlanner: Alle Kunden anzeigen (wurde bereits vom ViewModel gefiltert)
+        if (displayedDateMillis != null) {
+            return true
         }
+        
+        // Im CustomerManager: Alle Kunden immer anzeigen (alphabetisch sortiert, keine Sections)
+        return true
     }
 
     private fun getStartOfDay(ts: Long): Long {
@@ -468,11 +613,13 @@ class CustomerAdapter(
     private fun handleAbholung(customer: Customer) {
         if (customer.abholungErfolgt) return
         onAbholung?.invoke(customer)
+        // Button-Zustand bleibt bis Daten neu geladen werden (wird in TourPlannerActivity gemacht)
     }
 
     private fun handleAuslieferung(customer: Customer) {
         if (customer.auslieferungErfolgt) return
         onAuslieferung?.invoke(customer)
+        // Button-Zustand bleibt bis Daten neu geladen werden
     }
 
     private fun resetTourCycle(customerId: String) {
@@ -492,12 +639,24 @@ class CustomerAdapter(
                 .setPositiveButton("Nur diesen Termin") { _, _ ->
                     // Nur diesen Termin verschieben
                     onVerschieben?.invoke(customer, newDate, false)
+                    // Button-Zustand zurücksetzen nach Aktion
+                    pressedButtons.remove(customer.id)
+                    val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customer.id }
+                    if (position != -1) notifyItemChanged(position)
                 }
                 .setNeutralButton("Alle zukünftigen Termine") { _, _ ->
                     // Alle zukünftigen Termine verschieben
                     onVerschieben?.invoke(customer, newDate, true)
+                    pressedButtons.remove(customer.id)
+                    val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customer.id }
+                    if (position != -1) notifyItemChanged(position)
                 }
-                .setNegativeButton("Abbrechen", null)
+                .setNegativeButton("Abbrechen") { _, _ ->
+                    // Bei Abbrechen: Button-Zustand zurücksetzen
+                    pressedButtons.remove(customer.id)
+                    val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customer.id }
+                    if (position != -1) notifyItemChanged(position)
+                }
                 .show()
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
     }
@@ -527,20 +686,40 @@ class CustomerAdapter(
                 val pickedBis = Calendar.getInstance().apply { set(y, m, d, 23, 59, 59) }
                 if (pickedBis.timeInMillis >= urlaubVon) {
                     onUrlaub?.invoke(customer, urlaubVon, pickedBis.timeInMillis)
+                    // Button-Zustand zurücksetzen nach Aktion
+                    pressedButtons.remove(customer.id)
+                    val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customer.id }
+                    if (position != -1) notifyItemChanged(position)
                 } else {
                     Toast.makeText(context, "Enddatum muss nach Startdatum sein!", Toast.LENGTH_SHORT).show()
+                    // Bei Fehler: Button-Zustand zurücksetzen
+                    pressedButtons.remove(customer.id)
+                    val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customer.id }
+                    if (position != -1) notifyItemChanged(position)
                 }
             }
 
             DatePickerDialog(context, dateSetListenerBis, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).apply {
                 setTitle("Urlaub bis")
+                setOnCancelListener {
+                    // Bei Abbrechen: Button-Zustand zurücksetzen
+                    pressedButtons.remove(customer.id)
+                    val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customer.id }
+                    if (position != -1) notifyItemChanged(position)
+                }
                 show()
             }
         }
 
-        DatePickerDialog(context, dateSetListenerVon, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).apply {
-            setTitle("Urlaub von")
-            show()
+            DatePickerDialog(context, dateSetListenerVon, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).apply {
+                setTitle("Urlaub von")
+                setOnCancelListener {
+                    // Bei Abbrechen: Button-Zustand zurücksetzen
+                    pressedButtons.remove(customer.id)
+                    val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customer.id }
+                    if (position != -1) notifyItemChanged(position)
+                }
+                show()
+            }
         }
     }
-}

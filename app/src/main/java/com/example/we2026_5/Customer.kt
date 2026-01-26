@@ -27,7 +27,8 @@ data class Customer(
     val urlaubBis: Long = 0,
     val verschobenAufDatum: Long = 0,
     val fotoUrls: List<String> = listOf(),
-    val istImUrlaub: Boolean = false
+    val istImUrlaub: Boolean = false,
+    val geloeschteTermine: List<Long> = listOf() // Liste von gelöschten Termin-Daten (für einzelne Termin-Löschungen)
 ) {
     /**
      * Berechnet das nächste Fälligkeitsdatum basierend auf letzterTermin und Intervall.

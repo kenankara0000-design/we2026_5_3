@@ -37,6 +37,7 @@ class CustomerManagerViewModel(
         viewModelScope.launch {
             try {
                 val allCustomers = repository.getAllCustomers()
+                    .sortedBy { it.name.uppercase() } // Nach A-Z sortieren
                 _customers.value = allCustomers
                 _filteredCustomers.value = allCustomers
             } catch (e: Exception) {
@@ -56,7 +57,7 @@ class CustomerManagerViewModel(
                 it.name.contains(query, ignoreCase = true) ||
                 it.adresse.contains(query, ignoreCase = true)
             }
-        }
+        }.sortedBy { it.name.uppercase() } // Nach A-Z sortieren
         _filteredCustomers.value = filtered
     }
     
@@ -65,7 +66,18 @@ class CustomerManagerViewModel(
             try {
                 val success = repository.deleteCustomer(customerId)
                 if (success) {
-                    loadCustomers() // Liste aktualisieren
+                    // Kunde sofort aus der Liste entfernen (optimistische UI-Aktualisierung)
+                    val currentCustomers = _customers.value?.toMutableList() ?: mutableListOf()
+                    currentCustomers.removeAll { it.id == customerId }
+                    _customers.value = currentCustomers.sortedBy { it.name.uppercase() }
+                    
+                    // Gefilterte Liste auch aktualisieren
+                    val currentFiltered = _filteredCustomers.value?.toMutableList() ?: mutableListOf()
+                    currentFiltered.removeAll { it.id == customerId }
+                    _filteredCustomers.value = currentFiltered.sortedBy { it.name.uppercase() }
+                    
+                    // Dann die Liste neu laden um sicherzustellen, dass alles synchron ist
+                    loadCustomers()
                     onSuccess()
                 } else {
                     onError("Fehler beim Löschen des Kunden")
