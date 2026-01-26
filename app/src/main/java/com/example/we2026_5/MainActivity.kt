@@ -42,10 +42,6 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, TourPlannerActivity::class.java))
         }
 
-        binding.btnNeuerKunde.setOnClickListener {
-            startActivity(Intent(this, AddCustomerActivity::class.java))
-        }
-
         binding.btnKundenListen.setOnClickListener {
             startActivity(Intent(this, KundenListenActivity::class.java))
         }

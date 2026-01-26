@@ -53,36 +53,6 @@
                 android:padding="12dp"
                 android:layout_marginBottom="20dp"/>
 
-            <!-- Intervalle Container -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Intervalle (bis zu 12)"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="12dp"/>
-
-            <LinearLayout
-                android:id="@+id/layoutIntervalleContainer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp"/>
-
-            <!-- Neues Intervall Button -->
-            <Button
-                android:id="@+id/btnNeuesIntervall"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="+ Neues Intervall hinzufügen"
-                android:minHeight="56dp"
-                android:backgroundTint="@color/accent_green"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="20dp"/>
-
             <Button
                 android:id="@+id/btnSaveListe"
                 android:layout_width="match_parent"

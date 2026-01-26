@@ -39,7 +39,6 @@ class CustomerDetailActivity : AppCompatActivity() {
     private var currentCustomer: Customer? = null
     private lateinit var customerId: String
     private var isInEditMode = false
-    private var selectedWochentag: Int = 0
 
     private lateinit var photoAdapter: PhotoAdapter
     private var latestTmpUri: Uri? = null
@@ -114,20 +113,8 @@ class CustomerDetailActivity : AppCompatActivity() {
             binding.etDetailName.setText(currentCustomer?.name)
             binding.etDetailAdresse.setText(currentCustomer?.adresse)
             binding.etDetailTelefon.setText(currentCustomer?.telefon)
-            binding.etDetailIntervall.setText(currentCustomer?.intervallTage?.toString() ?: "7")
             binding.etDetailNotizen.setText(currentCustomer?.notizen)
             binding.etDetailReihenfolge.setText(currentCustomer?.reihenfolge?.toString() ?: "1")
-            
-            // Wochentag-Buttons initialisieren
-            selectedWochentag = currentCustomer?.wochentag ?: 0
-            updateWochentagButtons(selectedWochentag)
-            binding.btnDetailMo.setOnClickListener { selectWochentag(0) }
-            binding.btnDetailDi.setOnClickListener { selectWochentag(1) }
-            binding.btnDetailMi.setOnClickListener { selectWochentag(2) }
-            binding.btnDetailDo.setOnClickListener { selectWochentag(3) }
-            binding.btnDetailFr.setOnClickListener { selectWochentag(4) }
-            binding.btnDetailSa.setOnClickListener { selectWochentag(5) }
-            binding.btnDetailSo.setOnClickListener { selectWochentag(6) }
             
             // Google Maps Button für Adress-Auswahl
             binding.btnSelectLocation.setOnClickListener {
@@ -135,7 +122,6 @@ class CustomerDetailActivity : AppCompatActivity() {
             }
         } else {
             binding.tvDetailName.text = currentCustomer?.name
-            binding.tvDetailWochentag.text = getWochentagName(currentCustomer?.wochentag ?: 0)
             binding.tvDetailReihenfolge.text = (currentCustomer?.reihenfolge ?: 1).toString()
         }
     }
@@ -161,19 +147,6 @@ class CustomerDetailActivity : AppCompatActivity() {
             return
         }
 
-        val intervallInput = binding.etDetailIntervall.text.toString().toIntOrNull() ?: 7
-        val intervall = when {
-            intervallInput < 1 -> {
-                binding.etDetailIntervall.error = "Intervall muss mindestens 1 Tag sein"
-                return
-            }
-            intervallInput > 365 -> {
-                binding.etDetailIntervall.error = "Intervall darf maximal 365 Tage sein"
-                return
-            }
-            else -> intervallInput
-        }
-        
         val reihenfolgeInput = binding.etDetailReihenfolge.text.toString().toIntOrNull() ?: 1
         val reihenfolge = when {
             reihenfolgeInput < 1 -> {
@@ -183,11 +156,11 @@ class CustomerDetailActivity : AppCompatActivity() {
             else -> reihenfolgeInput
         }
 
-        // Duplikat-Prüfung: Wochentag + Reihenfolge (nur wenn sich geändert hat)
+        // Duplikat-Prüfung: Reihenfolge (nur wenn sich geändert hat)
         CoroutineScope(Dispatchers.Main).launch {
             val existingCustomer = ValidationHelper.checkDuplicateReihenfolge(
                 repository = repository,
-                wochentag = selectedWochentag,
+                wochentag = 0, // Wochentag wird nicht mehr verwendet
                 reihenfolge = reihenfolge,
                 excludeCustomerId = customerId
             )
@@ -196,23 +169,68 @@ class CustomerDetailActivity : AppCompatActivity() {
                 runOnUiThread {
                     binding.etDetailReihenfolge.error = "Reihenfolge $reihenfolge ist bereits von ${existingCustomer.name} belegt"
                     Toast.makeText(this@CustomerDetailActivity, 
-                        "Kunde '${existingCustomer.name}' hat bereits Reihenfolge $reihenfolge am ${getWochentagName(selectedWochentag)}", 
+                        "Kunde '${existingCustomer.name}' hat bereits Reihenfolge $reihenfolge", 
                         Toast.LENGTH_LONG).show()
                 }
                 return@launch
             }
 
+            // Button sofort deaktivieren und visuelles Feedback geben
+            // WICHTIG: Button muss sichtbar bleiben, damit das Feedback sichtbar ist!
+            runOnUiThread {
+                binding.btnSaveCustomer.visibility = View.VISIBLE  // Explizit sichtbar machen
+                binding.btnSaveCustomer.isEnabled = false
+                binding.btnSaveCustomer.text = "Speichere..."
+                binding.btnSaveCustomer.alpha = 0.6f
+            }
+            
             val updatedData = mapOf(
                 "name" to name,
                 "adresse" to adresse,
                 "telefon" to telefon,
-                "intervallTage" to intervall,
                 "notizen" to binding.etDetailNotizen.text.toString().trim(),
-                "wochentag" to selectedWochentag,
+                "wochentag" to 0, // Wochentag wird nicht mehr verwendet
                 "reihenfolge" to reihenfolge
             )
-            updateCustomerData(updatedData, "Änderungen gespeichert")
-            toggleEditMode(false)
+            
+            // Optimistische UI-Aktualisierung: UI sofort aktualisieren
+            // ABER: Button sichtbar lassen für visuelles Feedback!
+            currentCustomer?.let { customer ->
+                val updatedCustomer = customer.copy(
+                    name = name,
+                    adresse = adresse,
+                    telefon = telefon,
+                    notizen = binding.etDetailNotizen.text.toString().trim(),
+                    wochentag = 0, // Wochentag wird nicht mehr verwendet
+                    reihenfolge = reihenfolge
+                )
+                currentCustomer = updatedCustomer
+                // UI sofort aktualisieren (optimistisch), aber Button sichtbar lassen
+                // toggleEditMode(false) wird NACH dem visuellen Feedback aufgerufen
+            }
+            
+            updateCustomerData(updatedData, "Änderungen gespeichert") {
+                // Visuelles Feedback nach erfolgreichem Update
+                runOnUiThread {
+                    // Button explizit sichtbar machen (falls durch toggleEditMode versteckt wurde)
+                    binding.btnSaveCustomer.visibility = View.VISIBLE
+                    binding.btnSaveCustomer.text = "✓ Gespeichert!"
+                    binding.btnSaveCustomer.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                        resources.getColor(com.example.we2026_5.R.color.status_done, theme)
+                    )
+                    binding.btnSaveCustomer.alpha = 1.0f
+                    
+                    // Nach kurzer Verzögerung: Edit-Mode beenden und Button verstecken
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        // Jetzt erst Edit-Mode beenden (Button wird dadurch versteckt)
+                        toggleEditMode(false)
+                        // Button zurücksetzen für nächstes Mal
+                        binding.btnSaveCustomer.isEnabled = true
+                        binding.btnSaveCustomer.text = "Speichern"
+                        binding.btnSaveCustomer.alpha = 1.0f
+                    }, 1500)
+                }
+            }
         }
     }
 
@@ -371,78 +389,6 @@ class CustomerDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun selectWochentag(tag: Int) {
-        selectedWochentag = tag
-        updateWochentagButtons(tag)
-    }
-    
-    private fun updateWochentagButtons(tag: Int) {
-        val buttons = listOf(
-            binding.btnDetailMo, binding.btnDetailDi, binding.btnDetailMi,
-            binding.btnDetailDo, binding.btnDetailFr, binding.btnDetailSa, binding.btnDetailSo
-        )
-        buttons.forEachIndexed { index, button ->
-            // Abkürzungen explizit setzen
-            button.text = getWochentagAbbreviation(index)
-            
-            // Wochenendtage (Sa=5, So=6) bekommen Türkis-Farbe
-            val isWeekend = index == 5 || index == 6
-            val isSelected = index == tag
-            
-            if (isSelected) {
-                button.alpha = 1.0f
-                if (isWeekend) {
-                    button.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                        resources.getColor(com.example.we2026_5.R.color.weekend_orange_dark, theme)
-                    )
-                } else {
-                    button.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                        resources.getColor(com.example.we2026_5.R.color.weekday_blue_dark, theme)
-                    )
-                }
-            } else {
-                button.alpha = 0.8f
-                if (isWeekend) {
-                    button.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                        resources.getColor(com.example.we2026_5.R.color.weekend_orange, theme)
-                    )
-                } else {
-                    button.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                        resources.getColor(com.example.we2026_5.R.color.weekday_blue, theme)
-                    )
-                }
-            }
-            
-            // Text immer sichtbar machen
-            button.setTextColor(resources.getColor(com.example.we2026_5.R.color.white, theme))
-        }
-    }
-    
-    private fun getWochentagName(tag: Int): String {
-        return when (tag) {
-            0 -> "Montag"
-            1 -> "Dienstag"
-            2 -> "Mittwoch"
-            3 -> "Donnerstag"
-            4 -> "Freitag"
-            5 -> "Samstag"
-            6 -> "Sonntag"
-            else -> "Unbekannt"
-        }
-    }
-    
-    private fun getWochentagAbbreviation(tag: Int): String {
-        return when (tag) {
-            0 -> "Mo"
-            1 -> "Di"
-            2 -> "Mi"
-            3 -> "Do"
-            4 -> "Fr"
-            5 -> "Sa"
-            6 -> "So"
-            else -> "??"
-        }
-    }
 
     private fun openMapsForLocationSelection() {
         val currentAddress = binding.etDetailAdresse.text.toString().trim()
@@ -486,7 +432,14 @@ class CustomerDetailActivity : AppCompatActivity() {
             onUpdate = { customer ->
                 customer?.let {
                     currentCustomer = it
-                    if (!isInEditMode) updateUi(it)
+                    // UI immer aktualisieren, auch wenn im Edit-Mode (für Echtzeit-Updates)
+                    // Wenn im Edit-Mode, werden die EditTexts nicht überschrieben, aber andere Felder schon
+                    if (!isInEditMode) {
+                        updateUi(it)
+                    } else {
+                        // Im Edit-Mode: Nur nicht-editierbare Felder aktualisieren (z.B. Fotos)
+                        photoAdapter.updatePhotos(it.fotoUrls)
+                    }
                 } ?: run {
                     if (!isFinishing) {
                         Toast.makeText(this, "Kunde nicht mehr vorhanden.", Toast.LENGTH_SHORT).show()
@@ -504,8 +457,8 @@ class CustomerDetailActivity : AppCompatActivity() {
         binding.tvDetailName.text = customer.name
         binding.tvDetailAdresse.text = customer.adresse
         binding.tvDetailTelefon.text = customer.telefon
-        binding.tvDetailIntervall.text = "${customer.intervallTage} Tage"
         binding.tvDetailNotizen.text = customer.notizen
+        binding.tvDetailReihenfolge.text = customer.reihenfolge.toString()
         photoAdapter.updatePhotos(customer.fotoUrls)
     }
     
@@ -524,7 +477,7 @@ class CustomerDetailActivity : AppCompatActivity() {
     }
 
 
-    private fun updateCustomerData(data: Map<String, Any>, toastMessage: String) {
+    private fun updateCustomerData(data: Map<String, Any>, toastMessage: String, onSuccess: (() -> Unit)? = null) {
         CoroutineScope(Dispatchers.Main).launch {
             val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
                 operation = { 
@@ -537,6 +490,8 @@ class CustomerDetailActivity : AppCompatActivity() {
             
             if (success == true) {
                 Toast.makeText(this@CustomerDetailActivity, toastMessage, Toast.LENGTH_SHORT).show()
+                // Callback nach erfolgreichem Update aufrufen
+                onSuccess?.invoke()
             }
         }
     }

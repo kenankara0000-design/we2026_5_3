@@ -20,21 +20,10 @@ object ExportHelper {
             
             FileWriter(file).use { writer ->
                 // Header
-                writer.append("Name,Adresse,Telefon,Wochentag,Reihenfolge,Intervall,Letzter Termin,Status\n")
+                writer.append("Name,Adresse,Telefon,Reihenfolge,Intervall,Letzter Termin,Status\n")
                 
                 // Daten
                 customers.forEach { customer ->
-                    val wochentag = when (customer.wochentag) {
-                        0 -> "Montag"
-                        1 -> "Dienstag"
-                        2 -> "Mittwoch"
-                        3 -> "Donnerstag"
-                        4 -> "Freitag"
-                        5 -> "Samstag"
-                        6 -> "Sonntag"
-                        else -> "Unbekannt"
-                    }
-                    
                     val status = when {
                         customer.abholungErfolgt && customer.auslieferungErfolgt -> "Erledigt"
                         customer.verschobenAufDatum > 0 -> "Verschoben"
@@ -51,7 +40,6 @@ object ExportHelper {
                     writer.append("\"${customer.name}\",")
                     writer.append("\"${customer.adresse}\",")
                     writer.append("\"${customer.telefon}\",")
-                    writer.append("$wochentag,")
                     writer.append("${customer.reihenfolge},")
                     writer.append("${customer.intervallTage},")
                     writer.append("$letzterTermin,")

@@ -38,7 +38,8 @@ class CustomerAdapter(
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var displayedDateMillis: Long? = null
-    private var expandedSections = mutableSetOf<SectionType>() // Standardmäßig eingeklappt
+    // Sections standardmäßig expanded, damit sie sichtbar sind
+    private var expandedSections = mutableSetOf<SectionType>(SectionType.OVERDUE, SectionType.DONE)
     var onSectionToggle: ((SectionType) -> Unit)? = null
     
     // Multi-Select für Bulk-Operationen
@@ -380,65 +381,63 @@ class CustomerAdapter(
             // Prüfe welche Buttons gedrückt wurden
             val pressedButton = pressedButtons[customer.id]
             
-            // A (Abholung): Nur aktiv wenn Abholungsdatum heute fällig ist
+            // A (Abholung): Aktiv nur wenn am angezeigten Tag ein Abholungstermin fällig ist
+            // Verwende Callback um zu prüfen, ob am angezeigten Tag ein Abholungstermin fällig ist
             val abholungDatumHeute = getAbholungDatum?.invoke(customer) ?: 0L
-            val abholungFaelligHeute = abholungDatumHeute > 0 && getStartOfDay(abholungDatumHeute) == viewDateStart
-            val aButtonAktiv = abholungFaelligHeute && !customer.abholungErfolgt
+            val hatAbholungHeute = abholungDatumHeute > 0
+            // A-Button aktiv wenn Abholungstermin am angezeigten Tag fällig ist UND noch nicht erledigt
+            val aButtonAktiv = hatAbholungHeute && !customer.abholungErfolgt
             
-            holder.binding.btnAbholung.visibility = if (!isDone) View.VISIBLE else View.GONE
-            // Hervorhebung: Wenn dieser Button gedrückt wurde, normal, sonst hervorgehoben
+            // A-Button nur anzeigen wenn am angezeigten Tag ein Abholungstermin fällig ist
+            holder.binding.btnAbholung.visibility = if (hatAbholungHeute && !isDone) View.VISIBLE else View.GONE
+            // A-Button: Grüner Hintergrund wenn nicht geklickt, grauer Hintergrund wenn geklickt
             if (pressedButton == "A") {
-                // Gedrückter Button: Normal (kein Hintergrund)
-                holder.binding.btnAbholung.background = null
-            } else if (pressedButton != null) {
-                // Andere Buttons: Hervorgehoben mit Randung (nur wenn ein Button gedrückt wurde)
-                holder.binding.btnAbholung.background = ContextCompat.getDrawable(context, R.drawable.button_highlighted)
+                // Button wurde geklickt: Grauer Hintergrund, Text bleibt weiß
+                holder.binding.btnAbholung.background = ContextCompat.getDrawable(context, R.drawable.button_gray)
+                holder.binding.btnAbholung.setTextColor(ContextCompat.getColor(context, R.color.white))
             } else {
-                // Kein Button gedrückt: Normal
-                holder.binding.btnAbholung.background = null
+                // Button nicht geklickt: Grüner Hintergrund
+                holder.binding.btnAbholung.background = ContextCompat.getDrawable(context, R.drawable.button_a_l)
+                holder.binding.btnAbholung.setTextColor(if (aButtonAktiv) ContextCompat.getColor(context, R.color.white) else ContextCompat.getColor(context, R.color.white).let { Color.argb(128, Color.red(it), Color.green(it), Color.blue(it)) })
             }
-            holder.binding.btnAbholung.setTextColor(if (aButtonAktiv) activeColor else inactiveColor)
             
-            // L (Auslieferung): Nur aktiv wenn Auslieferungsdatum heute fällig ist
+            // L (Auslieferung): Aktiv nur wenn am angezeigten Tag ein Auslieferungstermin fällig ist
+            // Verwende Callback um zu prüfen, ob am angezeigten Tag ein Auslieferungstermin fällig ist
             val auslieferungDatumHeute = getAuslieferungDatum?.invoke(customer) ?: 0L
-            val auslieferungFaelligHeute = auslieferungDatumHeute > 0 && getStartOfDay(auslieferungDatumHeute) == viewDateStart
-            val lButtonAktiv = auslieferungFaelligHeute && !customer.auslieferungErfolgt
+            val hatAuslieferungHeute = auslieferungDatumHeute > 0
+            // L-Button aktiv wenn Auslieferungstermin am angezeigten Tag fällig ist UND noch nicht erledigt
+            val lButtonAktiv = hatAuslieferungHeute && !customer.auslieferungErfolgt
             
-            holder.binding.btnAuslieferung.visibility = if (!isDone) View.VISIBLE else View.GONE
+            // L-Button nur anzeigen wenn am angezeigten Tag ein Auslieferungstermin fällig ist
+            holder.binding.btnAuslieferung.visibility = if (hatAuslieferungHeute && !isDone) View.VISIBLE else View.GONE
+            // L-Button: Grüner Hintergrund wenn nicht geklickt, grauer Hintergrund wenn geklickt
             if (pressedButton == "L") {
-                holder.binding.btnAuslieferung.background = null
-            } else if (pressedButton != null) {
-                holder.binding.btnAuslieferung.background = ContextCompat.getDrawable(context, R.drawable.button_highlighted)
+                // Button wurde geklickt: Grauer Hintergrund, Text bleibt weiß
+                holder.binding.btnAuslieferung.background = ContextCompat.getDrawable(context, R.drawable.button_gray)
+                holder.binding.btnAuslieferung.setTextColor(ContextCompat.getColor(context, R.color.white))
             } else {
-                holder.binding.btnAuslieferung.background = null
+                // Button nicht geklickt: Grüner Hintergrund
+                holder.binding.btnAuslieferung.background = ContextCompat.getDrawable(context, R.drawable.button_a_l)
+                holder.binding.btnAuslieferung.setTextColor(if (lButtonAktiv) ContextCompat.getColor(context, R.color.white) else ContextCompat.getColor(context, R.color.white).let { Color.argb(128, Color.red(it), Color.green(it), Color.blue(it)) })
             }
-            holder.binding.btnAuslieferung.setTextColor(if (lButtonAktiv) activeColor else inactiveColor)
             
             // V (Verschieben): Nur aktiv wenn verschobenAufDatum > 0
             val vButtonAktiv = customer.verschobenAufDatum > 0
             
             holder.binding.btnVerschieben.visibility = if (!isDone && vButtonAktiv) View.VISIBLE else View.GONE
-            if (pressedButton == "V") {
-                holder.binding.btnVerschieben.background = null
-            } else if (pressedButton != null) {
-                holder.binding.btnVerschieben.background = ContextCompat.getDrawable(context, R.drawable.button_highlighted)
-            } else {
-                holder.binding.btnVerschieben.background = null
-            }
-            holder.binding.btnVerschieben.setTextColor(if (vButtonAktiv) activeColor else inactiveColor)
+            // V-Button: Immer hellroter Hintergrund
+            holder.binding.btnVerschieben.background = ContextCompat.getDrawable(context, R.drawable.button_v)
+            // Textfarbe: Weiß wenn aktiv, sonst etwas transparenter
+            holder.binding.btnVerschieben.setTextColor(if (vButtonAktiv) ContextCompat.getColor(context, R.color.white) else ContextCompat.getColor(context, R.color.white).let { Color.argb(128, Color.red(it), Color.green(it), Color.blue(it)) })
             
             // U (Urlaub): Nur aktiv wenn urlaubVon > 0 und urlaubBis > 0
             val uButtonAktiv = customer.urlaubVon > 0 && customer.urlaubBis > 0
             
             holder.binding.btnUrlaub.visibility = if (!isDone && uButtonAktiv) View.VISIBLE else View.GONE
-            if (pressedButton == "U") {
-                holder.binding.btnUrlaub.background = null
-            } else if (pressedButton != null) {
-                holder.binding.btnUrlaub.background = ContextCompat.getDrawable(context, R.drawable.button_highlighted)
-            } else {
-                holder.binding.btnUrlaub.background = null
-            }
-            holder.binding.btnUrlaub.setTextColor(if (uButtonAktiv) activeColor else inactiveColor)
+            // U-Button: Immer oranger Hintergrund
+            holder.binding.btnUrlaub.background = ContextCompat.getDrawable(context, R.drawable.button_u)
+            // Textfarbe: Weiß wenn aktiv, sonst etwas transparenter
+            holder.binding.btnUrlaub.setTextColor(if (uButtonAktiv) ContextCompat.getColor(context, R.color.white) else ContextCompat.getColor(context, R.color.white).let { Color.argb(128, Color.red(it), Color.green(it), Color.blue(it)) })
             
             holder.binding.btnRueckgaengig.visibility = if (isDone) View.VISIBLE else View.GONE
         } else {

@@ -195,7 +195,7 @@ class KundenListenActivity : AppCompatActivity() {
             holder.binding.tvListeName.text = liste.name
             
             val anzahlKunden = kundenProListe[liste.id] ?: 0
-            holder.binding.tvIntervallInfo.text = "${liste.intervalle.size} Intervall(e) • $anzahlKunden Kunde(n)"
+            holder.binding.tvIntervallInfo.text = "$anzahlKunden Kunde(n)"
             
             val erstelltAm = dateFormat.format(Date(liste.erstelltAm))
             holder.binding.tvErstelltAm.text = "Erstellt: $erstelltAm"

@@ -37,17 +37,18 @@ object ValidationHelper {
     }
     
     /**
-     * Prüft ob ein Kunde mit gleichem Wochentag + Reihenfolge bereits existiert
+     * Prüft ob ein Kunde mit gleicher Reihenfolge bereits existiert
+     * Wochentag wird nicht mehr verwendet
      */
     suspend fun checkDuplicateReihenfolge(
         repository: com.example.we2026_5.data.repository.CustomerRepository,
-        wochentag: Int,
+        wochentag: Int, // Wird nicht mehr verwendet, aber für Kompatibilität behalten
         reihenfolge: Int,
         excludeCustomerId: String? = null
     ): Customer? {
         val allCustomers = repository.getAllCustomers()
         return allCustomers.firstOrNull { customer ->
-            customer.wochentag == wochentag && 
+            // Wochentag-Prüfung entfernt - wird nicht mehr verwendet
             customer.reihenfolge == reihenfolge &&
             customer.id != excludeCustomerId
         }

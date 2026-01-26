@@ -44,7 +44,7 @@
             android:id="@+id/tvIntervallInfo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0 Intervalle"
+            android:text="0 Kunde(n)"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
             android:layout_marginTop="8dp"/>

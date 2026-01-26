@@ -1,6 +1,5 @@
 package com.example.we2026_5
 
-import android.app.DatePickerDialog
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -11,7 +10,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.*
-import java.util.concurrent.TimeUnit
 import org.koin.android.ext.android.inject
 import android.widget.ArrayAdapter
 
@@ -20,10 +18,6 @@ class AddCustomerActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAddCustomerBinding
     private val repository: CustomerRepository by inject()
     private val listeRepository: KundenListeRepository by inject()
-    private var selectedAbholungDatum: Long = 0
-    private var selectedAuslieferungDatum: Long = 0
-    private var selectedWochentag: Int = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 2 // 0=Montag
-    private val wochentagButtons = mutableListOf<android.widget.Button>()
     private var alleListen = listOf<com.example.we2026_5.KundenListe>()
     private var selectedListeId: String = ""
 
@@ -32,84 +26,19 @@ class AddCustomerActivity : AppCompatActivity() {
         binding = ActivityAddCustomerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Wochentag-Buttons initialisieren
-        wochentagButtons.addAll(listOf(
-            binding.btnMo, binding.btnDi, binding.btnMi, binding.btnDo,
-            binding.btnFr, binding.btnSa, binding.btnSo
-        ))
-        
-        // Standard-Wochentag setzen (heute)
-        val heute = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
-        selectedWochentag = (heute + 5) % 7 // Calendar.SUNDAY=1 -> 0=Montag
-        updateWochentagButtons()
-        
-        // Wochentag-Button Click-Handler
-        binding.btnMo.setOnClickListener { selectWochentag(0) }
-        binding.btnDi.setOnClickListener { selectWochentag(1) }
-        binding.btnMi.setOnClickListener { selectWochentag(2) }
-        binding.btnDo.setOnClickListener { selectWochentag(3) }
-        binding.btnFr.setOnClickListener { selectWochentag(4) }
-        binding.btnSa.setOnClickListener { selectWochentag(5) }
-        binding.btnSo.setOnClickListener { selectWochentag(6) }
-
-        // Initialisiere Datums-Buttons
-        updateAbholungDateButtonText(System.currentTimeMillis())
-        updateAuslieferungDateButtonText(System.currentTimeMillis())
-        selectedAbholungDatum = System.currentTimeMillis()
-        selectedAuslieferungDatum = System.currentTimeMillis()
-        updateWochentagAnzeige()
-
-        // Abholungsdatum-Picker
-        binding.btnPickAbholungDate.setOnClickListener {
-            val cal = Calendar.getInstance()
-            cal.timeInMillis = if (selectedAbholungDatum > 0) selectedAbholungDatum else System.currentTimeMillis()
-            DatePickerDialog(this, { _, y, m, d ->
-                val picked = Calendar.getInstance()
-                picked.set(y, m, d, 0, 0, 0)
-                selectedAbholungDatum = picked.timeInMillis
-                updateAbholungDateButtonText(selectedAbholungDatum)
-                updateWochentagAnzeige()
-                
-                // Wochentag automatisch basierend auf Abholungsdatum setzen (wenn wiederholen aktiviert)
-                if (binding.cbWiederholen.isChecked) {
-                    val dayOfWeek = picked.get(Calendar.DAY_OF_WEEK)
-                    selectedWochentag = (dayOfWeek + 5) % 7
-                    updateWochentagButtons()
-                }
-            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
-        }
-
-        // Auslieferungsdatum-Picker
-        binding.btnPickAuslieferungDate.setOnClickListener {
-            val cal = Calendar.getInstance()
-            cal.timeInMillis = if (selectedAuslieferungDatum > 0) selectedAuslieferungDatum else System.currentTimeMillis()
-            DatePickerDialog(this, { _, y, m, d ->
-                val picked = Calendar.getInstance()
-                picked.set(y, m, d, 0, 0, 0)
-                selectedAuslieferungDatum = picked.timeInMillis
-                updateAuslieferungDateButtonText(selectedAuslieferungDatum)
-                updateWochentagAnzeige()
-            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
-        }
-
-        // Wiederholen-Checkbox: Sichtbarkeit von Intervall und Wochentag steuern
-        binding.cbWiederholen.setOnCheckedChangeListener { _, isChecked ->
-            binding.layoutWiederholung.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
-        }
-
         // Liste-Auswahl Switch: Liste aktivieren/deaktivieren
         binding.switchListeAktivieren.setOnCheckedChangeListener { _, isChecked ->
             binding.layoutListeAuswahl.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
             binding.cardListeAuswahl.visibility = android.view.View.VISIBLE // Card immer sichtbar
+            
+            // Reihenfolge-Feld nur anzeigen wenn Liste aktiviert ist
+            binding.etReihenfolge.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
             
             if (isChecked) {
                 loadListen()
             } else {
                 selectedListeId = ""
             }
-            
-            // Datums-Felder ausblenden wenn Liste aktiviert (werden von Liste übernommen)
-            updateDatumsFelderSichtbarkeit(isChecked && selectedListeId.isNotEmpty())
         }
 
         // Liste-Spinner
@@ -120,12 +49,9 @@ class AddCustomerActivity : AppCompatActivity() {
                 } else {
                     selectedListeId = ""
                 }
-                // Datums-Felder ausblenden wenn Liste ausgewählt
-                updateDatumsFelderSichtbarkeit(selectedListeId.isNotEmpty())
             }
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
                 selectedListeId = ""
-                updateDatumsFelderSichtbarkeit(false)
             }
         }
 
@@ -157,76 +83,43 @@ class AddCustomerActivity : AppCompatActivity() {
             val kundenArt = if (binding.rbPrivat.isChecked) "Privat" else "Gewerblich"
             val listeAktiviert = binding.switchListeAktivieren.isChecked
 
-            // Validierung: Abholungsdatum muss gesetzt sein (nur wenn keine Liste aktiviert)
-            if (!listeAktiviert || selectedListeId.isEmpty()) {
-                if (selectedAbholungDatum == 0L) {
-                    Toast.makeText(this, "Bitte wählen Sie ein Abholungsdatum", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-
-                // Validierung: Auslieferungsdatum muss gesetzt sein
-                if (selectedAuslieferungDatum == 0L) {
-                    Toast.makeText(this, "Bitte wählen Sie ein Auslieferungsdatum", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-            }
-
             // Validierung: Wenn Liste aktiviert, muss eine Liste ausgewählt sein
             if (listeAktiviert && selectedListeId.isEmpty()) {
                 Toast.makeText(this, "Bitte wählen Sie eine Liste aus", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
-            val wiederholen = binding.cbWiederholen.isChecked
-            // Validierung: Wenn wiederholen aktiviert, Intervall und Wochentag prüfen
-            val intervall = if (wiederholen) {
-                val intervallInput = binding.etIntervallTage.text.toString().toIntOrNull() ?: 7
+            
+            // Reihenfolge nur validieren wenn Liste aktiviert ist (Feld ist dann sichtbar)
+            val reihenfolge = if (listeAktiviert && selectedListeId.isNotEmpty()) {
+                val reihenfolgeInput = binding.etReihenfolge.text.toString().toIntOrNull() ?: 1
                 when {
-                    intervallInput < 1 -> {
-                        binding.etIntervallTage.error = "Intervall muss mindestens 1 Tag sein"
+                    reihenfolgeInput < 1 -> {
+                        binding.etReihenfolge.error = "Reihenfolge muss mindestens 1 sein"
                         return@setOnClickListener
                     }
-                    intervallInput > 365 -> {
-                        binding.etIntervallTage.error = "Intervall darf maximal 365 Tage sein"
-                        return@setOnClickListener
-                    }
-                    else -> intervallInput
+                    else -> reihenfolgeInput
                 }
             } else {
-                7 // Wird nicht verwendet
+                1 // Standard-Reihenfolge wenn keine Liste aktiviert
             }
             
-            val reihenfolgeInput = binding.etReihenfolge.text.toString().toIntOrNull() ?: 1
-            val reihenfolge = when {
-                reihenfolgeInput < 1 -> {
-                    binding.etReihenfolge.error = "Reihenfolge muss mindestens 1 sein"
-                    return@setOnClickListener
-                }
-                else -> reihenfolgeInput
-            }
-            
-            // Wochentag bestimmen: Aus Abholungsdatum berechnen (für Kunden in Listen wird Wochentag nicht verwendet)
-            val calAbholung = Calendar.getInstance()
-            calAbholung.timeInMillis = selectedAbholungDatum
-            val abholungWochentag = (calAbholung.get(Calendar.DAY_OF_WEEK) + 5) % 7
-            
-            // Duplikat-Prüfung: Wochentag + Reihenfolge (nur wenn wiederholen aktiviert)
+            // Duplikat-Prüfung: Reihenfolge (nur für Privat-Kunden in Listen)
             CoroutineScope(Dispatchers.Main).launch {
-                val existingCustomer = if (wiederholen && kundenArt == "Privat") {
+                val existingCustomer = if (listeAktiviert && selectedListeId.isNotEmpty() && kundenArt == "Privat") {
                     ValidationHelper.checkDuplicateReihenfolge(
                         repository = repository,
-                        wochentag = abholungWochentag,
+                        wochentag = 0, // Wochentag wird nicht mehr verwendet
                         reihenfolge = reihenfolge
                     )
                 } else {
-                    null // Keine Duplikat-Prüfung bei einmaligen Terminen oder Gewerblich
+                    null // Keine Duplikat-Prüfung bei Gewerblich-Kunden oder Kunden ohne Liste
                 }
                 
                 if (existingCustomer != null) {
                     runOnUiThread {
                         binding.etReihenfolge.error = "Reihenfolge $reihenfolge ist bereits von ${existingCustomer.name} belegt"
                         Toast.makeText(this@AddCustomerActivity, 
-                            "Kunde '${existingCustomer.name}' hat bereits Reihenfolge $reihenfolge am ${getWochentagName(abholungWochentag)}", 
+                            "Kunde '${existingCustomer.name}' hat bereits Reihenfolge $reihenfolge", 
                             Toast.LENGTH_LONG).show()
                     }
                     return@launch
@@ -239,13 +132,6 @@ class AddCustomerActivity : AppCompatActivity() {
                     binding.btnSaveCustomer.alpha = 0.6f
                 }
                 
-                // letzterTermin berechnen (für wiederholende Termine)
-                val letzterTermin = if (wiederholen) {
-                    selectedAbholungDatum - TimeUnit.DAYS.toMillis(intervall.toLong())
-                } else {
-                    0 // Nicht verwendet bei einmaligen Terminen
-                }
-
                 // Für Kunden in Listen: Daten der Liste verwenden (keine eigenen Daten)
                 val liste = if (listeAktiviert && selectedListeId.isNotEmpty()) {
                     alleListen.find { it.id == selectedListeId }
@@ -264,14 +150,14 @@ class AddCustomerActivity : AppCompatActivity() {
                     kundenArt = kundenArt,
                     listeId = if (listeAktiviert && selectedListeId.isNotEmpty()) selectedListeId else "",
                     // Termine: Für Kunden in Listen werden Daten der Liste verwendet (0 = wird ignoriert)
-                    abholungDatum = if (liste != null) 0 else selectedAbholungDatum,
-                    auslieferungDatum = if (liste != null) 0 else selectedAuslieferungDatum,
-                    wiederholen = if (liste != null) true else wiederholen, // Kunden in Listen wiederholen immer
+                    abholungDatum = if (liste != null) 0 else 0,
+                    auslieferungDatum = if (liste != null) 0 else 0,
+                    wiederholen = if (liste != null) true else false,
                     // Wiederholungs-Felder: Für Listen-Kunden werden Intervalle von der Liste verwaltet
-                    intervallTage = if (liste != null) 0 else intervall,
-                    letzterTermin = if (liste != null) 0 else letzterTermin,
-                    wochentag = if (liste != null) 0 else (if (wiederholen) abholungWochentag else 0),
-                    reihenfolge = if (liste != null || wiederholen) reihenfolge else 1,
+                    intervallTage = if (liste != null) 0 else 0,
+                    letzterTermin = if (liste != null) 0 else 0,
+                    wochentag = 0, // Wochentag wird nicht mehr verwendet
+                    reihenfolge = reihenfolge, // Wird bereits korrekt berechnet (1 wenn keine Liste, sonst eingegebener Wert)
                     istImUrlaub = false
                 )
 
@@ -310,114 +196,6 @@ class AddCustomerActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateAbholungDateButtonText(dateInMillis: Long) {
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = dateInMillis
-        binding.btnPickAbholungDate.text = "${cal.get(Calendar.DAY_OF_MONTH)}.${cal.get(Calendar.MONTH) + 1}.${cal.get(Calendar.YEAR)}"
-    }
-    
-    private fun updateAuslieferungDateButtonText(dateInMillis: Long) {
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = dateInMillis
-        binding.btnPickAuslieferungDate.text = "${cal.get(Calendar.DAY_OF_MONTH)}.${cal.get(Calendar.MONTH) + 1}.${cal.get(Calendar.YEAR)}"
-    }
-    
-    private fun updateWochentagAnzeige() {
-        // Abholung Wochentag
-        if (selectedAbholungDatum > 0) {
-            val calAbholung = Calendar.getInstance()
-            calAbholung.timeInMillis = selectedAbholungDatum
-            val dayOfWeek = calAbholung.get(Calendar.DAY_OF_WEEK)
-            val wochentagName = getWochentagKurzName(dayOfWeek)
-            binding.tvAbholungWochentag.text = "📦 $wochentagName"
-            binding.tvAbholungWochentag.visibility = android.view.View.VISIBLE
-        } else {
-            binding.tvAbholungWochentag.visibility = android.view.View.GONE
-        }
-        
-        // Auslieferung Wochentag
-        if (selectedAuslieferungDatum > 0) {
-            val calAuslieferung = Calendar.getInstance()
-            calAuslieferung.timeInMillis = selectedAuslieferungDatum
-            val dayOfWeek = calAuslieferung.get(Calendar.DAY_OF_WEEK)
-            val wochentagName = getWochentagKurzName(dayOfWeek)
-            binding.tvAuslieferungWochentag.text = "🚚 $wochentagName"
-            binding.tvAuslieferungWochentag.visibility = android.view.View.VISIBLE
-        } else {
-            binding.tvAuslieferungWochentag.visibility = android.view.View.GONE
-        }
-        
-        // Layout sichtbar machen, wenn mindestens ein Wochentag angezeigt wird
-        val hasAnyWochentag = selectedAbholungDatum > 0 || selectedAuslieferungDatum > 0
-        binding.layoutWochentagAnzeige.visibility = if (hasAnyWochentag) android.view.View.VISIBLE else android.view.View.GONE
-    }
-    
-    private fun getWochentagKurzName(dayOfWeek: Int): String {
-        return when (dayOfWeek) {
-            Calendar.MONDAY -> "Mo"
-            Calendar.TUESDAY -> "Di"
-            Calendar.WEDNESDAY -> "Mi"
-            Calendar.THURSDAY -> "Do"
-            Calendar.FRIDAY -> "Fr"
-            Calendar.SATURDAY -> "Sa"
-            Calendar.SUNDAY -> "So"
-            else -> ""
-        }
-    }
-    
-    private fun selectWochentag(tag: Int) {
-        selectedWochentag = tag
-        updateWochentagButtons()
-    }
-    
-    private fun getWochentagName(tag: Int): String {
-        return when (tag) {
-            0 -> "Montag"
-            1 -> "Dienstag"
-            2 -> "Mittwoch"
-            3 -> "Donnerstag"
-            4 -> "Freitag"
-            5 -> "Samstag"
-            6 -> "Sonntag"
-            else -> "Unbekannt"
-        }
-    }
-    
-    private fun updateWochentagButtons() {
-        wochentagButtons.forEachIndexed { index, button ->
-            // Wochenendtage (Sa=5, So=6) bekommen Orange-Farbe
-            val isWeekend = index == 5 || index == 6
-            val isSelected = index == selectedWochentag
-            
-            if (isSelected) {
-                button.alpha = 1.0f
-                if (isWeekend) {
-                    button.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                        resources.getColor(com.example.we2026_5.R.color.weekend_orange_dark, theme)
-                    )
-                } else {
-                    button.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                        resources.getColor(com.example.we2026_5.R.color.weekday_blue_dark, theme)
-                    )
-                }
-            } else {
-                button.alpha = 0.8f
-                if (isWeekend) {
-                    button.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                        resources.getColor(com.example.we2026_5.R.color.weekend_orange, theme)
-                    )
-                } else {
-                    button.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                        resources.getColor(com.example.we2026_5.R.color.weekday_blue, theme)
-                    )
-                }
-            }
-            
-            // Text immer sichtbar machen
-            button.setTextColor(resources.getColor(com.example.we2026_5.R.color.white, theme))
-        }
-    }
-    
     private fun loadListen() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
@@ -572,18 +350,4 @@ class AddCustomerActivity : AppCompatActivity() {
             .show()
     }
     
-    private fun updateDatumsFelderSichtbarkeit(ausblenden: Boolean) {
-        // Wenn Liste ausgewählt, Datums-Felder ausblenden (werden von Liste übernommen)
-        binding.layoutAbholungDatum.visibility = if (ausblenden) android.view.View.GONE else android.view.View.VISIBLE
-        binding.layoutAuslieferungDatum.visibility = if (ausblenden) android.view.View.GONE else android.view.View.VISIBLE
-        
-        // Auch Wiederholen-Checkbox ausblenden wenn Liste ausgewählt (Liste hat eigenes wiederholen-Feld)
-        binding.cbWiederholen.visibility = if (ausblenden) android.view.View.GONE else android.view.View.VISIBLE
-        binding.layoutWiederholung.visibility = if (ausblenden) android.view.View.GONE else android.view.View.VISIBLE
-        
-        // Info-Text anzeigen wenn Liste aktiviert
-        if (ausblenden) {
-            // Optional: Info-Text hinzufügen, dass Daten von Liste übernommen werden
-        }
-    }
 }

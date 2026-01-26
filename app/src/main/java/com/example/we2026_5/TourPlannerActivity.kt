@@ -503,9 +503,14 @@ class TourPlannerActivity : AppCompatActivity() {
                     )
                     if (success == true) {
                         android.widget.Toast.makeText(this@TourPlannerActivity, "Abholung registriert", android.widget.Toast.LENGTH_SHORT).show()
-                        // Button-Zustand zurücksetzen
-                        adapter.clearPressedButtons()
-                        reloadCurrentView() // Daten neu laden
+                        // Daten werden automatisch durch Echtzeit-Listener aktualisiert
+                        // WICHTIG: reloadCurrentView() NACH clearPressedButtons() aufrufen, damit Button-Zustand erhalten bleibt
+                        // Button-Zustand erst nach längerer Verzögerung zurücksetzen, damit visuelle Änderung sichtbar bleibt
+                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                            adapter.clearPressedButtons()
+                            // Nach dem Zurücksetzen des Button-Zustands die View neu laden
+                            reloadCurrentView() // Für Kompatibilität (wird durch Echtzeit-Listener automatisch aktualisiert)
+                        }, 2000) // 2 Sekunden Verzögerung, damit visuelle Änderung deutlich sichtbar bleibt
                     }
                 }
             }
@@ -526,13 +531,18 @@ class TourPlannerActivity : AppCompatActivity() {
                     )
                     if (success == true) {
                         android.widget.Toast.makeText(this@TourPlannerActivity, "Auslieferung registriert", android.widget.Toast.LENGTH_SHORT).show()
-                        // Button-Zustand zurücksetzen
-                        adapter.clearPressedButtons()
-                        if (wasAbholungErfolgt) {
-                            resetTourCycle(customer.id)
-                        } else {
-                            reloadCurrentView() // Daten neu laden
-                        }
+                        // Daten werden automatisch durch Echtzeit-Listener aktualisiert
+                        // WICHTIG: reloadCurrentView() NACH clearPressedButtons() aufrufen, damit Button-Zustand erhalten bleibt
+                        // Button-Zustand erst nach längerer Verzögerung zurücksetzen, damit visuelle Änderung sichtbar bleibt
+                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                            adapter.clearPressedButtons()
+                            // Nach dem Zurücksetzen des Button-Zustands die View neu laden
+                            if (wasAbholungErfolgt) {
+                                resetTourCycle(customer.id)
+                            } else {
+                                reloadCurrentView() // Für Kompatibilität (wird durch Echtzeit-Listener automatisch aktualisiert)
+                            }
+                        }, 2000) // 2 Sekunden Verzögerung, damit visuelle Änderung deutlich sichtbar bleibt
                     }
                 }
             }
@@ -578,8 +588,12 @@ class TourPlannerActivity : AppCompatActivity() {
                     android.widget.Toast.makeText(this@TourPlannerActivity, 
                         if (alleVerschieben) "Alle zukünftigen Termine verschoben" else "Termin verschoben", 
                         android.widget.Toast.LENGTH_SHORT).show()
-                    adapter.clearPressedButtons()
-                    reloadCurrentView() // Daten neu laden
+                    // Daten werden automatisch durch Echtzeit-Listener aktualisiert
+                    // WICHTIG: reloadCurrentView() NACH clearPressedButtons() aufrufen, damit Button-Zustand erhalten bleibt
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        adapter.clearPressedButtons()
+                        reloadCurrentView() // Für Kompatibilität (wird durch Echtzeit-Listener automatisch aktualisiert)
+                    }, 2000) // 2 Sekunden Verzögerung, damit visuelle Änderung deutlich sichtbar bleibt
                 }
             }
         }
@@ -600,8 +614,12 @@ class TourPlannerActivity : AppCompatActivity() {
                 )
                 if (success == true) {
                     android.widget.Toast.makeText(this@TourPlannerActivity, "Urlaub eingetragen", android.widget.Toast.LENGTH_SHORT).show()
-                    adapter.clearPressedButtons()
-                    reloadCurrentView() // Daten neu laden
+                    // Daten werden automatisch durch Echtzeit-Listener aktualisiert
+                    // WICHTIG: reloadCurrentView() NACH clearPressedButtons() aufrufen, damit Button-Zustand erhalten bleibt
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        adapter.clearPressedButtons()
+                        reloadCurrentView() // Für Kompatibilität (wird durch Echtzeit-Listener automatisch aktualisiert)
+                    }, 2000) // 2 Sekunden Verzögerung, damit visuelle Änderung deutlich sichtbar bleibt
                 }
             }
         }
@@ -623,7 +641,8 @@ class TourPlannerActivity : AppCompatActivity() {
                 )
                 if (success == true) {
                     android.widget.Toast.makeText(this@TourPlannerActivity, "Rückgängig gemacht", android.widget.Toast.LENGTH_SHORT).show()
-                    reloadCurrentView() // Daten neu laden
+                    // Daten werden automatisch durch Echtzeit-Listener aktualisiert
+                    reloadCurrentView() // Für Kompatibilität (wird durch Echtzeit-Listener automatisch aktualisiert)
                 }
             }
         }
@@ -659,19 +678,28 @@ class TourPlannerActivity : AppCompatActivity() {
             if (liste != null) {
                 // Prüfe alle Intervalle der Liste
                 liste!!.intervalle.forEach { intervall ->
-                    if (isIntervallFaelligAm(intervall, viewDateStart)) {
-                        val abholungStart = getStartOfDay(intervall.abholungDatum)
-                        // Prüfe ob Abholungsdatum heute fällig ist
+                    val abholungStart = getStartOfDay(intervall.abholungDatum)
+                    
+                    if (!intervall.wiederholen) {
+                        // Einmaliges Intervall: Prüfe ob Abholungsdatum heute fällig ist
                         if (abholungStart == viewDateStart) {
                             return intervall.abholungDatum
                         }
-                        // Für wiederholende Intervalle: Prüfe ob heute ein Wiederholungstag ist
-                        if (intervall.wiederholen) {
-                            val intervallTage = intervall.intervallTage.coerceIn(1, 365)
-                            val intervallTageLong = intervallTage.toLong()
+                    } else {
+                        // Wiederholendes Intervall: Berechne korrektes Datum
+                        val intervallTage = intervall.intervallTage.coerceIn(1, 365)
+                        val intervallTageLong = intervallTage.toLong()
+                        
+                        if (viewDateStart >= abholungStart) {
                             val tageSeitAbholung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(viewDateStart - abholungStart)
-                            if (tageSeitAbholung >= 0 && tageSeitAbholung % intervallTageLong == 0L) {
-                                return abholungStart + java.util.concurrent.TimeUnit.DAYS.toMillis(tageSeitAbholung)
+                            // Berechne Zyklus und erwartetes Datum
+                            val zyklus = tageSeitAbholung / intervallTageLong
+                            val erwartetesDatum = abholungStart + java.util.concurrent.TimeUnit.DAYS.toMillis(zyklus * intervallTageLong)
+                            val erwartetesDatumStart = getStartOfDay(erwartetesDatum)
+                            
+                            // Prüfe ob viewDateStart genau auf einem Zyklus liegt
+                            if (erwartetesDatumStart == viewDateStart && tageSeitAbholung <= 365) {
+                                return erwartetesDatum
                             }
                         }
                     }
@@ -706,18 +734,28 @@ class TourPlannerActivity : AppCompatActivity() {
             
             if (liste != null) {
                 liste!!.intervalle.forEach { intervall ->
-                    if (isIntervallFaelligAm(intervall, viewDateStart)) {
-                        val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
+                    val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
+                    
+                    if (!intervall.wiederholen) {
+                        // Einmaliges Intervall: Prüfe ob Auslieferungsdatum heute fällig ist
                         if (auslieferungStart == viewDateStart) {
                             return intervall.auslieferungDatum
                         }
-                        // Für wiederholende Intervalle
-                        if (intervall.wiederholen) {
-                            val intervallTage = intervall.intervallTage.coerceIn(1, 365)
-                            val intervallTageLong = intervallTage.toLong()
+                    } else {
+                        // Wiederholendes Intervall: Berechne korrektes Datum
+                        val intervallTage = intervall.intervallTage.coerceIn(1, 365)
+                        val intervallTageLong = intervallTage.toLong()
+                        
+                        if (viewDateStart >= auslieferungStart) {
                             val tageSeitAuslieferung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(viewDateStart - auslieferungStart)
-                            if (tageSeitAuslieferung >= 0 && tageSeitAuslieferung % intervallTageLong == 0L) {
-                                return auslieferungStart + java.util.concurrent.TimeUnit.DAYS.toMillis(tageSeitAuslieferung)
+                            // Berechne Zyklus und erwartetes Datum
+                            val zyklus = tageSeitAuslieferung / intervallTageLong
+                            val erwartetesDatum = auslieferungStart + java.util.concurrent.TimeUnit.DAYS.toMillis(zyklus * intervallTageLong)
+                            val erwartetesDatumStart = getStartOfDay(erwartetesDatum)
+                            
+                            // Prüfe ob viewDateStart genau auf einem Zyklus liegt
+                            if (erwartetesDatumStart == viewDateStart && tageSeitAuslieferung <= 365) {
+                                return erwartetesDatum
                             }
                         }
                     }
@@ -748,21 +786,40 @@ class TourPlannerActivity : AppCompatActivity() {
         
         // Wiederholendes Intervall: Prüfe ob Datum auf einem Wiederholungszyklus liegt
         val intervallTage = intervall.intervallTage.coerceIn(1, 365)
+        val intervallTageLong = intervallTage.toLong()
         
-        // Prüfe Abholungsdatum
+        // Prüfe Abholungsdatum - generiere Termine für 365 Tage
         if (datumStart >= abholungStart) {
             val tageSeitAbholung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(datumStart - abholungStart)
-            val intervallTageLong = intervallTage.toLong()
+            // Prüfe ob das Datum auf einem Zyklus liegt (innerhalb von 365 Tagen)
             if (tageSeitAbholung <= 365 && tageSeitAbholung % intervallTageLong == 0L) {
+                val erwartetesDatum = abholungStart + java.util.concurrent.TimeUnit.DAYS.toMillis(tageSeitAbholung)
+                if (datumStart == erwartetesDatum) {
+                    return true
+                }
+            }
+        } else {
+            // Datum liegt vor dem Startdatum - prüfe ob es ein zukünftiger Termin ist (innerhalb von 365 Tagen)
+            val tageBisAbholung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(abholungStart - datumStart)
+            if (tageBisAbholung <= 365 && datumStart == abholungStart) {
                 return true
             }
         }
         
-        // Prüfe Auslieferungsdatum
+        // Prüfe Auslieferungsdatum - generiere Termine für 365 Tage
         if (datumStart >= auslieferungStart) {
             val tageSeitAuslieferung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(datumStart - auslieferungStart)
-            val intervallTageLong = intervallTage.toLong()
+            // Prüfe ob das Datum auf einem Zyklus liegt (innerhalb von 365 Tagen)
             if (tageSeitAuslieferung <= 365 && tageSeitAuslieferung % intervallTageLong == 0L) {
+                val erwartetesDatum = auslieferungStart + java.util.concurrent.TimeUnit.DAYS.toMillis(tageSeitAuslieferung)
+                if (datumStart == erwartetesDatum) {
+                    return true
+                }
+            }
+        } else {
+            // Datum liegt vor dem Startdatum - prüfe ob es ein zukünftiger Termin ist (innerhalb von 365 Tagen)
+            val tageBisAuslieferung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(auslieferungStart - datumStart)
+            if (tageBisAuslieferung <= 365 && datumStart == auslieferungStart) {
                 return true
             }
         }

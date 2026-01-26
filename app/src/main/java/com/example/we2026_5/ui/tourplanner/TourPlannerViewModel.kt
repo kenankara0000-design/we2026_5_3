@@ -3,6 +3,7 @@ package com.example.we2026_5.ui.tourplanner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
 import com.example.we2026_5.KundenListe
@@ -11,6 +12,10 @@ import com.example.we2026_5.ListItem
 import com.example.we2026_5.SectionType
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -20,8 +25,46 @@ class TourPlannerViewModel(
     private val listeRepository: KundenListeRepository
 ) : ViewModel() {
     
-    private val _tourItems = MutableLiveData<List<ListItem>>()
-    val tourItems: LiveData<List<ListItem>> = _tourItems
+    // Echtzeit-Listener: StateFlows für automatische Updates (können .value verwendet werden)
+    private val _customersStateFlow = MutableStateFlow<List<Customer>>(emptyList())
+    private val customersFlow: StateFlow<List<Customer>> = _customersStateFlow
+    
+    private val _listenStateFlow = MutableStateFlow<List<KundenListe>>(emptyList())
+    private val listenFlow: StateFlow<List<KundenListe>> = _listenStateFlow
+    
+    init {
+        // Sammle Updates von Firebase-Flows und aktualisiere StateFlows
+        viewModelScope.launch {
+            repository.getAllCustomersFlow().collect { customers ->
+                _customersStateFlow.value = customers
+            }
+        }
+        viewModelScope.launch {
+            listeRepository.getAllListenFlow().collect { listen ->
+                _listenStateFlow.value = listen
+            }
+        }
+    }
+    
+    // StateFlow für ausgewähltes Datum
+    private val selectedTimestampFlow = MutableStateFlow<Long?>(null)
+    
+    // StateFlow für erweiterte Sections
+    private val expandedSectionsFlow = MutableStateFlow<Set<SectionType>>(emptySet())
+    
+    // Kombiniere alle Flows für Tour-Items
+    val tourItems: LiveData<List<ListItem>> = combine(
+        customersFlow,
+        listenFlow,
+        selectedTimestampFlow,
+        expandedSectionsFlow
+    ) { customers, listen, timestamp, expandedSections ->
+        if (timestamp == null) {
+            emptyList()
+        } else {
+            processTourData(customers, listen, timestamp, expandedSections)
+        }
+    }.asLiveData()
     
     private val _weekItems = MutableLiveData<Map<Int, List<ListItem>>>()
     val weekItems: LiveData<Map<Int, List<ListItem>>> = _weekItems
@@ -32,24 +75,25 @@ class TourPlannerViewModel(
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> = _error
     
-    private val expandedSections = mutableSetOf<SectionType>()
+    // Sections standardmäßig expanded, damit sie sichtbar sind
+    private val expandedSections = mutableSetOf<SectionType>(SectionType.OVERDUE, SectionType.DONE)
     
     fun loadTourData(selectedTimestamp: Long, isSectionExpanded: (SectionType) -> Boolean) {
-        _isLoading.value = true
-        _error.value = null
-        
-        viewModelScope.launch {
-            try {
-                val allCustomers = repository.getAllCustomers()
-                val allListen = listeRepository.getAllListen()
-                val viewDateStart = getStartOfDay(selectedTimestamp)
-                val heuteStart = getStartOfDay(System.currentTimeMillis())
-                
-                // Wochentag berechnen (0=Montag, 6=Sonntag)
-                val calViewDate = Calendar.getInstance().apply {
-                    timeInMillis = viewDateStart
-                }
-                val viewDateWochentag = (calViewDate.get(Calendar.DAY_OF_WEEK) + 5) % 7
+        // Aktualisiere selectedTimestamp - Flow wird automatisch aktualisiert
+        selectedTimestampFlow.value = selectedTimestamp
+        // Aktualisiere expandedSections
+        expandedSectionsFlow.value = expandedSections.toSet()
+    }
+    
+    // Interne Funktion zur Verarbeitung der Tour-Daten
+    private fun processTourData(
+        allCustomers: List<Customer>,
+        allListen: List<KundenListe>,
+        selectedTimestamp: Long,
+        expandedSections: Set<SectionType>
+    ): List<ListItem> {
+        val viewDateStart = getStartOfDay(selectedTimestamp)
+        val heuteStart = getStartOfDay(System.currentTimeMillis())
                 
                 // Alle Kunden nach Listen gruppieren (sowohl Privat als auch Gewerblich)
                 val kundenNachListen = allCustomers.filter { it.listeId.isNotEmpty() }.groupBy { it.listeId }
@@ -98,7 +142,7 @@ class TourPlannerViewModel(
                 // Gewerblich-Kunden ohne Liste filtern (alte Logik)
                 val gewerblichKundenOhneListe = kundenOhneListe.filter { it.kundenArt == "Gewerblich" }
                 val filteredGewerblich = gewerblichKundenOhneListe.filter { customer ->
-                    if (customer.wiederholen && customer.wochentag != viewDateWochentag) return@filter false
+                    // Wochentag-Filterung entfernt - wird nicht mehr verwendet
                     if (!customer.wiederholen) {
                         // Einmaliger Termin: Prüfe ob Abholungsdatum an diesem Tag liegt
                         val abholungAm = getStartOfDay(customer.abholungDatum)
@@ -128,13 +172,42 @@ class TourPlannerViewModel(
                 // Liste mit Items erstellen
                 val items = mutableListOf<ListItem>()
                 
-                // Kunden nach Listen gruppiert anzeigen (sowohl Privat als auch Gewerblich)
+                // Listen-Kunden in Sections kategorisieren
+                val overdueListenKunden = mutableListOf<Customer>()
+                val normalListenKunden = mutableListOf<Customer>()
+                val doneListenKunden = mutableListOf<Customer>()
+                
+                // Kunden nach Listen gruppiert kategorisieren (sowohl Privat als auch Gewerblich)
                 allListen.sortedBy { it.name }.forEach { liste ->
                     val kundenInListe = listenMitKunden[liste.id] ?: return@forEach
                     if (kundenInListe.isNotEmpty()) {
-                        items.add(ListItem.ListeHeader(liste.name, kundenInListe.size, liste.id))
-                        // Kunden werden nur angezeigt wenn Liste expanded ist (wird im Adapter gehandhabt)
-                        kundenInListe.forEach { items.add(ListItem.CustomerItem(it)) }
+                        // Kunden in Sections kategorisieren
+                        kundenInListe.forEach { customer ->
+                            val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
+                            val faelligAm = customerFaelligAm(customer, liste, viewDateStart)
+                            
+                            // Überfällig: Prüfe ob EINER der Termine (Abholung ODER Auslieferung) überfällig ist
+                            val abholungUeberfaellig = !customer.abholungErfolgt && customer.abholungDatum > 0 && 
+                                                       getStartOfDay(customer.abholungDatum) < heuteStart
+                            val auslieferungUeberfaellig = !customer.auslieferungErfolgt && customer.auslieferungDatum > 0 && 
+                                                          getStartOfDay(customer.auslieferungDatum) < heuteStart
+                            
+                            // Für wiederholende Kunden: Prüfe ob fälliges Datum überfällig ist
+                            val wiederholendUeberfaellig = customer.wiederholen && !isDone && faelligAm < heuteStart
+                            
+                            // Überfällig wenn: EINER der Termine überfällig ist UND angezeigtes Datum >= überfälliges Datum
+                            val isOverdue = !isDone && (
+                                (abholungUeberfaellig && viewDateStart >= getStartOfDay(customer.abholungDatum)) ||
+                                (auslieferungUeberfaellig && viewDateStart >= getStartOfDay(customer.auslieferungDatum)) ||
+                                (wiederholendUeberfaellig && viewDateStart >= faelligAm)
+                            )
+                            
+                            when {
+                                isDone -> doneListenKunden.add(customer)
+                                isOverdue -> overdueListenKunden.add(customer)
+                                else -> normalListenKunden.add(customer)
+                            }
+                        }
                     }
                 }
                 
@@ -146,8 +219,23 @@ class TourPlannerViewModel(
                 filteredGewerblich.forEach { customer ->
                     val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
                     val faelligAm = customerFaelligAm(customer, null, viewDateStart)
-                    // Überfällige Termine: Zeige sie ab dem überfälligen Tag bis sie erledigt sind (auch in der Zukunft)
-                    val isOverdue = !isDone && faelligAm < heuteStart && viewDateStart >= faelligAm
+                    
+                    // Überfällig: Prüfe ob EINER der Termine (Abholung ODER Auslieferung) überfällig ist
+                    // Ein Termin ist überfällig, wenn er vor heute fällig war und noch nicht erledigt wurde
+                    val abholungUeberfaellig = !customer.abholungErfolgt && customer.abholungDatum > 0 && 
+                                             getStartOfDay(customer.abholungDatum) < heuteStart
+                    val auslieferungUeberfaellig = !customer.auslieferungErfolgt && customer.auslieferungDatum > 0 && 
+                                                  getStartOfDay(customer.auslieferungDatum) < heuteStart
+                    
+                    // Für wiederholende Kunden: Prüfe ob fälliges Datum überfällig ist
+                    val wiederholendUeberfaellig = customer.wiederholen && !isDone && faelligAm < heuteStart
+                    
+                    // Überfällig wenn: EINER der Termine überfällig ist UND angezeigtes Datum >= überfälliges Datum
+                    val isOverdue = !isDone && (
+                        (abholungUeberfaellig && viewDateStart >= getStartOfDay(customer.abholungDatum)) ||
+                        (auslieferungUeberfaellig && viewDateStart >= getStartOfDay(customer.auslieferungDatum)) ||
+                        (wiederholendUeberfaellig && viewDateStart >= faelligAm)
+                    )
                     
                     when {
                         isDone -> doneGewerblich.add(customer)
@@ -156,41 +244,51 @@ class TourPlannerViewModel(
                     }
                 }
                 
-                overdueGewerblich.sortBy { it.reihenfolge }
-                normalGewerblich.sortBy { it.reihenfolge }
-                doneGewerblich.sortBy { it.reihenfolge }
+                // Alle Kunden (Listen + Gewerblich) in Sections zusammenführen
+                val allOverdue = (overdueListenKunden + overdueGewerblich).sortedBy { it.reihenfolge }
+                val allNormal = (normalListenKunden + normalGewerblich).sortedBy { it.reihenfolge }
+                val allDone = (doneListenKunden + doneGewerblich).sortedBy { it.reihenfolge }
                 
-                if (overdueGewerblich.isNotEmpty()) {
-                    items.add(ListItem.SectionHeader("ÜBERFÄLLIG", overdueGewerblich.size, SectionType.OVERDUE))
-                    if (isSectionExpanded(SectionType.OVERDUE)) {
-                        overdueGewerblich.forEach { items.add(ListItem.CustomerItem(it)) }
+                // Kunden nach Listen gruppiert anzeigen (sowohl Privat als auch Gewerblich)
+                allListen.sortedBy { it.name }.forEach { liste ->
+                    val kundenInListe = listenMitKunden[liste.id] ?: return@forEach
+                    if (kundenInListe.isNotEmpty()) {
+                        items.add(ListItem.ListeHeader(liste.name, kundenInListe.size, liste.id))
+                        // Kunden werden nur angezeigt wenn Liste expanded ist (wird im Adapter gehandhabt)
+                        kundenInListe.forEach { items.add(ListItem.CustomerItem(it)) }
                     }
                 }
-                
-                normalGewerblich.forEach { items.add(ListItem.CustomerItem(it)) }
-                
-                if (doneGewerblich.isNotEmpty()) {
-                    items.add(ListItem.SectionHeader("ERLEDIGT", doneGewerblich.size, SectionType.DONE))
-                    if (isSectionExpanded(SectionType.DONE)) {
-                        doneGewerblich.forEach { items.add(ListItem.CustomerItem(it)) }
-                    }
-                }
-                
-                _tourItems.value = items
-            } catch (e: Exception) {
-                _error.value = e.message ?: "Fehler beim Laden der Touren"
-            } finally {
-                _isLoading.value = false
+        
+        // Sections für alle Kunden (Listen + Gewerblich)
+        if (allOverdue.isNotEmpty()) {
+            items.add(ListItem.SectionHeader("ÜBERFÄLLIG", allOverdue.size, SectionType.OVERDUE))
+            if (expandedSections.contains(SectionType.OVERDUE)) {
+                allOverdue.forEach { items.add(ListItem.CustomerItem(it)) }
             }
         }
+        
+        allNormal.forEach { items.add(ListItem.CustomerItem(it)) }
+        
+        if (allDone.isNotEmpty()) {
+            items.add(ListItem.SectionHeader("ERLEDIGT", allDone.size, SectionType.DONE))
+            if (expandedSections.contains(SectionType.DONE)) {
+                allDone.forEach { items.add(ListItem.CustomerItem(it)) }
+            }
+        }
+        
+        return items
     }
     
     fun toggleSection(sectionType: SectionType) {
-        if (expandedSections.contains(sectionType)) {
-            expandedSections.remove(sectionType)
+        val current = expandedSections.toMutableSet()
+        if (current.contains(sectionType)) {
+            current.remove(sectionType)
         } else {
-            expandedSections.add(sectionType)
+            current.add(sectionType)
         }
+        expandedSections.clear()
+        expandedSections.addAll(current)
+        expandedSectionsFlow.value = current
     }
     
     fun isSectionExpanded(sectionType: SectionType): Boolean {
@@ -214,10 +312,79 @@ class TourPlannerViewModel(
             
             // Nächstes Datum aus den Intervallen der Liste berechnen (ab dem angezeigten Datum)
             val naechstesDatum = getNaechstesListeDatum(liste, abDatum, c.geloeschteTermine)
-            return naechstesDatum ?: abDatum
+            return naechstesDatum ?: 0L  // Nicht abDatum zurückgeben, wenn kein Termin gefunden wird
         }
         
         // Für Kunden ohne Liste: Normale Logik
+        if (!c.wiederholen) {
+            // Einmaliger Termin: Berücksichtige sowohl Abholungs- als auch Auslieferungsdatum
+            val abholungStart = getStartOfDay(c.abholungDatum)
+            val auslieferungStart = getStartOfDay(c.auslieferungDatum)
+            val abDatumStart = getStartOfDay(abDatum)
+            
+            // Prüfe ob verschoben
+            if (c.verschobenAufDatum > 0) {
+                val verschobenStart = getStartOfDay(c.verschobenAufDatum)
+                if (c.geloeschteTermine.contains(verschobenStart)) {
+                    // Verschobenes Datum wurde gelöscht - keine weiteren Termine
+                    return 0L
+                }
+                // Wenn abDatum auf verschobenem Datum liegt, gib es zurück
+                if (abDatumStart == verschobenStart) return c.verschobenAufDatum
+                // Wenn abDatum vor verschobenem Datum liegt, gib verschobenes Datum zurück
+                if (abDatumStart < verschobenStart) return c.verschobenAufDatum
+                // Wenn abDatum nach verschobenem Datum liegt, keine weiteren Termine
+                return 0L
+            }
+            
+            // Prüfe ob Termine gelöscht wurden
+            val abholungGeloescht = c.geloeschteTermine.contains(abholungStart)
+            val auslieferungGeloescht = c.geloeschteTermine.contains(auslieferungStart)
+            
+            // Wenn beide Termine gelöscht wurden, keine weiteren Termine
+            if (abholungGeloescht && auslieferungGeloescht) return 0L
+            
+            // Wenn abDatum genau auf Abholungstag liegt und nicht gelöscht
+            if (abDatumStart == abholungStart && !abholungGeloescht) {
+                return c.abholungDatum
+            }
+            
+            // Wenn abDatum genau auf Auslieferungstag liegt und nicht gelöscht
+            if (abDatumStart == auslieferungStart && !auslieferungGeloescht) {
+                return c.auslieferungDatum
+            }
+            
+            // Wenn abDatum zwischen beiden liegt: Gib das nächste fällige Datum zurück
+            if (abDatumStart > abholungStart && abDatumStart < auslieferungStart) {
+                // Zwischen Abholung und Auslieferung: Gib Auslieferungsdatum zurück (nächstes fälliges)
+                return if (!auslieferungGeloescht) c.auslieferungDatum else 0L
+            }
+            if (abDatumStart > auslieferungStart && abDatumStart < abholungStart) {
+                // Zwischen Auslieferung und Abholung: Gib Abholungsdatum zurück (nächstes fälliges)
+                return if (!abholungGeloescht) c.abholungDatum else 0L
+            }
+            
+            // Wenn abDatum vor beiden liegt: Gib Abholungsdatum zurück (nächstes fälliges)
+            if (abDatumStart < abholungStart && abDatumStart < auslieferungStart) {
+                return if (!abholungGeloescht) c.abholungDatum else 
+                       if (!auslieferungGeloescht) c.auslieferungDatum else 0L
+            }
+            
+            // Wenn abDatum nach beiden liegt: Keine weiteren Termine
+            if (abDatumStart > abholungStart && abDatumStart > auslieferungStart) {
+                return 0L
+            }
+            
+            // Fallback: Gib das nächste fällige Datum zurück
+            if (!abholungGeloescht && !auslieferungGeloescht) {
+                return minOf(c.abholungDatum, c.auslieferungDatum)
+            }
+            if (!abholungGeloescht) return c.abholungDatum
+            if (!auslieferungGeloescht) return c.auslieferungDatum
+            return 0L
+        }
+        
+        // Wiederholender Termin: Alte Logik
         val faelligAm = c.getFaelligAm()
         val faelligAmStart = getStartOfDay(faelligAm)
         // Prüfe ob Termin gelöscht wurde
@@ -290,8 +457,9 @@ class TourPlannerViewModel(
         
         viewModelScope.launch {
             try {
-                val allCustomers = repository.getAllCustomers()
-                val allListen = listeRepository.getAllListen()
+                // Verwende die aktuellen Werte aus den Flows (Echtzeit-Updates)
+                val allCustomers = customersFlow.value ?: emptyList()
+                val allListen = listenFlow.value ?: emptyList()
                 val heuteStart = getStartOfDay(System.currentTimeMillis())
                 
                 // Woche startet am Montag
@@ -310,7 +478,6 @@ class TourPlannerViewModel(
                 for (dayOffset in 0..6) {
                     val dayTimestamp = weekStart + TimeUnit.DAYS.toMillis(dayOffset.toLong())
                     val dayStart = getStartOfDay(dayTimestamp)
-                    val dayWochentag = dayOffset // 0=Montag, 6=Sonntag
                     
                     val dayItems = mutableListOf<ListItem>()
                     
@@ -368,7 +535,7 @@ class TourPlannerViewModel(
                     // Gewerblich-Kunden ohne Liste filtern
                     val gewerblichKundenOhneListe = kundenOhneListe.filter { it.kundenArt == "Gewerblich" }
                     val filteredGewerblich = gewerblichKundenOhneListe.filter { customer ->
-                        if (customer.wiederholen && customer.wochentag != dayWochentag) return@filter false
+                        // Wochentag-Filterung entfernt - wird nicht mehr verwendet
                         if (!customer.wiederholen) {
                             val abholungAm = getStartOfDay(customer.abholungDatum)
                             val auslieferungAm = getStartOfDay(customer.auslieferungDatum)
@@ -401,8 +568,22 @@ class TourPlannerViewModel(
                     filteredGewerblich.forEach { customer ->
                         val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
                         val faelligAm = customerFaelligAm(customer, null, dayStart)
-                        // Überfällige Termine: Zeige sie ab dem überfälligen Tag bis sie erledigt sind (auch in der Zukunft)
-                        val isOverdue = !isDone && faelligAm < heuteStart && dayStart >= faelligAm
+                        
+                        // Überfällig: Prüfe ob EINER der Termine (Abholung ODER Auslieferung) überfällig ist
+                        val abholungUeberfaellig = !customer.abholungErfolgt && customer.abholungDatum > 0 && 
+                                                 getStartOfDay(customer.abholungDatum) < heuteStart
+                        val auslieferungUeberfaellig = !customer.auslieferungErfolgt && customer.auslieferungDatum > 0 && 
+                                                      getStartOfDay(customer.auslieferungDatum) < heuteStart
+                        
+                        // Für wiederholende Kunden: Prüfe ob fälliges Datum überfällig ist
+                        val wiederholendUeberfaellig = customer.wiederholen && !isDone && faelligAm < heuteStart
+                        
+                        // Überfällig wenn: EINER der Termine überfällig ist UND angezeigtes Datum >= überfälliges Datum
+                        val isOverdue = !isDone && (
+                            (abholungUeberfaellig && dayStart >= getStartOfDay(customer.abholungDatum)) ||
+                            (auslieferungUeberfaellig && dayStart >= getStartOfDay(customer.auslieferungDatum)) ||
+                            (wiederholendUeberfaellig && dayStart >= faelligAm)
+                        )
                         
                         when {
                             isDone -> doneGewerblich.add(customer)
@@ -539,17 +720,27 @@ class TourPlannerViewModel(
                 var naechsteAbholung: Long? = null
                 if (abDatumStart >= abholungStart) {
                     val tageSeitAbholung = TimeUnit.MILLISECONDS.toDays(abDatumStart - abholungStart)
-                    var zyklus = (tageSeitAbholung / intervallTage + 1).toInt()
-                    var versuche = 0
-                    while (versuche < 100) { // Max 100 Versuche
-                        val kandidat = abholungStart + TimeUnit.DAYS.toMillis((zyklus * intervallTage).toLong())
-                        val kandidatStart = getStartOfDay(kandidat)
-                        if (kandidatStart >= abDatumStart && !geloeschteTermine.contains(kandidatStart)) {
-                            naechsteAbholung = kandidatStart
-                            break
+                    // Prüfe zuerst, ob abDatumStart genau auf einem Zyklus liegt
+                    val zyklusAktuell = tageSeitAbholung / intervallTage
+                    val aktuellesDatum = abholungStart + TimeUnit.DAYS.toMillis(zyklusAktuell * intervallTage)
+                    val aktuellesDatumStart = getStartOfDay(aktuellesDatum)
+                    
+                    if (aktuellesDatumStart == abDatumStart && !geloeschteTermine.contains(aktuellesDatumStart)) {
+                        naechsteAbholung = aktuellesDatumStart
+                    } else {
+                        // Suche nächsten Zyklus
+                        var zyklus = (tageSeitAbholung / intervallTage + 1).toInt()
+                        var versuche = 0
+                        while (versuche < 100) { // Max 100 Versuche
+                            val kandidat = abholungStart + TimeUnit.DAYS.toMillis((zyklus * intervallTage).toLong())
+                            val kandidatStart = getStartOfDay(kandidat)
+                            if (kandidatStart >= abDatumStart && !geloeschteTermine.contains(kandidatStart)) {
+                                naechsteAbholung = kandidatStart
+                                break
+                            }
+                            zyklus++
+                            versuche++
                         }
-                        zyklus++
-                        versuche++
                     }
                 } else {
                     if (!geloeschteTermine.contains(abholungStart)) {
@@ -578,17 +769,27 @@ class TourPlannerViewModel(
                 var naechsteAuslieferung: Long? = null
                 if (abDatumStart >= auslieferungStart) {
                     val tageSeitAuslieferung = TimeUnit.MILLISECONDS.toDays(abDatumStart - auslieferungStart)
-                    var zyklus = (tageSeitAuslieferung / intervallTage + 1).toInt()
-                    var versuche = 0
-                    while (versuche < 100) {
-                        val kandidat = auslieferungStart + TimeUnit.DAYS.toMillis((zyklus * intervallTage).toLong())
-                        val kandidatStart = getStartOfDay(kandidat)
-                        if (kandidatStart >= abDatumStart && !geloeschteTermine.contains(kandidatStart)) {
-                            naechsteAuslieferung = kandidatStart
-                            break
+                    // Prüfe zuerst, ob abDatumStart genau auf einem Zyklus liegt
+                    val zyklusAktuell = tageSeitAuslieferung / intervallTage
+                    val aktuellesDatum = auslieferungStart + TimeUnit.DAYS.toMillis(zyklusAktuell * intervallTage)
+                    val aktuellesDatumStart = getStartOfDay(aktuellesDatum)
+                    
+                    if (aktuellesDatumStart == abDatumStart && !geloeschteTermine.contains(aktuellesDatumStart)) {
+                        naechsteAuslieferung = aktuellesDatumStart
+                    } else {
+                        // Suche nächsten Zyklus
+                        var zyklus = (tageSeitAuslieferung / intervallTage + 1).toInt()
+                        var versuche = 0
+                        while (versuche < 100) {
+                            val kandidat = auslieferungStart + TimeUnit.DAYS.toMillis((zyklus * intervallTage).toLong())
+                            val kandidatStart = getStartOfDay(kandidat)
+                            if (kandidatStart >= abDatumStart && !geloeschteTermine.contains(kandidatStart)) {
+                                naechsteAuslieferung = kandidatStart
+                                break
+                            }
+                            zyklus++
+                            versuche++
                         }
-                        zyklus++
-                        versuche++
                     }
                 } else {
                     if (!geloeschteTermine.contains(auslieferungStart)) {
