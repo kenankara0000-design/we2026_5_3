@@ -155,44 +155,58 @@
             android:layout_marginBottom="20dp"/>
 
         <!-- Abholungsdatum -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="📦 Abholungsdatum"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"/>
-
-        <Button
-            android:id="@+id/btnPickAbholungDate"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        <LinearLayout
+            android:id="@+id/layoutAbholungDatum"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Abholungsdatum wählen"
-            android:minHeight="48dp"
-            android:layout_marginBottom="12dp"/>
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📦 Abholungsdatum"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="8dp"/>
+
+            <Button
+                android:id="@+id/btnPickAbholungDate"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Abholungsdatum wählen"
+                android:minHeight="48dp"/>
+        </LinearLayout>
 
         <!-- Auslieferungsdatum -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🚚 Auslieferungsdatum"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"/>
-
-        <Button
-            android:id="@+id/btnPickAuslieferungDate"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        <LinearLayout
+            android:id="@+id/layoutAuslieferungDatum"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Auslieferungsdatum wählen"
-            android:minHeight="48dp"
-            android:layout_marginBottom="12dp"/>
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🚚 Auslieferungsdatum"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="8dp"/>
+
+            <Button
+                android:id="@+id/btnPickAuslieferungDate"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Auslieferungsdatum wählen"
+                android:minHeight="48dp"/>
+        </LinearLayout>
 
         <!-- Wiederholen Option -->
         <LinearLayout

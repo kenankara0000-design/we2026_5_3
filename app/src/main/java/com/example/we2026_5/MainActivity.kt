@@ -45,6 +45,10 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, AddCustomerActivity::class.java))
         }
 
+        binding.btnListeErstellen.setOnClickListener {
+            startActivity(Intent(this, ListeErstellenActivity::class.java))
+        }
+
         binding.btnStatistiken.setOnClickListener {
             startActivity(Intent(this, StatisticsActivity::class.java))
         }

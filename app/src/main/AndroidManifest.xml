@@ -57,6 +57,10 @@
             android:name=".MapViewActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ListeErstellenActivity"
+            android:exported="false" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.example.we2026_5.fileprovider"

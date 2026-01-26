@@ -103,6 +103,9 @@ class AddCustomerActivity : AppCompatActivity() {
             if (isPrivat) {
                 loadListen()
             }
+            
+            // Datums-Felder ausblenden wenn Privat (werden von Liste übernommen)
+            updateDatumsFelderSichtbarkeit(isPrivat && selectedListeId.isNotEmpty())
         }
 
         // Liste-Spinner
@@ -113,9 +116,12 @@ class AddCustomerActivity : AppCompatActivity() {
                 } else {
                     selectedListeId = ""
                 }
+                // Datums-Felder ausblenden wenn Liste ausgewählt
+                updateDatumsFelderSichtbarkeit(selectedListeId.isNotEmpty())
             }
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
                 selectedListeId = ""
+                updateDatumsFelderSichtbarkeit(false)
             }
         }
 
@@ -140,20 +146,23 @@ class AddCustomerActivity : AppCompatActivity() {
             val adresse = binding.etAdresse.text.toString().trim()
             val telefon = binding.etTelefon.text.toString().trim()
 
-            // Validierung: Abholungsdatum muss gesetzt sein
-            if (selectedAbholungDatum == 0L) {
-                Toast.makeText(this, "Bitte wählen Sie ein Abholungsdatum", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            // Validierung: Auslieferungsdatum muss gesetzt sein
-            if (selectedAuslieferungDatum == 0L) {
-                Toast.makeText(this, "Bitte wählen Sie ein Auslieferungsdatum", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
+            // Kunden-Art bestimmen
             val kundenArt = if (binding.rbPrivat.isChecked) "Privat" else "Gewerblich"
-            
+
+            // Validierung: Abholungsdatum muss gesetzt sein (nur für Gewerblich oder Privat ohne Liste)
+            if (kundenArt == "Gewerblich" || (kundenArt == "Privat" && selectedListeId.isEmpty())) {
+                if (selectedAbholungDatum == 0L) {
+                    Toast.makeText(this, "Bitte wählen Sie ein Abholungsdatum", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                // Validierung: Auslieferungsdatum muss gesetzt sein
+                if (selectedAuslieferungDatum == 0L) {
+                    Toast.makeText(this, "Bitte wählen Sie ein Auslieferungsdatum", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+            }
+
             // Validierung: Wenn Privat, muss eine Liste ausgewählt sein
             if (kundenArt == "Privat" && selectedListeId.isEmpty()) {
                 Toast.makeText(this, "Bitte wählen Sie eine Liste für Privat-Kunden", Toast.LENGTH_SHORT).show()
@@ -235,6 +244,13 @@ class AddCustomerActivity : AppCompatActivity() {
                     0 // Nicht verwendet bei einmaligen Terminen
                 }
 
+                // Für Privat-Kunden in Listen: Daten der Liste verwenden (keine eigenen Daten)
+                val liste = if (kundenArt == "Privat" && selectedListeId.isNotEmpty()) {
+                    alleListen.find { it.id == selectedListeId }
+                } else {
+                    null
+                }
+                
                 val customerId = java.util.UUID.randomUUID().toString()
                 val customer = Customer(
                     id = customerId,
@@ -245,15 +261,15 @@ class AddCustomerActivity : AppCompatActivity() {
                     // Kunden-Art und Liste
                     kundenArt = kundenArt,
                     listeId = if (kundenArt == "Privat") selectedListeId else "",
-                    // Termine
-                    abholungDatum = selectedAbholungDatum,
-                    auslieferungDatum = selectedAuslieferungDatum,
-                    wiederholen = wiederholen,
-                    // Wiederholungs-Felder (nur wenn wiederholen = true)
-                    intervallTage = intervall,
-                    letzterTermin = letzterTermin,
-                    wochentag = if (wiederholen) abholungWochentag else 0,
-                    reihenfolge = if (wiederholen) reihenfolge else 1,
+                    // Termine: Für Privat-Kunden in Listen werden Daten der Liste verwendet (0 = wird ignoriert)
+                    abholungDatum = if (liste != null) 0 else selectedAbholungDatum,
+                    auslieferungDatum = if (liste != null) 0 else selectedAuslieferungDatum,
+                    wiederholen = liste?.wiederholen ?: wiederholen,
+                    // Wiederholungs-Felder
+                    intervallTage = if (liste != null && liste.wiederholen) 7 else intervall, // Listen wiederholen wöchentlich
+                    letzterTermin = if (liste != null) 0 else letzterTermin,
+                    wochentag = if (liste != null) liste.abholungWochentag else (if (wiederholen) abholungWochentag else 0),
+                    reihenfolge = if (liste != null || wiederholen) reihenfolge else 1,
                     istImUrlaub = false
                 )
 
@@ -274,16 +290,18 @@ class AddCustomerActivity : AppCompatActivity() {
                         binding.btnSaveCustomer.backgroundTintList = android.content.res.ColorStateList.valueOf(
                             resources.getColor(com.example.we2026_5.R.color.status_done, theme)
                         )
+                        binding.btnSaveCustomer.alpha = 1.0f
                         
                         // Kurz warten, damit der Benutzer das Feedback sieht
                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                             finish()
-                        }, 500)
+                        }, 800)
                     } else {
                         // Fehler: Button wieder aktivieren
                         binding.btnSaveCustomer.isEnabled = true
                         binding.btnSaveCustomer.text = "Speichern"
                         binding.btnSaveCustomer.alpha = 1.0f
+                        // Toast wird bereits von FirebaseRetryHelper angezeigt
                     }
                 }
             }
@@ -451,7 +469,8 @@ class AddCustomerActivity : AppCompatActivity() {
                         id = listeId,
                         name = listeName,
                         abholungWochentag = selectedAbholungWT,
-                        auslieferungWochentag = selectedAuslieferungWT
+                        auslieferungWochentag = selectedAuslieferungWT,
+                        wiederholen = true // Standard: Listen werden wöchentlich wiederholt
                     )
                     
                     CoroutineScope(Dispatchers.Main).launch {
@@ -472,5 +491,15 @@ class AddCustomerActivity : AppCompatActivity() {
             }
             .setNegativeButton("Abbrechen", null)
             .show()
+    }
+    
+    private fun updateDatumsFelderSichtbarkeit(ausblenden: Boolean) {
+        // Wenn Liste ausgewählt, Datums-Felder ausblenden (werden von Liste übernommen)
+        binding.layoutAbholungDatum.visibility = if (ausblenden) android.view.View.GONE else android.view.View.VISIBLE
+        binding.layoutAuslieferungDatum.visibility = if (ausblenden) android.view.View.GONE else android.view.View.VISIBLE
+        
+        // Auch Wiederholen-Checkbox ausblenden wenn Liste ausgewählt (Liste hat eigenes wiederholen-Feld)
+        binding.cbWiederholen.visibility = if (ausblenden) android.view.View.GONE else android.view.View.VISIBLE
+        binding.layoutWiederholung.visibility = if (ausblenden) android.view.View.GONE else android.view.View.VISIBLE
     }
 }

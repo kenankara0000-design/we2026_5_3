@@ -55,17 +55,16 @@
                 android:textSize="12sp"
                 android:textStyle="italic"/>
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnNavigation"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:text="📍"
-                android:textSize="18sp"
+                android:src="@drawable/ic_location_on"
+                android:background="@drawable/button_icon_pressed"
                 android:backgroundTint="@color/primary_blue"
-                android:textColor="@color/white"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:padding="0dp"
+                android:tint="#FFFFFF"
+                android:contentDescription="Navigation"
+                android:padding="12dp"
                 android:visibility="gone"/>
         </LinearLayout>
 
@@ -95,81 +94,70 @@
             android:gravity="end"
             android:paddingTop="8dp">
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnAbholung"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:text="A"
-                android:textSize="16sp"
-                android:textStyle="bold"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:src="@drawable/ic_pickup"
+                android:background="@drawable/button_icon_pressed"
                 android:backgroundTint="@color/button_abholung"
-                android:textColor="@color/white"
-                android:layout_marginEnd="6dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:padding="0dp"
-                />
+                android:tint="#FFFFFF"
+                android:contentDescription="Abholung"
+                android:padding="12dp"
+                android:layout_marginEnd="8dp" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnAuslieferung"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:text="L"
-                android:textSize="16sp"
-                android:textStyle="bold"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:src="@drawable/ic_delivery"
+                android:background="@drawable/button_icon_pressed"
                 android:backgroundTint="@color/button_auslieferung"
-                android:textColor="@color/white"
-                android:layout_marginEnd="6dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:padding="0dp"
-                />
+                android:tint="#FFFFFF"
+                android:contentDescription="Auslieferung"
+                android:padding="12dp"
+                android:layout_marginEnd="8dp" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnVerschieben"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:text="V"
-                android:textSize="16sp"
-                android:textStyle="bold"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:src="@drawable/ic_reschedule"
+                android:background="@drawable/button_icon_pressed"
                 android:backgroundTint="@color/button_verschieben"
-                android:textColor="@color/white"
-                android:layout_marginEnd="6dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:padding="0dp"
-                />
+                android:tint="#FFFFFF"
+                android:contentDescription="Verschieben"
+                android:padding="12dp"
+                android:layout_marginEnd="8dp" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnUrlaub"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:text="U"
-                android:textSize="16sp"
-                android:textStyle="bold"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:src="@drawable/ic_vacation"
+                android:background="@drawable/button_icon_pressed"
                 android:backgroundTint="@color/button_urlaub"
-                android:textColor="@color/white"
-                android:layout_marginEnd="6dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:padding="0dp"
-                />
+                android:tint="#FFFFFF"
+                android:contentDescription="Urlaub"
+                android:padding="12dp"
+                android:layout_marginEnd="8dp" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnRueckgaengig"
                 android:layout_width="wrap_content"
-                android:layout_height="48dp"
+                android:layout_height="52dp"
                 android:text="Rückgängig"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:backgroundTint="@color/button_rueckgaengig"
-                android:textColor="@color/white"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
+                android:textColor="#FFFFFF"
+                app:icon="@drawable/ic_undo"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp"
+                app:cornerRadius="12dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:visibility="gone"
-                />
+                android:visibility="gone" />
         </LinearLayout>
 
     </LinearLayout>

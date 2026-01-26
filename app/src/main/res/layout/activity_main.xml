@@ -54,6 +54,18 @@
         style="@style/Widget.Material3.Button.ElevatedButton"/>
 
     <Button
+        android:id="@+id/btnListeErstellen"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:text="📋 Liste erstellen"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="@color/primary_blue_light"
+        android:textColor="@color/white"
+        android:layout_marginBottom="20dp"
+        style="@style/Widget.Material3.Button.ElevatedButton"/>
+
+    <Button
         android:id="@+id/btnStatistiken"
         android:layout_width="match_parent"
         android:layout_height="80dp"

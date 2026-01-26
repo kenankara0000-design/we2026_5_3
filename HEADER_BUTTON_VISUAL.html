@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Header Button Layout Optionen</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .option {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #1976D2;
+            color: white;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .button-bar {
+            background: #1976D2;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .button {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 4px;
+            min-width: 48px;
+            text-align: center;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 10px 0;
+            min-height: 200px;
+        }
+        h2 {
+            color: #1976D2;
+        }
+        .pro-con {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .pros, .cons {
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .pros {
+            background: #e8f5e9;
+        }
+        .cons {
+            background: #ffebee;
+        }
+        .recommended {
+            border: 3px solid #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>📐 Header Button Layout - Optionen</h1>
+
+    <!-- OPTION 1: Buttons im Header (aktuell) -->
+    <div class="option">
+        <h2>Option 1: Buttons im Header (2 Zeilen) - AKTUELL</h2>
+        <div class="header" style="height: 72px; display: flex; align-items: center; justify-content: space-between;">
+            <div>← Zurück</div>
+            <div style="flex: 1; text-align: center;">Datum</div>
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+                <div style="display: flex; gap: 3px;">
+                    <div class="button">📍</div>
+                    <div class="button">📅</div>
+                </div>
+                <div class="button" style="margin: 0 auto;">📊</div>
+            </div>
+        </div>
+        <div class="pro-con">
+            <div class="pros">
+                <strong>✅ Vorteile:</strong>
+                <ul>
+                    <li>Alles in einem Bereich</li>
+                    <li>Kompakt</li>
+                    <li>Kein zusätzlicher Platz</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <strong>❌ Nachteile:</strong>
+                <ul>
+                    <li>Buttons können eng sein</li>
+                    <li>Header wird höher (72dp)</li>
+                    <li>Weniger Platz für Datum</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- OPTION 2: Separate Button-Zeile unter Header -->
+    <div class="option recommended">
+        <h2>Option 2: Separate Button-Zeile unter Header ⭐ EMPFOHLEN</h2>
+        <div class="header" style="height: 60px; display: flex; align-items: center; justify-content: space-between;">
+            <div>← Zurück</div>
+            <div style="flex: 1; text-align: center;">Datum</div>
+            <div></div>
+        </div>
+        <div class="button-bar">
+            <div class="button">📍 Karte</div>
+            <div class="button">📅 Heute</div>
+            <div class="button">📊 Woche</div>
+        </div>
+        <div class="content">Content-Bereich</div>
+        <div class="pro-con">
+            <div class="pros">
+                <strong>✅ Vorteile:</strong>
+                <ul>
+                    <li>Header bleibt schlank (60dp)</li>
+                    <li>Buttons haben viel Platz</li>
+                    <li>Bessere Lesbarkeit</li>
+                    <li>Klare Trennung</li>
+                    <li>Funktioniert auf allen Bildschirmen</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <strong>❌ Nachteile:</strong>
+                <ul>
+                    <li>Zusätzliche Zeile (56dp)</li>
+                    <li>Scroll-Bereich etwas kleiner</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- OPTION 3: Buttons unten am Bildschirm -->
+    <div class="option">
+        <h2>Option 3: Buttons unten am Bildschirm (FAB-Style)</h2>
+        <div class="header" style="height: 60px; display: flex; align-items: center; justify-content: space-between;">
+            <div>← Zurück</div>
+            <div style="flex: 1; text-align: center;">Datum</div>
+            <div></div>
+        </div>
+        <div class="content" style="min-height: 400px;">Content-Bereich</div>
+        <div class="button-bar" style="position: fixed; bottom: 0; left: 0; right: 0; border-radius: 0;">
+            <div class="button">📍</div>
+            <div class="button">📅</div>
+            <div class="button">📊</div>
+        </div>
+        <div class="pro-con">
+            <div class="pros">
+                <strong>✅ Vorteile:</strong>
+                <ul>
+                    <li>Immer sichtbar</li>
+                    <li>Viel Platz</li>
+                    <li>Header sehr kompakt</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <strong>❌ Nachteile:</strong>
+                <ul>
+                    <li>Nimmt Content-Platz</li>
+                    <li>Kann Content verdecken</li>
+                    <li>Weniger intuitiv</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin-top: 30px;">
+        <h2>🎯 Meine Empfehlung: <strong>Option 2</strong></h2>
+        <p><strong>Separate Button-Zeile unter Header</strong></p>
+        <p>Diese Lösung bietet den besten Kompromiss zwischen Kompaktheit und Benutzerfreundlichkeit.</p>
+    </div>
+
+</body>
+</html>

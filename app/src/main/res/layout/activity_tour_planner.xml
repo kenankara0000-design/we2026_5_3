@@ -9,10 +9,10 @@
     <!-- Header mit Zurück-Button -->
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="64dp"
         android:background="@color/primary_blue"
-        android:padding="8dp"
-        android:elevation="6dp">
+        android:padding="12dp"
+        android:elevation="8dp">
 
         <!-- Zurück-Button links -->
         <ImageButton
@@ -21,29 +21,40 @@
             android:layout_height="48dp"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_revert"
-            android:tint="#FFFFFF"
-            android:contentDescription="Zurück" />
+            android:background="@drawable/button_icon_pressed"
+            android:src="@drawable/ic_arrow_back"
+            android:contentDescription="Zurück"
+            android:padding="12dp" />
 
         <!-- Offline-Status-Indikator (unter Zurück-Button) -->
-        <TextView
+        <LinearLayout
             android:id="@+id/tvOfflineStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/btnBackFromTour"
             android:layout_alignParentStart="true"
             android:layout_marginTop="2dp"
-            android:text="📴 Offline"
-            android:textColor="#FFEB3B"
-            android:textSize="10sp"
-            android:textStyle="bold"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:visibility="gone"
             android:background="@drawable/status_badge_overdue"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp"/>
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp">
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_offline"
+                android:layout_marginEnd="4dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Offline"
+                android:textColor="#FFEB3B"
+                android:textSize="10sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
         
         <!-- Mitte: Datum-Navigation -->
         <LinearLayout
@@ -53,18 +64,17 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:layout_toEndOf="@id/btnBackFromTour"
-            android:layout_toStartOf="@id/rightButtonsContainer"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp">
 
             <ImageButton
                 android:id="@+id/btnPrevDay"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_media_previous"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/button_icon_pressed"
+                android:src="@drawable/ic_arrow_back"
                 android:contentDescription="Vorheriger Tag"
-                android:tint="#FFFFFF"
+                android:padding="10dp"
                 android:layout_marginEnd="8dp"/>
 
             <TextView
@@ -75,51 +85,61 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
-                android:minWidth="120dp"
+                android:minWidth="140dp"
                 android:gravity="center" />
 
             <ImageButton
                 android:id="@+id/btnNextDay"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_media_next"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/button_icon_pressed"
+                android:src="@drawable/ic_arrow_forward"
                 android:contentDescription="Nächster Tag"
-                android:tint="#FFFFFF"
+                android:padding="10dp"
                 android:layout_marginStart="8dp"/>
         </LinearLayout>
-        
-        <!-- Rechts: Kartenansicht und Heute Button -->
-        <LinearLayout
-            android:id="@+id/rightButtonsContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:layout_marginEnd="4dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-            
-            <ImageButton
-                android:id="@+id/btnMapView"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:layout_marginEnd="6dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_mylocation"
-                android:tint="#FFFFFF"
-                android:contentDescription="Kartenansicht" />
-            
-            <ImageButton
-                android:id="@+id/btnToday"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_today"
-                android:tint="#FFFFFF"
-                android:contentDescription="Heute" />
-        </LinearLayout>
     </RelativeLayout>
+    
+    <!-- Button-Zeile unter Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="@color/primary_blue"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:elevation="6dp">
+        
+        <ImageButton
+            android:id="@+id/btnMapView"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/button_icon_pressed"
+            android:src="@drawable/ic_map"
+            android:contentDescription="Kartenansicht"
+            android:padding="12dp" />
+        
+        <ImageButton
+            android:id="@+id/btnToday"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/button_icon_pressed"
+            android:src="@drawable/ic_calendar_today"
+            android:contentDescription="Heute"
+            android:padding="12dp" />
+        
+        <ImageButton
+            android:id="@+id/btnToggleView"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/button_icon_pressed"
+            android:src="@drawable/ic_view_week"
+            android:contentDescription="Wochenansicht"
+            android:padding="12dp" />
+    </LinearLayout>
     
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
@@ -140,6 +160,13 @@
                 android:id="@+id/rvTourList"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
+            
+            <!-- Wochenansicht -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvWeekView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/emptyStateLayout"

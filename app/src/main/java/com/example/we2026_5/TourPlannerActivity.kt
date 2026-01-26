@@ -31,7 +31,9 @@ class TourPlannerActivity : AppCompatActivity() {
     private val viewModel: TourPlannerViewModel by viewModel()
     private val repository: CustomerRepository by inject()
     private lateinit var adapter: CustomerAdapter
+    private lateinit var weekAdapter: WeekViewAdapter
     private var viewDate = Calendar.getInstance()
+    private var isWeekView = false
     private lateinit var gestureDetector: GestureDetectorCompat
     private lateinit var networkMonitor: NetworkMonitor
 
@@ -56,6 +58,34 @@ class TourPlannerActivity : AppCompatActivity() {
 
         binding.rvTourList.layoutManager = LinearLayoutManager(this)
         binding.rvTourList.adapter = adapter
+        
+        // Wochenansicht-Adapter initialisieren
+        weekAdapter = WeekViewAdapter(
+            weekData = emptyMap(),
+            context = this,
+            onCustomerClick = { customer ->
+                val intent = Intent(this, CustomerDetailActivity::class.java).apply {
+                    putExtra("CUSTOMER_ID", customer.id)
+                }
+                startActivity(intent)
+            },
+            customerAdapterFactory = { items ->
+                val dayAdapter = CustomerAdapter(
+                    items = items.toMutableList(),
+                    context = this,
+                    onClick = { customer ->
+                        val intent = Intent(this, CustomerDetailActivity::class.java).apply {
+                            putExtra("CUSTOMER_ID", customer.id)
+                        }
+                        startActivity(intent)
+                    }
+                )
+                setupAdapterCallbacksForAdapter(dayAdapter)
+                dayAdapter
+            }
+        )
+        binding.rvWeekView.layoutManager = LinearLayoutManager(this)
+        binding.rvWeekView.adapter = weekAdapter
         
         // Drag & Drop für Kunden-Reihenfolge
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
@@ -84,8 +114,11 @@ class TourPlannerActivity : AppCompatActivity() {
         // Callback für Section-Toggle setzen
         adapter.onSectionToggle = { sectionType ->
             viewModel.toggleSection(sectionType)
-            loadTourData(viewDate.timeInMillis) // Daten neu laden wenn Section getoggelt wird
+            reloadCurrentView() // Daten neu laden wenn Section getoggelt wird
         }
+        
+        // Initial: Tagesansicht
+        updateViewMode()
         
         // ViewModel Observer einrichten
         observeViewModel()
@@ -93,12 +126,20 @@ class TourPlannerActivity : AppCompatActivity() {
         binding.btnBackFromTour.setOnClickListener { finish() }
 
         binding.btnPrevDay.setOnClickListener {
-            viewDate.add(Calendar.DAY_OF_YEAR, -1)
+            if (isWeekView) {
+                viewDate.add(Calendar.WEEK_OF_YEAR, -1)
+            } else {
+                viewDate.add(Calendar.DAY_OF_YEAR, -1)
+            }
             updateDisplay()
         }
 
         binding.btnNextDay.setOnClickListener {
-            viewDate.add(Calendar.DAY_OF_YEAR, 1)
+            if (isWeekView) {
+                viewDate.add(Calendar.WEEK_OF_YEAR, 1)
+            } else {
+                viewDate.add(Calendar.DAY_OF_YEAR, 1)
+            }
             updateDisplay()
         }
 
@@ -112,9 +153,15 @@ class TourPlannerActivity : AppCompatActivity() {
             startActivity(intent)
         }
         
+        // Toggle zwischen Tag- und Wochenansicht
+        binding.btnToggleView.setOnClickListener {
+            isWeekView = !isWeekView
+            updateViewMode()
+        }
+        
         // Pull-to-Refresh
         binding.swipeRefresh.setOnRefreshListener {
-            loadTourData(viewDate.timeInMillis)
+            reloadCurrentView()
             binding.swipeRefresh.isRefreshing = false
         }
         
@@ -182,17 +229,45 @@ class TourPlannerActivity : AppCompatActivity() {
     }
 
     private fun observeViewModel() {
-        // Tour-Items beobachten
+        // Tour-Items beobachten (Tagesansicht)
         viewModel.tourItems.observe(this) { items ->
-            adapter.updateData(items, getStartOfDay(viewDate.timeInMillis))
-            
-            // Empty State anzeigen wenn keine Kunden vorhanden
-            if (items.isEmpty()) {
-                binding.emptyStateLayout.visibility = View.VISIBLE
-                binding.rvTourList.visibility = View.GONE
-            } else {
-                binding.emptyStateLayout.visibility = View.GONE
-                binding.rvTourList.visibility = View.VISIBLE
+            if (!isWeekView) {
+                adapter.updateData(items, getStartOfDay(viewDate.timeInMillis))
+                
+                // Empty State anzeigen wenn keine Kunden vorhanden
+                if (items.isEmpty()) {
+                    binding.emptyStateLayout.visibility = View.VISIBLE
+                    binding.rvTourList.visibility = View.GONE
+                } else {
+                    binding.emptyStateLayout.visibility = View.GONE
+                    binding.rvTourList.visibility = View.VISIBLE
+                }
+            }
+        }
+        
+        // Wochen-Items beobachten
+        viewModel.weekItems.observe(this) { weekData ->
+            if (isWeekView) {
+                val weekStart = Calendar.getInstance().apply {
+                    timeInMillis = viewDate.timeInMillis
+                    set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+                
+                weekAdapter.updateWeekData(weekData, weekStart)
+                
+                // Empty State prüfen
+                val hasAnyData = weekData.values.any { it.isNotEmpty() }
+                if (hasAnyData) {
+                    binding.emptyStateLayout.visibility = View.GONE
+                    binding.rvWeekView.visibility = View.VISIBLE
+                } else {
+                    binding.emptyStateLayout.visibility = View.VISIBLE
+                    binding.rvWeekView.visibility = View.GONE
+                }
             }
         }
         
@@ -216,14 +291,58 @@ class TourPlannerActivity : AppCompatActivity() {
     }
 
     private fun updateDisplay() {
-        val fmt = SimpleDateFormat("EEE, dd.MM.yyyy", Locale.GERMANY)
-        binding.tvCurrentDate.text = fmt.format(viewDate.time)
-        loadTourData(viewDate.timeInMillis)
+        if (isWeekView) {
+            // Wochenansicht: Zeige Woche (z.B. "KW 4, 2026")
+            val cal = Calendar.getInstance().apply {
+                timeInMillis = viewDate.timeInMillis
+                set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+            }
+            val weekNumber = cal.get(Calendar.WEEK_OF_YEAR)
+            val year = cal.get(Calendar.YEAR)
+            binding.tvCurrentDate.text = "KW $weekNumber, $year"
+            loadWeekData(viewDate.timeInMillis)
+        } else {
+            // Tagesansicht
+            val fmt = SimpleDateFormat("EEE, dd.MM.yyyy", Locale.GERMANY)
+            binding.tvCurrentDate.text = fmt.format(viewDate.time)
+            loadTourData(viewDate.timeInMillis)
+        }
+    }
+    
+    private fun updateViewMode() {
+        if (isWeekView) {
+            binding.rvTourList.visibility = View.GONE
+            binding.rvWeekView.visibility = View.VISIBLE
+            binding.btnPrevDay.contentDescription = "Vorherige Woche"
+            binding.btnNextDay.contentDescription = "Nächste Woche"
+            binding.btnToggleView.contentDescription = "Tagesansicht"
+        } else {
+            binding.rvTourList.visibility = View.VISIBLE
+            binding.rvWeekView.visibility = View.GONE
+            binding.btnPrevDay.contentDescription = "Vorheriger Tag"
+            binding.btnNextDay.contentDescription = "Nächster Tag"
+            binding.btnToggleView.contentDescription = "Wochenansicht"
+        }
+        updateDisplay()
     }
 
     private fun loadTourData(selectedTimestamp: Long) {
         viewModel.loadTourData(selectedTimestamp) { sectionType ->
             viewModel.isSectionExpanded(sectionType)
+        }
+    }
+    
+    private fun loadWeekData(selectedTimestamp: Long) {
+        viewModel.loadWeekData(selectedTimestamp) { sectionType ->
+            viewModel.isSectionExpanded(sectionType)
+        }
+    }
+    
+    private fun reloadCurrentView() {
+        if (isWeekView) {
+            loadWeekData(viewDate.timeInMillis)
+        } else {
+            loadTourData(viewDate.timeInMillis)
         }
     }
     
@@ -234,11 +353,15 @@ class TourPlannerActivity : AppCompatActivity() {
         binding.tvErrorMessage.text = message
         
         binding.btnRetry.setOnClickListener {
-            loadTourData(viewDate.timeInMillis)
+            reloadCurrentView()
         }
     }
 
     private fun setupAdapterCallbacks() {
+        setupAdapterCallbacksForAdapter(adapter)
+    }
+    
+    private fun setupAdapterCallbacksForAdapter(adapter: CustomerAdapter) {
         // Abholung
         adapter.onAbholung = { customer ->
             if (!customer.abholungErfolgt) {
@@ -253,7 +376,7 @@ class TourPlannerActivity : AppCompatActivity() {
                     )
                     if (success == true) {
                         android.widget.Toast.makeText(this@TourPlannerActivity, "Abholung registriert", android.widget.Toast.LENGTH_SHORT).show()
-                        loadTourData(viewDate.timeInMillis) // Daten neu laden
+                        reloadCurrentView() // Daten neu laden
                     }
                 }
             }
@@ -277,7 +400,7 @@ class TourPlannerActivity : AppCompatActivity() {
                         if (wasAbholungErfolgt) {
                             resetTourCycle(customer.id)
                         } else {
-                            loadTourData(viewDate.timeInMillis) // Daten neu laden
+                            reloadCurrentView() // Daten neu laden
                         }
                     }
                 }
@@ -324,7 +447,7 @@ class TourPlannerActivity : AppCompatActivity() {
                     android.widget.Toast.makeText(this@TourPlannerActivity, 
                         if (alleVerschieben) "Alle zukünftigen Termine verschoben" else "Termin verschoben", 
                         android.widget.Toast.LENGTH_SHORT).show()
-                    loadTourData(viewDate.timeInMillis) // Daten neu laden
+                    reloadCurrentView() // Daten neu laden
                 }
             }
         }
@@ -345,7 +468,7 @@ class TourPlannerActivity : AppCompatActivity() {
                 )
                 if (success == true) {
                     android.widget.Toast.makeText(this@TourPlannerActivity, "Urlaub eingetragen", android.widget.Toast.LENGTH_SHORT).show()
-                    loadTourData(viewDate.timeInMillis) // Daten neu laden
+                    reloadCurrentView() // Daten neu laden
                 }
             }
         }
@@ -367,7 +490,7 @@ class TourPlannerActivity : AppCompatActivity() {
                 )
                 if (success == true) {
                     android.widget.Toast.makeText(this@TourPlannerActivity, "Rückgängig gemacht", android.widget.Toast.LENGTH_SHORT).show()
-                    loadTourData(viewDate.timeInMillis) // Daten neu laden
+                    reloadCurrentView() // Daten neu laden
                 }
             }
         }
@@ -391,7 +514,7 @@ class TourPlannerActivity : AppCompatActivity() {
             )
             if (success == true) {
                 android.widget.Toast.makeText(this@TourPlannerActivity, "Tour abgeschlossen!", android.widget.Toast.LENGTH_SHORT).show()
-                loadTourData(viewDate.timeInMillis) // Daten neu laden
+                reloadCurrentView() // Daten neu laden
             }
         }
     }
