@@ -329,17 +329,39 @@ class CustomerDetailActivity : AppCompatActivity() {
             binding.btnDetailDo, binding.btnDetailFr, binding.btnDetailSa, binding.btnDetailSo
         )
         buttons.forEachIndexed { index, button ->
-            if (index == tag) {
+            // Abkürzungen explizit setzen
+            button.text = getWochentagAbbreviation(index)
+            
+            // Wochenendtage (Sa=5, So=6) bekommen Türkis-Farbe
+            val isWeekend = index == 5 || index == 6
+            val isSelected = index == tag
+            
+            if (isSelected) {
                 button.alpha = 1.0f
-                button.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                    resources.getColor(com.example.we2026_5.R.color.primary_blue_dark, theme)
-                )
+                if (isWeekend) {
+                    button.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                        resources.getColor(com.example.we2026_5.R.color.weekend_orange_dark, theme)
+                    )
+                } else {
+                    button.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                        resources.getColor(com.example.we2026_5.R.color.weekday_blue_dark, theme)
+                    )
+                }
             } else {
-                button.alpha = 0.6f
-                button.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                    resources.getColor(com.example.we2026_5.R.color.primary_blue, theme)
-                )
+                button.alpha = 0.8f
+                if (isWeekend) {
+                    button.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                        resources.getColor(com.example.we2026_5.R.color.weekend_orange, theme)
+                    )
+                } else {
+                    button.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                        resources.getColor(com.example.we2026_5.R.color.weekday_blue, theme)
+                    )
+                }
             }
+            
+            // Text immer sichtbar machen
+            button.setTextColor(resources.getColor(com.example.we2026_5.R.color.white, theme))
         }
     }
     
@@ -353,6 +375,19 @@ class CustomerDetailActivity : AppCompatActivity() {
             5 -> "Samstag"
             6 -> "Sonntag"
             else -> "Unbekannt"
+        }
+    }
+    
+    private fun getWochentagAbbreviation(tag: Int): String {
+        return when (tag) {
+            0 -> "Mo"
+            1 -> "Di"
+            2 -> "Mi"
+            3 -> "Do"
+            4 -> "Fr"
+            5 -> "Sa"
+            6 -> "So"
+            else -> "??"
         }
     }
 

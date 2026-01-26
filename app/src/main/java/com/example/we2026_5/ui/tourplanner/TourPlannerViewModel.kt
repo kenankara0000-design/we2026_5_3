@@ -52,6 +52,12 @@ class TourPlannerViewModel(
                                            faelligAm in customer.urlaubVon..customer.urlaubBis
                     if (faelligAmImUrlaub) return@filter false
                     
+                    val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
+                    val isOverdue = !isDone && faelligAm < heuteStart
+                    
+                    // Überfällige Kunden NUR anzeigen, wenn das angezeigte Datum heute oder in der Vergangenheit ist
+                    if (isOverdue && viewDateStart > heuteStart) return@filter false
+                    
                     // Kunden anzeigen, die an diesem Tag fällig sind (Termin liegt an diesem Tag)
                     faelligAm <= viewDateStart + TimeUnit.DAYS.toMillis(1)
                 }

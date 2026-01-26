@@ -36,4 +36,16 @@
     <color name="section_overdue_text">#C62828</color>
     <color name="section_done_bg">#E8F5E9</color>
     <color name="section_done_text">#2E7D32</color>
+    
+    <!-- Wochentag-Farben (Mo-Fr) -->
+    <color name="weekday_blue">#1976D2</color>
+    <color name="weekday_blue_dark">#1565C0</color>
+    
+    <!-- Wochenend-Farben (Sa-So) - Türkis -->
+    <color name="weekend_turquoise">#26A69A</color>
+    <color name="weekend_turquoise_dark">#00897B</color>
+    
+    <!-- Alternative: Orange für Wochenende -->
+    <color name="weekend_orange">#FF9800</color>
+    <color name="weekend_orange_dark">#F57C00</color>
 </resources>
