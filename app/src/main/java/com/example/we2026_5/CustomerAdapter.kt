@@ -1,6 +1,5 @@
 package com.example.we2026_5
 
-import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -10,21 +9,19 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.example.we2026_5.adapter.CustomerDialogHelper
+import com.example.we2026_5.adapter.CustomerViewHolderBinder
 import com.example.we2026_5.databinding.ItemCustomerBinding
 import com.example.we2026_5.databinding.ItemSectionHeaderBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 sealed class ListItem {
     data class CustomerItem(val customer: Customer) : ListItem()
-    data class SectionHeader(val title: String, val count: Int, val sectionType: SectionType) : ListItem()
-    data class ListeHeader(val listeName: String, val kundenCount: Int, val listeId: String) : ListItem()
+    data class SectionHeader(val title: String, val count: Int, val erledigtCount: Int, val sectionType: SectionType) : ListItem()
+    data class ListeHeader(val listeName: String, val kundenCount: Int, val erledigtCount: Int, val listeId: String) : ListItem()
 }
 
 enum class SectionType {
@@ -38,8 +35,8 @@ class CustomerAdapter(
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var displayedDateMillis: Long? = null
-    // Sections standardmäßig expanded, damit sie sichtbar sind
-    private var expandedSections = mutableSetOf<SectionType>(SectionType.OVERDUE, SectionType.DONE)
+    // Sections standardmäßig eingeklappt (collapsed)
+    private var expandedSections = mutableSetOf<SectionType>()
     var onSectionToggle: ((SectionType) -> Unit)? = null
     
     // Multi-Select für Bulk-Operationen
@@ -48,6 +45,47 @@ class CustomerAdapter(
     
     // Button-Zustand: Welcher Button wurde für welchen Kunden gedrückt
     private val pressedButtons = mutableMapOf<String, String>() // customerId -> "A", "L", "V", "U"
+    
+    // Dialog-Helper für Verschieben, Urlaub, Rückgängig
+    private val dialogHelper: CustomerDialogHelper by lazy {
+        CustomerDialogHelper(
+            context = context,
+            onVerschieben = { customer, newDate, alleVerschieben ->
+                onVerschieben?.invoke(customer, newDate, alleVerschieben)
+            },
+            onUrlaub = { customer, von, bis ->
+                onUrlaub?.invoke(customer, von, bis)
+            },
+            onRueckgaengig = { customer ->
+                onRueckgaengig?.invoke(customer)
+            },
+            onButtonStateReset = { customerId ->
+                pressedButtons.remove(customerId)
+                val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customerId }
+                if (position != -1) notifyItemChanged(position)
+            }
+        )
+    }
+    
+    // ViewHolder-Binder für Customer-Binding-Logik
+    private val viewHolderBinder: CustomerViewHolderBinder by lazy {
+        CustomerViewHolderBinder(
+            context = context,
+            displayedDateMillis = displayedDateMillis,
+            pressedButtons = pressedButtons,
+            selectedCustomers = selectedCustomers,
+            isMultiSelectMode = isMultiSelectMode,
+            getAbholungDatum = getAbholungDatum,
+            getAuslieferungDatum = getAuslieferungDatum,
+            onTerminClick = onTerminClick,
+            onClick = onClick,
+            dialogHelper = dialogHelper,
+            onAbholung = { customer -> handleAbholung(customer) },
+            onAuslieferung = { customer -> handleAuslieferung(customer) },
+            enableMultiSelectMode = { enableMultiSelectMode() },
+            toggleCustomerSelection = { customerId, holder -> toggleCustomerSelection(customerId, holder) }
+        )
+    }
     
     // Callbacks für Firebase-Operationen (statt direkter Firebase-Aufrufe)
     var onAbholung: ((Customer) -> Unit)? = null
@@ -125,21 +163,51 @@ class CustomerAdapter(
                 val prevItem = if (position > 0) items[position - 1] else null
                 val isInListe = prevItem is ListItem.ListeHeader && item.customer.listeId == prevItem.listeId
                 
+                // Prüfe ob Kunde tatsächlich zu einem Section gehört (wird in CardView angezeigt)
+                val isInSection = if (prevItem is ListItem.SectionHeader && displayedDateMillis != null) {
+                    // Prüfe ob Kunde tatsächlich zu diesem Section gehört
+                    val customer = item.customer
+                    val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
+                    when (prevItem.sectionType) {
+                        SectionType.OVERDUE -> {
+                            val heuteStart = getStartOfDay(System.currentTimeMillis())
+                            val viewDateStart = displayedDateMillis?.let { getStartOfDay(it) } ?: heuteStart
+                            val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                                customer = customer,
+                                startDatum = heuteStart - java.util.concurrent.TimeUnit.DAYS.toMillis(365),
+                                tageVoraus = 730
+                            )
+                            val isOverdue = termine.any { termin ->
+                                val terminStart = getStartOfDay(termin.datum)
+                                terminStart < heuteStart && terminStart != viewDateStart && // Nicht überfällig wenn genau am angezeigten Tag
+                                com.example.we2026_5.util.TerminFilterUtils.sollUeberfaelligAnzeigen(
+                                    terminDatum = termin.datum,
+                                    anzeigeDatum = viewDateStart,
+                                    aktuellesDatum = heuteStart
+                                )
+                            }
+                            isOverdue && !isDone
+                        }
+                        SectionType.DONE -> isDone
+                        else -> false
+                    }
+                } else {
+                    false
+                }
+                
                 // Im CustomerManager: Alle Kunden immer anzeigen (alphabetisch sortiert)
                 val isInCustomerManager = displayedDateMillis == null
                 
                 if (isInListe && !isInCustomerManager) {
-                    // Im TourPlanner: Kunde gehört zu einer Liste - nur anzeigen wenn Liste expanded ist
-                    val listeHeader = prevItem as ListItem.ListeHeader
-                    if (expandedListen.contains(listeHeader.listeId)) {
-                        bindCustomerViewHolder(holder as CustomerViewHolder, item.customer)
-                        holder.itemView.visibility = View.VISIBLE
-                    } else {
-                        holder.itemView.visibility = View.GONE
-                    }
+                    // Im TourPlanner: Kunde gehört zu einer Liste - wird im Container angezeigt, also hier verstecken
+                    // Kunden aus Listen werden nur im Container der CardView angezeigt, nicht als separate Items
+                    holder.itemView.visibility = View.GONE
+                } else if (isInSection && !isInCustomerManager) {
+                    // Kunde gehört tatsächlich zu einem Section - wird in CardView angezeigt, also hier verstecken
+                    holder.itemView.visibility = View.GONE
                 } else {
                     // Im CustomerManager: Alle Kunden immer anzeigen
-                    // Im TourPlanner: Gewerblich-Kunde oder nicht in Liste
+                    // Im TourPlanner: Gewerblich-Kunde oder nicht in Liste/Section
                     if (shouldShowCustomer(item.customer)) {
                         bindCustomerViewHolder(holder as CustomerViewHolder, item.customer)
                         holder.itemView.visibility = View.VISIBLE
@@ -169,28 +237,120 @@ class CustomerAdapter(
 
     private fun bindSectionHeaderViewHolder(holder: SectionHeaderViewHolder, header: ListItem.SectionHeader) {
         holder.binding.tvSectionTitle.text = header.title
-        holder.binding.tvSectionCount.text = "(${header.count})"
+        holder.binding.tvSectionCount.text = "${header.erledigtCount}/${header.count}"
         
         val isExpanded = expandedSections.contains(header.sectionType)
-        holder.binding.ivExpandCollapse.rotation = if (isExpanded) 180f else 0f
+        // Plus/Minus Symbol: + (eingeklappt) / - (ausgeklappt)
+        holder.binding.tvExpandCollapse.text = if (isExpanded) "-" else "+"
         
         // Hintergrund und Textfarbe nach Section-Typ setzen (moderneres Design mit CardView)
         when (header.sectionType) {
             SectionType.OVERDUE -> {
                 holder.binding.cardSectionHeader.setCardBackgroundColor(ContextCompat.getColor(context, R.color.section_overdue_bg))
                 holder.binding.tvSectionTitle.setTextColor(ContextCompat.getColor(context, R.color.section_overdue_text))
-                holder.binding.ivExpandCollapse.setColorFilter(ContextCompat.getColor(context, R.color.section_overdue_text))
+                holder.binding.tvExpandCollapse.setTextColor(ContextCompat.getColor(context, R.color.section_overdue_text))
                 holder.binding.tvSectionCount.setTextColor(ContextCompat.getColor(context, R.color.section_overdue_text))
             }
             SectionType.DONE -> {
                 holder.binding.cardSectionHeader.setCardBackgroundColor(ContextCompat.getColor(context, R.color.section_done_bg))
                 holder.binding.tvSectionTitle.setTextColor(ContextCompat.getColor(context, R.color.section_done_text))
-                holder.binding.ivExpandCollapse.setColorFilter(ContextCompat.getColor(context, R.color.section_done_text))
+                holder.binding.tvExpandCollapse.setTextColor(ContextCompat.getColor(context, R.color.section_done_text))
                 holder.binding.tvSectionCount.setTextColor(ContextCompat.getColor(context, R.color.section_done_text))
             }
             SectionType.LISTE -> {
                 // Wird nicht für SectionHeader verwendet, nur für ListeHeader
             }
+        }
+        
+        // Kunden in den Container einfügen (nur für Tagesansicht, nicht Wochenansicht)
+        if (displayedDateMillis != null && isExpanded) {
+            // Finde alle Kunden, die zu diesem Section gehören
+            val sectionKunden = mutableListOf<Customer>()
+            val headerPosition = items.indexOf(header)
+            // Suche nach Kunden-Items nach diesem Header
+            for (i in (headerPosition + 1) until items.size) {
+                val item = items[i]
+                if (item is ListItem.CustomerItem) {
+                    // Prüfe ob Kunde zu diesem Section gehört
+                    val customer = item.customer
+                    val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
+                    val isOverdue = when (header.sectionType) {
+                        SectionType.OVERDUE -> {
+                            val heuteStart = getStartOfDay(System.currentTimeMillis())
+                            val viewDateStart = displayedDateMillis?.let { getStartOfDay(it) } ?: heuteStart
+                            val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                                customer = customer,
+                                startDatum = heuteStart - java.util.concurrent.TimeUnit.DAYS.toMillis(365),
+                                tageVoraus = 730
+                            )
+                            // WICHTIG: Ein Termin ist nur überfällig, wenn er in der Vergangenheit liegt
+                            // UND nicht genau am angezeigten Tag liegt (dann ist er normal fällig)
+                            termine.any { termin ->
+                                val terminStart = getStartOfDay(termin.datum)
+                                val istUeberfaellig = terminStart < heuteStart // Termin liegt in der Vergangenheit
+                                // WICHTIG: Wenn der Termin genau am angezeigten Tag liegt, ist er NICHT überfällig
+                                if (terminStart == viewDateStart) return@any false
+                                istUeberfaellig && com.example.we2026_5.util.TerminFilterUtils.sollUeberfaelligAnzeigen(
+                                    terminDatum = termin.datum,
+                                    anzeigeDatum = viewDateStart,
+                                    aktuellesDatum = heuteStart
+                                )
+                            }
+                        }
+                        SectionType.DONE -> isDone
+                        else -> false
+                    }
+                    
+                    val belongsToSection = when (header.sectionType) {
+                        SectionType.OVERDUE -> isOverdue && !isDone
+                        SectionType.DONE -> isDone
+                        else -> false
+                    }
+                    
+                    if (belongsToSection) {
+                        sectionKunden.add(customer)
+                    } else {
+                        // Stoppe wenn wir zu einem anderen Section kommen
+                        if (item is ListItem.SectionHeader || item is ListItem.ListeHeader) {
+                            break
+                        }
+                    }
+                } else if (item is ListItem.SectionHeader || item is ListItem.ListeHeader) {
+                    // Stoppe wenn wir zu einem anderen Header kommen
+                    break
+                }
+            }
+            
+            // Kunden-Views in den Container einfügen
+            holder.binding.containerKunden.removeAllViews()
+            sectionKunden.forEachIndexed { index, customer ->
+                val customerBinding = ItemCustomerBinding.inflate(LayoutInflater.from(context))
+                val customerHolder = CustomerViewHolder(customerBinding)
+                bindCustomerViewHolder(customerHolder, customer)
+                
+                // Abstand zwischen Kunden anpassen (dichter zusammen, aber etwas Abstand)
+                val cardView = customerBinding.root as? androidx.cardview.widget.CardView
+                if (cardView != null) {
+                    val layoutParams = cardView.layoutParams as? ViewGroup.MarginLayoutParams
+                        ?: ViewGroup.MarginLayoutParams(
+                            ViewGroup.MarginLayoutParams.MATCH_PARENT,
+                            ViewGroup.MarginLayoutParams.WRAP_CONTENT
+                        )
+                    layoutParams.setMargins(
+                        layoutParams.leftMargin,
+                        if (index == 0) 0 else 4, // Kleiner Abstand oben (außer beim ersten)
+                        layoutParams.rightMargin,
+                        4 // Kleiner Abstand unten
+                    )
+                    cardView.layoutParams = layoutParams
+                }
+                
+                holder.binding.containerKunden.addView(customerBinding.root)
+            }
+            holder.binding.containerKunden.visibility = View.VISIBLE
+        } else {
+            holder.binding.containerKunden.visibility = View.GONE
+            holder.binding.containerKunden.removeAllViews()
         }
         
         // Click-Listener auf das gesamte Item setzen
@@ -203,30 +363,84 @@ class CustomerAdapter(
             toggleSection(header.sectionType)
         }
         
-        // Auch auf den Pfeil klicken können
-        holder.binding.ivExpandCollapse.setOnClickListener {
+        // Auch auf das Plus/Minus Symbol klicken können
+        holder.binding.tvExpandCollapse.setOnClickListener {
             toggleSection(header.sectionType)
         }
     }
     
     private fun bindListeHeaderViewHolder(holder: ListeHeaderViewHolder, header: ListItem.ListeHeader) {
         holder.binding.tvSectionTitle.text = header.listeName
-        holder.binding.tvSectionCount.text = "(${header.kundenCount})"
+        holder.binding.tvSectionCount.text = "${header.erledigtCount}/${header.kundenCount}"
         
         val isExpanded = expandedListen.contains(header.listeId)
-        holder.binding.ivExpandCollapse.rotation = if (isExpanded) 180f else 0f
+        // Plus/Minus Symbol: + (eingeklappt) / - (ausgeklappt)
+        holder.binding.tvExpandCollapse.text = if (isExpanded) "-" else "+"
         
         // Design für Liste-Header (andere Farbe als normale Sections)
         holder.binding.cardSectionHeader.setCardBackgroundColor(ContextCompat.getColor(context, R.color.primary_blue))
         holder.binding.tvSectionTitle.setTextColor(ContextCompat.getColor(context, R.color.white))
-        holder.binding.ivExpandCollapse.setColorFilter(ContextCompat.getColor(context, R.color.white))
+        holder.binding.tvExpandCollapse.setTextColor(ContextCompat.getColor(context, R.color.white))
         holder.binding.tvSectionCount.setTextColor(ContextCompat.getColor(context, R.color.white))
+        
+        // Kunden in den Container einfügen (nur für Tagesansicht, nicht Wochenansicht)
+        if (displayedDateMillis != null && isExpanded) {
+            // Finde alle Kunden, die zu dieser Liste gehören
+            val listeKunden = mutableListOf<Customer>()
+            val headerPosition = items.indexOf(header)
+            // Suche nach Kunden-Items nach diesem Header
+            for (i in (headerPosition + 1) until items.size) {
+                val item = items[i]
+                if (item is ListItem.CustomerItem && item.customer.listeId == header.listeId) {
+                    listeKunden.add(item.customer)
+                } else if (item is ListItem.ListeHeader || item is ListItem.SectionHeader) {
+                    // Stoppe wenn wir zu einem anderen Header kommen
+                    break
+                }
+            }
+            
+            // Kunden-Views in den Container einfügen
+            holder.binding.containerKunden.removeAllViews()
+            listeKunden.forEachIndexed { index, customer ->
+                val customerBinding = ItemCustomerBinding.inflate(LayoutInflater.from(context))
+                val customerHolder = CustomerViewHolder(customerBinding)
+                bindCustomerViewHolder(customerHolder, customer)
+                
+                // Abstand zwischen Kunden anpassen (dichter zusammen, aber etwas Abstand)
+                val cardView = customerBinding.root as? androidx.cardview.widget.CardView
+                if (cardView != null) {
+                    val layoutParams = cardView.layoutParams as? ViewGroup.MarginLayoutParams
+                        ?: ViewGroup.MarginLayoutParams(
+                            ViewGroup.MarginLayoutParams.MATCH_PARENT,
+                            ViewGroup.MarginLayoutParams.WRAP_CONTENT
+                        )
+                    layoutParams.setMargins(
+                        layoutParams.leftMargin,
+                        if (index == 0) 0 else 4, // Kleiner Abstand oben (außer beim ersten)
+                        layoutParams.rightMargin,
+                        4 // Kleiner Abstand unten
+                    )
+                    cardView.layoutParams = layoutParams
+                }
+                
+                holder.binding.containerKunden.addView(customerBinding.root)
+            }
+            holder.binding.containerKunden.visibility = View.VISIBLE
+        } else {
+            holder.binding.containerKunden.visibility = View.GONE
+            holder.binding.containerKunden.removeAllViews()
+        }
         
         holder.itemView.setOnClickListener {
             toggleListe(header.listeId)
         }
         
         holder.binding.tvSectionTitle.setOnClickListener {
+            toggleListe(header.listeId)
+        }
+        
+        // Auch auf das Plus/Minus Symbol klicken können
+        holder.binding.tvExpandCollapse.setOnClickListener {
             toggleListe(header.listeId)
         }
     }
@@ -253,297 +467,30 @@ class CustomerAdapter(
     }
 
     private fun bindCustomerViewHolder(holder: CustomerViewHolder, customer: Customer) {
-        holder.binding.tvItemName.text = customer.name
-        holder.binding.tvItemAdresse.text = customer.adresse
-        
-        // Kunden-Art anzeigen
-        holder.binding.tvItemKundenArt.text = customer.kundenArt
-        holder.binding.tvItemKundenArt.visibility = View.VISIBLE
-        
-        // Telefon anzeigen (wenn vorhanden)
-        if (customer.telefon.isNotBlank()) {
-            holder.binding.tvItemTelefon.text = "📞 ${customer.telefon}"
-            holder.binding.tvItemTelefon.visibility = View.VISIBLE
-        } else {
-            holder.binding.tvItemTelefon.visibility = View.GONE
-        }
-        
-        // Notizen anzeigen (wenn vorhanden)
-        if (customer.notizen.isNotBlank()) {
-            holder.binding.tvItemNotizen.text = "📝 ${customer.notizen}"
-            holder.binding.tvItemNotizen.visibility = View.VISIBLE
-        } else {
-            holder.binding.tvItemNotizen.visibility = View.GONE
-        }
-
-        // Nächstes Tour-Datum berechnen und anzeigen
-        // Verwende getFaelligAm() um sowohl neue (intervalle) als auch alte Struktur zu unterstützen
-        val naechsteTour = customer.getFaelligAm()
-        
-        if (naechsteTour > 0) {
-            val cal = Calendar.getInstance()
-            cal.timeInMillis = naechsteTour
-            val dateStr = "${cal.get(Calendar.DAY_OF_MONTH)}.${cal.get(Calendar.MONTH) + 1}.${cal.get(Calendar.YEAR)}"
-            holder.binding.tvNextTour.text = "Nächste Tour: $dateStr"
-            holder.binding.tvNextTour.visibility = View.VISIBLE
-        } else {
-            // Kein Termin gefunden - zeige entsprechenden Text
-            holder.binding.tvNextTour.text = "Nächste Tour: Kein Termin"
-            holder.binding.tvNextTour.visibility = View.VISIBLE
-        }
-
-        // Navigation-Button anzeigen wenn Adresse vorhanden (immer)
-        holder.binding.btnNavigation.visibility = if (customer.adresse.isNotBlank()) View.VISIBLE else View.GONE
+        // Navigation-Button setzen (bleibt in CustomerAdapter, da startNavigation hier ist)
         holder.binding.btnNavigation.setOnClickListener {
             startNavigation(customer.adresse)
         }
-
-        resetStyles(holder)
-
-        // Status-Styles anwenden wenn im TourPlanner
-        if (displayedDateMillis != null) {
-            applyStatusStyles(holder, customer)
-        } else {
-            holder.binding.tvStatusLabel.visibility = View.GONE
-        }
-
-        // Button-Handler (immer setzen)
-        holder.binding.btnAbholung.setOnClickListener { 
-            pressedButtons[customer.id] = "A"
-            handleAbholung(customer) 
-        }
-        holder.binding.btnAuslieferung.setOnClickListener { 
-            pressedButtons[customer.id] = "L"
-            handleAuslieferung(customer) 
-        }
-        holder.binding.btnVerschieben.setOnClickListener { 
-            pressedButtons[customer.id] = "V"
-            showVerschiebenDialog(customer) 
-        }
-        holder.binding.btnUrlaub.setOnClickListener { 
-            pressedButtons[customer.id] = "U"
-            showUrlaubDialog(customer) 
-        }
-        holder.binding.btnRueckgaengig.setOnClickListener { handleRueckgaengig(customer) }
-
-        // Termin-Klick: Wenn im TourPlanner, öffne Termin-Detail-Dialog
-        // Normale Klicks auf die Card werden nur im CustomerManager verwendet
-        if (displayedDateMillis != null) {
-            // Im TourPlanner: Klick auf Card öffnet Termin-Detail-Dialog
-            holder.itemView.setOnClickListener {
-                if (isMultiSelectMode) {
-                    toggleCustomerSelection(customer.id, holder)
-                } else {
-                    // Berechne das aktuelle Termin-Datum für diesen Kunden
-                    val terminDatum = if (customer.verschobenAufDatum > 0) {
-                        customer.verschobenAufDatum
-                    } else {
-                        // Berechne fälliges Datum basierend auf Customer-Daten
-                        customer.getFaelligAm()
-                    }
-                    onTerminClick?.invoke(customer, terminDatum)
-                }
-            }
-        } else {
-            // Im CustomerManager: Normaler Click öffnet CustomerDetailActivity
-            holder.itemView.setOnClickListener {
-                if (isMultiSelectMode) {
-                    toggleCustomerSelection(customer.id, holder)
-                } else {
-                    onClick(customer)
-                }
-            }
-        }
         
-        // Long-Press für Multi-Select aktivieren
-        holder.itemView.setOnLongClickListener {
-            if (!isMultiSelectMode) {
-                enableMultiSelectMode()
-                toggleCustomerSelection(customer.id, holder)
-            }
-            true
-        }
-        
-        // Multi-Select Visualisierung
-        if (isMultiSelectMode) {
-            holder.binding.itemContainer.alpha = if (selectedCustomers.contains(customer.id)) 0.7f else 1.0f
-            holder.binding.itemContainer.setBackgroundColor(
-                if (selectedCustomers.contains(customer.id)) 
-                    ContextCompat.getColor(context, R.color.primary_blue_light)
-                else 
-                    Color.WHITE
-            )
-        } else {
-            holder.binding.itemContainer.alpha = 1.0f
-            resetStyles(holder)
-        }
-        
-        // WICHTIG: Buttons-Sichtbarkeit und -Farben am ENDE setzen, damit sie nicht überschrieben werden
-        // Im TourPlanner: Buttons für ALLE nicht-erledigten Kunden anzeigen
-        val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-        if (displayedDateMillis != null) {
-            val heuteStart = getStartOfDay(System.currentTimeMillis())
-            val viewDateStart = displayedDateMillis?.let { 
-                com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(it) 
-            } ?: com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-            
-            // Im TourPlanner: Buttons anzeigen mit Farben basierend auf Status
-            val activeColor = ContextCompat.getColor(context, R.color.button_active) // Orange
-            val inactiveColor = ContextCompat.getColor(context, R.color.button_inactive) // Grau
-            
-            // Prüfe welche Buttons gedrückt wurden
-            val pressedButton = pressedButtons[customer.id]
-            
-            // A (Abholung): Prüfe ob am angezeigten Tag ein Abholungstermin fällig ist ODER überfällig
-            val abholungDatumHeute = getAbholungDatum?.invoke(customer) ?: 0L
-            val hatAbholungHeute = abholungDatumHeute > 0
-            
-            // Prüfe ob es einen überfälligen Abholungstermin gibt, der am angezeigten Tag sichtbar sein soll
-            val hatUeberfaelligeAbholung = if (!customer.abholungErfolgt) {
-                val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                    customer = customer,
-                    startDatum = heuteStart - java.util.concurrent.TimeUnit.DAYS.toMillis(365),
-                    tageVoraus = 730
-                )
-                termine.any { termin ->
-                    termin.typ == com.example.we2026_5.TerminTyp.ABHOLUNG &&
-                    com.example.we2026_5.util.TerminBerechnungUtils.istUeberfaellig(termin.datum, heuteStart, customer.abholungErfolgt) &&
-                    com.example.we2026_5.util.TerminBerechnungUtils.sollUeberfaelligAnzeigen(termin.datum, viewDateStart, heuteStart)
-                }
-            } else {
-                false
-            }
-            
-            // A-Button anzeigen wenn: Termin heute fällig ODER überfällig und am angezeigten Tag sichtbar
-            val sollAButtonAnzeigen = (hatAbholungHeute || hatUeberfaelligeAbholung) && !isDone
-            // Button ist aktiv wenn: Am tatsächlichen Termin-Tag ODER bei überfälligen Terminen (damit man erledigen kann)
-            val aButtonAktiv = (hatAbholungHeute || hatUeberfaelligeAbholung) && !customer.abholungErfolgt
-            // Am tatsächlichen Abholungstermin-Tag (nicht überfällig)
-            val istAmTatsaechlichenAbholungTag = hatAbholungHeute && !hatUeberfaelligeAbholung
-            
-            holder.binding.btnAbholung.visibility = if (sollAButtonAnzeigen) View.VISIBLE else View.GONE
-            // A-Button: Grüner Hintergrund wenn nicht geklickt, grauer Hintergrund wenn geklickt
-            if (pressedButton == "A") {
-                // Button wurde geklickt: Grauer Hintergrund, Text bleibt weiß
-                holder.binding.btnAbholung.background = ContextCompat.getDrawable(context, R.drawable.button_gray)
-                holder.binding.btnAbholung.setTextColor(ContextCompat.getColor(context, R.color.white))
-            } else {
-                // Button nicht geklickt: Grüner Hintergrund
-                // Am tatsächlichen Termin-Tag: Voll sichtbar, bei überfälligen: auch aktiv aber ggf. etwas transparenter
-                holder.binding.btnAbholung.background = ContextCompat.getDrawable(context, R.drawable.button_a_l)
-                if (istAmTatsaechlichenAbholungTag) {
-                    // Am tatsächlichen Termin-Tag: Voll sichtbar
-                    holder.binding.btnAbholung.setTextColor(ContextCompat.getColor(context, R.color.white))
-                    holder.binding.btnAbholung.alpha = 1.0f
-                } else if (hatUeberfaelligeAbholung) {
-                    // Bei überfälligen Terminen: Auch aktiv, aber leicht transparenter um zu zeigen dass es überfällig ist
-                    holder.binding.btnAbholung.setTextColor(ContextCompat.getColor(context, R.color.white))
-                    holder.binding.btnAbholung.alpha = 0.9f
-                } else {
-                    // Inaktiver Zustand (sollte nicht vorkommen wenn Button angezeigt wird)
-                    holder.binding.btnAbholung.setTextColor(ContextCompat.getColor(context, R.color.white).let { Color.argb(128, Color.red(it), Color.green(it), Color.blue(it)) })
-                    holder.binding.btnAbholung.alpha = 1.0f
-                }
-            }
-            
-            // L (Auslieferung): Prüfe ob am angezeigten Tag ein Auslieferungstermin fällig ist ODER überfällig
-            val auslieferungDatumHeute = getAuslieferungDatum?.invoke(customer) ?: 0L
-            val hatAuslieferungHeute = auslieferungDatumHeute > 0
-            
-            // Prüfe ob es einen überfälligen Auslieferungstermin gibt, der am angezeigten Tag sichtbar sein soll
-            val hatUeberfaelligeAuslieferung = if (!customer.auslieferungErfolgt) {
-                val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                    customer = customer,
-                    startDatum = heuteStart - java.util.concurrent.TimeUnit.DAYS.toMillis(365),
-                    tageVoraus = 730
-                )
-                termine.any { termin ->
-                    termin.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG &&
-                    com.example.we2026_5.util.TerminBerechnungUtils.istUeberfaellig(termin.datum, heuteStart, customer.auslieferungErfolgt) &&
-                    com.example.we2026_5.util.TerminBerechnungUtils.sollUeberfaelligAnzeigen(termin.datum, viewDateStart, heuteStart)
-                }
-            } else {
-                false
-            }
-            
-            // L-Button anzeigen wenn: Termin heute fällig ODER überfällig und am angezeigten Tag sichtbar
-            val sollLButtonAnzeigen = (hatAuslieferungHeute || hatUeberfaelligeAuslieferung) && !isDone
-            // Button ist aktiv wenn: Am tatsächlichen Termin-Tag ODER bei überfälligen Terminen (damit man erledigen kann)
-            val lButtonAktiv = (hatAuslieferungHeute || hatUeberfaelligeAuslieferung) && !customer.auslieferungErfolgt
-            // Am tatsächlichen Auslieferungstermin-Tag (nicht überfällig)
-            val istAmTatsaechlichenAuslieferungTag = hatAuslieferungHeute && !hatUeberfaelligeAuslieferung
-            
-            holder.binding.btnAuslieferung.visibility = if (sollLButtonAnzeigen) View.VISIBLE else View.GONE
-            // L-Button: Grüner Hintergrund wenn nicht geklickt, grauer Hintergrund wenn geklickt
-            if (pressedButton == "L") {
-                // Button wurde geklickt: Grauer Hintergrund, Text bleibt weiß
-                holder.binding.btnAuslieferung.background = ContextCompat.getDrawable(context, R.drawable.button_gray)
-                holder.binding.btnAuslieferung.setTextColor(ContextCompat.getColor(context, R.color.white))
-            } else {
-                // Button nicht geklickt: Grüner Hintergrund
-                // Am tatsächlichen Termin-Tag: Voll sichtbar, bei überfälligen: auch aktiv aber ggf. etwas transparenter
-                holder.binding.btnAuslieferung.background = ContextCompat.getDrawable(context, R.drawable.button_a_l)
-                if (istAmTatsaechlichenAuslieferungTag) {
-                    // Am tatsächlichen Termin-Tag: Voll sichtbar
-                    holder.binding.btnAuslieferung.setTextColor(ContextCompat.getColor(context, R.color.white))
-                    holder.binding.btnAuslieferung.alpha = 1.0f
-                } else if (hatUeberfaelligeAuslieferung) {
-                    // Bei überfälligen Terminen: Auch aktiv, aber leicht transparenter um zu zeigen dass es überfällig ist
-                    holder.binding.btnAuslieferung.setTextColor(ContextCompat.getColor(context, R.color.white))
-                    holder.binding.btnAuslieferung.alpha = 0.9f
-                } else {
-                    // Inaktiver Zustand (sollte nicht vorkommen wenn Button angezeigt wird)
-                    holder.binding.btnAuslieferung.setTextColor(ContextCompat.getColor(context, R.color.white).let { Color.argb(128, Color.red(it), Color.green(it), Color.blue(it)) })
-                    holder.binding.btnAuslieferung.alpha = 1.0f
-                }
-            }
-            
-            // V (Verschieben): Aktiv wenn verschobenAufDatum > 0 ODER verschobeneTermine vorhanden
-            // Prüfe ob am angezeigten Tag ein verschobener Termin vorhanden ist
-            val hatVerschobenenTerminHeute = customer.verschobeneTermine.any { verschoben ->
-                val originalStart = com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(verschoben.originalDatum)
-                val verschobenStart = com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(verschoben.verschobenAufDatum)
-                originalStart == viewDateStart || verschobenStart == viewDateStart
-            }
-            val vButtonAktiv = customer.verschobenAufDatum > 0 || hatVerschobenenTerminHeute
-            
-            holder.binding.btnVerschieben.visibility = if (!isDone && vButtonAktiv) View.VISIBLE else View.GONE
-            // V-Button: Immer hellroter Hintergrund
-            holder.binding.btnVerschieben.background = ContextCompat.getDrawable(context, R.drawable.button_v)
-            // Textfarbe: Weiß wenn aktiv, sonst etwas transparenter
-            holder.binding.btnVerschieben.setTextColor(if (vButtonAktiv) ContextCompat.getColor(context, R.color.white) else ContextCompat.getColor(context, R.color.white).let { Color.argb(128, Color.red(it), Color.green(it), Color.blue(it)) })
-            
-            // U (Urlaub): Aktiv wenn urlaubVon > 0 und urlaubBis > 0 UND ein Termin am angezeigten Tag im Urlaub liegt
-            val hatTerminImUrlaub = if (customer.urlaubVon > 0 && customer.urlaubBis > 0) {
-                val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                    customer = customer,
-                    startDatum = viewDateStart - java.util.concurrent.TimeUnit.DAYS.toMillis(1),
-                    tageVoraus = 2
-                )
-                termine.any { termin ->
-                    com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(termin.datum) == viewDateStart &&
-                    com.example.we2026_5.util.TerminBerechnungUtils.istTerminImUrlaub(termin.datum, customer.urlaubVon, customer.urlaubBis)
-                }
-            } else {
-                false
-            }
-            val uButtonAktiv = customer.urlaubVon > 0 && customer.urlaubBis > 0 && hatTerminImUrlaub
-            
-            holder.binding.btnUrlaub.visibility = if (!isDone && uButtonAktiv) View.VISIBLE else View.GONE
-            // U-Button: Immer oranger Hintergrund
-            holder.binding.btnUrlaub.background = ContextCompat.getDrawable(context, R.drawable.button_u)
-            // Textfarbe: Weiß wenn aktiv, sonst etwas transparenter
-            holder.binding.btnUrlaub.setTextColor(if (uButtonAktiv) ContextCompat.getColor(context, R.color.white) else ContextCompat.getColor(context, R.color.white).let { Color.argb(128, Color.red(it), Color.green(it), Color.blue(it)) })
-            
-            holder.binding.btnRueckgaengig.visibility = if (isDone) View.VISIBLE else View.GONE
-        } else {
-            // In CustomerManager: Buttons ausblenden
-            holder.binding.btnAbholung.visibility = View.GONE
-            holder.binding.btnAuslieferung.visibility = View.GONE
-            holder.binding.btnVerschieben.visibility = View.GONE
-            holder.binding.btnUrlaub.visibility = View.GONE
-            holder.binding.btnRueckgaengig.visibility = View.GONE
-        }
+        // Verwende den ViewHolder-Binder für den Rest
+        // Aktualisiere den Binder mit aktuellen Werten (da lazy init nur einmal ausgeführt wird)
+        val binder = CustomerViewHolderBinder(
+            context = context,
+            displayedDateMillis = displayedDateMillis,
+            pressedButtons = pressedButtons,
+            selectedCustomers = selectedCustomers,
+            isMultiSelectMode = isMultiSelectMode,
+            getAbholungDatum = getAbholungDatum,
+            getAuslieferungDatum = getAuslieferungDatum,
+            onTerminClick = onTerminClick,
+            onClick = onClick,
+            dialogHelper = dialogHelper,
+            onAbholung = { customer -> handleAbholung(customer) },
+            onAuslieferung = { customer -> handleAuslieferung(customer) },
+            enableMultiSelectMode = { enableMultiSelectMode() },
+            toggleCustomerSelection = { customerId, holder -> toggleCustomerSelection(customerId, holder) }
+        )
+        binder.bind(holder, customer)
     }
     
     fun enableMultiSelectMode() {
@@ -588,90 +535,11 @@ class CustomerAdapter(
         }
     }
 
-    private fun resetStyles(holder: CustomerViewHolder) {
-        holder.binding.itemContainer.alpha = 1.0f
-        holder.binding.tvItemName.setTextColor(Color.BLACK)
-        holder.binding.tvItemName.setTypeface(null, Typeface.NORMAL)
-        holder.binding.itemContainer.setBackgroundColor(Color.WHITE)
-    }
-
-    private fun applyStatusStyles(holder: CustomerViewHolder, customer: Customer) {
-        holder.binding.tvStatusLabel.visibility = View.VISIBLE
-        holder.binding.tvStatusLabel.setTextColor(Color.WHITE)
-
-        val heuteStart = com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-        val viewDateStart = displayedDateMillis?.let { 
-            com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(it) 
-        } ?: heuteStart
-
-        // WICHTIG: Überfällige Termine nicht in der Zukunft anzeigen
-        if (viewDateStart > heuteStart) {
-            // In der Zukunft: Keine überfälligen Termine anzeigen
-            holder.binding.tvStatusLabel.visibility = View.GONE
-            return
-        }
-
-        val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-        
-        // NEUE STRUKTUR: Verwende TerminBerechnungUtils für korrekte Überfällig-Prüfung
-        val istUeberfaellig = if (customer.intervalle.isNotEmpty()) {
-            val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                customer = customer,
-                startDatum = heuteStart - TimeUnit.DAYS.toMillis(365),
-                tageVoraus = 730
-            )
-            termine.any { termin ->
-                com.example.we2026_5.util.TerminBerechnungUtils.istUeberfaellig(
-                    terminDatum = termin.datum,
-                    aktuellesDatum = heuteStart,
-                    erledigt = false
-                ) && com.example.we2026_5.util.TerminBerechnungUtils.sollUeberfaelligAnzeigen(
-                    terminDatum = termin.datum,
-                    anzeigeDatum = viewDateStart,
-                    aktuellesDatum = heuteStart
-                )
-            }
-        } else {
-            // ALTE STRUKTUR: Rückwärtskompatibilität
-            val faelligAm = if (customer.verschobenAufDatum > 0) customer.verschobenAufDatum else customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
-            !isDone && faelligAm < heuteStart && faelligAm > 0 && viewDateStart >= faelligAm && viewDateStart <= heuteStart
-        }
-        
-        val showAsOverdue = istUeberfaellig && !isDone
-
-        when {
-            isDone -> {
-                holder.binding.tvStatusLabel.text = "ERLEDIGT"
-                holder.binding.tvStatusLabel.setBackgroundResource(R.drawable.status_badge_done)
-                holder.binding.tvStatusLabel.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white))
-                holder.binding.itemContainer.setBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.light_gray))
-                holder.binding.itemContainer.alpha = 0.6f
-            }
-            showAsOverdue -> {
-                holder.binding.tvStatusLabel.text = "ÜBERFÄLLIG"
-                holder.binding.tvStatusLabel.setBackgroundResource(R.drawable.status_badge_overdue)
-                holder.binding.tvStatusLabel.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white))
-                holder.binding.tvItemName.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.status_overdue))
-                holder.binding.tvItemName.setTypeface(null, Typeface.BOLD)
-            }
-            customer.verschobenAufDatum > 0 -> {
-                holder.binding.tvStatusLabel.text = "VERSCHOBEN"
-                holder.binding.tvStatusLabel.setBackgroundResource(R.drawable.status_badge_verschoben)
-                holder.binding.tvStatusLabel.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white))
-            }
-            else -> holder.binding.tvStatusLabel.visibility = View.GONE
-        }
-    }
 
     override fun getItemCount() = items.size
 
     fun updateData(newList: List<ListItem>, date: Long? = null) {
-        // Alle Listen standardmäßig expanded machen
-        newList.forEach { item ->
-            if (item is ListItem.ListeHeader) {
-                expandedListen.add(item.listeId)
-            }
-        }
+        // Listen bleiben standardmäßig eingeklappt (collapsed)
         items = newList.toMutableList()
         displayedDateMillis = date
         notifyDataSetChanged()
@@ -753,100 +621,4 @@ class CustomerAdapter(
         onResetTourCycle?.invoke(customerId)
     }
 
-    private fun showVerschiebenDialog(customer: Customer) {
-        val cal = Calendar.getInstance()
-        DatePickerDialog(context, { _, year, month, dayOfMonth ->
-            val picked = Calendar.getInstance().apply { set(year, month, dayOfMonth, 0, 0, 0) }
-            val newDate = picked.timeInMillis
-            
-            // Dialog: Nur diesen Termin oder alle restlichen Termine verschieben?
-            AlertDialog.Builder(context)
-                .setTitle("Termin verschieben")
-                .setMessage("Wie möchten Sie vorgehen?")
-                .setPositiveButton("Nur diesen Termin") { _, _ ->
-                    // Nur diesen Termin verschieben
-                    onVerschieben?.invoke(customer, newDate, false)
-                    // Button-Zustand zurücksetzen nach Aktion
-                    pressedButtons.remove(customer.id)
-                    val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customer.id }
-                    if (position != -1) notifyItemChanged(position)
-                }
-                .setNeutralButton("Alle zukünftigen Termine") { _, _ ->
-                    // Alle zukünftigen Termine verschieben
-                    onVerschieben?.invoke(customer, newDate, true)
-                    pressedButtons.remove(customer.id)
-                    val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customer.id }
-                    if (position != -1) notifyItemChanged(position)
-                }
-                .setNegativeButton("Abbrechen") { _, _ ->
-                    // Bei Abbrechen: Button-Zustand zurücksetzen
-                    pressedButtons.remove(customer.id)
-                    val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customer.id }
-                    if (position != -1) notifyItemChanged(position)
-                }
-                .show()
-        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
-    }
-
-    private fun handleRueckgaengig(customer: Customer) {
-        if (!customer.abholungErfolgt && !customer.auslieferungErfolgt) return
-        
-        AlertDialog.Builder(context)
-            .setTitle("Rückgängig machen")
-            .setMessage("Möchten Sie die Erledigung wirklich rückgängig machen?")
-            .setPositiveButton("Ja") { _, _ ->
-                onRueckgaengig?.invoke(customer)
-            }
-            .setNegativeButton("Abbrechen", null)
-            .show()
-    }
-
-    private fun showUrlaubDialog(customer: Customer) {
-        val cal = Calendar.getInstance()
-        var urlaubVon: Long = 0
-
-        val dateSetListenerVon = DatePickerDialog.OnDateSetListener { _, year, month, day ->
-            val pickedVon = Calendar.getInstance().apply { set(year, month, day, 0, 0, 0) }
-            urlaubVon = pickedVon.timeInMillis
-
-            val dateSetListenerBis = DatePickerDialog.OnDateSetListener { _, y, m, d ->
-                val pickedBis = Calendar.getInstance().apply { set(y, m, d, 23, 59, 59) }
-                if (pickedBis.timeInMillis >= urlaubVon) {
-                    onUrlaub?.invoke(customer, urlaubVon, pickedBis.timeInMillis)
-                    // Button-Zustand zurücksetzen nach Aktion
-                    pressedButtons.remove(customer.id)
-                    val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customer.id }
-                    if (position != -1) notifyItemChanged(position)
-                } else {
-                    Toast.makeText(context, "Enddatum muss nach Startdatum sein!", Toast.LENGTH_SHORT).show()
-                    // Bei Fehler: Button-Zustand zurücksetzen
-                    pressedButtons.remove(customer.id)
-                    val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customer.id }
-                    if (position != -1) notifyItemChanged(position)
-                }
-            }
-
-            DatePickerDialog(context, dateSetListenerBis, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).apply {
-                setTitle("Urlaub bis")
-                setOnCancelListener {
-                    // Bei Abbrechen: Button-Zustand zurücksetzen
-                    pressedButtons.remove(customer.id)
-                    val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customer.id }
-                    if (position != -1) notifyItemChanged(position)
-                }
-                show()
-            }
-        }
-
-            DatePickerDialog(context, dateSetListenerVon, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).apply {
-                setTitle("Urlaub von")
-                setOnCancelListener {
-                    // Bei Abbrechen: Button-Zustand zurücksetzen
-                    pressedButtons.remove(customer.id)
-                    val position = items.indexOfFirst { it is ListItem.CustomerItem && it.customer.id == customer.id }
-                    if (position != -1) notifyItemChanged(position)
-                }
-                show()
-            }
-        }
     }

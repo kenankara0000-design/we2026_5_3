@@ -18,6 +18,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.databinding.ActivityTourPlannerBinding
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
+import com.example.we2026_5.tourplanner.TourPlannerDialogHelper
+import com.example.we2026_5.tourplanner.TourPlannerDateUtils
+import com.example.we2026_5.tourplanner.TourPlannerCallbackHandler
 import com.example.we2026_5.FirebaseRetryHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,12 +44,33 @@ class TourPlannerActivity : AppCompatActivity() {
     private lateinit var gestureDetector: GestureDetectorCompat
     private lateinit var networkMonitor: NetworkMonitor
     private var pressedHeaderButton: String? = null // "Karte", "Heute", "Woche"
+    
+    // Helper-Klassen
+    private lateinit var dialogHelper: TourPlannerDialogHelper
+    private lateinit var dateUtils: TourPlannerDateUtils
+    private lateinit var callbackHandler: TourPlannerCallbackHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTourPlannerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        // Helper initialisieren
+        dateUtils = TourPlannerDateUtils(listeRepository)
+        dialogHelper = TourPlannerDialogHelper(
+            activity = this,
+            onKundeAnzeigen = { customer ->
+                val intent = Intent(this, CustomerDetailActivity::class.java).apply {
+                    putExtra("CUSTOMER_ID", customer.id)
+                }
+                startActivity(intent)
+            },
+            onTerminLoeschen = { customer, terminDatum ->
+                loescheEinzelnenTermin(customer, terminDatum)
+            }
+        )
 
+        // Adapter ZUERST initialisieren (wird von callbackHandler benötigt)
         adapter = CustomerAdapter(
             items = mutableListOf(),
             context = this,
@@ -58,7 +82,7 @@ class TourPlannerActivity : AppCompatActivity() {
             }
         )
         
-        // Callbacks für Firebase-Operationen setzen
+        // Callbacks für Firebase-Operationen setzen (initialisiert auch callbackHandler)
         setupAdapterCallbacks()
 
         binding.rvTourList.layoutManager = LinearLayoutManager(this)
@@ -176,7 +200,7 @@ class TourPlannerActivity : AppCompatActivity() {
             } else {
                 // Tagesansicht: Datum aktualisieren und Daten neu laden
                 // Explizit loadTourData aufrufen, um sicherzustellen, dass Daten geladen werden
-                val heuteTimestamp = getStartOfDay(heuteStart.timeInMillis)
+                val heuteTimestamp = dateUtils.getStartOfDay(heuteStart.timeInMillis)
                 loadTourData(heuteTimestamp)
                 updateDisplay()
                 updateTodayButtonState()
@@ -279,7 +303,7 @@ class TourPlannerActivity : AppCompatActivity() {
         // Tour-Items beobachten (Tagesansicht)
         viewModel.tourItems.observe(this) { items ->
             if (!isWeekView) {
-                adapter.updateData(items, getStartOfDay(viewDate.timeInMillis))
+                adapter.updateData(items, dateUtils.getStartOfDay(viewDate.timeInMillis))
                 
                 // Empty State anzeigen wenn keine Kunden vorhanden
                 if (items.isEmpty()) {
@@ -489,254 +513,32 @@ class TourPlannerActivity : AppCompatActivity() {
     }
     
     private fun setupAdapterCallbacksForAdapter(adapter: CustomerAdapter) {
-        // Abholung
-        adapter.onAbholung = { customer ->
-            if (!customer.abholungErfolgt) {
-                CoroutineScope(Dispatchers.Main).launch {
-                    val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                        operation = { 
-                            repository.updateCustomer(customer.id, mapOf("abholungErfolgt" to true))
-                        },
-                        context = this@TourPlannerActivity,
-                        errorMessage = "Fehler beim Registrieren der Abholung. Bitte erneut versuchen.",
-                        maxRetries = 3
-                    )
-                    if (success == true) {
-                        android.widget.Toast.makeText(this@TourPlannerActivity, "Abholung registriert", android.widget.Toast.LENGTH_SHORT).show()
-                        // Daten werden automatisch durch Echtzeit-Listener aktualisiert
-                        // WICHTIG: reloadCurrentView() NACH clearPressedButtons() aufrufen, damit Button-Zustand erhalten bleibt
-                        // Button-Zustand erst nach längerer Verzögerung zurücksetzen, damit visuelle Änderung sichtbar bleibt
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            adapter.clearPressedButtons()
-                            // Nach dem Zurücksetzen des Button-Zustands die View neu laden
-                            reloadCurrentView() // Für Kompatibilität (wird durch Echtzeit-Listener automatisch aktualisiert)
-                        }, 2000) // 2 Sekunden Verzögerung, damit visuelle Änderung deutlich sichtbar bleibt
-                    }
-                }
-            }
-        }
-        
-        // Auslieferung
-        adapter.onAuslieferung = { customer ->
-            if (!customer.auslieferungErfolgt) {
-                val wasAbholungErfolgt = customer.abholungErfolgt
-                CoroutineScope(Dispatchers.Main).launch {
-                    val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                        operation = { 
-                            repository.updateCustomer(customer.id, mapOf("auslieferungErfolgt" to true))
-                        },
-                        context = this@TourPlannerActivity,
-                        errorMessage = "Fehler beim Registrieren der Auslieferung. Bitte erneut versuchen.",
-                        maxRetries = 3
-                    )
-                    if (success == true) {
-                        android.widget.Toast.makeText(this@TourPlannerActivity, "Auslieferung registriert", android.widget.Toast.LENGTH_SHORT).show()
-                        // Daten werden automatisch durch Echtzeit-Listener aktualisiert
-                        // WICHTIG: reloadCurrentView() NACH clearPressedButtons() aufrufen, damit Button-Zustand erhalten bleibt
-                        // Button-Zustand erst nach längerer Verzögerung zurücksetzen, damit visuelle Änderung sichtbar bleibt
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            adapter.clearPressedButtons()
-                            // Nach dem Zurücksetzen des Button-Zustands die View neu laden
-                            if (wasAbholungErfolgt) {
-                                resetTourCycle(customer.id)
-                            } else {
-                                reloadCurrentView() // Für Kompatibilität (wird durch Echtzeit-Listener automatisch aktualisiert)
-                            }
-                        }, 2000) // 2 Sekunden Verzögerung, damit visuelle Änderung deutlich sichtbar bleibt
-                    }
-                }
-            }
-        }
-        
-        // Tour-Zyklus zurücksetzen
-        adapter.onResetTourCycle = { customerId ->
-            resetTourCycle(customerId)
-        }
-        
-        // Verschieben
-        adapter.onVerschieben = { customer, newDate, alleVerschieben ->
-            CoroutineScope(Dispatchers.Main).launch {
-                val success = if (alleVerschieben) {
-                    // Alle zukünftigen Termine verschieben
-                    val aktuellerFaelligAm = if (customer.verschobenAufDatum > 0) customer.verschobenAufDatum
-                                             else customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
-                    val diff = newDate - aktuellerFaelligAm
-                    val neuerLetzterTermin = customer.letzterTermin + diff
-                    FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                        operation = { 
-                            repository.updateCustomer(customer.id, mapOf(
-                                "letzterTermin" to neuerLetzterTermin,
-                                "verschobenAufDatum" to 0
-                            ))
-                        },
-                        context = this@TourPlannerActivity,
-                        errorMessage = "Fehler beim Verschieben. Bitte erneut versuchen.",
-                        maxRetries = 3
-                    )
-                } else {
-                    // Nur diesen Termin verschieben
-                    FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                        operation = { 
-                            repository.updateCustomer(customer.id, mapOf("verschobenAufDatum" to newDate))
-                        },
-                        context = this@TourPlannerActivity,
-                        errorMessage = "Fehler beim Verschieben. Bitte erneut versuchen.",
-                        maxRetries = 3
-                    )
-                }
-                if (success == true) {
-                    android.widget.Toast.makeText(this@TourPlannerActivity, 
-                        if (alleVerschieben) "Alle zukünftigen Termine verschoben" else "Termin verschoben", 
-                        android.widget.Toast.LENGTH_SHORT).show()
-                    // Daten werden automatisch durch Echtzeit-Listener aktualisiert
-                    // WICHTIG: reloadCurrentView() NACH clearPressedButtons() aufrufen, damit Button-Zustand erhalten bleibt
-                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                        adapter.clearPressedButtons()
-                        reloadCurrentView() // Für Kompatibilität (wird durch Echtzeit-Listener automatisch aktualisiert)
-                    }, 2000) // 2 Sekunden Verzögerung, damit visuelle Änderung deutlich sichtbar bleibt
-                }
-            }
-        }
-        
-        // Urlaub
-        adapter.onUrlaub = { customer, von, bis ->
-            CoroutineScope(Dispatchers.Main).launch {
-                val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                    operation = { 
-                        repository.updateCustomer(customer.id, mapOf(
-                            "urlaubVon" to von, 
-                            "urlaubBis" to bis
-                        ))
-                    },
-                    context = this@TourPlannerActivity,
-                    errorMessage = "Fehler beim Eintragen des Urlaubs. Bitte erneut versuchen.",
-                    maxRetries = 3
-                )
-                if (success == true) {
-                    android.widget.Toast.makeText(this@TourPlannerActivity, "Urlaub eingetragen", android.widget.Toast.LENGTH_SHORT).show()
-                    // Daten werden automatisch durch Echtzeit-Listener aktualisiert
-                    // WICHTIG: reloadCurrentView() NACH clearPressedButtons() aufrufen, damit Button-Zustand erhalten bleibt
-                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                        adapter.clearPressedButtons()
-                        reloadCurrentView() // Für Kompatibilität (wird durch Echtzeit-Listener automatisch aktualisiert)
-                    }, 2000) // 2 Sekunden Verzögerung, damit visuelle Änderung deutlich sichtbar bleibt
-                }
-            }
-        }
-        
-        // Rückgängig
-        adapter.onRueckgaengig = { customer ->
-            val updates = mutableMapOf<String, Any>()
-            if (customer.abholungErfolgt) updates["abholungErfolgt"] = false
-            if (customer.auslieferungErfolgt) updates["auslieferungErfolgt"] = false
-            
-            CoroutineScope(Dispatchers.Main).launch {
-                val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                    operation = { 
-                        repository.updateCustomer(customer.id, updates)
-                    },
-                    context = this@TourPlannerActivity,
-                    errorMessage = "Fehler beim Rückgängigmachen. Bitte erneut versuchen.",
-                    maxRetries = 3
-                )
-                if (success == true) {
-                    android.widget.Toast.makeText(this@TourPlannerActivity, "Rückgängig gemacht", android.widget.Toast.LENGTH_SHORT).show()
-                    // Daten werden automatisch durch Echtzeit-Listener aktualisiert
-                    reloadCurrentView() // Für Kompatibilität (wird durch Echtzeit-Listener automatisch aktualisiert)
-                }
-            }
-        }
+        // Aktualisiere CallbackHandler mit neuem Adapter
+        callbackHandler = TourPlannerCallbackHandler(
+            context = this,
+            repository = repository,
+            dateUtils = dateUtils,
+            viewDate = viewDate,
+            adapter = adapter,
+            reloadCurrentView = { reloadCurrentView() },
+            resetTourCycle = { customerId -> resetTourCycle(customerId) }
+        )
+        callbackHandler.setupCallbacks()
         
         // Termin-Klick: Öffne Termin-Detail-Dialog
         adapter.onTerminClick = { customer, terminDatum ->
-            showTerminDetailDialog(customer, terminDatum)
-        }
-        
-        // Callbacks für Datum-Berechnung (für A/L Button-Aktivierung)
-        adapter.getAbholungDatum = { customer ->
-            // Berechne Abholungsdatum für den angezeigten Tag
-            val viewDateStart = getStartOfDay(viewDate.timeInMillis)
-            calculateAbholungDatum(customer, viewDateStart)
-        }
-        
-        adapter.getAuslieferungDatum = { customer ->
-            // Berechne Auslieferungsdatum für den angezeigten Tag
-            val viewDateStart = getStartOfDay(viewDate.timeInMillis)
-            calculateAuslieferungDatum(customer, viewDateStart)
+            dialogHelper.showTerminDetailDialog(customer, terminDatum)
         }
     }
     
+    // Alle Callback-Funktionen entfernt - jetzt in TourPlannerCallbackHandler
+    
     private fun calculateAbholungDatum(customer: Customer, viewDateStart: Long): Long {
-        // NEUE STRUKTUR: Verwende Intervalle-Liste wenn vorhanden
-        if (customer.intervalle.isNotEmpty()) {
-            val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                customer = customer,
-                startDatum = viewDateStart - java.util.concurrent.TimeUnit.DAYS.toMillis(1),
-                tageVoraus = 2 // Nur 2 Tage (gestern, heute, morgen)
-            )
-            // Prüfe ob am angezeigten Tag ein Abholungstermin vorhanden ist
-            return termine.firstOrNull { 
-                it.typ == com.example.we2026_5.TerminTyp.ABHOLUNG &&
-                com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart
-            }?.datum ?: 0L
-        }
-        
-        // Für Listen-Kunden: Prüfe ob heute ein Abholungstag ist
-        if (customer.listeId.isNotEmpty()) {
-            // Lade Liste synchron (vereinfacht - könnte verbessert werden)
-            var liste: com.example.we2026_5.KundenListe? = null
-            kotlinx.coroutines.runBlocking {
-                liste = listeRepository.getListeById(customer.listeId)
-            }
-            
-            if (liste != null) {
-                // Prüfe alle Intervalle der Liste
-                liste!!.intervalle.forEach { intervall ->
-                    val abholungStart = getStartOfDay(intervall.abholungDatum)
-                    
-                    if (!intervall.wiederholen) {
-                        // Einmaliges Intervall: Prüfe ob Abholungsdatum heute fällig ist
-                        if (abholungStart == viewDateStart) {
-                            return intervall.abholungDatum
-                        }
-                    } else {
-                        // Wiederholendes Intervall: Berechne korrektes Datum
-                        val intervallTage = intervall.intervallTage.coerceIn(1, 365)
-                        val intervallTageLong = intervallTage.toLong()
-                        
-                        if (viewDateStart >= abholungStart) {
-                            val tageSeitAbholung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(viewDateStart - abholungStart)
-                            // Berechne Zyklus und erwartetes Datum
-                            val zyklus = tageSeitAbholung / intervallTageLong
-                            val erwartetesDatum = abholungStart + java.util.concurrent.TimeUnit.DAYS.toMillis(zyklus * intervallTageLong)
-                            val erwartetesDatumStart = getStartOfDay(erwartetesDatum)
-                            
-                            // Prüfe ob viewDateStart genau auf einem Zyklus liegt
-                            if (erwartetesDatumStart == viewDateStart && tageSeitAbholung <= 365) {
-                                return erwartetesDatum
-                            }
-                        }
-                    }
-                }
-            }
-            return 0L // Nicht fällig an diesem Tag
-        } else {
-            // Für Kunden ohne Liste
-            if (customer.verschobenAufDatum > 0) {
-                val verschobenStart = getStartOfDay(customer.verschobenAufDatum)
-                if (verschobenStart == viewDateStart) return customer.verschobenAufDatum
-            }
-            val abholungStart = getStartOfDay(customer.abholungDatum)
-            if (abholungStart == viewDateStart) return customer.abholungDatum
-            // Für wiederholende Termine
-            if (customer.wiederholen && customer.letzterTermin > 0) {
-                val naechsteAbholung = customer.letzterTermin + java.util.concurrent.TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
-                val naechsteAbholungStart = getStartOfDay(naechsteAbholung)
-                if (naechsteAbholungStart == viewDateStart) return naechsteAbholung
-            }
-            return 0L
-        }
+        val heuteStart = dateUtils.getStartOfDay(System.currentTimeMillis())
+        return dateUtils.calculateAbholungDatum(customer, viewDateStart, heuteStart)
     }
+    
+    // Alte Implementierung entfernt - jetzt in TourPlannerDateUtils
     
     private fun calculateAuslieferungDatum(customer: Customer, viewDateStart: Long): Long {
         // NEUE STRUKTUR: Verwende Intervalle-Liste wenn vorhanden
@@ -753,157 +555,21 @@ class TourPlannerActivity : AppCompatActivity() {
             }?.datum ?: 0L
         }
         
-        // Ähnlich wie Abholungsdatum
-        if (customer.listeId.isNotEmpty()) {
-            var liste: com.example.we2026_5.KundenListe? = null
-            kotlinx.coroutines.runBlocking {
-                liste = listeRepository.getListeById(customer.listeId)
-            }
-            
-            if (liste != null) {
-                liste!!.intervalle.forEach { intervall ->
-                    val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
-                    
-                    if (!intervall.wiederholen) {
-                        // Einmaliges Intervall: Prüfe ob Auslieferungsdatum heute fällig ist
-                        if (auslieferungStart == viewDateStart) {
-                            return intervall.auslieferungDatum
-                        }
-                    } else {
-                        // Wiederholendes Intervall: Berechne korrektes Datum
-                        val intervallTage = intervall.intervallTage.coerceIn(1, 365)
-                        val intervallTageLong = intervallTage.toLong()
-                        
-                        if (viewDateStart >= auslieferungStart) {
-                            val tageSeitAuslieferung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(viewDateStart - auslieferungStart)
-                            // Berechne Zyklus und erwartetes Datum
-                            val zyklus = tageSeitAuslieferung / intervallTageLong
-                            val erwartetesDatum = auslieferungStart + java.util.concurrent.TimeUnit.DAYS.toMillis(zyklus * intervallTageLong)
-                            val erwartetesDatumStart = getStartOfDay(erwartetesDatum)
-                            
-                            // Prüfe ob viewDateStart genau auf einem Zyklus liegt
-                            if (erwartetesDatumStart == viewDateStart && tageSeitAuslieferung <= 365) {
-                                return erwartetesDatum
-                            }
-                        }
-                    }
-                }
-            }
-            return 0L
-        } else {
-            // Für Kunden ohne Liste
-            if (customer.verschobenAufDatum > 0) {
-                val verschobenStart = getStartOfDay(customer.verschobenAufDatum)
-                if (verschobenStart == viewDateStart) return customer.verschobenAufDatum
-            }
-            val auslieferungStart = getStartOfDay(customer.auslieferungDatum)
-            if (auslieferungStart == viewDateStart) return customer.auslieferungDatum
-            return 0L
-        }
+        // Verwende DateUtils für Listen-Kunden und andere Fälle
+        val heuteStart = dateUtils.getStartOfDay(System.currentTimeMillis())
+        return dateUtils.calculateAuslieferungDatum(customer, viewDateStart, heuteStart)
     }
     
     private fun isIntervallFaelligAm(intervall: com.example.we2026_5.ListeIntervall, datum: Long): Boolean {
-        val datumStart = getStartOfDay(datum)
-        val abholungStart = getStartOfDay(intervall.abholungDatum)
-        val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
-        
-        if (!intervall.wiederholen) {
-            // Einmaliges Intervall: Prüfe ob Datum genau Abholungs- oder Auslieferungsdatum ist
-            return datumStart == abholungStart || datumStart == auslieferungStart
-        }
-        
-        // Wiederholendes Intervall: Prüfe ob Datum auf einem Wiederholungszyklus liegt
-        val intervallTage = intervall.intervallTage.coerceIn(1, 365)
-        val intervallTageLong = intervallTage.toLong()
-        
-        // Prüfe Abholungsdatum - generiere Termine für 365 Tage
-        if (datumStart >= abholungStart) {
-            val tageSeitAbholung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(datumStart - abholungStart)
-            // Prüfe ob das Datum auf einem Zyklus liegt (innerhalb von 365 Tagen)
-            if (tageSeitAbholung <= 365 && tageSeitAbholung % intervallTageLong == 0L) {
-                val erwartetesDatum = abholungStart + java.util.concurrent.TimeUnit.DAYS.toMillis(tageSeitAbholung)
-                if (datumStart == erwartetesDatum) {
-                    return true
-                }
-            }
-        } else {
-            // Datum liegt vor dem Startdatum - prüfe ob es ein zukünftiger Termin ist (innerhalb von 365 Tagen)
-            val tageBisAbholung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(abholungStart - datumStart)
-            if (tageBisAbholung <= 365 && datumStart == abholungStart) {
-                return true
-            }
-        }
-        
-        // Prüfe Auslieferungsdatum - generiere Termine für 365 Tage
-        if (datumStart >= auslieferungStart) {
-            val tageSeitAuslieferung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(datumStart - auslieferungStart)
-            // Prüfe ob das Datum auf einem Zyklus liegt (innerhalb von 365 Tagen)
-            if (tageSeitAuslieferung <= 365 && tageSeitAuslieferung % intervallTageLong == 0L) {
-                val erwartetesDatum = auslieferungStart + java.util.concurrent.TimeUnit.DAYS.toMillis(tageSeitAuslieferung)
-                if (datumStart == erwartetesDatum) {
-                    return true
-                }
-            }
-        } else {
-            // Datum liegt vor dem Startdatum - prüfe ob es ein zukünftiger Termin ist (innerhalb von 365 Tagen)
-            val tageBisAuslieferung = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(auslieferungStart - datumStart)
-            if (tageBisAuslieferung <= 365 && datumStart == auslieferungStart) {
-                return true
-            }
-        }
-        
-        return false
+        return dateUtils.isIntervallFaelligAm(intervall, datum)
     }
     
-    private fun showTerminDetailDialog(customer: Customer, terminDatum: Long) {
-        val dialogView = LayoutInflater.from(this).inflate(com.example.we2026_5.R.layout.dialog_termin_detail, null)
-        val binding = com.example.we2026_5.databinding.DialogTerminDetailBinding.bind(dialogView)
-        
-        // Kundeninfos anzeigen
-        binding.tvKundenname.text = customer.name
-        binding.tvAdresse.text = customer.adresse
-        binding.tvTelefon.text = customer.telefon
-        binding.tvNotizen.text = customer.notizen.ifEmpty { "Keine Notizen" }
-        
-        // Termin-Datum formatieren
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = terminDatum
-        val dateStr = "${cal.get(Calendar.DAY_OF_MONTH)}.${cal.get(Calendar.MONTH) + 1}.${cal.get(Calendar.YEAR)}"
-        binding.tvTerminDatum.text = dateStr
-        
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogView)
-            .create()
-        
-        // Kunde anzeigen Button
-        binding.btnKundeAnzeigen.setOnClickListener {
-            dialog.dismiss()
-            val intent = Intent(this, CustomerDetailActivity::class.java).apply {
-                putExtra("CUSTOMER_ID", customer.id)
-            }
-            startActivity(intent)
-        }
-        
-        // Termin löschen Button
-        binding.btnTerminLoeschen.setOnClickListener {
-            AlertDialog.Builder(this)
-                .setTitle("Termin löschen?")
-                .setMessage("Möchten Sie diesen Termin wirklich löschen? Dies hat keine Auswirkung auf andere Termine.")
-                .setPositiveButton("Löschen") { _, _ ->
-                    loescheEinzelnenTermin(customer, terminDatum)
-                    dialog.dismiss()
-                }
-                .setNegativeButton("Abbrechen", null)
-                .show()
-        }
-        
-        dialog.show()
-    }
+    // Alte Implementierungen entfernt - jetzt in TourPlannerDateUtils und TourPlannerDialogHelper
     
     private fun loescheEinzelnenTermin(customer: Customer, terminDatum: Long) {
         CoroutineScope(Dispatchers.Main).launch {
             // Normalisiere das Datum auf Tagesanfang für Vergleich
-            val terminDatumStart = getStartOfDay(terminDatum)
+            val terminDatumStart = dateUtils.getStartOfDay(terminDatum)
             
             // Aktuelle gelöschte Termine holen und neues Datum hinzufügen
             val aktuelleGeloeschteTermine = customer.geloeschteTermine.toMutableList()
@@ -953,12 +619,20 @@ class TourPlannerActivity : AppCompatActivity() {
     }
 
     private fun getStartOfDay(ts: Long): Long {
-        return Calendar.getInstance().apply {
-            timeInMillis = ts
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
+        return dateUtils.getStartOfDay(ts)
+    }
+    
+    /**
+     * Berechnet das Fälligkeitsdatum für Abholung (wenn überfällig)
+     */
+    private fun getFaelligAmDatumFuerAbholung(customer: Customer, heuteStart: Long): Long {
+        return dateUtils.getFaelligAmDatumFuerAbholung(customer, heuteStart)
+    }
+    
+    /**
+     * Berechnet das Fälligkeitsdatum für Auslieferung (wenn überfällig)
+     */
+    private fun getFaelligAmDatumFuerAuslieferung(customer: Customer, heuteStart: Long): Long {
+        return dateUtils.getFaelligAmDatumFuerAuslieferung(customer, heuteStart)
     }
 }

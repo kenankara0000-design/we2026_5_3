@@ -11,44 +11,66 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="18dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp">
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tvSectionTitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="ÜBERFÄLLIG"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@color/section_overdue_text"
-        android:clickable="true"
-        android:focusable="true"/>
+        <!-- Header-Bereich (Titel, Count, Plus/Minus) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="18dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp">
 
-    <TextView
-        android:id="@+id/tvSectionCount"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="(5)"
-        android:textSize="14sp"
-        android:textColor="@color/text_secondary"
-        android:layout_marginEnd="12dp"
-        android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/tvSectionTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="ÜBERFÄLLIG"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/section_overdue_text"
+                android:clickable="true"
+                android:focusable="true"/>
 
-    <ImageView
-        android:id="@+id/ivExpandCollapse"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:src="@android:drawable/arrow_down_float"
-        android:tint="@color/section_overdue_text"
-        android:clickable="true"
-        android:focusable="true"/>
+            <TextView
+                android:id="@+id/tvSectionCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="(5)"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginEnd="12dp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/tvExpandCollapse"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:text="+"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/section_overdue_text"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"/>
+
+        </LinearLayout>
+
+        <!-- Container für Kunden (wird dynamisch gefüllt) -->
+        <LinearLayout
+            android:id="@+id/containerKunden"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="12dp"/>
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

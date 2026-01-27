@@ -93,7 +93,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Wiederholen"
-                android:textSize="14sp"/>
+                android:textSize="14sp"
+                android:textColor="@color/text_primary"/>
 
             <EditText
                 android:id="@+id/etIntervallTage"
@@ -104,6 +105,9 @@
                 android:inputType="number"
                 android:padding="8dp"
                 android:layout_marginStart="16dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:background="@color/surface_white"
                 android:enabled="false"/>
         </LinearLayout>
 
@@ -132,6 +136,9 @@
                 android:hint="Anzahl (0 = unbegrenzt)"
                 android:inputType="number"
                 android:padding="8dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:background="@color/surface_white"
                 android:enabled="false"/>
         </LinearLayout>
 

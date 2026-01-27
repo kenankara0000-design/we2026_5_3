@@ -153,6 +153,7 @@
                     android:text="Liste-Name:"
                     android:textStyle="bold"
                     android:textSize="14sp"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="4dp"/>
 
                 <EditText
@@ -162,6 +163,8 @@
                     android:hint="Listen-Name"
                     android:padding="8dp"
                     android:background="#FFFFFF"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
                     android:layout_marginBottom="12dp"/>
 
                 <TextView
@@ -170,6 +173,7 @@
                     android:text="Liste-Art:"
                     android:textStyle="bold"
                     android:textSize="14sp"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="4dp"/>
 
                 <RadioGroup
@@ -184,21 +188,24 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Gewerbe"/>
+                        android:text="Gewerbe"
+                        android:textColor="@color/text_primary"/>
 
                     <RadioButton
                         android:id="@+id/rbPrivatEdit"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Privat"/>
+                        android:text="Privat"
+                        android:textColor="@color/text_primary"/>
 
                     <RadioButton
                         android:id="@+id/rbListeEdit"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Liste"/>
+                        android:text="Liste"
+                        android:textColor="@color/text_primary"/>
                 </RadioGroup>
 
                 <!-- Intervalle-Verwaltung -->

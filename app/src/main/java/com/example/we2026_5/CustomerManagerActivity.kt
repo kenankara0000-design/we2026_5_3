@@ -17,6 +17,8 @@ import com.example.we2026_5.ListItem
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.databinding.ActivityCustomerManagerBinding
 import com.example.we2026_5.ui.customermanager.CustomerManagerViewModel
+import com.example.we2026_5.customermanager.CustomerExportHelper
+import com.example.we2026_5.customermanager.BulkSelectManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,6 +34,8 @@ class CustomerManagerActivity : AppCompatActivity() {
     private val repository: CustomerRepository by inject()
     private lateinit var adapter: CustomerAdapter
     private lateinit var networkMonitor: NetworkMonitor
+    private lateinit var exportHelper: CustomerExportHelper
+    private lateinit var bulkSelectManager: BulkSelectManager
     private var pressedHeaderButton: String? = null // "Auswählen", "Exportieren", "NeuerKunde"
     private val deletedCustomerIds = mutableSetOf<String>() // Liste von gelöschten Kunden-IDs (optimistische UI-Aktualisierung)
     
@@ -58,6 +62,20 @@ class CustomerManagerActivity : AppCompatActivity() {
 
         binding.rvCustomerList.layoutManager = LinearLayoutManager(this)
         binding.rvCustomerList.adapter = adapter
+        
+        // ExportHelper initialisieren
+        exportHelper = CustomerExportHelper(this, repository)
+        
+        // BulkSelectManager initialisieren
+        bulkSelectManager = BulkSelectManager(
+            activity = this,
+            binding = binding,
+            adapter = adapter,
+            repository = repository,
+            onSelectionChanged = {
+                updateButtonStates()
+            }
+        )
 
         binding.btnBackFromManager.setOnClickListener { finish() }
 
@@ -71,28 +89,21 @@ class CustomerManagerActivity : AppCompatActivity() {
         binding.btnExport.setOnClickListener {
             pressedHeaderButton = "Exportieren"
             updateHeaderButtonStates()
-            showExportDialog()
+            exportHelper.showExportDialog()
         }
 
         binding.btnBulkSelect.setOnClickListener {
             pressedHeaderButton = "Auswählen"
             updateHeaderButtonStates()
-            adapter.enableMultiSelectMode()
-            updateBulkActionBar()
-            updateButtonStates()
+            bulkSelectManager.enableMultiSelectMode()
         }
 
         binding.btnBulkCancel.setOnClickListener {
-            adapter.disableMultiSelectMode()
-            updateBulkActionBar()
-            updateButtonStates()
+            bulkSelectManager.disableMultiSelectMode()
         }
 
         binding.btnBulkDone.setOnClickListener {
-            val selected = adapter.getSelectedCustomers()
-            if (selected.isNotEmpty()) {
-                markBulkAsDone(selected)
-            }
+            bulkSelectManager.handleBulkDone()
         }
 
         binding.etSearch.addTextChangedListener(object : TextWatcher {
@@ -175,7 +186,7 @@ class CustomerManagerActivity : AppCompatActivity() {
             }
             
             adapter.updateData(filteredCustomers.map { ListItem.CustomerItem(it) })
-            updateBulkActionBar()
+            bulkSelectManager.updateBulkActionBar()
             updateButtonStates()
             
             // Empty State anzeigen wenn keine Kunden vorhanden
@@ -218,80 +229,9 @@ class CustomerManagerActivity : AppCompatActivity() {
         }
     }
     
-    private fun showExportDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Exportieren")
-            .setItems(arrayOf("Als CSV exportieren", "Als Text exportieren")) { _, which ->
-                when (which) {
-                    0 -> exportAsCSV()
-                    1 -> exportAsText()
-                }
-            }
-            .show()
-    }
+    // Export-Funktionen entfernt - jetzt in CustomerExportHelper
     
-    private fun exportAsCSV() {
-        CoroutineScope(Dispatchers.Main).launch {
-            try {
-                val allCustomers = repository.getAllCustomers()
-                val file = ExportHelper.exportToCSV(this@CustomerManagerActivity, allCustomers)
-                
-                if (file != null) {
-                    shareFile(file, "text/csv")
-                    Toast.makeText(this@CustomerManagerActivity, "CSV exportiert: ${file.name}", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this@CustomerManagerActivity, "Fehler beim Exportieren", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(this@CustomerManagerActivity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-    
-    private fun exportAsText() {
-        CoroutineScope(Dispatchers.Main).launch {
-            try {
-                val allCustomers = repository.getAllCustomers()
-                val file = ExportHelper.exportTourAsText(this@CustomerManagerActivity, allCustomers, Date())
-                
-                if (file != null) {
-                    shareFile(file, "text/plain")
-                    Toast.makeText(this@CustomerManagerActivity, "Text exportiert: ${file.name}", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this@CustomerManagerActivity, "Fehler beim Exportieren", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(this@CustomerManagerActivity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-    
-    private fun shareFile(file: File, mimeType: String) {
-        val uri = FileProvider.getUriForFile(
-            this,
-            "com.example.we2026_5.fileprovider",
-            file
-        )
-        
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = mimeType
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        
-        startActivity(Intent.createChooser(shareIntent, "Datei teilen"))
-    }
-    
-    private fun updateBulkActionBar() {
-        val hasSelection = adapter.hasSelectedCustomers()
-        binding.bulkActionBar.visibility = if (hasSelection) View.VISIBLE else View.GONE
-        binding.btnBulkSelect.visibility = if (hasSelection) View.GONE else View.VISIBLE
-        
-        if (hasSelection) {
-            val count = adapter.getSelectedCustomers().size
-            binding.tvSelectedCount.text = "$count ausgewählt"
-        }
-    }
+    // updateBulkActionBar Funktion entfernt - jetzt in BulkSelectManager
     
     private fun updateButtonStates() {
         // Header-Button-Zustände aktualisieren
@@ -352,7 +292,7 @@ class CustomerManagerActivity : AppCompatActivity() {
             }
             else -> {
                 // Kein Button gedrückt: Prüfe ob Multi-Select aktiv ist
-                val isMultiSelectActive = adapter.hasSelectedCustomers() || adapter.isMultiSelectModeEnabled()
+                val isMultiSelectActive = bulkSelectManager.isMultiSelectActive()
                 if (isMultiSelectActive) {
                     // Multi-Select aktiv: Auswählen-Button orange
                     binding.btnBulkSelect.setBackgroundColor(activeBackgroundColor)
@@ -376,26 +316,5 @@ class CustomerManagerActivity : AppCompatActivity() {
         }
     }
     
-    private fun markBulkAsDone(customers: List<Customer>) {
-        AlertDialog.Builder(this)
-            .setTitle("Mehrere Kunden als erledigt markieren?")
-            .setMessage("${customers.size} Kunden werden als erledigt markiert (Abholung + Auslieferung).")
-            .setPositiveButton("Ja") { _, _ ->
-                CoroutineScope(Dispatchers.Main).launch {
-                    customers.forEach { customer ->
-                        val updates = mapOf(
-                            "abholungErfolgt" to true,
-                            "auslieferungErfolgt" to true
-                        )
-                        repository.updateCustomer(customer.id, updates)
-                    }
-                    adapter.disableMultiSelectMode()
-                    updateBulkActionBar()
-                    updateButtonStates()
-                    Toast.makeText(this@CustomerManagerActivity, "${customers.size} Kunden als erledigt markiert", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Abbrechen", null)
-            .show()
-    }
+    // markBulkAsDone Funktion entfernt - jetzt in BulkSelectManager
 }

@@ -58,19 +58,17 @@ class IntervallAdapter(
         private val binding: ItemIntervallBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-
         fun bind(intervall: CustomerIntervall, position: Int) {
             // Abholungsdatum
             if (intervall.abholungDatum > 0) {
-                binding.tvAbholungDatum.text = dateFormat.format(Date(intervall.abholungDatum))
+                binding.tvAbholungDatum.text = com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(intervall.abholungDatum)
             } else {
                 binding.tvAbholungDatum.text = "Nicht gesetzt"
             }
 
             // Auslieferungsdatum
             if (intervall.auslieferungDatum > 0) {
-                binding.tvAuslieferungDatum.text = dateFormat.format(Date(intervall.auslieferungDatum))
+                binding.tvAuslieferungDatum.text = com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(intervall.auslieferungDatum)
             } else {
                 binding.tvAuslieferungDatum.text = "Nicht gesetzt"
             }

@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
+    android:layout_margin="4dp"
     app:cardCornerRadius="12dp"
     app:cardElevation="2dp"
     app:cardBackgroundColor="@color/surface_white">
@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="12dp">
+        android:padding="8dp">
 
         <!-- Kundenname und Buttons in einer Zeile -->
         <RelativeLayout
@@ -21,11 +21,28 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp">
 
+            <!-- Kunden-Typ Button (G/P/L) vor dem Namen -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnKundenTyp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:text="G"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:minWidth="36dp"
+                android:minHeight="36dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:layout_marginEnd="8dp"
+                app:cornerRadius="8dp"/>
+
             <TextView
                 android:id="@+id/tvItemName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
+                android:layout_toEndOf="@id/btnKundenTyp"
                 android:layout_centerVertical="true"
                 android:text="Kunden Name"
                 android:textSize="18sp"
@@ -137,17 +154,6 @@
             android:layout_marginTop="4dp"/>
 
         <TextView
-            android:id="@+id/tvItemKundenArt"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Gewerblich"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp"
-            android:textStyle="italic"
-            android:layout_marginTop="2dp"
-            android:visibility="gone"/>
-
-        <TextView
             android:id="@+id/tvItemTelefon"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -216,6 +222,35 @@
             android:textSize="11sp"
             android:textStyle="bold"
             android:textAllCaps="true"/>
+
+        <!-- Überfällig-Indikator (rötlicher Hintergrund wenn überfällig war) -->
+        <TextView
+            android:id="@+id/tvUeberfaelligIndikator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:padding="8dp"
+            android:background="@drawable/status_badge_overdue"
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:text="Überfällig war"
+            android:visibility="gone"
+            android:gravity="center"/>
+
+        <!-- Erledigungs-Hinweise (Fälligkeitsdatum, Erledigungsdatum, Zeitstempel) -->
+        <TextView
+            android:id="@+id/tvErledigungsHinweise"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:padding="8dp"
+            android:background="@drawable/status_badge_done"
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            android:textStyle="italic"
+            android:visibility="gone"
+            android:lineSpacingExtra="2dp"/>
 
         <!-- Rückgängig-Button (nur bei erledigten Kunden) -->
         <com.google.android.material.button.MaterialButton

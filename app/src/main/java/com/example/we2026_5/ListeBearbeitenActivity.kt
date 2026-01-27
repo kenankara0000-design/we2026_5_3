@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.databinding.ActivityListeBearbeitenBinding
+import com.example.we2026_5.util.IntervallManager
 import com.example.we2026_5.databinding.ItemKundeListeBinding
 import com.example.we2026_5.FirebaseRetryHelper
 import kotlinx.coroutines.CoroutineScope
@@ -66,7 +67,15 @@ class ListeBearbeitenActivity : AppCompatActivity() {
             onDatumSelected = { position, isAbholung ->
                 aktuellesIntervallPosition = position
                 aktuellesDatumTyp = isAbholung
-                showDatumPicker(position, isAbholung)
+                IntervallManager.showDatumPickerForListe(
+                    context = this@ListeBearbeitenActivity,
+                    intervalle = intervalle,
+                    position = position,
+                    isAbholung = isAbholung,
+                    onDatumSelected = { updatedIntervall ->
+                        intervallAdapter.updateIntervalle(intervalle.toList())
+                    }
+                )
             }
         )
         binding.rvListeIntervalle.layoutManager = LinearLayoutManager(this)
@@ -243,6 +252,10 @@ class ListeBearbeitenActivity : AppCompatActivity() {
             holder.binding.tvKundenName.text = kunde.name
             holder.binding.tvKundenAdresse.text = kunde.adresse
 
+            // Kunden-Typ Button (G/P/L) anzeigen
+            val context = holder.itemView.context
+            com.example.we2026_5.ui.CustomerTypeButtonHelper.setupButton(holder.binding.btnKundenTyp, kunde, context)
+
             if (showRemoveButton) {
                 holder.binding.btnEntfernen.visibility = View.VISIBLE
                 holder.binding.btnHinzufuegen.visibility = View.GONE
@@ -261,45 +274,7 @@ class ListeBearbeitenActivity : AppCompatActivity() {
         override fun getItemCount(): Int = kunden.size
     }
     
-    private fun showDatumPicker(position: Int, isAbholung: Boolean) {
-        val cal = Calendar.getInstance()
-        val intervall = intervalle.getOrNull(position) ?: return
-        
-        // Aktuelles Datum oder Intervall-Datum verwenden
-        val initialDatum = if (isAbholung && intervall.abholungDatum > 0) {
-            cal.timeInMillis = intervall.abholungDatum
-            intervall.abholungDatum
-        } else if (!isAbholung && intervall.auslieferungDatum > 0) {
-            cal.timeInMillis = intervall.auslieferungDatum
-            intervall.auslieferungDatum
-        } else {
-            System.currentTimeMillis()
-        }
-        
-        cal.timeInMillis = initialDatum
-        
-        DatePickerDialog(
-            this,
-            DatePickerDialog.OnDateSetListener { _, year: Int, month: Int, dayOfMonth: Int ->
-                cal.set(year, month, dayOfMonth, 0, 0, 0)
-                cal.set(Calendar.MILLISECOND, 0)
-                val selectedDatum = cal.timeInMillis
-                
-                // Intervall aktualisieren
-                val updatedIntervall = if (isAbholung) {
-                    intervall.copy(abholungDatum = selectedDatum)
-                } else {
-                    intervall.copy(auslieferungDatum = selectedDatum)
-                }
-                
-                intervalle[position] = updatedIntervall
-                intervallAdapter.updateIntervalle(intervalle.toList())
-            },
-            cal.get(Calendar.YEAR),
-            cal.get(Calendar.MONTH),
-            cal.get(Calendar.DAY_OF_MONTH)
-        ).show()
-    }
+    // showDatumPicker Funktion entfernt - jetzt in IntervallManager
     
     private fun toggleEditMode(isEditing: Boolean) {
         isInEditMode = isEditing

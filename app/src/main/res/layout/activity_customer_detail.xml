@@ -24,6 +24,24 @@
             android:tint="#FFFFFF"
             android:contentDescription="Zurück" />
 
+        <!-- Kunden-Typ Button (G/P/L) vor dem Namen -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnKundenTyp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
+            android:text="G"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:minWidth="36dp"
+            android:minHeight="36dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            app:cornerRadius="8dp"
+            android:visibility="gone"/>
+
         <TextView
             android:id="@+id/tvDetailName"
             android:layout_width="wrap_content"
@@ -186,6 +204,7 @@
                     android:text="Name:"
                     android:textStyle="bold"
                     android:textSize="14sp"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="4dp"/>
 
                 <EditText
@@ -195,6 +214,8 @@
                     android:hint="Name"
                     android:padding="8dp"
                     android:background="#FFFFFF"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
                     android:layout_marginBottom="12dp"/>
 
                 <TextView
@@ -203,6 +224,7 @@
                     android:text="Kunden-Art:"
                     android:textStyle="bold"
                     android:textSize="14sp"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="4dp"/>
 
                 <RadioGroup
@@ -217,21 +239,24 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Gewerblich"/>
+                        android:text="Gewerblich"
+                        android:textColor="@color/text_primary"/>
 
                     <RadioButton
                         android:id="@+id/rbDetailPrivat"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Privat"/>
+                        android:text="Privat"
+                        android:textColor="@color/text_primary"/>
 
                     <RadioButton
                         android:id="@+id/rbDetailListe"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Liste"/>
+                        android:text="Liste"
+                        android:textColor="@color/text_primary"/>
                 </RadioGroup>
 
                 <TextView
@@ -240,6 +265,7 @@
                     android:text="Adresse:"
                     android:textStyle="bold"
                     android:textSize="14sp"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="4dp"/>
 
                 <LinearLayout
@@ -255,7 +281,9 @@
                         android:layout_weight="1"
                         android:hint="Adresse"
                         android:padding="8dp"
-                        android:background="#FFFFFF"/>
+                        android:background="#FFFFFF"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_secondary"/>
 
                     <Button
                         android:id="@+id/btnSelectLocation"
@@ -276,6 +304,7 @@
                     android:text="Telefon:"
                     android:textStyle="bold"
                     android:textSize="14sp"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="4dp"/>
 
                 <EditText
@@ -286,6 +315,8 @@
                     android:inputType="phone"
                     android:padding="8dp"
                     android:background="#FFFFFF"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
                     android:layout_marginBottom="12dp"/>
 
                 <TextView
@@ -294,6 +325,7 @@
                     android:text="Notizen:"
                     android:textStyle="bold"
                     android:textSize="14sp"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="4dp"/>
 
                 <EditText
@@ -306,6 +338,8 @@
                     android:gravity="top"
                     android:padding="8dp"
                     android:background="#FFFFFF"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
                     android:layout_marginBottom="12dp"/>
 
                 <!-- Intervalle-Verwaltung (nur für Gewerblich und Liste) -->

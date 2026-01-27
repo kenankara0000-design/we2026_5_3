@@ -54,6 +54,9 @@
             android:hint="Name (Pflichtfeld)"
             android:inputType="textPersonName"
             android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:background="@color/surface_white"
             android:layout_marginBottom="12dp"/>
 
         <EditText
@@ -63,6 +66,9 @@
             android:hint="Adresse (Optional)"
             android:inputType="textPostalAddress"
             android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:background="@color/surface_white"
             android:layout_marginBottom="12dp"/>
 
         <EditText
@@ -72,6 +78,9 @@
             android:hint="Telefon (Optional)"
             android:inputType="phone"
             android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:background="@color/surface_white"
             android:layout_marginBottom="12dp"/>
 
         <!-- Kunden-Art -->
@@ -80,6 +89,8 @@
             android:layout_height="wrap_content"
             android:text="Kunden-Art:"
             android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
             android:layout_marginBottom="8dp"/>
 
         <RadioGroup
@@ -95,6 +106,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Gewerblich"
+                android:textColor="@color/text_primary"
                 android:checked="true"/>
 
             <RadioButton
@@ -102,14 +114,16 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Privat"/>
+                android:text="Privat"
+                android:textColor="@color/text_primary"/>
 
             <RadioButton
                 android:id="@+id/rbListe"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Liste"/>
+                android:text="Liste"
+                android:textColor="@color/text_primary"/>
         </RadioGroup>
 
         <!-- Intervall-Erstellung (nur für Gewerblich-Kunden) -->
@@ -175,6 +189,9 @@
             android:minLines="3"
             android:gravity="top"
             android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:background="@color/surface_white"
             android:layout_marginBottom="12dp"/>
 
         <Button

@@ -37,6 +37,13 @@ data class Customer(
     val urlaubVon: Long = 0,
     val urlaubBis: Long = 0,
     
+    // Erledigungsdaten und Zeitstempel
+    val abholungErledigtAm: Long = 0, // Datum wann Abholung erledigt wurde (nur Datum, ohne Uhrzeit)
+    val auslieferungErledigtAm: Long = 0, // Datum wann Auslieferung erledigt wurde (nur Datum, ohne Uhrzeit)
+    val abholungZeitstempel: Long = 0, // Zeitstempel mit Uhrzeit wann Abholung erledigt wurde
+    val auslieferungZeitstempel: Long = 0, // Zeitstempel mit Uhrzeit wann Auslieferung erledigt wurde
+    val faelligAmDatum: Long = 0, // Fälligkeitsdatum (für überfällige Kunden: speichert das Datum, an dem der Termin fällig war)
+    
     // Verschieben-Logik - ERWEITERT für einzelne Termine
     @Deprecated("Verwende verschobeneTermine für einzelne Termine. Wird für Migration beibehalten.")
     val verschobenAufDatum: Long = 0, // Alte Logik: Verschiebt alle Termine
@@ -70,7 +77,7 @@ data class Customer(
             // Nächstes fälliges Datum (nicht gelöscht, nicht in Vergangenheit)
             val naechstesTermin = termine.firstOrNull { 
                 it.datum >= com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(heute) &&
-                !com.example.we2026_5.util.TerminBerechnungUtils.istTerminGeloescht(it.datum, geloeschteTermine)
+                !com.example.we2026_5.util.TerminFilterUtils.istTerminGeloescht(it.datum, geloeschteTermine)
             }
             return naechstesTermin?.datum ?: 0L
         }

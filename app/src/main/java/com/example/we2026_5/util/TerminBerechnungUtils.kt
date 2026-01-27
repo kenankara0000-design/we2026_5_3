@@ -27,37 +27,7 @@ object TerminBerechnungUtils {
         return cal.timeInMillis
     }
     
-    /**
-     * Prüft ob ein Termin verschoben wurde
-     */
-    fun istTerminVerschoben(
-        terminDatum: Long,
-        verschobeneTermine: List<VerschobenerTermin>,
-        intervallId: String? = null
-    ): VerschobenerTermin? {
-        val terminStart = getStartOfDay(terminDatum)
-        return verschobeneTermine.firstOrNull { verschoben ->
-            val originalStart = getStartOfDay(verschoben.originalDatum)
-            originalStart == terminStart && 
-            (verschoben.intervallId == null || verschoben.intervallId == intervallId)
-        }
-    }
-    
-    /**
-     * Prüft ob ein Termin gelöscht wurde
-     */
-    fun istTerminGeloescht(terminDatum: Long, geloeschteTermine: List<Long>): Boolean {
-        val terminStart = getStartOfDay(terminDatum)
-        return geloeschteTermine.contains(terminStart)
-    }
-    
-    /**
-     * Prüft ob ein Termin im Urlaub liegt
-     */
-    fun istTerminImUrlaub(terminDatum: Long, urlaubVon: Long, urlaubBis: Long): Boolean {
-        if (urlaubVon == 0L || urlaubBis == 0L) return false
-        return terminDatum in urlaubVon..urlaubBis
-    }
+    // Filter-Funktionen entfernt - jetzt in TerminFilterUtils
     
     /**
      * Berechnet alle Termine für einen Zeitraum (365 Tage) für ein CustomerIntervall
@@ -132,11 +102,11 @@ object TerminBerechnungUtils {
             // Einmaliger Termin
             if (startDatumStartNormalized >= startDatumStart && startDatumStartNormalized <= endDatum) {
                 // Prüfe ob verschoben
-                val verschoben = istTerminVerschoben(startDatumStartNormalized, verschobeneTermine, intervallId)
+                val verschoben = TerminFilterUtils.istTerminVerschoben(startDatumStartNormalized, verschobeneTermine, intervallId)
                 val finalDatum = verschoben?.verschobenAufDatum ?: startDatumStartNormalized
                 
                 // Prüfe ob gelöscht
-                if (!istTerminGeloescht(finalDatum, geloeschteTermine)) {
+                if (!TerminFilterUtils.istTerminGeloescht(finalDatum, geloeschteTermine)) {
                     termine.add(TerminInfo(
                         datum = finalDatum,
                         typ = typ,
@@ -160,11 +130,11 @@ object TerminBerechnungUtils {
             
             while (aktuellesDatum <= endDatum && versuche < maxVersuche && durchgefuehrteAnzahl < maxWiederholungen) {
                 // Prüfe ob verschoben
-                val verschoben = istTerminVerschoben(aktuellesDatum, verschobeneTermine, intervallId)
+                val verschoben = TerminFilterUtils.istTerminVerschoben(aktuellesDatum, verschobeneTermine, intervallId)
                 val finalDatum = verschoben?.verschobenAufDatum ?: aktuellesDatum
                 
                 // Prüfe ob gelöscht
-                if (!istTerminGeloescht(finalDatum, geloeschteTermine)) {
+                if (!TerminFilterUtils.istTerminGeloescht(finalDatum, geloeschteTermine)) {
                     if (finalDatum >= startDatumStart && finalDatum <= endDatum) {
                         termine.add(TerminInfo(
                             datum = finalDatum,
@@ -272,35 +242,7 @@ object TerminBerechnungUtils {
         return alleTermine.sortedBy { it.datum }
     }
     
-    /**
-     * Prüft ob ein Termin überfällig ist
-     */
-    fun istUeberfaellig(
-        terminDatum: Long,
-        aktuellesDatum: Long = System.currentTimeMillis(),
-        erledigt: Boolean
-    ): Boolean {
-        if (erledigt) return false
-        val terminStart = getStartOfDay(terminDatum)
-        val aktuellesStart = getStartOfDay(aktuellesDatum)
-        return terminStart < aktuellesStart
-    }
-    
-    /**
-     * Prüft ob ein überfälliger Termin an einem bestimmten Datum angezeigt werden soll
-     */
-    fun sollUeberfaelligAnzeigen(
-        terminDatum: Long,
-        anzeigeDatum: Long,
-        aktuellesDatum: Long = System.currentTimeMillis()
-    ): Boolean {
-        val terminStart = getStartOfDay(terminDatum)
-        val anzeigeStart = getStartOfDay(anzeigeDatum)
-        val aktuellesStart = getStartOfDay(aktuellesDatum)
-        
-        // Überfällig nur anzeigen: Ab Termin-Datum bis zum aktuellen Datum (nicht in Zukunft)
-        return terminStart < aktuellesStart && anzeigeStart >= terminStart && anzeigeStart <= aktuellesStart
-    }
+    // Filter-Funktionen entfernt - jetzt in TerminFilterUtils
 }
 
 /**

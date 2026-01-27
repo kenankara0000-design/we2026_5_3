@@ -51,6 +51,9 @@
                 android:hint="Listen-Name (z.B. Borna P)"
                 android:inputType="textPersonName"
                 android:padding="12dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:background="@color/surface_white"
                 android:layout_marginBottom="12dp"/>
 
             <!-- Liste-Art -->
@@ -60,6 +63,7 @@
                 android:text="Liste-Art:"
                 android:textSize="14sp"
                 android:textStyle="bold"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="8dp"/>
 
             <RadioGroup
@@ -75,6 +79,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Gewerbe"
+                    android:textColor="@color/text_primary"
                     android:checked="true"/>
 
                 <RadioButton
@@ -82,14 +87,16 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Privat"/>
+                    android:text="Privat"
+                    android:textColor="@color/text_primary"/>
 
                 <RadioButton
                     android:id="@+id/rbListe"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Liste"/>
+                    android:text="Liste"
+                    android:textColor="@color/text_primary"/>
             </RadioGroup>
 
             <!-- Intervalle-Verwaltung -->

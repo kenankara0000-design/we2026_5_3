@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.databinding.ActivityListeErstellenBinding
 import com.example.we2026_5.FirebaseRetryHelper
+import com.example.we2026_5.util.IntervallManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,7 +42,15 @@ class ListeErstellenActivity : AppCompatActivity() {
             onDatumSelected = { position, isAbholung ->
                 aktuellesIntervallPosition = position
                 aktuellesDatumTyp = isAbholung
-                showDatumPicker(position, isAbholung)
+                IntervallManager.showDatumPickerForListe(
+                    context = this@ListeErstellenActivity,
+                    intervalle = intervalle,
+                    position = position,
+                    isAbholung = isAbholung,
+                    onDatumSelected = { updatedIntervall ->
+                        intervallAdapter.updateIntervalle(intervalle.toList())
+                    }
+                )
             }
         )
         binding.rvIntervalle.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
@@ -124,51 +133,5 @@ class ListeErstellenActivity : AppCompatActivity() {
         }
     }
     
-    private fun showDatumPicker(position: Int, isAbholung: Boolean) {
-        val cal = Calendar.getInstance()
-        val currentYear = cal.get(Calendar.YEAR)
-        val currentMonth = cal.get(Calendar.MONTH)
-        val currentDay = cal.get(Calendar.DAY_OF_MONTH)
-        
-        // Prüfe ob bereits ein Datum gesetzt ist
-        val intervall = intervalle.getOrNull(position) ?: ListeIntervall()
-        val aktuellesDatum = if (isAbholung) intervall.abholungDatum else intervall.auslieferungDatum
-        
-        if (aktuellesDatum > 0) {
-            cal.timeInMillis = aktuellesDatum
-            cal.set(Calendar.YEAR, cal.get(Calendar.YEAR))
-            cal.set(Calendar.MONTH, cal.get(Calendar.MONTH))
-            cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH))
-        }
-        
-        val datePickerDialog = DatePickerDialog(
-            this,
-            DatePickerDialog.OnDateSetListener { _, year: Int, month: Int, dayOfMonth: Int ->
-                val selectedCal = Calendar.getInstance()
-                selectedCal.set(year, month, dayOfMonth)
-                val selectedTimestamp = selectedCal.timeInMillis
-                
-                // Aktualisiere das Intervall
-                val updatedIntervall = if (isAbholung) {
-                    intervall.copy(abholungDatum = selectedTimestamp)
-                } else {
-                    intervall.copy(auslieferungDatum = selectedTimestamp)
-                }
-                
-                // Aktualisiere die Liste
-                if (position < intervalle.size) {
-                    intervalle[position] = updatedIntervall
-                } else {
-                    intervalle.add(updatedIntervall)
-                }
-                
-                intervallAdapter.updateIntervalle(intervalle.toList())
-            },
-            if (aktuellesDatum > 0) cal.get(Calendar.YEAR) else currentYear,
-            if (aktuellesDatum > 0) cal.get(Calendar.MONTH) else currentMonth,
-            if (aktuellesDatum > 0) cal.get(Calendar.DAY_OF_MONTH) else currentDay
-        )
-        
-        datePickerDialog.show()
-    }
+    // showDatumPicker Funktion entfernt - jetzt in IntervallManager
 }

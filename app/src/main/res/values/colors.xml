@@ -27,6 +27,7 @@
     <color name="accent_orange">#FF9800</color>
     <color name="accent_green">#4CAF50</color>
     <color name="accent_blue">#2196F3</color>
+    <color name="accent_brown">#795548</color>
     
     <!-- Neutrale Farben -->
     <color name="white">#FFFFFF</color>
@@ -58,4 +59,9 @@
     <!-- Alternative: Orange für Wochenende -->
     <color name="weekend_orange">#FF9800</color>
     <color name="weekend_orange_dark">#F57C00</color>
+    
+    <!-- Kunden-Status Hintergrundfarben -->
+    <color name="customer_overdue_bg">#FFEBEE</color> <!-- Rötlicher Hintergrund für überfällige Kunden -->
+    <color name="customer_done_bg">#E0E0E0</color> <!-- Grauer Hintergrund für erledigte Kunden -->
+    <color name="customer_gewerblich_bg">#E3F2FD</color> <!-- Helles Blau für Gewerblich-Kunden die noch abzuholen sind -->
 </resources>
