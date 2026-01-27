@@ -34,10 +34,10 @@ class CustomerViewHolderBinder(
     private val onAbholung: (Customer) -> Unit,
     private val onAuslieferung: (Customer) -> Unit,
     private val enableMultiSelectMode: () -> Unit,
-    private val toggleCustomerSelection: (String, CustomerAdapter.CustomerViewHolder) -> Unit
+    private val toggleCustomerSelection: (String, CustomerViewHolder) -> Unit
 ) {
     
-    fun bind(holder: CustomerAdapter.CustomerViewHolder, customer: Customer) {
+    fun bind(holder: CustomerViewHolder, customer: Customer) {
         setupBasicInfo(holder, customer)
         setupCustomerTypeButton(holder, customer)
         setupNavigation(holder, customer)
@@ -56,7 +56,7 @@ class CustomerViewHolderBinder(
         setupButtonVisibility(holder, customer)
     }
     
-    private fun setupBasicInfo(holder: CustomerAdapter.CustomerViewHolder, customer: Customer) {
+    private fun setupBasicInfo(holder: CustomerViewHolder, customer: Customer) {
         holder.binding.tvItemName.text = customer.name
         holder.binding.tvItemAdresse.text = customer.adresse
         
@@ -88,16 +88,16 @@ class CustomerViewHolderBinder(
         }
     }
     
-    private fun setupCustomerTypeButton(holder: CustomerAdapter.CustomerViewHolder, customer: Customer) {
+    private fun setupCustomerTypeButton(holder: CustomerViewHolder, customer: Customer) {
         CustomerTypeButtonHelper.setupButton(holder.binding.btnKundenTyp, customer, context)
     }
     
-    private fun setupNavigation(holder: CustomerAdapter.CustomerViewHolder, customer: Customer) {
+    private fun setupNavigation(holder: CustomerViewHolder, customer: Customer) {
         holder.binding.btnNavigation.visibility = if (customer.adresse.isNotBlank()) View.VISIBLE else View.GONE
         // Navigation-Listener wird in CustomerAdapter gesetzt (benötigt startNavigation Funktion)
     }
     
-    private fun setupClickListeners(holder: CustomerAdapter.CustomerViewHolder, customer: Customer) {
+    private fun setupClickListeners(holder: CustomerViewHolder, customer: Customer) {
         // Button-Handler
         holder.binding.btnAbholung.setOnClickListener {
             pressedButtons[customer.id] = "A"
@@ -153,7 +153,7 @@ class CustomerViewHolderBinder(
         }
     }
     
-    private fun applyMultiSelectStyles(holder: CustomerAdapter.CustomerViewHolder, customer: Customer) {
+    private fun applyMultiSelectStyles(holder: CustomerViewHolder, customer: Customer) {
         if (isMultiSelectMode) {
             holder.binding.itemContainer.alpha = if (selectedCustomers.contains(customer.id)) 0.7f else 1.0f
             holder.binding.itemContainer.setBackgroundColor(
@@ -168,7 +168,7 @@ class CustomerViewHolderBinder(
         }
     }
     
-    private fun setupCompletionHints(holder: CustomerAdapter.CustomerViewHolder, customer: Customer) {
+    private fun setupCompletionHints(holder: CustomerViewHolder, customer: Customer) {
         val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
         if (isDone) {
             val hinweise = mutableListOf<String>()
@@ -213,7 +213,7 @@ class CustomerViewHolderBinder(
         }
     }
     
-    private fun setupButtonVisibility(holder: CustomerAdapter.CustomerViewHolder, customer: Customer) {
+    private fun setupButtonVisibility(holder: CustomerViewHolder, customer: Customer) {
         if (displayedDateMillis != null) {
             val heuteStart = getStartOfDay(System.currentTimeMillis())
             val viewDateStart = displayedDateMillis?.let {
@@ -251,7 +251,7 @@ class CustomerViewHolderBinder(
                 holder.binding.btnAbholung.setTextColor(ContextCompat.getColor(context, R.color.white))
                 holder.binding.btnAbholung.alpha = 0.7f
             } else {
-                holder.binding.btnAbholung.background = ContextCompat.getDrawable(context, R.drawable.button_a_l)
+                holder.binding.btnAbholung.background = ContextCompat.getDrawable(context, R.drawable.button_a_glossy)
                 if (istAmTatsaechlichenAbholungTag) {
                     holder.binding.btnAbholung.setTextColor(ContextCompat.getColor(context, R.color.white))
                     holder.binding.btnAbholung.alpha = 1.0f
@@ -297,7 +297,7 @@ class CustomerViewHolderBinder(
                 holder.binding.btnAuslieferung.setTextColor(ContextCompat.getColor(context, R.color.white))
                 holder.binding.btnAuslieferung.alpha = 0.7f
             } else {
-                holder.binding.btnAuslieferung.background = ContextCompat.getDrawable(context, R.drawable.button_a_l)
+                holder.binding.btnAuslieferung.background = ContextCompat.getDrawable(context, R.drawable.button_l_glossy)
                 if (istAmTatsaechlichenAuslieferungTag) {
                     holder.binding.btnAuslieferung.setTextColor(ContextCompat.getColor(context, R.color.white))
                     holder.binding.btnAuslieferung.alpha = 1.0f
@@ -324,7 +324,7 @@ class CustomerViewHolderBinder(
             val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
             
             holder.binding.btnVerschieben.visibility = if (!isDone && vButtonAktiv) View.VISIBLE else View.GONE
-            holder.binding.btnVerschieben.background = ContextCompat.getDrawable(context, R.drawable.button_v)
+            holder.binding.btnVerschieben.background = ContextCompat.getDrawable(context, R.drawable.button_v_glossy)
             holder.binding.btnVerschieben.setTextColor(
                 if (vButtonAktiv) ContextCompat.getColor(context, R.color.white)
                 else ContextCompat.getColor(context, R.color.white).let {
@@ -349,7 +349,7 @@ class CustomerViewHolderBinder(
             val uButtonAktiv = customer.urlaubVon > 0 && customer.urlaubBis > 0 && hatTerminImUrlaub
             
             holder.binding.btnUrlaub.visibility = if (!isDone && uButtonAktiv) View.VISIBLE else View.GONE
-            holder.binding.btnUrlaub.background = ContextCompat.getDrawable(context, R.drawable.button_u)
+            holder.binding.btnUrlaub.background = ContextCompat.getDrawable(context, R.drawable.button_u_glossy)
             holder.binding.btnUrlaub.setTextColor(
                 if (uButtonAktiv) ContextCompat.getColor(context, R.color.white)
                 else ContextCompat.getColor(context, R.color.white).let {
@@ -401,7 +401,7 @@ class CustomerViewHolderBinder(
         }
     }
     
-    private fun resetStyles(holder: CustomerAdapter.CustomerViewHolder) {
+    private fun resetStyles(holder: CustomerViewHolder) {
         holder.binding.itemContainer.alpha = 1.0f
         holder.binding.tvItemName.setTextColor(ContextCompat.getColor(context, R.color.text_primary))
         holder.binding.tvItemName.setTypeface(null, Typeface.NORMAL)
@@ -409,7 +409,7 @@ class CustomerViewHolderBinder(
         holder.binding.root.setCardBackgroundColor(ContextCompat.getColor(context, R.color.surface_white))
     }
     
-    private fun applyStatusStyles(holder: CustomerAdapter.CustomerViewHolder, customer: Customer) {
+    private fun applyStatusStyles(holder: CustomerViewHolder, customer: Customer) {
         holder.binding.tvStatusLabel.visibility = View.VISIBLE
         holder.binding.tvStatusLabel.setTextColor(Color.WHITE)
         

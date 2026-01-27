@@ -2,23 +2,18 @@ package com.example.we2026_5
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.GestureDetector
-import android.view.MotionEvent
 import android.view.View
-import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import androidx.core.view.GestureDetectorCompat
-import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.databinding.ActivityTourPlannerBinding
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.example.we2026_5.tourplanner.TourPlannerDialogHelper
 import com.example.we2026_5.tourplanner.TourPlannerDateUtils
 import com.example.we2026_5.tourplanner.TourPlannerCallbackHandler
+import com.example.we2026_5.tourplanner.TourPlannerUISetup
+import com.example.we2026_5.tourplanner.TourPlannerGestureHandler
 import com.example.we2026_5.FirebaseRetryHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,7 +34,6 @@ class TourPlannerActivity : AppCompatActivity() {
     private lateinit var weekAdapter: WeekViewAdapter
     private var viewDate = Calendar.getInstance()
     private var isWeekView = false
-    private lateinit var gestureDetector: GestureDetectorCompat
     private lateinit var networkMonitor: NetworkMonitor
     private var pressedHeaderButton: String? = null // "Karte", "Heute", "Woche"
     
@@ -47,6 +41,8 @@ class TourPlannerActivity : AppCompatActivity() {
     private lateinit var dialogHelper: TourPlannerDialogHelper
     private lateinit var dateUtils: TourPlannerDateUtils
     private lateinit var callbackHandler: TourPlannerCallbackHandler
+    private lateinit var uiSetup: TourPlannerUISetup
+    private lateinit var gestureHandler: TourPlannerGestureHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,9 +79,6 @@ class TourPlannerActivity : AppCompatActivity() {
         // Callbacks für Firebase-Operationen setzen (initialisiert auch callbackHandler)
         setupAdapterCallbacks()
 
-        binding.rvTourList.layoutManager = LinearLayoutManager(this)
-        binding.rvTourList.adapter = adapter
-        
         // Wochenansicht-Adapter initialisieren
         weekAdapter = WeekViewAdapter(
             weekData = emptyMap(),
@@ -111,32 +104,15 @@ class TourPlannerActivity : AppCompatActivity() {
                 dayAdapter
             }
         )
-        binding.rvWeekView.layoutManager = LinearLayoutManager(this)
-        binding.rvWeekView.adapter = weekAdapter
         
-        // Drag & Drop für Kunden
-        val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
-            ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0
-        ) {
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ): Boolean {
-                val fromPosition = viewHolder.adapterPosition
-                val toPosition = target.adapterPosition
-                return adapter.onItemMove(fromPosition, toPosition)
-            }
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                // Nicht verwendet
-            }
-            
-            override fun isLongPressDragEnabled(): Boolean {
-                return true // Lang drücken zum Verschieben
-            }
-        })
-        itemTouchHelper.attachToRecyclerView(binding.rvTourList)
+        // UI-Setup initialisieren
+        uiSetup = TourPlannerUISetup(
+            activity = this,
+            binding = binding,
+            setupAdapterCallbacks = { setupAdapterCallbacks() },
+            setupAdapterCallbacksForAdapter = { adapter -> setupAdapterCallbacksForAdapter(adapter) }
+        )
+        uiSetup.setupAdapters(adapter, weekAdapter)
         
         // Callback für Section-Toggle setzen
         adapter.onSectionToggle = { sectionType ->
@@ -146,7 +122,7 @@ class TourPlannerActivity : AppCompatActivity() {
         
         // Initial: Tagesansicht
         updateViewMode()
-        updateHeaderButtonStates() // Initial Header-Button-Zustand setzen
+        uiSetup.updateHeaderButtonStates(pressedHeaderButton) // Initial Header-Button-Zustand setzen
         
         // ViewModel Observer einrichten
         observeViewModel()
@@ -175,7 +151,7 @@ class TourPlannerActivity : AppCompatActivity() {
 
         binding.btnToday.setOnClickListener {
             pressedHeaderButton = "Heute"
-            updateHeaderButtonStates()
+            uiSetup.updateHeaderButtonStates(pressedHeaderButton)
             // Auf heute springen - immer ein neues Calendar-Objekt erstellen
             val heute = Calendar.getInstance()
             val heuteStart = Calendar.getInstance().apply {
@@ -207,12 +183,12 @@ class TourPlannerActivity : AppCompatActivity() {
 
         binding.btnMapView.setOnClickListener {
             pressedHeaderButton = "Karte"
-            updateHeaderButtonStates()
+            uiSetup.updateHeaderButtonStates(pressedHeaderButton)
             val intent = Intent(this, MapViewActivity::class.java)
             startActivity(intent)
             // Nach Rückkehr Button-Zustand zurücksetzen
             pressedHeaderButton = null
-            updateHeaderButtonStates()
+            uiSetup.updateHeaderButtonStates(pressedHeaderButton)
         }
         
         // Toggle zwischen Tag- und Wochenansicht
@@ -220,7 +196,6 @@ class TourPlannerActivity : AppCompatActivity() {
             pressedHeaderButton = if (isWeekView) null else "Woche"
             isWeekView = !isWeekView
             updateViewMode()
-            updateHeaderButtonStates()
         }
         
         // Pull-to-Refresh
@@ -237,7 +212,12 @@ class TourPlannerActivity : AppCompatActivity() {
         }
         
         // Swipe-Gesten für Datum-Wechsel einrichten
-        setupSwipeGestures()
+        gestureHandler = TourPlannerGestureHandler(
+            binding = binding,
+            viewDate = viewDate,
+            onDateChanged = { updateDisplay() }
+        )
+        gestureHandler.setupSwipeGestures()
     }
     
     override fun onDestroy() {
@@ -245,47 +225,6 @@ class TourPlannerActivity : AppCompatActivity() {
         networkMonitor.stopMonitoring()
     }
     
-    private fun setupSwipeGestures() {
-        gestureDetector = GestureDetectorCompat(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onFling(
-                e1: MotionEvent?,
-                e2: MotionEvent,
-                velocityX: Float,
-                velocityY: Float
-            ): Boolean {
-                if (e1 == null) return false
-                
-                val deltaX = e2.x - e1.x
-                val deltaY = e2.y - e1.y
-                
-                // Nur horizontale Swipes erkennen (nicht vertikale)
-                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 100) {
-                    if (deltaX > 0) {
-                        // Swipe nach rechts = vorheriger Tag
-                        viewDate.add(Calendar.DAY_OF_YEAR, -1)
-                        updateDisplay()
-                        return true
-                    } else {
-                        // Swipe nach links = nächster Tag
-                        viewDate.add(Calendar.DAY_OF_YEAR, 1)
-                        updateDisplay()
-                        return true
-                    }
-                }
-                return false
-            }
-        })
-        
-        // Swipe-Gesten auf dem RecyclerView aktivieren
-        binding.rvTourList.setOnTouchListener { _, event ->
-            gestureDetector.onTouchEvent(event) || false
-        }
-        
-        // Auch auf dem gesamten Layout aktivieren (falls RecyclerView leer ist)
-        binding.root.setOnTouchListener { _, event ->
-            gestureDetector.onTouchEvent(event) || false
-        }
-    }
 
     override fun onStart() {
         super.onStart()
@@ -293,7 +232,7 @@ class TourPlannerActivity : AppCompatActivity() {
         // Button-Zustand zurücksetzen wenn von MapViewActivity zurückgekehrt
         if (pressedHeaderButton == "Karte") {
             pressedHeaderButton = null
-            updateHeaderButtonStates()
+            uiSetup.updateHeaderButtonStates(pressedHeaderButton)
         }
     }
 
@@ -304,13 +243,7 @@ class TourPlannerActivity : AppCompatActivity() {
                 adapter.updateData(items, dateUtils.getStartOfDay(viewDate.timeInMillis))
                 
                 // Empty State anzeigen wenn keine Kunden vorhanden
-                if (items.isEmpty()) {
-                    binding.emptyStateLayout.visibility = View.VISIBLE
-                    binding.rvTourList.visibility = View.GONE
-                } else {
-                    binding.emptyStateLayout.visibility = View.GONE
-                    binding.rvTourList.visibility = View.VISIBLE
-                }
+                uiSetup.updateEmptyState(items.isEmpty(), isWeekView = false)
             }
         }
         
@@ -330,13 +263,7 @@ class TourPlannerActivity : AppCompatActivity() {
                 
                 // Empty State prüfen
                 val hasAnyData = weekData.values.any { it.isNotEmpty() }
-                if (hasAnyData) {
-                    binding.emptyStateLayout.visibility = View.GONE
-                    binding.rvWeekView.visibility = View.VISIBLE
-                } else {
-                    binding.emptyStateLayout.visibility = View.VISIBLE
-                    binding.rvWeekView.visibility = View.GONE
-                }
+                uiSetup.updateEmptyState(!hasAnyData, isWeekView = true)
             }
         }
         
@@ -379,100 +306,15 @@ class TourPlannerActivity : AppCompatActivity() {
     }
     
     private fun updateViewMode() {
-        if (isWeekView) {
-            binding.rvTourList.visibility = View.GONE
-            binding.rvWeekView.visibility = View.VISIBLE
-            binding.btnPrevDay.contentDescription = "Vorherige Woche"
-            binding.btnNextDay.contentDescription = "Nächste Woche"
-            binding.btnToggleView.contentDescription = "Tagesansicht"
-        } else {
-            binding.rvTourList.visibility = View.VISIBLE
-            binding.rvWeekView.visibility = View.GONE
-            binding.btnPrevDay.contentDescription = "Vorheriger Tag"
-            binding.btnNextDay.contentDescription = "Nächster Tag"
-            binding.btnToggleView.contentDescription = "Wochenansicht"
-        }
-        updateHeaderButtonStates() // Button-Zustände aktualisieren
+        uiSetup.updateViewMode(isWeekView)
+        uiSetup.updateHeaderButtonStates(pressedHeaderButton) // Button-Zustände aktualisieren
         updateDisplay()
     }
     
     private fun updateTodayButtonState() {
         // Diese Funktion wird jetzt von updateHeaderButtonStates() übernommen
         // Behalten für Kompatibilität, aber Logik ist in updateHeaderButtonStates()
-        updateHeaderButtonStates()
-    }
-    
-    private fun updateHeaderButtonStates() {
-        // Farben definieren
-        val activeBackgroundColor = ContextCompat.getColor(this, R.color.status_warning) // Orange
-        val inactiveBackgroundColor = ContextCompat.getColor(this, R.color.button_blue) // Blau
-        val textColor = ContextCompat.getColor(this, R.color.white)
-        
-        // Button-Zeile bleibt immer blau
-        val barBackgroundColor = ContextCompat.getColor(this, R.color.primary_blue)
-        binding.buttonBar.setBackgroundColor(barBackgroundColor)
-        
-        when (pressedHeaderButton) {
-            "Karte" -> {
-                // Aktiver Button: Orange Hintergrund
-                binding.btnMapView.setBackgroundColor(activeBackgroundColor)
-                binding.btnMapView.setTextColor(textColor)
-                binding.btnMapView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-                
-                // Inaktive Buttons: Blau Hintergrund
-                binding.btnToday.setBackgroundColor(inactiveBackgroundColor)
-                binding.btnToday.setTextColor(textColor)
-                binding.btnToday.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-                
-                binding.btnToggleView.setBackgroundColor(inactiveBackgroundColor)
-                binding.btnToggleView.setTextColor(textColor)
-                binding.btnToggleView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-            }
-            "Heute" -> {
-                // Aktiver Button: Orange Hintergrund
-                binding.btnToday.setBackgroundColor(activeBackgroundColor)
-                binding.btnToday.setTextColor(textColor)
-                binding.btnToday.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-                
-                // Inaktive Buttons: Blau Hintergrund
-                binding.btnMapView.setBackgroundColor(inactiveBackgroundColor)
-                binding.btnMapView.setTextColor(textColor)
-                binding.btnMapView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-                
-                binding.btnToggleView.setBackgroundColor(inactiveBackgroundColor)
-                binding.btnToggleView.setTextColor(textColor)
-                binding.btnToggleView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-            }
-            "Woche" -> {
-                // Aktiver Button: Orange Hintergrund
-                binding.btnToggleView.setBackgroundColor(activeBackgroundColor)
-                binding.btnToggleView.setTextColor(textColor)
-                binding.btnToggleView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-                
-                // Inaktive Buttons: Blau Hintergrund
-                binding.btnMapView.setBackgroundColor(inactiveBackgroundColor)
-                binding.btnMapView.setTextColor(textColor)
-                binding.btnMapView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-                
-                binding.btnToday.setBackgroundColor(inactiveBackgroundColor)
-                binding.btnToday.setTextColor(textColor)
-                binding.btnToday.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-            }
-            else -> {
-                // Kein Button gedrückt: Alle blau
-                binding.btnMapView.setBackgroundColor(inactiveBackgroundColor)
-                binding.btnMapView.setTextColor(textColor)
-                binding.btnMapView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-                
-                binding.btnToday.setBackgroundColor(inactiveBackgroundColor)
-                binding.btnToday.setTextColor(textColor)
-                binding.btnToday.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-                
-                binding.btnToggleView.setBackgroundColor(inactiveBackgroundColor)
-                binding.btnToggleView.setTextColor(textColor)
-                binding.btnToggleView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-            }
-        }
+        uiSetup.updateHeaderButtonStates(pressedHeaderButton)
     }
 
     private fun loadTourData(selectedTimestamp: Long) {
@@ -496,12 +338,7 @@ class TourPlannerActivity : AppCompatActivity() {
     }
     
     private fun showErrorState(message: String) {
-        binding.errorStateLayout.visibility = View.VISIBLE
-        binding.rvTourList.visibility = View.GONE
-        binding.emptyStateLayout.visibility = View.GONE
-        binding.tvErrorMessage.text = message
-        
-        binding.btnRetry.setOnClickListener {
+        uiSetup.showErrorState(message) {
             reloadCurrentView()
         }
     }

@@ -22,3 +22,27 @@ Bei jeder Datei-Bearbeitung folgst du diesem Ablauf:
 - **Firebase Storage:** gs://tourplaner2026.firebasestorage.app
 - **GitHub-Pfad:** https://github.com/kenankara0000-design/we2026_5
 - **Wichtig:** Gib Dateien immer als ganzes Stück aus, niemals in Teilen oder Fragmenten.
+
+## IV. Firebase-Konfiguration (KRITISCH)
+- **HAUPT-DATENBANK:** Die App nutzt **Firebase Realtime Database** (NICHT Firestore!)
+- **WICHTIG:** Bei allen Firebase-bezogenen Änderungen immer beachten:
+  - Repositories verwenden `FirebaseDatabase`, `DatabaseReference`, `ValueEventListener`
+  - NICHT `Firestore`, `CollectionReference`, `DocumentSnapshot` verwenden
+  - `FirebaseSyncManager` ist korrekt implementiert für Realtime Database
+  - `AppModule.kt` registriert `FirebaseDatabase.getInstance()` korrekt
+- **Für Zukunft:** Bei allen Firebase-Änderungen immer Realtime Database verwenden, niemals Firestore
+
+## V. Code-Organisation und Dateistruktur
+- **WICHTIG:** Bei jeder neuen Funktion, die hinzugefügt wird, MUSS mit dem Benutzer besprochen werden:
+  - Ob es besser wäre, eine **separate neue Datei** zu erstellen
+  - Oder ob die Funktion in eine **bestehende Datei** eingefügt werden soll
+- **ABLAUF:**
+  1. **Empfehlung geben:** Ich gebe meine fachliche Empfehlung mit Begründung (z.B. "Empfehlung: Separate Datei, weil...")
+  2. **Optionen vorstellen:** Beide Optionen klar darstellen (neue Datei vs. bestehende Datei)
+  3. **Auf Entscheidung warten:** NICHT selbstständig entscheiden - immer auf explizite Entscheidung des Benutzers warten
+- Dies gilt für:
+  - Neue Helper-Klassen
+  - Neue Utility-Funktionen
+  - Neue Manager-Klassen
+  - Neue Adapter
+  - Jede andere neue Code-Struktur
