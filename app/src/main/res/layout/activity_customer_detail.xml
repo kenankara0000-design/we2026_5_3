@@ -14,39 +14,47 @@
         android:padding="8dp"
         android:elevation="6dp">
 
+        <!-- Zurück-Button ganz links -->
         <ImageButton
             android:id="@+id/btnDetailBack"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_menu_revert"
             android:tint="#FFFFFF"
             android:contentDescription="Zurück" />
 
-        <!-- Kunden-Typ Button (G/P/L) vor dem Namen -->
+        <!-- Kunden-Typ Button (G/P/L) rechts vom Zurück-Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnKundenTyp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
+            android:layout_toEndOf="@id/btnDetailBack"
             android:layout_centerVertical="true"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="8dp"
             android:text="G"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:minWidth="36dp"
-            android:minHeight="36dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
+            android:textColor="#FFFFFF"
+            android:minWidth="38dp"
+            android:minHeight="32dp"
+            android:paddingStart="9dp"
+            android:paddingEnd="9dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             app:cornerRadius="8dp"
-            android:visibility="gone"/>
+            app:strokeWidth="0dp"/>
 
+        <!-- Kunden-Name rechts vom Kunden-Button -->
         <TextView
             android:id="@+id/tvDetailName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
+            android:layout_toEndOf="@id/btnKundenTyp"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="12dp"
             android:text="Kundenname"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
@@ -92,8 +100,8 @@
                     android:layout_height="wrap_content"
                     android:text="Gewerblich"
                     android:textSize="16sp"
-                    android:padding="8dp"
-                    android:background="#E0E0E0"
+                    android:padding="12dp"
+                    android:background="@drawable/field_background"
                     android:layout_marginBottom="12dp"/>
 
                 <TextView
@@ -110,8 +118,8 @@
                     android:layout_height="wrap_content"
                     android:text="Adresse"
                     android:textSize="16sp"
-                    android:padding="8dp"
-                    android:background="#E0E0E0"
+                    android:padding="12dp"
+                    android:background="@drawable/field_background"
                     android:clickable="true"
                     android:focusable="true"
                     android:layout_marginBottom="12dp"/>
@@ -130,8 +138,8 @@
                     android:layout_height="wrap_content"
                     android:text="Telefon"
                     android:textSize="16sp"
-                    android:padding="8dp"
-                    android:background="#E0E0E0"
+                    android:padding="12dp"
+                    android:background="@drawable/field_background"
                     android:clickable="true"
                     android:focusable="true"
                     android:layout_marginBottom="12dp"/>
@@ -150,8 +158,8 @@
                     android:layout_height="wrap_content"
                     android:text="Notizen"
                     android:textSize="16sp"
-                    android:padding="8dp"
-                    android:background="#E0E0E0"
+                    android:padding="12dp"
+                    android:background="@drawable/field_background"
                     android:minHeight="100dp"
                     android:layout_marginBottom="12dp"/>
 
@@ -212,8 +220,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Name"
-                    android:padding="8dp"
-                    android:background="#FFFFFF"
+                    android:padding="12dp"
+                    android:background="@drawable/field_background"
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_secondary"
                     android:layout_marginBottom="12dp"/>
@@ -280,8 +288,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:hint="Adresse"
-                        android:padding="8dp"
-                        android:background="#FFFFFF"
+                        android:padding="12dp"
+                        android:background="@drawable/field_background"
                         android:textColor="@color/text_primary"
                         android:textColorHint="@color/text_secondary"/>
 
@@ -313,8 +321,8 @@
                     android:layout_height="wrap_content"
                     android:hint="Telefon"
                     android:inputType="phone"
-                    android:padding="8dp"
-                    android:background="#FFFFFF"
+                    android:padding="12dp"
+                    android:background="@drawable/field_background"
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_secondary"
                     android:layout_marginBottom="12dp"/>
@@ -336,8 +344,8 @@
                     android:inputType="textMultiLine"
                     android:minLines="3"
                     android:gravity="top"
-                    android:padding="8dp"
-                    android:background="#FFFFFF"
+                    android:padding="12dp"
+                    android:background="@drawable/field_background"
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_secondary"
                     android:layout_marginBottom="12dp"/>
@@ -379,8 +387,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="+ Intervall hinzufügen"
-                            android:backgroundTint="@color/primary_blue"
-                            android:textColor="@color/white"
+                            android:background="@drawable/button_bearbeiten_glossy"
+                            android:textColor="#FFFFFF"
                             android:padding="12dp"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
@@ -398,9 +406,14 @@
                     android:id="@+id/btnEditCustomer"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_weight="1.2"
                     android:text="Bearbeiten"
-                    android:layout_marginEnd="4dp"/>
+                    android:textColor="#FFFFFF"
+                    android:minWidth="120dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/button_bearbeiten_glossy"/>
 
                 <Button
                     android:id="@+id/btnSaveCustomer"
@@ -408,10 +421,11 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Speichern"
+                    android:textColor="#FFFFFF"
                     android:layout_marginStart="4dp"
                     android:layout_marginEnd="4dp"
                     android:visibility="gone"
-                    android:backgroundTint="@color/button_auslieferung"/>
+                    android:background="@drawable/button_speichern_glossy"/>
 
                 <Button
                     android:id="@+id/btnDeleteCustomer"
@@ -419,9 +433,10 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Löschen"
+                    android:textColor="#FFFFFF"
                     android:layout_marginStart="4dp"
                     android:visibility="gone"
-                    android:backgroundTint="#DC3545"/>
+                    android:background="@drawable/button_loeschen_glossy"/>
             </LinearLayout>
 
             <View

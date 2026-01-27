@@ -21,32 +21,28 @@ object CustomerTypeButtonHelper {
      * @param context Der Context für Farb-Ressourcen
      */
     fun setupButton(button: MaterialButton, kundenArt: String, context: Context) {
+        // Textfarbe immer weiß setzen
+        button.setTextColor(android.graphics.Color.WHITE)
+        // BackgroundTint deaktivieren, damit Drawable sichtbar ist
+        button.backgroundTintList = null
+        
         when (kundenArt) {
             "Gewerblich" -> {
                 button.text = "G"
-                button.setBackgroundTintList(
-                    android.content.res.ColorStateList.valueOf(
-                        ContextCompat.getColor(context, R.color.primary_blue)
-                    )
-                )
+                // Kräftigeres, glänzenderes Blau mit Gradient-Hintergrund
+                button.setBackgroundResource(R.drawable.button_gewerblich_glossy)
                 button.visibility = View.VISIBLE
             }
             "Privat" -> {
                 button.text = "P"
-                button.setBackgroundTintList(
-                    android.content.res.ColorStateList.valueOf(
-                        ContextCompat.getColor(context, R.color.accent_orange)
-                    )
-                )
+                // Kräftigeres, glänzenderes Orange mit Gradient-Hintergrund
+                button.setBackgroundResource(R.drawable.button_privat_glossy)
                 button.visibility = View.VISIBLE
             }
             "Liste" -> {
                 button.text = "L"
-                button.setBackgroundTintList(
-                    android.content.res.ColorStateList.valueOf(
-                        ContextCompat.getColor(context, R.color.accent_brown)
-                    )
-                )
+                // Kräftigeres, glänzenderes Braun mit Gradient-Hintergrund
+                button.setBackgroundResource(R.drawable.button_liste_glossy)
                 button.visibility = View.VISIBLE
             }
             else -> {

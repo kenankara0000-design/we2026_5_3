@@ -146,7 +146,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="65dp"
                 android:text="Speichern"
-                android:backgroundTint="@color/primary_blue"
+                android:background="@drawable/button_speichern_glossy"
                 android:textColor="#FFFFFF"
                 android:layout_marginBottom="12dp"/>
 

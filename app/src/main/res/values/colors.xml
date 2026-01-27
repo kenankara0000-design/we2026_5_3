@@ -29,6 +29,11 @@
     <color name="accent_blue">#2196F3</color>
     <color name="accent_brown">#795548</color>
     
+    <!-- Kräftige, glänzende Farben für G/P/L Buttons -->
+    <color name="button_gewerblich_glossy">#0D47A1</color> <!-- Dunkleres, kräftigeres Blau -->
+    <color name="button_privat_glossy">#E65100</color> <!-- Kräftigeres Orange -->
+    <color name="button_liste_glossy">#5D4037</color> <!-- Kräftigeres Braun -->
+    
     <!-- Neutrale Farben -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>

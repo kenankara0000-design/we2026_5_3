@@ -25,15 +25,28 @@ class CustomerManagerViewModel(
     // StateFlow für Such-Query
     private val searchQueryFlow = MutableStateFlow("")
     
-    // Kombiniere customers und searchQuery für gefilterte Liste
+    // StateFlow für ausgewählten Tab (0=Gewerblich, 1=Privat, 2=Liste)
+    private val selectedTabFlow = MutableStateFlow(0)
+    
+    // Kombiniere customers, searchQuery und selectedTab für gefilterte Liste
     val filteredCustomers: LiveData<List<Customer>> = combine(
         customersFlow,
-        searchQueryFlow
-    ) { customers, query ->
+        searchQueryFlow,
+        selectedTabFlow
+    ) { customers, query, selectedTab ->
+        // Zuerst nach Tab filtern
+        val tabFiltered = when (selectedTab) {
+            0 -> customers.filter { it.kundenArt == "Gewerblich" }
+            1 -> customers.filter { it.kundenArt == "Privat" }
+            2 -> customers.filter { it.kundenArt == "Liste" }
+            else -> customers
+        }
+        
+        // Dann nach Such-Query filtern
         if (query.isEmpty()) {
-            customers
+            tabFiltered
         } else {
-            customers.filter {
+            tabFiltered.filter {
                 it.name.contains(query, ignoreCase = true) ||
                 it.adresse.contains(query, ignoreCase = true)
             }
@@ -57,6 +70,10 @@ class CustomerManagerViewModel(
     
     fun filterCustomers(query: String) {
         searchQueryFlow.value = query
+    }
+    
+    fun setSelectedTab(tabIndex: Int) {
+        selectedTabFlow.value = tabIndex
     }
     
     fun deleteCustomer(customerId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {

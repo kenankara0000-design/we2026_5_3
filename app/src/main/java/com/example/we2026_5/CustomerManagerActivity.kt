@@ -63,6 +63,17 @@ class CustomerManagerActivity : AppCompatActivity() {
         binding.rvCustomerList.layoutManager = LinearLayoutManager(this)
         binding.rvCustomerList.adapter = adapter
         
+        // Tab-Listener einrichten
+        binding.tabLayout.addOnTabSelectedListener(object : com.google.android.material.tabs.TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: com.google.android.material.tabs.TabLayout.Tab?) {
+                tab?.position?.let { position ->
+                    viewModel.setSelectedTab(position)
+                }
+            }
+            override fun onTabUnselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
+            override fun onTabReselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
+        })
+        
         // ExportHelper initialisieren
         exportHelper = CustomerExportHelper(this, repository)
         

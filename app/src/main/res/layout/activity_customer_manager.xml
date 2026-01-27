@@ -64,12 +64,43 @@
         </LinearLayout>
     </RelativeLayout>
     
-    <!-- Button-Zeile unter Header -->
+    <!-- Tabs für Kunden-Typen -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/headerLayout"
+        android:background="@color/primary_blue"
+        app:tabMode="fixed"
+        app:tabGravity="fill"
+        app:tabTextColor="#CCFFFFFF"
+        app:tabSelectedTextColor="#FFFFFF"
+        app:tabIndicatorColor="#FFFFFF"
+        app:tabIndicatorHeight="3dp"
+        android:elevation="6dp">
+        
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gewerblich" />
+        
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Privat" />
+        
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Liste" />
+    </com.google.android.material.tabs.TabLayout>
+
+    <!-- Button-Zeile unter Tabs -->
     <LinearLayout
         android:id="@+id/buttonBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/headerLayout"
+        android:layout_below="@id/tabLayout"
         android:background="@color/primary_blue"
         android:orientation="horizontal"
         android:gravity="center_vertical"
@@ -141,7 +172,8 @@
         android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/buttonBar">
+        android:layout_below="@id/buttonBar"
+        android:layout_above="@id/bulkActionBar">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -253,8 +285,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Erneut versuchen"
-                    android:backgroundTint="@color/primary_blue"
-                    android:textColor="@color/white"/>
+                    android:background="@drawable/button_bearbeiten_glossy"
+                    android:textColor="#FFFFFF"/>
             </LinearLayout>
         </FrameLayout>
 
@@ -290,7 +322,7 @@
             android:layout_height="wrap_content"
             android:text="Als erledigt markieren"
             android:textSize="12sp"
-            android:backgroundTint="@color/status_done"
+            android:background="@drawable/button_speichern_glossy"
             android:textColor="#FFFFFF"
             android:layout_marginEnd="8dp"/>
         
@@ -300,7 +332,7 @@
             android:layout_height="wrap_content"
             android:text="Abbrechen"
             android:textSize="12sp"
-            android:backgroundTint="@color/light_gray"
+            android:background="@drawable/button_u_glossy"
             android:textColor="#FFFFFF"/>
     </LinearLayout>
 

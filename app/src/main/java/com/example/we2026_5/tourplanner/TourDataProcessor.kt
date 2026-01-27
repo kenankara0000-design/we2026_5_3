@@ -83,8 +83,16 @@ class TourDataProcessor {
             }
         }
         
-        // Gewerblich-Kunden ohne Liste filtern
-        val gewerblichKundenOhneListe = kundenOhneListe.filter { it.kundenArt == "Gewerblich" }
+        // Sammle alle Kunden-IDs die in Listen sind (um Doppelungen zu vermeiden)
+        // WICHTIG: Sammle ALLE Kunden aus Listen, nicht nur die fälligen
+        val alleKundenInListenIds = kundenNachListen.values.flatten().map { it.id }.toSet()
+        val kundenInListenIds = listenMitKunden.values.flatten().map { it.id }.toSet()
+        
+        // Gewerblich-Kunden ohne Liste filtern (Kunden aus Listen sind bereits oben angezeigt)
+        // Filtere ALLE Kunden aus Listen heraus, nicht nur die fälligen
+        val gewerblichKundenOhneListe = kundenOhneListe.filter { 
+            it.kundenArt == "Gewerblich" && it.id !in alleKundenInListenIds 
+        }
         val filteredGewerblich = gewerblichKundenOhneListe.filter { customer ->
             val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
             
@@ -121,7 +129,6 @@ class TourDataProcessor {
         
         // Liste mit Items erstellen
         val items = mutableListOf<ListItem>()
-        val kundenInListenIds = listenMitKunden.values.flatten().map { it.id }.toSet()
         
         // Gewerblich-Kunden OHNE Liste kategorisieren
         val overdueGewerblich = mutableListOf<Customer>()
@@ -129,7 +136,8 @@ class TourDataProcessor {
         val doneGewerblich = mutableListOf<Customer>()
         
         filteredGewerblich.forEach { customer ->
-            if (customer.id in kundenInListenIds) return@forEach
+            // Sicherstellen, dass Kunden aus Listen nicht in normalen Bereichen erscheinen
+            if (customer.id in alleKundenInListenIds) return@forEach
             
             val isOverdue = istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)
             
@@ -210,13 +218,95 @@ class TourDataProcessor {
         allListen.sortedBy { it.name }.forEach { liste ->
             val kundenInListe = listenMitKunden[liste.id] ?: return@forEach
             if (kundenInListe.isNotEmpty()) {
-                val erledigteKunden = kundenInListe.count { customer ->
-                    val customerDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-                    val listeDone = liste.abholungErfolgt && liste.auslieferungErfolgt
-                    customerDone || listeDone
+                // Trenne Kunden in erledigt und nicht erledigt
+                val nichtErledigteKunden = mutableListOf<Customer>()
+                val erledigteKundenInListe = mutableListOf<Customer>()
+                
+                kundenInListe.forEach { customer ->
+                    val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
+                    val listeDone = liste.abholungErfolgt || liste.auslieferungErfolgt
+                    
+                    // Prüfe ob Kunde am angezeigten Tag erledigt wurde oder erledigt sein soll
+                    val sollAlsErledigtAnzeigen = if (isDone || listeDone) {
+                        val warUeberfaelligUndErledigtAmDatum = if (isDone && customer.faelligAmDatum > 0) {
+                            val faelligAmStart = getStartOfDay(customer.faelligAmDatum)
+                            val erledigtAmStart = if (customer.abholungErledigtAm > 0) {
+                                getStartOfDay(customer.abholungErledigtAm)
+                            } else if (customer.auslieferungErledigtAm > 0) {
+                                getStartOfDay(customer.auslieferungErledigtAm)
+                            } else {
+                                0L
+                            }
+                            viewDateStart == faelligAmStart || (erledigtAmStart > 0 && viewDateStart == erledigtAmStart)
+                        } else {
+                            false
+                        }
+                        
+                        val hatErledigtenTerminAmDatum = if (isDone) {
+                            val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                                customer = customer,
+                                liste = liste,
+                                startDatum = viewDateStart - TimeUnit.DAYS.toMillis(365),
+                                tageVoraus = 730
+                            )
+                            
+                            val hatErledigtenATermin = if (customer.abholungErfolgt) {
+                                val abholungErledigtAmStart = if (customer.abholungErledigtAm > 0) getStartOfDay(customer.abholungErledigtAm) else 0L
+                                if (abholungErledigtAmStart > 0 && viewDateStart == abholungErledigtAmStart) {
+                                    true
+                                } else {
+                                    termine.any { termin ->
+                                        termin.typ == com.example.we2026_5.TerminTyp.ABHOLUNG &&
+                                        getStartOfDay(termin.datum) == viewDateStart
+                                    }
+                                }
+                            } else {
+                                false
+                            }
+                            
+                            val hatErledigtenLTermin = if (customer.auslieferungErfolgt) {
+                                val auslieferungErledigtAmStart = if (customer.auslieferungErledigtAm > 0) getStartOfDay(customer.auslieferungErledigtAm) else 0L
+                                if (auslieferungErledigtAmStart > 0 && viewDateStart == auslieferungErledigtAmStart) {
+                                    true
+                                } else {
+                                    termine.any { termin ->
+                                        termin.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG &&
+                                        getStartOfDay(termin.datum) == viewDateStart
+                                    }
+                                }
+                            } else {
+                                false
+                            }
+                            
+                            hatErledigtenATermin || hatErledigtenLTermin
+                        } else {
+                            false
+                        }
+                        
+                        warUeberfaelligUndErledigtAmDatum || hatErledigtenTerminAmDatum
+                    } else {
+                        false
+                    }
+                    
+                    if (sollAlsErledigtAnzeigen) {
+                        erledigteKundenInListe.add(customer)
+                    } else {
+                        nichtErledigteKunden.add(customer)
+                    }
                 }
-                items.add(ListItem.ListeHeader(liste.name, kundenInListe.size, erledigteKunden, liste.id))
-                kundenInListe.forEach { items.add(ListItem.CustomerItem(it)) }
+                
+                val gesamtKunden = nichtErledigteKunden.size + erledigteKundenInListe.size
+                items.add(ListItem.ListeHeader(liste.name, gesamtKunden, erledigteKundenInListe.size, liste.id))
+                
+                // Zeige zuerst nicht erledigte Kunden
+                nichtErledigteKunden.sortedBy { it.name }.forEach { items.add(ListItem.CustomerItem(it)) }
+                
+                // Dann Erledigt-Bereich innerhalb der Liste (wenn es erledigte Kunden gibt)
+                if (erledigteKundenInListe.isNotEmpty()) {
+                    // Erledigt-Bereich innerhalb der Liste - verwende SectionHeader mit spezieller Markierung
+                    // Für jetzt verwenden wir einen normalen SectionHeader, aber innerhalb der Liste
+                    erledigteKundenInListe.sortedBy { it.name }.forEach { items.add(ListItem.CustomerItem(it)) }
+                }
             }
         }
         

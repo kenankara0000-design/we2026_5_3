@@ -5,9 +5,11 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.net.Uri
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -399,9 +401,35 @@ class CustomerAdapter(
                 }
             }
             
+            // Trenne Kunden in erledigt und nicht erledigt basierend auf der Reihenfolge in items
+            // Die Reihenfolge sollte bereits von TourDataProcessor kommen: zuerst nicht erledigte, dann erledigte
+            val nichtErledigteKunden = mutableListOf<Customer>()
+            val erledigteKundenInListe = mutableListOf<Customer>()
+            var hatErledigteGesehen = false
+            
+            // Respektiere die Reihenfolge aus TourDataProcessor: zuerst nicht erledigte, dann erledigte
+            listeKunden.forEach { customer ->
+                val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
+                
+                // Einfache Prüfung: Wenn Kunde erledigt ist, gehört er zum Erledigt-Bereich
+                // Die komplexe Datumslogik wird bereits in TourDataProcessor gemacht
+                if (isDone) {
+                    erledigteKundenInListe.add(customer)
+                    hatErledigteGesehen = true
+                } else {
+                    // Wenn wir bereits erledigte Kunden gesehen haben, sollte dieser Kunde nicht mehr kommen
+                    // (Reihenfolge sollte bereits stimmen - nicht erledigte zuerst)
+                    if (!hatErledigteGesehen) {
+                        nichtErledigteKunden.add(customer)
+                    }
+                }
+            }
+            
             // Kunden-Views in den Container einfügen
             holder.binding.containerKunden.removeAllViews()
-            listeKunden.forEachIndexed { index, customer ->
+            
+            // Zuerst nicht erledigte Kunden (Reihenfolge respektieren, aber nach Namen sortieren für bessere Übersicht)
+            nichtErledigteKunden.sortedBy { it.name }.forEachIndexed { index, customer ->
                 val customerBinding = ItemCustomerBinding.inflate(LayoutInflater.from(context))
                 val customerHolder = CustomerViewHolder(customerBinding)
                 bindCustomerViewHolder(customerHolder, customer)
@@ -417,6 +445,46 @@ class CustomerAdapter(
                     layoutParams.setMargins(
                         layoutParams.leftMargin,
                         if (index == 0) 0 else 4, // Kleiner Abstand oben (außer beim ersten)
+                        layoutParams.rightMargin,
+                        4 // Kleiner Abstand unten
+                    )
+                    cardView.layoutParams = layoutParams
+                }
+                
+                holder.binding.containerKunden.addView(customerBinding.root)
+            }
+            
+            // Dann Erledigt-Label (wenn es erledigte Kunden gibt)
+            if (erledigteKundenInListe.isNotEmpty() && nichtErledigteKunden.isNotEmpty()) {
+                // Trennstrich oder Label für Erledigt-Bereich
+                val erledigtLabel = TextView(context).apply {
+                    setText("ERLEDIGT")
+                    textSize = 14f
+                    setTypeface(null, Typeface.BOLD)
+                    setTextColor(ContextCompat.getColor(context, R.color.section_done_text))
+                    setPadding(16, 12, 16, 8)
+                    gravity = Gravity.CENTER_VERTICAL
+                }
+                holder.binding.containerKunden.addView(erledigtLabel)
+            }
+            
+            // Dann erledigte Kunden (Reihenfolge respektieren, aber nach Namen sortieren für bessere Übersicht)
+            erledigteKundenInListe.sortedBy { it.name }.forEachIndexed { index, customer ->
+                val customerBinding = ItemCustomerBinding.inflate(LayoutInflater.from(context))
+                val customerHolder = CustomerViewHolder(customerBinding)
+                bindCustomerViewHolder(customerHolder, customer)
+                
+                // Abstand zwischen Kunden anpassen (dichter zusammen, aber etwas Abstand)
+                val cardView = customerBinding.root as? androidx.cardview.widget.CardView
+                if (cardView != null) {
+                    val layoutParams = cardView.layoutParams as? ViewGroup.MarginLayoutParams
+                        ?: ViewGroup.MarginLayoutParams(
+                            ViewGroup.MarginLayoutParams.MATCH_PARENT,
+                            ViewGroup.MarginLayoutParams.WRAP_CONTENT
+                        )
+                    layoutParams.setMargins(
+                        layoutParams.leftMargin,
+                        if (index == 0 && nichtErledigteKunden.isEmpty()) 0 else 4, // Kleiner Abstand oben
                         layoutParams.rightMargin,
                         4 // Kleiner Abstand unten
                     )
