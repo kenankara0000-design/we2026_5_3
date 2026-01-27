@@ -1,13 +1,10 @@
 package com.example.we2026_5
 
-import android.app.DatePickerDialog
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.databinding.ActivityListeErstellenBinding
 import com.example.we2026_5.FirebaseRetryHelper
-import com.example.we2026_5.util.IntervallManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,12 +15,6 @@ class ListeErstellenActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityListeErstellenBinding
     private val listeRepository: KundenListeRepository by inject()
-    
-    // Intervalle-Verwaltung
-    private val intervalle = mutableListOf<ListeIntervall>()
-    private lateinit var intervallAdapter: ListeIntervallAdapter
-    private var aktuellesIntervallPosition: Int = -1
-    private var aktuellesDatumTyp: Boolean = true // true = Abholung, false = Auslieferung
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,36 +22,6 @@ class ListeErstellenActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.btnBack.setOnClickListener { finish() }
-        
-        // Intervall-Adapter initialisieren
-        intervallAdapter = ListeIntervallAdapter(
-            intervalle = intervalle.toMutableList(),
-            onIntervallChanged = { neueIntervalle ->
-                intervalle.clear()
-                intervalle.addAll(neueIntervalle)
-            },
-            onDatumSelected = { position, isAbholung ->
-                aktuellesIntervallPosition = position
-                aktuellesDatumTyp = isAbholung
-                IntervallManager.showDatumPickerForListe(
-                    context = this@ListeErstellenActivity,
-                    intervalle = intervalle,
-                    position = position,
-                    isAbholung = isAbholung,
-                    onDatumSelected = { updatedIntervall ->
-                        intervallAdapter.updateIntervalle(intervalle.toList())
-                    }
-                )
-            }
-        )
-        binding.rvIntervalle.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
-        binding.rvIntervalle.adapter = intervallAdapter
-
-        // Intervall hinzufügen Button
-        binding.btnIntervallHinzufuegen.setOnClickListener {
-            val neuesIntervall = ListeIntervall()
-            intervallAdapter.addIntervall(neuesIntervall)
-        }
 
         binding.btnSaveListe.setOnClickListener {
             val name = binding.etListeName.text.toString().trim()
@@ -85,12 +46,12 @@ class ListeErstellenActivity : AppCompatActivity() {
                     else -> "Gewerbe"
                 }
                 
-                // Liste mit Intervalle erstellen
+                // Liste ohne Intervalle erstellen - Intervalle werden später über Regeln hinzugefügt
                 val neueListe = KundenListe(
                     id = listeId,
                     name = name,
                     listeArt = listeArt,
-                    intervalle = intervalle.toList(),
+                    intervalle = emptyList(), // Intervalle werden später über "Termin Anlegen" hinzugefügt
                     erstelltAm = System.currentTimeMillis()
                 )
 

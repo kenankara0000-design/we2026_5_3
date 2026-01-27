@@ -64,43 +64,12 @@
         </LinearLayout>
     </RelativeLayout>
     
-    <!-- Tabs für Kunden-Typen -->
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tabLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/headerLayout"
-        android:background="@color/primary_blue"
-        app:tabMode="fixed"
-        app:tabGravity="fill"
-        app:tabTextColor="#CCFFFFFF"
-        app:tabSelectedTextColor="#FFFFFF"
-        app:tabIndicatorColor="#FFFFFF"
-        app:tabIndicatorHeight="3dp"
-        android:elevation="6dp">
-        
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Gewerblich" />
-        
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Privat" />
-        
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Liste" />
-    </com.google.android.material.tabs.TabLayout>
-
-    <!-- Button-Zeile unter Tabs -->
+    <!-- Button-Zeile oben (Auswählen, Exportieren, +) -->
     <LinearLayout
         android:id="@+id/buttonBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/tabLayout"
+        android:layout_below="@id/headerLayout"
         android:background="@color/primary_blue"
         android:orientation="horizontal"
         android:gravity="center_vertical"
@@ -168,11 +137,25 @@
             app:pressedTranslationZ="10dp" />
     </LinearLayout>
 
+    <!-- Tabs für Kunden-Typen -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/buttonBar"
+        android:background="@color/primary_blue"
+        app:tabMode="fixed"
+        app:tabGravity="fill"
+        app:tabTextColor="#FFFFFF"
+        app:tabSelectedTextColor="#FFFFFF"
+        app:tabIndicatorColor="#FF9800"
+        app:tabIndicatorHeight="4dp" />
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/buttonBar"
+        android:layout_below="@id/tabLayout"
         android:layout_above="@id/bulkActionBar">
 
         <LinearLayout

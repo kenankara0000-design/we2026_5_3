@@ -51,6 +51,10 @@ class MainActivity : AppCompatActivity() {
         binding.btnStatistiken.setOnClickListener {
             startActivity(Intent(this, StatisticsActivity::class.java))
         }
+
+        binding.btnTerminRegeln.setOnClickListener {
+            startActivity(Intent(this, TerminRegelManagerActivity::class.java))
+        }
         
         // Globaler NetworkMonitor für Offline-Status
         networkMonitor = NetworkMonitor(this)

@@ -210,8 +210,90 @@ class CustomerAdapter(
                 } else {
                     // Im CustomerManager: Alle Kunden immer anzeigen
                     // Im TourPlanner: Gewerblich-Kunde oder nicht in Liste/Section
-                    if (shouldShowCustomer(item.customer)) {
-                        bindCustomerViewHolder(holder as CustomerViewHolder, item.customer)
+                    // WICHTIG: Kunden mit listeId sollten NUR in Listen-Containern angezeigt werden
+                    val customer = item.customer
+                    if (customer.listeId.isNotEmpty() && !isInCustomerManager) {
+                        // Kunde gehört zu einer Liste - sollte nicht als separates Item angezeigt werden
+                        holder.itemView.visibility = View.GONE
+                    } else if (shouldShowCustomer(customer)) {
+                        bindCustomerViewHolder(holder as CustomerViewHolder, customer)
+                        
+                        // WICHTIG: Wenn Kunde im Überfällig-Bereich ist, nur A-Button anzeigen
+                        // Wenn Kunde im normalen Bereich ist und auch im Überfällig-Bereich ist, nur L-Button anzeigen
+                        if (displayedDateMillis != null && prevItem is ListItem.SectionHeader) {
+                            val heuteStart = getStartOfDay(System.currentTimeMillis())
+                            val viewDateStart = displayedDateMillis?.let { getStartOfDay(it) } ?: heuteStart
+                            
+                            // Prüfe welche Termine am Tag fällig sind
+                            val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                                customer = customer,
+                                startDatum = viewDateStart - java.util.concurrent.TimeUnit.DAYS.toMillis(365),
+                                tageVoraus = 730
+                            )
+                            val termineAmTag = termine.filter { getStartOfDay(it.datum) == viewDateStart }
+                            val hatAbholungAmTag = termineAmTag.any { it.typ == com.example.we2026_5.TerminTyp.ABHOLUNG }
+                            val hatAuslieferungAmTag = termineAmTag.any { it.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG }
+                            
+                            // Prüfe ob Abholung überfällig ist
+                            val abholungUeberfaellig = if (hatAbholungAmTag) {
+                                val abholungTermin = termineAmTag.firstOrNull { it.typ == com.example.we2026_5.TerminTyp.ABHOLUNG }
+                                if (abholungTermin != null && !customer.abholungErfolgt) {
+                                    val terminStart = getStartOfDay(abholungTermin.datum)
+                                    terminStart < heuteStart && com.example.we2026_5.util.TerminFilterUtils.sollUeberfaelligAnzeigen(
+                                        terminDatum = abholungTermin.datum,
+                                        anzeigeDatum = viewDateStart,
+                                        aktuellesDatum = heuteStart
+                                    )
+                                } else {
+                                    false
+                                }
+                            } else {
+                                false
+                            }
+                            
+                            // Prüfe ob Auslieferung überfällig ist
+                            val auslieferungUeberfaellig = if (hatAuslieferungAmTag) {
+                                val auslieferungTermin = termineAmTag.firstOrNull { it.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG }
+                                if (auslieferungTermin != null && !customer.auslieferungErfolgt) {
+                                    val terminStart = getStartOfDay(auslieferungTermin.datum)
+                                    terminStart < heuteStart && com.example.we2026_5.util.TerminFilterUtils.sollUeberfaelligAnzeigen(
+                                        terminDatum = auslieferungTermin.datum,
+                                        anzeigeDatum = viewDateStart,
+                                        aktuellesDatum = heuteStart
+                                    )
+                                } else {
+                                    false
+                                }
+                            } else {
+                                false
+                            }
+                            
+                            // Wenn im Überfällig-Bereich: Nur A-Button anzeigen (wenn Abholung überfällig)
+                            if (prevItem.sectionType == SectionType.OVERDUE) {
+                                if (!abholungUeberfaellig) {
+                                    holder.binding.btnAbholung.visibility = View.GONE
+                                }
+                                // L-Button ausblenden wenn Auslieferung nicht überfällig
+                                if (!auslieferungUeberfaellig) {
+                                    holder.binding.btnAuslieferung.visibility = View.GONE
+                                }
+                            } else if (prevItem.sectionType != SectionType.DONE) {
+                                // Im normalen Bereich: Nur L-Button anzeigen (wenn Auslieferung normal)
+                                // Wenn Abholung überfällig ist, sollte L-Button angezeigt werden
+                                if (abholungUeberfaellig && !auslieferungUeberfaellig) {
+                                    // Abholung überfällig, Auslieferung normal -> nur L-Button
+                                    holder.binding.btnAbholung.visibility = View.GONE
+                                } else if (!hatAbholungAmTag) {
+                                    // Keine Abholung am Tag -> A-Button ausblenden
+                                    holder.binding.btnAbholung.visibility = View.GONE
+                                }
+                                if (!hatAuslieferungAmTag) {
+                                    // Keine Auslieferung am Tag -> L-Button ausblenden
+                                    holder.binding.btnAuslieferung.visibility = View.GONE
+                                }
+                            }
+                        }
+                        
                         holder.itemView.visibility = View.VISIBLE
                     } else {
                         holder.itemView.visibility = View.GONE
@@ -455,8 +537,9 @@ class CustomerAdapter(
             }
             
             // Dann Erledigt-Label (wenn es erledigte Kunden gibt)
-            if (erledigteKundenInListe.isNotEmpty() && nichtErledigteKunden.isNotEmpty()) {
-                // Trennstrich oder Label für Erledigt-Bereich
+            // WICHTIG: Label immer anzeigen wenn es erledigte Kunden gibt, auch wenn keine nicht erledigten vorhanden sind
+            if (erledigteKundenInListe.isNotEmpty()) {
+                // Trennstrich oder Label für Erledigt-Bereich innerhalb der Liste
                 val erledigtLabel = TextView(context).apply {
                     setText("ERLEDIGT")
                     textSize = 14f

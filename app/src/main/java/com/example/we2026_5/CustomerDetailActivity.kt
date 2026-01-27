@@ -19,10 +19,12 @@ import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.databinding.ActivityCustomerDetailBinding
 import com.example.we2026_5.detail.CustomerPhotoManager
 import com.example.we2026_5.detail.CustomerEditManager
 import com.example.we2026_5.util.IntervallManager
+import com.example.we2026_5.util.TerminRegelManager
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
@@ -36,6 +38,7 @@ class CustomerDetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCustomerDetailBinding
     private val repository: CustomerRepository by inject()
+    private val regelRepository: TerminRegelRepository by inject()
     private val storage: FirebaseStorage by inject()
     private var customerListener: ValueEventListener? = null
     private var currentCustomer: Customer? = null
@@ -145,10 +148,9 @@ class CustomerDetailActivity : AppCompatActivity() {
         binding.rvDetailIntervalleView.layoutManager = LinearLayoutManager(this)
         binding.rvDetailIntervalleView.adapter = intervallViewAdapter
 
-        // Intervall hinzufügen Button
-        binding.btnDetailIntervallHinzufuegen.setOnClickListener {
-            val neuesIntervall = CustomerIntervall()
-            intervallAdapter.addIntervall(neuesIntervall)
+        // Termin Anlegen Button
+        binding.btnTerminAnlegen.setOnClickListener {
+            showRegelAuswahlDialog()
         }
 
         binding.btnDetailBack.setOnClickListener { finish() }
@@ -316,6 +318,69 @@ class CustomerDetailActivity : AppCompatActivity() {
             intervallViewAdapter.updateIntervalle(customer.intervalle)
         } else {
             binding.cardDetailIntervallView.visibility = View.GONE
+        }
+    }
+    
+    private fun showRegelAuswahlDialog() {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val regeln = regelRepository.getAllRegeln()
+                
+                if (regeln.isEmpty()) {
+                    Toast.makeText(this@CustomerDetailActivity, "Keine Regeln vorhanden. Bitte erstellen Sie zuerst eine Regel.", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+                
+                val regelNamen = regeln.map { it.name }.toTypedArray()
+                
+                AlertDialog.Builder(this@CustomerDetailActivity)
+                    .setTitle("Termin-Regel auswählen")
+                    .setItems(regelNamen) { _, which ->
+                        val ausgewaehlteRegel = regeln[which]
+                        wendeRegelAn(ausgewaehlteRegel)
+                    }
+                    .setNegativeButton("Abbrechen", null)
+                    .show()
+            } catch (e: Exception) {
+                Toast.makeText(this@CustomerDetailActivity, "Fehler beim Laden der Regeln: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    private fun wendeRegelAn(regel: TerminRegel) {
+        val customer = currentCustomer ?: return
+        
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                // Regel auf Kunden anwenden
+                val neuesIntervall = TerminRegelManager.wendeRegelAufKundeAn(regel, customer)
+                
+                // Intervall zur Liste hinzufügen
+                val neueIntervalle = customer.intervalle.toMutableList()
+                neueIntervalle.add(neuesIntervall)
+                
+                // Kunden aktualisieren
+                val updates = mapOf(
+                    "intervalle" to neueIntervalle
+                )
+                
+                val success = repository.updateCustomer(customer.id, updates)
+                if (success) {
+                    // Verwendungsanzahl erhöhen
+                    regelRepository.incrementVerwendungsanzahl(regel.id)
+                    
+                    Toast.makeText(this@CustomerDetailActivity, "Regel '${regel.name}' angewendet", Toast.LENGTH_SHORT).show()
+                    
+                    // UI aktualisieren
+                    intervalle.clear()
+                    intervalle.addAll(neueIntervalle)
+                    intervallAdapter.updateIntervalle(intervalle.toList())
+                } else {
+                    Toast.makeText(this@CustomerDetailActivity, "Fehler beim Anwenden der Regel", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@CustomerDetailActivity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
     

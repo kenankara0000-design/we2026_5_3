@@ -240,12 +240,12 @@
                             android:layout_marginBottom="8dp"/>
 
                         <Button
-                            android:id="@+id/btnListeIntervallHinzufuegen"
+                            android:id="@+id/btnTerminAnlegen"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="+ Intervall hinzufügen"
-                            android:backgroundTint="@color/primary_blue"
-                            android:textColor="@color/white"
+                            android:text="Termin Anlegen"
+                            android:background="@drawable/button_speichern_glossy"
+                            android:textColor="#FFFFFF"
                             android:padding="12dp"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>

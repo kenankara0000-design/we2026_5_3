@@ -171,60 +171,6 @@ class TourPlannerViewModel(
                (wiederholendUeberfaellig && viewDateStart >= faelligAm && viewDateStart <= heuteStart)
     }
     
-    /**
-     * Prüft ob ein Intervall innerhalb der nächsten 365 Tage fällig ist
-     */
-    private fun isIntervallFaelligInZukunft(intervall: ListeIntervall, abDatum: Long): Boolean {
-        val abDatumStart = getStartOfDay(abDatum)
-        val maxZukunft = abDatumStart + TimeUnit.DAYS.toMillis(365)
-        
-        if (!intervall.wiederholen) {
-            // Einmaliges Intervall: Prüfe ob innerhalb von 365 Tagen
-            val abholungStart = getStartOfDay(intervall.abholungDatum)
-            val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
-            return (abholungStart >= abDatumStart && abholungStart <= maxZukunft) ||
-                   (auslieferungStart >= abDatumStart && auslieferungStart <= maxZukunft)
-        }
-        
-        // Wiederholendes Intervall: Prüfe ob innerhalb von 365 Tagen ein Termin fällig ist
-        val intervallTage = intervall.intervallTage.coerceIn(1, 365)
-        val abholungStart = getStartOfDay(intervall.abholungDatum)
-        val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
-        
-        // Prüfe Abholungstermine
-        if (abDatumStart <= maxZukunft) {
-            var naechsteAbholung = if (abDatumStart >= abholungStart) {
-                val tageSeitAbholung = TimeUnit.MILLISECONDS.toDays(abDatumStart - abholungStart)
-                val naechsterZyklus = ((tageSeitAbholung / intervallTage) + 1) * intervallTage
-                abholungStart + TimeUnit.DAYS.toMillis(naechsterZyklus)
-            } else {
-                abholungStart
-            }
-            
-            if (naechsteAbholung <= maxZukunft) {
-                return true
-            }
-        }
-        
-        // Prüfe Auslieferungstermine
-        if (abDatumStart <= maxZukunft) {
-            var naechsteAuslieferung = if (abDatumStart >= auslieferungStart) {
-                val tageSeitAuslieferung = TimeUnit.MILLISECONDS.toDays(abDatumStart - auslieferungStart)
-                val naechsterZyklus = ((tageSeitAuslieferung / intervallTage) + 1) * intervallTage
-                auslieferungStart + TimeUnit.DAYS.toMillis(naechsterZyklus)
-            } else {
-                auslieferungStart
-            }
-            
-            if (naechsteAuslieferung <= maxZukunft) {
-                return true
-            }
-        }
-        
-        return false
-    }
-    */
-    
     fun loadWeekData(weekStartTimestamp: Long, isSectionExpanded: (SectionType) -> Boolean) {
         _isLoading.value = true
         _error.value = null

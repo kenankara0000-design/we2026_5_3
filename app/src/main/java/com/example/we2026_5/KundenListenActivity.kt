@@ -21,8 +21,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import java.text.SimpleDateFormat
-import java.util.*
 
 class KundenListenActivity : AppCompatActivity() {
 
@@ -30,7 +28,6 @@ class KundenListenActivity : AppCompatActivity() {
     private val listeRepository: KundenListeRepository by inject()
     private val customerRepository: CustomerRepository by inject()
     private lateinit var adapter: ListenAdapter
-    private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY)
     private var kundenProListe = mapOf<String, Int>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -201,7 +198,7 @@ class KundenListenActivity : AppCompatActivity() {
             val anzahlKunden = kundenProListe[liste.id] ?: 0
             holder.binding.tvIntervallInfo.text = "$anzahlKunden Kunde(n)"
             
-            val erstelltAm = dateFormat.format(Date(liste.erstelltAm))
+            val erstelltAm = com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(liste.erstelltAm)
             holder.binding.tvErstelltAm.text = "Erstellt: $erstelltAm"
 
             holder.itemView.setOnClickListener {

@@ -7,8 +7,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.we2026_5.databinding.ItemWeekDayBinding
-import java.text.SimpleDateFormat
-import java.util.*
 
 class WeekViewAdapter(
     private var weekData: Map<Int, List<ListItem>>,
@@ -18,7 +16,6 @@ class WeekViewAdapter(
 ) : RecyclerView.Adapter<WeekViewAdapter.DayViewHolder>() {
 
     private val wochentage = arrayOf("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
-    private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY)
     private var weekStartTimestamp: Long = 0
 
     inner class DayViewHolder(val binding: ItemWeekDayBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -46,7 +43,7 @@ class WeekViewAdapter(
             set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
             add(Calendar.DAY_OF_YEAR, dayOffset)
         }
-        val dateStr = dateFormat.format(cal.time)
+        val dateStr = com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(cal.timeInMillis)
         
         holder.binding.tvDayHeader.text = "$dayName, $dateStr"
         

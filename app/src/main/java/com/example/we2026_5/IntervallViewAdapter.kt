@@ -6,8 +6,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.we2026_5.databinding.ItemIntervallBinding
-import java.text.SimpleDateFormat
-import java.util.*
 
 /**
  * Read-Only Adapter für die Anzeige von Intervallen im View-Mode

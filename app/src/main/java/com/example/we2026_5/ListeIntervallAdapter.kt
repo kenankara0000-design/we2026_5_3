@@ -5,8 +5,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.we2026_5.databinding.ItemIntervallBinding
-import java.text.SimpleDateFormat
-import java.util.*
 
 class ListeIntervallAdapter(
     private var intervalle: MutableList<ListeIntervall>,

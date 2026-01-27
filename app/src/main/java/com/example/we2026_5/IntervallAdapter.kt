@@ -8,8 +8,6 @@ import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.we2026_5.databinding.ItemIntervallBinding
-import java.text.SimpleDateFormat
-import java.util.*
 
 class IntervallAdapter(
     private var intervalle: MutableList<CustomerIntervall>,

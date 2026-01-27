@@ -140,4 +140,16 @@
         android:textColor="@color/white"
         style="@style/Widget.Material3.Button.ElevatedButton"/>
 
+    <Button
+        android:id="@+id/btnTerminRegeln"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:text="📋 Termin-Regeln"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="20dp"
+        android:backgroundTint="@color/status_warning"
+        android:textColor="@color/white"
+        style="@style/Widget.Material3.Button.ElevatedButton"/>
+
 </LinearLayout>

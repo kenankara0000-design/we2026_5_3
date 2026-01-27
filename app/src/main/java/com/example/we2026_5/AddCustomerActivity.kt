@@ -1,12 +1,9 @@
 package com.example.we2026_5
 
-import android.app.DatePickerDialog
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.databinding.ActivityAddCustomerBinding
-import com.example.we2026_5.util.IntervallManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -17,10 +14,6 @@ class AddCustomerActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAddCustomerBinding
     private val repository: CustomerRepository by inject()
-    private var intervalle = mutableListOf<CustomerIntervall>()
-    private lateinit var intervallAdapter: IntervallAdapter
-    private var aktuellesIntervallPosition: Int = -1
-    private var aktuellesDatumTyp: Boolean = true // true = Abholung, false = Auslieferung
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,52 +28,6 @@ class AddCustomerActivity : AppCompatActivity() {
 
 
         binding.btnBack.setOnClickListener { finish() }
-
-        // Intervall-Card initial anzeigen für Gewerblich-Kunden (Standard)
-        binding.cardIntervall.visibility = android.view.View.VISIBLE
-
-        // Intervall-Adapter initialisieren
-        intervallAdapter = IntervallAdapter(
-            intervalle = intervalle,
-            onIntervallChanged = { neueIntervalle ->
-                intervalle.clear()
-                intervalle.addAll(neueIntervalle)
-            },
-            onDatumSelected = { position, isAbholung ->
-                aktuellesIntervallPosition = position
-                aktuellesDatumTyp = isAbholung
-                IntervallManager.showDatumPickerForCustomer(
-                    context = this@AddCustomerActivity,
-                    intervalle = intervalle,
-                    position = position,
-                    isAbholung = isAbholung,
-                    onDatumSelected = { updatedIntervall ->
-                        intervallAdapter.updateIntervalle(intervalle.toList())
-                    }
-                )
-            }
-        )
-        binding.rvIntervalle.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
-        binding.rvIntervalle.adapter = intervallAdapter
-
-        // Intervall hinzufügen Button
-        binding.btnIntervallHinzufuegen.setOnClickListener {
-            val neuesIntervall = CustomerIntervall()
-            intervallAdapter.addIntervall(neuesIntervall)
-        }
-
-        // Kunden-Art ändern: Intervall-Card anzeigen/ausblenden
-        binding.rgKundenArt.setOnCheckedChangeListener { _, checkedId ->
-            val isGewerblich = checkedId == binding.rbGewerblich.id
-            val isListe = checkedId == binding.rbListe.id
-            
-            // Intervall-Card anzeigen für Gewerblich-Kunden und Liste-Kunden
-            binding.cardIntervall.visibility = if (isGewerblich || isListe) {
-                android.view.View.VISIBLE
-            } else {
-                android.view.View.GONE
-            }
-        }
 
         binding.btnSaveCustomer.setOnClickListener {
             val name = binding.etName.text.toString().trim()
@@ -108,13 +55,7 @@ class AddCustomerActivity : AppCompatActivity() {
             CoroutineScope(Dispatchers.Main).launch {
                 val customerId = java.util.UUID.randomUUID().toString()
                 
-                // NEUE STRUKTUR: Intervalle für Gewerblich-Kunden und Liste-Kunden
-                val customerIntervalle = if ((kundenArt == "Gewerblich" || kundenArt == "Liste") && intervalle.isNotEmpty()) {
-                    intervalle.toList()
-                } else {
-                    emptyList()
-                }
-                
+                // Kunden werden ohne Intervalle erstellt - Intervalle werden später über Regeln hinzugefügt
                 val customer = Customer(
                     id = customerId,
                     name = name,
@@ -124,15 +65,15 @@ class AddCustomerActivity : AppCompatActivity() {
                     // Kunden-Art
                     kundenArt = kundenArt,
                     listeId = "", // Keine Liste-Zuordnung mehr
-                    // NEUE STRUKTUR: Intervalle-Liste
-                    intervalle = customerIntervalle,
-                    // ALTE STRUKTUR: Für Rückwärtskompatibilität (wird ignoriert wenn intervalle vorhanden)
-                    abholungDatum = if (customerIntervalle.isNotEmpty()) 0 else 0,
-                    auslieferungDatum = if (customerIntervalle.isNotEmpty()) 0 else 0,
-                    wiederholen = customerIntervalle.any { it.wiederholen },
-                    intervallTage = if (customerIntervalle.isNotEmpty()) 0 else 7,
-                    letzterTermin = if (customerIntervalle.isNotEmpty()) 0 else 0,
-                    wochentag = 0, // Wochentag wird nicht mehr verwendet
+                    // Intervalle werden später über "Termin Anlegen" hinzugefügt
+                    intervalle = emptyList(),
+                    // ALTE STRUKTUR: Für Rückwärtskompatibilität (alle auf 0/false gesetzt)
+                    abholungDatum = 0,
+                    auslieferungDatum = 0,
+                    wiederholen = false,
+                    intervallTage = 0,
+                    letzterTermin = 0,
+                    wochentag = 0,
                     istImUrlaub = false
                 )
 

@@ -92,6 +92,7 @@
                     android:text="Kunden-Art:"
                     android:textStyle="bold"
                     android:textSize="14sp"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="4dp"/>
 
                 <TextView
@@ -100,6 +101,7 @@
                     android:layout_height="wrap_content"
                     android:text="Gewerblich"
                     android:textSize="16sp"
+                    android:textColor="@color/text_primary"
                     android:padding="12dp"
                     android:background="@drawable/field_background"
                     android:layout_marginBottom="12dp"/>
@@ -110,6 +112,7 @@
                     android:text="Adresse:"
                     android:textStyle="bold"
                     android:textSize="14sp"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="4dp"/>
 
                 <TextView
@@ -118,6 +121,7 @@
                     android:layout_height="wrap_content"
                     android:text="Adresse"
                     android:textSize="16sp"
+                    android:textColor="@color/text_primary"
                     android:padding="12dp"
                     android:background="@drawable/field_background"
                     android:clickable="true"
@@ -130,6 +134,7 @@
                     android:text="Telefon:"
                     android:textStyle="bold"
                     android:textSize="14sp"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="4dp"/>
 
                 <TextView
@@ -138,6 +143,7 @@
                     android:layout_height="wrap_content"
                     android:text="Telefon"
                     android:textSize="16sp"
+                    android:textColor="@color/text_primary"
                     android:padding="12dp"
                     android:background="@drawable/field_background"
                     android:clickable="true"
@@ -150,6 +156,7 @@
                     android:text="Notizen:"
                     android:textStyle="bold"
                     android:textSize="14sp"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="4dp"/>
 
                 <TextView
@@ -158,6 +165,7 @@
                     android:layout_height="wrap_content"
                     android:text="Notizen"
                     android:textSize="16sp"
+                    android:textColor="@color/text_primary"
                     android:padding="12dp"
                     android:background="@drawable/field_background"
                     android:minHeight="100dp"
@@ -383,13 +391,14 @@
                             android:layout_marginBottom="8dp"/>
 
                         <Button
-                            android:id="@+id/btnDetailIntervallHinzufuegen"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="+ Intervall hinzufügen"
-                            android:background="@drawable/button_bearbeiten_glossy"
-                            android:textColor="#FFFFFF"
-                            android:padding="12dp"/>
+                            <Button
+                                android:id="@+id/btnTerminAnlegen"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Termin Anlegen"
+                                android:background="@drawable/button_speichern_glossy"
+                                android:textColor="#FFFFFF"
+                                android:padding="12dp"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
@@ -451,6 +460,7 @@
                 android:text="Dokumentation &amp; Fotos"
                 android:textSize="16sp"
                 android:textStyle="bold"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="12dp"/>
 
             <Button

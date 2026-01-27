@@ -63,16 +63,24 @@ class CustomerManagerActivity : AppCompatActivity() {
         binding.rvCustomerList.layoutManager = LinearLayoutManager(this)
         binding.rvCustomerList.adapter = adapter
         
-        // Tab-Listener einrichten
+        // TabLayout einrichten
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Gewerblich"))
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Privat"))
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Liste"))
+        
         binding.tabLayout.addOnTabSelectedListener(object : com.google.android.material.tabs.TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: com.google.android.material.tabs.TabLayout.Tab?) {
                 tab?.position?.let { position ->
                     viewModel.setSelectedTab(position)
                 }
             }
+            
             override fun onTabUnselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
             override fun onTabReselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
         })
+        
+        // Initial: Gewerblich-Tab ausgewählt
+        viewModel.setSelectedTab(0)
         
         // ExportHelper initialisieren
         exportHelper = CustomerExportHelper(this, repository)
@@ -248,6 +256,7 @@ class CustomerManagerActivity : AppCompatActivity() {
         // Header-Button-Zustände aktualisieren
         updateHeaderButtonStates()
     }
+    
     
     private fun updateHeaderButtonStates() {
         // Farben definieren

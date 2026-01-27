@@ -14,8 +14,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
+import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.databinding.ActivityListeBearbeitenBinding
 import com.example.we2026_5.util.IntervallManager
+import com.example.we2026_5.util.TerminRegelManager
 import com.example.we2026_5.databinding.ItemKundeListeBinding
 import com.example.we2026_5.FirebaseRetryHelper
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +31,7 @@ class ListeBearbeitenActivity : AppCompatActivity() {
     private lateinit var binding: ActivityListeBearbeitenBinding
     private val listeRepository: KundenListeRepository by inject()
     private val customerRepository: CustomerRepository by inject()
+    private val regelRepository: TerminRegelRepository by inject()
     private lateinit var liste: KundenListe
     private lateinit var kundenInListeAdapter: KundenListeAdapter
     private lateinit var verfuegbareKundenAdapter: KundenListeAdapter
@@ -87,9 +90,9 @@ class ListeBearbeitenActivity : AppCompatActivity() {
         binding.rvListeIntervalleView.adapter = intervallViewAdapter
 
         // Intervall hinzufügen Button
-        binding.btnListeIntervallHinzufuegen.setOnClickListener {
-            val neuesIntervall = ListeIntervall()
-            intervallAdapter.addIntervall(neuesIntervall)
+        // Termin Anlegen Button
+        binding.btnTerminAnlegen.setOnClickListener {
+            showRegelAuswahlDialog()
         }
         
         // Bearbeitungs-Button
@@ -407,6 +410,75 @@ class ListeBearbeitenActivity : AppCompatActivity() {
             intervallViewAdapter.updateIntervalle(liste.intervalle)
         } else {
             binding.cardListeIntervallView.visibility = View.GONE
+        }
+    }
+    
+    private fun showRegelAuswahlDialog() {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val regeln = regelRepository.getAllRegeln()
+                
+                if (regeln.isEmpty()) {
+                    Toast.makeText(this@ListeBearbeitenActivity, "Keine Regeln vorhanden. Bitte erstellen Sie zuerst eine Regel.", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+                
+                val regelNamen = regeln.map { it.name }.toTypedArray()
+                
+                AlertDialog.Builder(this@ListeBearbeitenActivity)
+                    .setTitle("Termin-Regel auswählen")
+                    .setItems(regelNamen) { _, which ->
+                        val ausgewaehlteRegel = regeln[which]
+                        wendeRegelAn(ausgewaehlteRegel)
+                    }
+                    .setNegativeButton("Abbrechen", null)
+                    .show()
+            } catch (e: Exception) {
+                Toast.makeText(this@ListeBearbeitenActivity, "Fehler beim Laden der Regeln: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    private fun wendeRegelAn(regel: TerminRegel) {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                // Regel auf Liste anwenden
+                val neuesIntervall = TerminRegelManager.wendeRegelAufListeAn(regel, liste)
+                
+                // Intervall zur Liste hinzufügen
+                val neueIntervalle = liste.intervalle.toMutableList()
+                neueIntervalle.add(neuesIntervall)
+                
+                // Liste aktualisieren
+                val intervalleMap = neueIntervalle.mapIndexed { index, intervall ->
+                    mapOf(
+                        "abholungDatum" to intervall.abholungDatum,
+                        "auslieferungDatum" to intervall.auslieferungDatum,
+                        "wiederholen" to intervall.wiederholen,
+                        "intervallTage" to intervall.intervallTage,
+                        "intervallAnzahl" to intervall.intervallAnzahl
+                    )
+                }
+                
+                val updates = mapOf(
+                    "intervalle" to intervalleMap
+                )
+                
+                listeRepository.updateListe(liste.id, updates)
+                
+                // Verwendungsanzahl erhöhen
+                regelRepository.incrementVerwendungsanzahl(regel.id)
+                
+                // Lokale Liste aktualisieren
+                liste = liste.copy(intervalle = neueIntervalle)
+                intervalle.clear()
+                intervalle.addAll(neueIntervalle)
+                intervallAdapter.updateIntervalle(intervalle.toList())
+                
+                Toast.makeText(this@ListeBearbeitenActivity, "Regel '${regel.name}' angewendet", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@ListeBearbeitenActivity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }
