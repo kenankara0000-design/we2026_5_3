@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Primärfarben - Modernes Blau -->
-    <color name="primary_blue">#1565C0</color> <!-- Dunkleres Blau für Container -->
-    <color name="primary_blue_dark">#1565C0</color>
-    <color name="primary_blue_light">#42A5F5</color>
-    <color name="button_blue">#42A5F5</color> <!-- Mittleres Blau für Buttons -->
+    <!-- Primärfarben - Modernes Material Design 3 Blau -->
+    <color name="primary_blue">#1976D2</color> <!-- Material Blue 700 -->
+    <color name="primary_blue_dark">#1565C0</color> <!-- Material Blue 800 -->
+    <color name="primary_blue_light">#42A5F5</color> <!-- Material Blue 400 -->
+    <color name="button_blue">#2196F3</color> <!-- Material Blue 500 -->
     
     <!-- Alte Primärfarbe (für Kompatibilität) -->
     <color name="purple_500">#1976D2</color>
     
-    <!-- Status-Farben -->
-    <color name="status_overdue">#E53935</color>
-    <color name="status_done">#4CAF50</color>
-    <color name="status_warning">#FF9800</color>
-    <color name="status_info">#2196F3</color>
-    <color name="error_red">#E53935</color>
+    <!-- Status-Farben - Verbesserte Kontraste -->
+    <color name="status_overdue">#D32F2F</color> <!-- Material Red 700 -->
+    <color name="status_done">#388E3C</color> <!-- Material Green 700 -->
+    <color name="status_warning">#F57C00</color> <!-- Material Orange 700 -->
+    <color name="status_info">#1976D2</color> <!-- Material Blue 700 -->
+    <color name="error_red">#D32F2F</color>
     
-    <!-- Button-Farben -->
-    <color name="button_abholung">#1976D2</color>
-    <color name="button_auslieferung">#4CAF50</color>
-    <color name="button_verschieben">#FF9800</color>
-    <color name="button_urlaub">#757575</color>
-    <color name="button_rueckgaengig">#E53935</color>
+    <!-- Button-Farben - Modernisiert -->
+    <color name="button_abholung">#1976D2</color> <!-- Blau für Abholung -->
+    <color name="button_auslieferung">#388E3C</color> <!-- Grün für Auslieferung -->
+    <color name="button_verschieben">#F57C00</color> <!-- Orange für Verschieben -->
+    <color name="button_urlaub">#616161</color> <!-- Grau für Urlaub -->
+    <color name="button_rueckgaengig">#D32F2F</color> <!-- Rot für Rückgängig -->
     
     <!-- Akzent-Farben für wichtige Buttons -->
-    <color name="accent_orange">#FF9800</color>
-    <color name="accent_green">#4CAF50</color>
-    <color name="accent_blue">#2196F3</color>
-    <color name="accent_brown">#795548</color>
+    <color name="accent_orange">#F57C00</color>
+    <color name="accent_green">#388E3C</color>
+    <color name="accent_blue">#1976D2</color>
+    <color name="accent_brown">#5D4037</color>
     
     <!-- Kräftige, glänzende Farben für G/P/L Buttons -->
-    <color name="button_gewerblich_glossy">#0D47A1</color> <!-- Dunkleres, kräftigeres Blau -->
+    <color name="button_gewerblich_glossy">#1565C0</color> <!-- Dunkleres, kräftigeres Blau -->
     <color name="button_privat_glossy">#E65100</color> <!-- Kräftigeres Orange -->
     <color name="button_liste_glossy">#5D4037</color> <!-- Kräftigeres Braun -->
     
-    <!-- Neutrale Farben -->
+    <!-- Neutrale Farben - Material Design 3 -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
-    <color name="light_gray">#D3D3D3</color>
+    <color name="light_gray">#E0E0E0</color>
     <color name="background_light">#FAFAFA</color>
     <color name="surface_white">#FFFFFF</color>
     <color name="surface_light">#F5F5F5</color>
@@ -45,28 +45,45 @@
     <color name="text_secondary">#757575</color>
     <color name="divider">#E0E0E0</color>
     <color name="button_inactive">#BDBDBD</color>
-    <color name="button_active">#FF9800</color>
+    <color name="button_active">#F57C00</color>
     
-    <!-- Section Header Hintergründe -->
+    <!-- Section Header Hintergründe - Verbesserte Lesbarkeit -->
     <color name="section_overdue_bg">#FFEBEE</color>
     <color name="section_overdue_text">#C62828</color>
     <color name="section_done_bg">#E8F5E9</color>
     <color name="section_done_text">#2E7D32</color>
     
-    <!-- Wochentag-Farben (Mo-Fr) -->
+    <!-- Wochentag-Farben (Mo-Fr) - Modernisiert -->
     <color name="weekday_blue">#1976D2</color>
     <color name="weekday_blue_dark">#1565C0</color>
     
     <!-- Wochenend-Farben (Sa-So) - Türkis -->
-    <color name="weekend_turquoise">#26A69A</color>
-    <color name="weekend_turquoise_dark">#00897B</color>
+    <color name="weekend_turquoise">#00897B</color> <!-- Material Teal 600 -->
+    <color name="weekend_turquoise_dark">#00695C</color> <!-- Material Teal 700 -->
     
     <!-- Alternative: Orange für Wochenende -->
-    <color name="weekend_orange">#FF9800</color>
-    <color name="weekend_orange_dark">#F57C00</color>
+    <color name="weekend_orange">#F57C00</color>
+    <color name="weekend_orange_dark">#E65100</color>
     
-    <!-- Kunden-Status Hintergrundfarben -->
+    <!-- Kunden-Status Hintergrundfarben - Verbesserte Kontraste -->
     <color name="customer_overdue_bg">#FFEBEE</color> <!-- Rötlicher Hintergrund für überfällige Kunden -->
-    <color name="customer_done_bg">#E0E0E0</color> <!-- Grauer Hintergrund für erledigte Kunden -->
+    <color name="customer_done_bg">#F5F5F5</color> <!-- Hellgrauer Hintergrund für erledigte Kunden -->
     <color name="customer_gewerblich_bg">#E3F2FD</color> <!-- Helles Blau für Gewerblich-Kunden die noch abzuholen sind -->
+    
+    <!-- Termin-Farben - Neue Kategorien -->
+    <color name="termin_today">#1976D2</color> <!-- Blau für heute -->
+    <color name="termin_tomorrow">#42A5F5</color> <!-- Hellblau für morgen -->
+    <color name="termin_upcoming">#757575</color> <!-- Grau für kommende Termine -->
+    <color name="termin_past">#BDBDBD</color> <!-- Hellgrau für vergangene Termine -->
+    
+    <!-- Termin-Regel spezifische Farben -->
+    <color name="termin_regel_card_bg">#FFFFFF</color> <!-- Weißer Hintergrund für Regel-Cards -->
+    <color name="termin_regel_card_elevation">#E0E0E0</color> <!-- Schattenfarbe für Cards -->
+    <color name="termin_regel_header_bg">#1976D2</color> <!-- Blau für Header (wie primary_blue) -->
+    <color name="termin_regel_header_text">#FFFFFF</color> <!-- Weiß für Header-Text -->
+    <color name="termin_regel_button_save">#388E3C</color> <!-- Grün für Speichern-Button (wie status_done) -->
+    <color name="termin_regel_button_save_dark">#2E7D32</color> <!-- Dunkleres Grün für Button-Border -->
+    <color name="termin_regel_fab">#2196F3</color> <!-- Blau für FAB (wie button_blue) -->
+    <color name="termin_regel_abholung">#1976D2</color> <!-- Blau für Abholung -->
+    <color name="termin_regel_auslieferung">#388E3C</color> <!-- Grün für Auslieferung -->
 </resources>

@@ -97,4 +97,123 @@ object DateFormatter {
         cal.timeInMillis = timeInMillis
         return formatDateShort(cal)
     }
+    
+    /**
+     * Formatiert ein Datum mit Wochentag als "Mo, 26.01.2026"
+     * @param calendar Calendar-Objekt
+     */
+    fun formatDateWithWeekday(calendar: Calendar): String {
+        val weekday = calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.getDefault())
+        val dateStr = formatDateWithLeadingZeros(calendar)
+        return "$weekday, $dateStr"
+    }
+    
+    /**
+     * Formatiert ein Datum mit Wochentag als "Mo, 26.01.2026"
+     * @param timeInMillis Zeitstempel in Millisekunden
+     */
+    fun formatDateWithWeekday(timeInMillis: Long): String {
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = timeInMillis
+        return formatDateWithWeekday(cal)
+    }
+    
+    /**
+     * Formatiert ein Datum mit vollem Wochentag als "Montag, 26.01.2026"
+     * @param calendar Calendar-Objekt
+     */
+    fun formatDateWithFullWeekday(calendar: Calendar): String {
+        val weekday = calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault())
+        val dateStr = formatDateWithLeadingZeros(calendar)
+        return "$weekday, $dateStr"
+    }
+    
+    /**
+     * Formatiert ein Datum mit vollem Wochentag als "Montag, 26.01.2026"
+     * @param timeInMillis Zeitstempel in Millisekunden
+     */
+    fun formatDateWithFullWeekday(timeInMillis: Long): String {
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = timeInMillis
+        return formatDateWithFullWeekday(cal)
+    }
+    
+    /**
+     * Formatiert ein Datum relativ zum heutigen Tag
+     * Gibt zurück: "Heute", "Morgen", "Übermorgen", oder formatiertes Datum
+     * @param timeInMillis Zeitstempel in Millisekunden
+     */
+    fun formatDateRelative(timeInMillis: Long): String {
+        val today = Calendar.getInstance()
+        today.set(Calendar.HOUR_OF_DAY, 0)
+        today.set(Calendar.MINUTE, 0)
+        today.set(Calendar.SECOND, 0)
+        today.set(Calendar.MILLISECOND, 0)
+        
+        val target = Calendar.getInstance()
+        target.timeInMillis = timeInMillis
+        target.set(Calendar.HOUR_OF_DAY, 0)
+        target.set(Calendar.MINUTE, 0)
+        target.set(Calendar.SECOND, 0)
+        target.set(Calendar.MILLISECOND, 0)
+        
+        val diff = ((target.timeInMillis - today.timeInMillis) / (1000 * 60 * 60 * 24)).toInt()
+        
+        return when (diff) {
+            0 -> "Heute"
+            1 -> "Morgen"
+            2 -> "Übermorgen"
+            -1 -> "Gestern"
+            else -> formatDateWithWeekday(timeInMillis)
+        }
+    }
+    
+    /**
+     * Prüft ob ein Datum heute ist
+     * @param timeInMillis Zeitstempel in Millisekunden
+     */
+    fun isToday(timeInMillis: Long): Boolean {
+        val today = Calendar.getInstance()
+        val target = Calendar.getInstance()
+        target.timeInMillis = timeInMillis
+        
+        return today.get(Calendar.YEAR) == target.get(Calendar.YEAR) &&
+               today.get(Calendar.DAY_OF_YEAR) == target.get(Calendar.DAY_OF_YEAR)
+    }
+    
+    /**
+     * Prüft ob ein Datum morgen ist
+     * @param timeInMillis Zeitstempel in Millisekunden
+     */
+    fun isTomorrow(timeInMillis: Long): Boolean {
+        val today = Calendar.getInstance()
+        val tomorrow = Calendar.getInstance()
+        tomorrow.add(Calendar.DAY_OF_YEAR, 1)
+        val target = Calendar.getInstance()
+        target.timeInMillis = timeInMillis
+        
+        return tomorrow.get(Calendar.YEAR) == target.get(Calendar.YEAR) &&
+               tomorrow.get(Calendar.DAY_OF_YEAR) == target.get(Calendar.DAY_OF_YEAR)
+    }
+    
+    /**
+     * Prüft ob ein Datum in der Vergangenheit liegt
+     * @param timeInMillis Zeitstempel in Millisekunden
+     */
+    fun isPast(timeInMillis: Long): Boolean {
+        val today = Calendar.getInstance()
+        today.set(Calendar.HOUR_OF_DAY, 0)
+        today.set(Calendar.MINUTE, 0)
+        today.set(Calendar.SECOND, 0)
+        today.set(Calendar.MILLISECOND, 0)
+        
+        val target = Calendar.getInstance()
+        target.timeInMillis = timeInMillis
+        target.set(Calendar.HOUR_OF_DAY, 0)
+        target.set(Calendar.MINUTE, 0)
+        target.set(Calendar.SECOND, 0)
+        target.set(Calendar.MILLISECOND, 0)
+        
+        return target.timeInMillis < today.timeInMillis
+    }
 }

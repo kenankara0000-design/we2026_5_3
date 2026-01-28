@@ -10,7 +10,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="64dp"
-        android:background="@color/primary_blue"
+        android:background="@color/termin_regel_header_bg"
         android:padding="12dp"
         android:elevation="8dp">
 
@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Neue Regel erstellen"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/termin_regel_header_text"
             android:textSize="20sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -106,7 +106,8 @@
                 android:layout_height="wrap_content"
                 android:text="Datum wählen (oder heute)"
                 android:background="@drawable/field_background"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/termin_regel_abholung"
+                android:textStyle="bold"
                 android:layout_marginBottom="16dp"/>
 
             <!-- Auslieferung -->
@@ -125,7 +126,8 @@
                 android:layout_height="wrap_content"
                 android:text="Datum wählen (oder heute)"
                 android:background="@drawable/field_background"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/termin_regel_auslieferung"
+                android:textStyle="bold"
                 android:layout_marginBottom="16dp"/>
 
             <!-- Wiederholen -->
@@ -206,7 +208,7 @@
                 android:layout_height="wrap_content"
                 android:text="Speichern"
                 android:background="@drawable/button_speichern_glossy"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/white"
                 android:padding="16dp"
                 android:layout_marginTop="16dp"/>
         </LinearLayout>

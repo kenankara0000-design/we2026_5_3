@@ -53,9 +53,11 @@ class CustomerManagerActivity : AppCompatActivity() {
             items = mutableListOf(),
             context = this,
             onClick = { customer ->
+                android.util.Log.d("CustomerManager", "onClick called for customer: ${customer.name} (ID: ${customer.id})")
                 val intent = Intent(this, CustomerDetailActivity::class.java).apply {
                     putExtra("CUSTOMER_ID", customer.id)
                 }
+                android.util.Log.d("CustomerManager", "Starting CustomerDetailActivity with customer ID: ${customer.id}")
                 startActivityForResult(intent, REQUEST_CODE_CUSTOMER_DETAIL)
             }
         )

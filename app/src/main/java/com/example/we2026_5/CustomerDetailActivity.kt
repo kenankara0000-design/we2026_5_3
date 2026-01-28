@@ -82,19 +82,7 @@ class CustomerDetailActivity : AppCompatActivity() {
             intervalle = intervalle
         )
 
-        // Callbacks initialisieren
-        callbacks = CustomerDetailCallbacks(
-            activity = this,
-            binding = binding,
-            repository = repository,
-            regelRepository = regelRepository,
-            customerId = customerId,
-            intervalle = intervalle,
-            intervallAdapter = uiSetup.intervallAdapter,
-            currentCustomer = currentCustomer
-        )
-
-        // UI-Setup durchführen
+        // UI-Setup ZUERST durchführen, damit Adapter initialisiert werden
         uiSetup.setupUI(
             onTerminAnlegenClick = { callbacks.showRegelAuswahlDialog() },
             onBackClick = { finish() },
@@ -121,6 +109,18 @@ class CustomerDetailActivity : AppCompatActivity() {
                     }
                 )
             }
+        )
+        
+        // Callbacks NACH setupUI initialisieren (benötigt intervallAdapter)
+        callbacks = CustomerDetailCallbacks(
+            activity = this,
+            binding = binding,
+            repository = repository,
+            regelRepository = regelRepository,
+            customerId = customerId,
+            intervalle = intervalle,
+            intervallAdapter = uiSetup.intervallAdapter,
+            currentCustomer = currentCustomer
         )
         
         // EditManager initialisieren

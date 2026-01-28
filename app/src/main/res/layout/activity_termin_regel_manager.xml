@@ -10,7 +10,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="64dp"
-        android:background="@color/primary_blue"
+        android:background="@color/termin_regel_header_bg"
         android:padding="12dp"
         android:elevation="8dp">
 
@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Termin-Regeln"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/termin_regel_header_text"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -41,8 +41,8 @@
             android:layout_centerVertical="true"
             android:src="@android:drawable/ic_input_add"
             android:contentDescription="Neue Regel erstellen"
-            app:tint="#FFFFFF"
-            app:backgroundTint="@color/button_blue"
+            app:tint="@color/termin_regel_header_text"
+            app:backgroundTint="@color/termin_regel_fab"
             app:elevation="6dp" />
     </RelativeLayout>
 

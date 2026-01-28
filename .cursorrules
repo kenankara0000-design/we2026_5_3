@@ -46,3 +46,9 @@ Bei jeder Datei-Bearbeitung folgst du diesem Ablauf:
   - Neue Manager-Klassen
   - Neue Adapter
   - Jede andere neue Code-Struktur
+
+## VI. Code-Änderungen vs. Zusammenfassungen (KRITISCH)
+- **WICHTIG:** Wenn der Benutzer "zusammenfassen" schreibt, DARF KEIN Code geändert oder geschrieben werden!
+- **NUR zusammenfassen:** Analysieren, beschreiben, Vorschläge machen - aber KEINE Dateien ändern
+- **Code-Änderungen:** Nur wenn der Benutzer explizit "programmieren" oder ähnliche Anweisungen gibt
+- **Regel:** "zusammenfassen" = NUR Text-Ausgabe, KEINE Tool-Calls für Code-Änderungen

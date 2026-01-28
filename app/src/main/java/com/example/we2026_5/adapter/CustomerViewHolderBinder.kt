@@ -98,25 +98,34 @@ class CustomerViewHolderBinder(
     }
     
     private fun setupClickListeners(holder: CustomerViewHolder, customer: Customer) {
-        // Button-Handler
-        holder.binding.btnAbholung.setOnClickListener {
-            pressedButtons[customer.id] = "A"
-            onAbholung(customer)
-        }
-        holder.binding.btnAuslieferung.setOnClickListener {
-            pressedButtons[customer.id] = "L"
-            onAuslieferung(customer)
-        }
-        holder.binding.btnVerschieben.setOnClickListener {
-            pressedButtons[customer.id] = "V"
-            dialogHelper.showVerschiebenDialog(customer)
-        }
-        holder.binding.btnUrlaub.setOnClickListener {
-            pressedButtons[customer.id] = "U"
-            dialogHelper.showUrlaubDialog(customer)
-        }
-        holder.binding.btnRueckgaengig.setOnClickListener {
-            dialogHelper.showRueckgaengigDialog(customer)
+        // Button-Handler - nur setzen wenn im TourPlanner (displayedDateMillis != null)
+        if (displayedDateMillis != null) {
+            holder.binding.btnAbholung.setOnClickListener {
+                pressedButtons[customer.id] = "A"
+                onAbholung(customer)
+            }
+            holder.binding.btnAuslieferung.setOnClickListener {
+                pressedButtons[customer.id] = "L"
+                onAuslieferung(customer)
+            }
+            holder.binding.btnVerschieben.setOnClickListener {
+                pressedButtons[customer.id] = "V"
+                dialogHelper.showVerschiebenDialog(customer)
+            }
+            holder.binding.btnUrlaub.setOnClickListener {
+                pressedButtons[customer.id] = "U"
+                dialogHelper.showUrlaubDialog(customer)
+            }
+            holder.binding.btnRueckgaengig.setOnClickListener {
+                dialogHelper.showRueckgaengigDialog(customer)
+            }
+        } else {
+            // Im CustomerManager: Click-Listener entfernen, damit sie keine Clicks abfangen
+            holder.binding.btnAbholung.setOnClickListener(null)
+            holder.binding.btnAuslieferung.setOnClickListener(null)
+            holder.binding.btnVerschieben.setOnClickListener(null)
+            holder.binding.btnUrlaub.setOnClickListener(null)
+            holder.binding.btnRueckgaengig.setOnClickListener(null)
         }
         
         // Termin-Klick: Wenn im TourPlanner, öffne Termin-Detail-Dialog
@@ -134,23 +143,54 @@ class CustomerViewHolderBinder(
                 }
             }
         } else {
-            holder.itemView.setOnClickListener {
+            // Click-Listener auf itemView UND itemContainer setzen, um sicherzustellen, dass Clicks funktionieren
+            val clickListener = View.OnClickListener {
+                android.util.Log.d("CustomerViewHolderBinder", "Item clicked: ${customer.name}, MultiSelect: $isMultiSelectMode")
                 if (isMultiSelectMode) {
                     toggleCustomerSelection(customer.id, holder)
                 } else {
+                    android.util.Log.d("CustomerViewHolderBinder", "Calling onClick for customer: ${customer.name}")
                     onClick(customer)
                 }
+            }
+            
+            // Click-Listener auf alle relevanten Views setzen
+            holder.itemView.setOnClickListener(clickListener)
+            holder.binding.itemContainer.setOnClickListener(clickListener)
+            holder.binding.tvItemName.setOnClickListener(clickListener)
+            holder.binding.tvItemAdresse.setOnClickListener(clickListener)
+            holder.binding.tvItemTelefon.setOnClickListener(clickListener)
+            holder.binding.tvItemNotizen.setOnClickListener(clickListener)
+            holder.binding.tvNextTour.setOnClickListener(clickListener)
+            
+            // Wichtig: Views müssen clickable sein, damit der Listener funktioniert
+            holder.itemView.isClickable = true
+            holder.itemView.isFocusable = true
+            holder.binding.itemContainer.isClickable = true
+            holder.binding.itemContainer.isFocusable = true
+            holder.binding.tvItemName.isClickable = true
+            holder.binding.tvItemAdresse.isClickable = true
+            holder.binding.tvItemTelefon.isClickable = true
+            holder.binding.tvItemNotizen.isClickable = true
+            holder.binding.tvNextTour.isClickable = true
+            
+            // WICHTIG: Button-Container im CustomerManager nicht klickbar machen, damit Clicks durchgehen
+            if (displayedDateMillis == null) {
+                holder.binding.buttonContainer.isClickable = false
+                holder.binding.buttonContainer.isFocusable = false
             }
         }
         
         // Long-Press für Multi-Select aktivieren
-        holder.itemView.setOnLongClickListener {
+        val longClickListener = View.OnLongClickListener {
             if (!isMultiSelectMode) {
                 enableMultiSelectMode()
                 toggleCustomerSelection(customer.id, holder)
             }
             true
         }
+        holder.itemView.setOnLongClickListener(longClickListener)
+        holder.binding.itemContainer.setOnLongClickListener(longClickListener)
     }
     
     private fun applyMultiSelectStyles(holder: CustomerViewHolder, customer: Customer) {
@@ -392,12 +432,17 @@ class CustomerViewHolderBinder(
             
             holder.binding.btnRueckgaengig.visibility = if (hatErledigtenATerminAmDatum || hatErledigtenLTerminAmDatum) View.VISIBLE else View.GONE
         } else {
-            // In CustomerManager: Buttons ausblenden
+            // In CustomerManager: Buttons ausblenden UND nicht klickbar machen
             holder.binding.btnAbholung.visibility = View.GONE
+            holder.binding.btnAbholung.isClickable = false
             holder.binding.btnAuslieferung.visibility = View.GONE
+            holder.binding.btnAuslieferung.isClickable = false
             holder.binding.btnVerschieben.visibility = View.GONE
+            holder.binding.btnVerschieben.isClickable = false
             holder.binding.btnUrlaub.visibility = View.GONE
+            holder.binding.btnUrlaub.isClickable = false
             holder.binding.btnRueckgaengig.visibility = View.GONE
+            holder.binding.btnRueckgaengig.isClickable = false
         }
     }
     
