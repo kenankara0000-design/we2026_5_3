@@ -74,6 +74,18 @@ class TourPlannerCallbackHandler(
             CoroutineScope(Dispatchers.Main).launch {
                 val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
                 
+                // Prüfe ob Abholung heute fällig ist (nicht überfällig)
+                val istAbholungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.ABHOLUNG, heuteStart)
+                
+                if (!istAbholungHeute) {
+                    android.widget.Toast.makeText(
+                        context,
+                        "Abholung kann nur erledigt werden, wenn das Datum heute ist.",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                    return@launch
+                }
+                
                 // Prüfe ob A und L am gleichen Tag sind
                 val sindAmGleichenTag = checkSindAmGleichenTag(customer)
                 
@@ -127,6 +139,18 @@ class TourPlannerCallbackHandler(
             } else {
                 CoroutineScope(Dispatchers.Main).launch {
                     val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+                    
+                    // Prüfe ob Auslieferung heute fällig ist (nicht überfällig)
+                    val istAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart)
+                    
+                    if (!istAuslieferungHeute) {
+                        android.widget.Toast.makeText(
+                            context,
+                            "Auslieferung kann nur erledigt werden, wenn das Datum heute ist.",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                        return@launch
+                    }
                     
                     // Prüfe ob A und L am gleichen Tag sind
                     val sindAmGleichenTag = checkSindAmGleichenTag(customer)
@@ -318,6 +342,68 @@ class TourPlannerCallbackHandler(
                 }
             }
         }
+    }
+    
+    /**
+     * Prüft, ob ein Termin heute erledigt werden kann (auch für überfällige Termine).
+     * 
+     * Container 1: Tag der ursprünglichen Abholung/Auslieferung - zeigt überfällig an
+     * Container 2: Tag der Überfälligkeit (heute) - kann erledigt werden
+     * 
+     * Ein Termin kann erledigt werden, wenn:
+     * 1. Er heute normal fällig ist, ODER
+     * 2. Er überfällig ist und heute angezeigt wird (Container 2)
+     */
+    private fun istTerminHeuteFaellig(customer: Customer, terminTyp: com.example.we2026_5.TerminTyp, heuteStart: Long): Boolean {
+        // Berechne alle Termine für den Kunden (gestern, heute, morgen)
+        val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+            customer = customer,
+            startDatum = heuteStart - TimeUnit.DAYS.toMillis(1),
+            tageVoraus = 2 // Nur 2 Tage (gestern, heute, morgen)
+        )
+        
+        // Prüfe ob heute ein Termin des gewünschten Typs fällig ist (normal fällig)
+        val terminHeute = termine.firstOrNull { 
+            it.typ == terminTyp &&
+            TerminBerechnungUtils.getStartOfDay(it.datum) == heuteStart
+        }
+        
+        if (terminHeute != null) {
+            return true
+        }
+        
+        // Prüfe ob ein überfälliger Termin heute angezeigt werden soll (Container 2)
+        // Überfällige Termine werden angezeigt, wenn:
+        // 1. Am tatsächlichen Fälligkeitstag (Container 1) - zeigt überfällig an
+        // 2. Am heutigen Tag, wenn noch überfällig (Container 2) - HIER kann erledigt werden
+        val ueberfaelligeTermine = termine.filter { 
+            it.typ == terminTyp &&
+            TerminBerechnungUtils.getStartOfDay(it.datum) < heuteStart
+        }
+        
+        // Prüfe ob ein überfälliger Termin heute angezeigt werden soll (Container 2)
+        // WICHTIG: Nur wenn der Termin noch nicht erledigt ist
+        val istErledigt = if (terminTyp == com.example.we2026_5.TerminTyp.ABHOLUNG) {
+            customer.abholungErfolgt
+        } else {
+            customer.auslieferungErfolgt
+        }
+        
+        if (!istErledigt) {
+            val ueberfaelligerTerminHeuteAnzeigen = ueberfaelligeTermine.any { termin ->
+                com.example.we2026_5.util.TerminFilterUtils.sollUeberfaelligAnzeigen(
+                    terminDatum = termin.datum,
+                    anzeigeDatum = heuteStart,
+                    aktuellesDatum = heuteStart
+                )
+            }
+            
+            if (ueberfaelligerTerminHeuteAnzeigen) {
+                return true
+            }
+        }
+        
+        return false
     }
     
     private fun checkSindAmGleichenTag(customer: Customer): Boolean {

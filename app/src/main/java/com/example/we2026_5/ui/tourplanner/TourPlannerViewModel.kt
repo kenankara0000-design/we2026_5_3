@@ -7,13 +7,11 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
 import com.example.we2026_5.KundenListe
-import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.ListItem
 import com.example.we2026_5.SectionType
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.tourplanner.TourDataProcessor
-import com.example.we2026_5.ui.tourplanner.TourPlannerWeekDataProcessor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -29,7 +27,6 @@ class TourPlannerViewModel(
     
     // Datenverarbeitungsprozessor
     private val dataProcessor = TourDataProcessor()
-    private val weekDataProcessor = TourPlannerWeekDataProcessor(dataProcessor)
     
     // Echtzeit-Listener: StateFlows für automatische Updates (können .value verwendet werden)
     private val _customersStateFlow = MutableStateFlow<List<Customer>>(emptyList())
@@ -72,9 +69,6 @@ class TourPlannerViewModel(
         }
     }.asLiveData()
     
-    private val _weekItems = MutableLiveData<Map<Int, List<ListItem>>>()
-    val weekItems: LiveData<Map<Int, List<ListItem>>> = _weekItems
-    
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
     
@@ -110,33 +104,4 @@ class TourPlannerViewModel(
     }
     
     // Alle Datenverarbeitungsfunktionen entfernt - jetzt in TourDataProcessor
-    
-    fun loadWeekData(weekStartTimestamp: Long, isSectionExpanded: (SectionType) -> Boolean) {
-        _isLoading.value = true
-        _error.value = null
-        
-        viewModelScope.launch {
-            try {
-                // Verwende die aktuellen Werte aus den Flows (Echtzeit-Updates)
-                val allCustomers = customersFlow.value ?: emptyList()
-                val allListen = listenFlow.value ?: emptyList()
-                
-                // Verwende WeekDataProcessor für die Verarbeitung
-                val weekData = weekDataProcessor.processWeekData(
-                    allCustomers = allCustomers,
-                    allListen = allListen,
-                    weekStartTimestamp = weekStartTimestamp,
-                    isSectionExpanded = isSectionExpanded
-                )
-                
-                _weekItems.value = weekData
-            } catch (e: Exception) {
-                _error.value = e.message ?: "Fehler beim Laden der Wochenansicht"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-    
-    // Alle Datenverarbeitungsfunktionen entfernt - jetzt in TourDataProcessor und TourPlannerWeekDataProcessor
 }

@@ -59,13 +59,13 @@ class CustomerDetailUISetup(
         binding.rvDetailIntervalle.layoutManager = LinearLayoutManager(activity)
         binding.rvDetailIntervalle.adapter = intervallAdapter
 
-        // Intervall-View-Adapter für Read-Only-Anzeige im View-Mode
-        intervallViewAdapter = IntervallViewAdapter(emptyList())
+        // Intervall-View-Adapter wird später in CustomerDetailActivity initialisiert
+        // (benötigt Callback für Regel-Klick)
         binding.rvDetailIntervalleView.layoutManager = LinearLayoutManager(activity)
-        binding.rvDetailIntervalleView.adapter = intervallViewAdapter
 
         // Click-Listener setzen
         binding.btnTerminAnlegen.setOnClickListener { onTerminAnlegenClick() }
+        binding.btnTerminAnlegenView.setOnClickListener { onTerminAnlegenClick() }
         binding.btnDetailBack.setOnClickListener { onBackClick() }
         binding.tvDetailAdresse.setOnClickListener { onAdresseClick() }
         binding.tvDetailTelefon.setOnClickListener { onTelefonClick() }
@@ -90,10 +90,17 @@ class CustomerDetailUISetup(
         com.example.we2026_5.ui.CustomerTypeButtonHelper.setupButton(binding.btnKundenTyp, customer, activity)
         
         // Intervalle im View-Mode anzeigen (nur für Gewerblich und Liste)
+        // CardView wird immer angezeigt, wenn Kunde Gewerblich oder Liste ist (auch ohne Intervalle),
+        // damit der "Termin Anlegen" Button sichtbar ist
         val sollIntervallAnzeigen = customer.kundenArt == "Gewerblich" || customer.kundenArt == "Liste"
-        if (sollIntervallAnzeigen && customer.intervalle.isNotEmpty()) {
+        if (sollIntervallAnzeigen) {
             binding.cardDetailIntervallView.visibility = View.VISIBLE
-            intervallViewAdapter.updateIntervalle(customer.intervalle)
+            if (customer.intervalle.isNotEmpty()) {
+                intervallViewAdapter.updateIntervalle(customer.intervalle)
+                binding.rvDetailIntervalleView.visibility = View.VISIBLE
+            } else {
+                binding.rvDetailIntervalleView.visibility = View.GONE
+            }
         } else {
             binding.cardDetailIntervallView.visibility = View.GONE
         }

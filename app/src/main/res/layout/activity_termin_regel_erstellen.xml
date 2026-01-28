@@ -90,6 +90,36 @@
                 android:background="@drawable/field_background"
                 android:layout_marginBottom="16dp"/>
 
+            <!-- Wochentag-basiert Option -->
+            <CheckBox
+                android:id="@+id/cbWochentagBasiert"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Wochentag-basiert (z.B. Montag zu Montag)"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Startdatum (für Wochentag-Berechnung) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Startdatum:"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="4dp"/>
+
+            <Button
+                android:id="@+id/btnStartDatum"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:text="Startdatum wählen"
+                android:background="@drawable/field_background"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+
             <!-- Abholung -->
             <TextView
                 android:layout_width="wrap_content"
@@ -100,15 +130,41 @@
                 android:textColor="@color/text_primary"
                 android:layout_marginBottom="4dp"/>
 
-            <Button
-                android:id="@+id/btnAbholungDatum"
+            <!-- Abholung: Datum oder Wochentag (je nach Modus) -->
+            <LinearLayout
+                android:id="@+id/layoutAbholungDatum"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Datum wählen (oder heute)"
-                android:background="@drawable/field_background"
-                android:textColor="@color/termin_regel_abholung"
-                android:textStyle="bold"
-                android:layout_marginBottom="16dp"/>
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp">
+
+                <Button
+                    android:id="@+id/btnAbholungDatum"
+                    android:layout_width="200dp"
+                    android:layout_height="wrap_content"
+                    android:text="Abholung"
+                    android:background="@drawable/field_background"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutAbholungWochentag"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp">
+
+                <Button
+                    android:id="@+id/btnAbholungWochentag"
+                    android:layout_width="200dp"
+                    android:layout_height="wrap_content"
+                    android:text="Wochentag wählen"
+                    android:background="@drawable/field_background"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"/>
+            </LinearLayout>
 
             <!-- Auslieferung -->
             <TextView
@@ -120,15 +176,41 @@
                 android:textColor="@color/text_primary"
                 android:layout_marginBottom="4dp"/>
 
-            <Button
-                android:id="@+id/btnAuslieferungDatum"
+            <!-- Auslieferung: Datum oder Wochentag (je nach Modus) -->
+            <LinearLayout
+                android:id="@+id/layoutAuslieferungDatum"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Datum wählen (oder heute)"
-                android:background="@drawable/field_background"
-                android:textColor="@color/termin_regel_auslieferung"
-                android:textStyle="bold"
-                android:layout_marginBottom="16dp"/>
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp">
+
+                <Button
+                    android:id="@+id/btnAuslieferungDatum"
+                    android:layout_width="200dp"
+                    android:layout_height="wrap_content"
+                    android:text="Auslieferung"
+                    android:background="@drawable/field_background"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutAuslieferungWochentag"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp">
+
+                <Button
+                    android:id="@+id/btnAuslieferungWochentag"
+                    android:layout_width="200dp"
+                    android:layout_height="wrap_content"
+                    android:text="Wochentag wählen"
+                    android:background="@drawable/field_background"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"/>
+            </LinearLayout>
 
             <!-- Wiederholen -->
             <TextView
@@ -201,16 +283,37 @@
                     android:text="0"/>
             </LinearLayout>
 
-            <!-- Speichern Button -->
-            <Button
-                android:id="@+id/btnSpeichern"
+            <!-- Buttons: Speichern und Löschen (Löschen nur im Bearbeiten-Modus) -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Speichern"
-                android:background="@drawable/button_speichern_glossy"
-                android:textColor="@color/white"
-                android:padding="16dp"
-                android:layout_marginTop="16dp"/>
+                android:orientation="horizontal"
+                android:layout_marginTop="16dp"
+                android:weightSum="2">
+                
+                <Button
+                    android:id="@+id/btnSpeichern"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Speichern"
+                    android:background="@drawable/button_speichern_glossy"
+                    android:textColor="@color/white"
+                    android:padding="16dp"
+                    android:layout_marginEnd="8dp"/>
+                
+                <Button
+                    android:id="@+id/btnLoeschen"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Löschen"
+                    android:background="@drawable/button_loeschen_glossy"
+                    android:textColor="@color/white"
+                    android:padding="16dp"
+                    android:layout_marginStart="8dp"
+                    android:visibility="gone"/>
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

@@ -200,7 +200,17 @@
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvDetailIntervalleView"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"/>
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"/>
+
+                        <Button
+                            android:id="@+id/btnTerminAnlegenView"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Termin Anlegen"
+                            android:background="@drawable/button_speichern_glossy"
+                            android:textColor="#FFFFFF"
+                            android:padding="12dp"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>

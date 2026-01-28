@@ -76,10 +76,7 @@ class TerminRegelAdapter(
                 onRegelClick(regel)
             }
             
-            binding.root.setOnLongClickListener {
-                onRegelDelete(regel)
-                true
-            }
+            // Long-Press-Löschen entfernt - Löschen nur über Bearbeiten-Fenster möglich
         }
     }
 }

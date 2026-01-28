@@ -8,6 +8,7 @@
 
     <!-- Header mit Zurück-Button -->
     <RelativeLayout
+        android:id="@+id/headerLayout"
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:background="@color/termin_regel_header_bg"
@@ -33,17 +34,22 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNewRegel"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:src="@android:drawable/ic_input_add"
-            android:contentDescription="Neue Regel erstellen"
-            app:tint="@color/termin_regel_header_text"
-            app:backgroundTint="@color/termin_regel_fab"
-            app:elevation="6dp" />
+            android:text="Neue Regel"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="normal"
+            app:cornerRadius="8dp"
+            app:backgroundTint="@color/button_blue"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:minWidth="0dp"
+            android:contentDescription="Neue Regel erstellen" />
     </RelativeLayout>
 
     <androidx.recyclerview.widget.RecyclerView

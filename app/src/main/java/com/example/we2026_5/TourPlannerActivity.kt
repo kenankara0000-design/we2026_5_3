@@ -31,9 +31,7 @@ class TourPlannerActivity : AppCompatActivity() {
     private val repository: CustomerRepository by inject()
     private val listeRepository: com.example.we2026_5.data.repository.KundenListeRepository by inject()
     private lateinit var adapter: CustomerAdapter
-    private lateinit var weekAdapter: WeekViewAdapter
     private var viewDate = Calendar.getInstance()
-    private var isWeekView = false
     private lateinit var networkMonitor: NetworkMonitor
     private var pressedHeaderButton: String? = null // "Karte", "Heute", "Woche"
     
@@ -78,32 +76,6 @@ class TourPlannerActivity : AppCompatActivity() {
         
         // Callbacks für Firebase-Operationen setzen (initialisiert auch callbackHandler)
         setupAdapterCallbacks()
-
-        // Wochenansicht-Adapter initialisieren
-        weekAdapter = WeekViewAdapter(
-            weekData = emptyMap(),
-            context = this,
-            onCustomerClick = { customer ->
-                val intent = Intent(this, CustomerDetailActivity::class.java).apply {
-                    putExtra("CUSTOMER_ID", customer.id)
-                }
-                startActivity(intent)
-            },
-            customerAdapterFactory = { items ->
-                val dayAdapter = CustomerAdapter(
-                    items = items.toMutableList(),
-                    context = this,
-                    onClick = { customer ->
-                        val intent = Intent(this, CustomerDetailActivity::class.java).apply {
-                            putExtra("CUSTOMER_ID", customer.id)
-                        }
-                        startActivity(intent)
-                    }
-                )
-                setupAdapterCallbacksForAdapter(dayAdapter)
-                dayAdapter
-            }
-        )
         
         // UI-Setup initialisieren
         uiSetup = TourPlannerUISetup(
@@ -112,7 +84,7 @@ class TourPlannerActivity : AppCompatActivity() {
             setupAdapterCallbacks = { setupAdapterCallbacks() },
             setupAdapterCallbacksForAdapter = { adapter -> setupAdapterCallbacksForAdapter(adapter) }
         )
-        uiSetup.setupAdapters(adapter, weekAdapter)
+        uiSetup.setupAdapters(adapter)
         
         // Callback für Section-Toggle setzen
         adapter.onSectionToggle = { sectionType ->
@@ -130,21 +102,13 @@ class TourPlannerActivity : AppCompatActivity() {
         binding.btnBackFromTour.setOnClickListener { finish() }
 
         binding.btnPrevDay.setOnClickListener {
-            if (isWeekView) {
-                viewDate.add(Calendar.WEEK_OF_YEAR, -1)
-            } else {
-                viewDate.add(Calendar.DAY_OF_YEAR, -1)
-            }
+            viewDate.add(Calendar.DAY_OF_YEAR, -1)
             updateDisplay()
             updateTodayButtonState()
         }
 
         binding.btnNextDay.setOnClickListener {
-            if (isWeekView) {
-                viewDate.add(Calendar.WEEK_OF_YEAR, 1)
-            } else {
-                viewDate.add(Calendar.DAY_OF_YEAR, 1)
-            }
+            viewDate.add(Calendar.DAY_OF_YEAR, 1)
             updateDisplay()
             updateTodayButtonState()
         }
@@ -167,18 +131,11 @@ class TourPlannerActivity : AppCompatActivity() {
             // Datum setzen
             viewDate = heuteStart
             
-            // Wenn Wochenansicht aktiv ist, zur Tagesansicht wechseln
-            if (isWeekView) {
-                isWeekView = false
-                updateViewMode()
-            } else {
-                // Tagesansicht: Datum aktualisieren und Daten neu laden
-                // Explizit loadTourData aufrufen, um sicherzustellen, dass Daten geladen werden
-                val heuteTimestamp = dateUtils.getStartOfDay(heuteStart.timeInMillis)
-                loadTourData(heuteTimestamp)
-                updateDisplay()
-                updateTodayButtonState()
-            }
+            // Tagesansicht: Datum aktualisieren und Daten neu laden
+            val heuteTimestamp = dateUtils.getStartOfDay(heuteStart.timeInMillis)
+            loadTourData(heuteTimestamp)
+            updateDisplay()
+            updateTodayButtonState()
         }
 
         binding.btnMapView.setOnClickListener {
@@ -189,13 +146,6 @@ class TourPlannerActivity : AppCompatActivity() {
             // Nach Rückkehr Button-Zustand zurücksetzen
             pressedHeaderButton = null
             uiSetup.updateHeaderButtonStates(pressedHeaderButton)
-        }
-        
-        // Toggle zwischen Tag- und Wochenansicht
-        binding.btnToggleView.setOnClickListener {
-            pressedHeaderButton = if (isWeekView) null else "Woche"
-            isWeekView = !isWeekView
-            updateViewMode()
         }
         
         // Pull-to-Refresh
@@ -239,32 +189,10 @@ class TourPlannerActivity : AppCompatActivity() {
     private fun observeViewModel() {
         // Tour-Items beobachten (Tagesansicht)
         viewModel.tourItems.observe(this) { items ->
-            if (!isWeekView) {
-                adapter.updateData(items, dateUtils.getStartOfDay(viewDate.timeInMillis))
-                
-                // Empty State anzeigen wenn keine Kunden vorhanden
-                uiSetup.updateEmptyState(items.isEmpty(), isWeekView = false)
-            }
-        }
-        
-        // Wochen-Items beobachten
-        viewModel.weekItems.observe(this) { weekData ->
-            if (isWeekView) {
-                val weekStart = Calendar.getInstance().apply {
-                    timeInMillis = viewDate.timeInMillis
-                    set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                    set(Calendar.HOUR_OF_DAY, 0)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }.timeInMillis
-                
-                weekAdapter.updateWeekData(weekData, weekStart)
-                
-                // Empty State prüfen
-                val hasAnyData = weekData.values.any { it.isNotEmpty() }
-                uiSetup.updateEmptyState(!hasAnyData, isWeekView = true)
-            }
+            adapter.updateData(items, dateUtils.getStartOfDay(viewDate.timeInMillis))
+            
+            // Empty State anzeigen wenn keine Kunden vorhanden
+            uiSetup.updateEmptyState(items.isEmpty())
         }
         
         // Loading-State beobachten
@@ -287,26 +215,21 @@ class TourPlannerActivity : AppCompatActivity() {
     }
 
     private fun updateDisplay() {
-        if (isWeekView) {
-            // Wochenansicht: Zeige Woche (z.B. "KW 4, 2026")
-            val cal = Calendar.getInstance().apply {
-                timeInMillis = viewDate.timeInMillis
-                set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-            }
-            val weekNumber = cal.get(Calendar.WEEK_OF_YEAR)
-            val year = cal.get(Calendar.YEAR)
-            binding.tvCurrentDate.text = "KW $weekNumber, $year"
-            loadWeekData(viewDate.timeInMillis)
-        } else {
-            // Tagesansicht
-            val fmt = SimpleDateFormat("EEE, dd.MM.yyyy", Locale.GERMANY)
-            binding.tvCurrentDate.text = fmt.format(viewDate.time)
-            loadTourData(viewDate.timeInMillis)
-        }
+        // Tagesansicht
+        val fmt = SimpleDateFormat("EEE, dd.MM.yyyy", Locale.GERMANY)
+        binding.tvCurrentDate.text = fmt.format(viewDate.time)
+        loadTourData(viewDate.timeInMillis)
+        
+        // WICHTIG:
+        // Callback-Handler (TourPlannerCallbackHandler) und die Adapter-Callbacks
+        // verwenden die aktuelle viewDate-Referenz, um A/L-Buttons (heute fällig / überfällig)
+        // korrekt zu berechnen. Da sich viewDate beim Datumswechsel ändert,
+        // müssen wir die Callbacks nach jedem Update neu setzen.
+        setupAdapterCallbacksForAdapter(adapter)
     }
     
     private fun updateViewMode() {
-        uiSetup.updateViewMode(isWeekView)
+        uiSetup.updateViewMode()
         uiSetup.updateHeaderButtonStates(pressedHeaderButton) // Button-Zustände aktualisieren
         updateDisplay()
     }
@@ -322,19 +245,9 @@ class TourPlannerActivity : AppCompatActivity() {
             viewModel.isSectionExpanded(sectionType)
         }
     }
-    
-    private fun loadWeekData(selectedTimestamp: Long) {
-        viewModel.loadWeekData(selectedTimestamp) { sectionType ->
-            viewModel.isSectionExpanded(sectionType)
-        }
-    }
-    
+        
     private fun reloadCurrentView() {
-        if (isWeekView) {
-            loadWeekData(viewDate.timeInMillis)
-        } else {
-            loadTourData(viewDate.timeInMillis)
-        }
+        loadTourData(viewDate.timeInMillis)
     }
     
     private fun showErrorState(message: String) {

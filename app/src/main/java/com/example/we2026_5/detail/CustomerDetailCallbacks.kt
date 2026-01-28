@@ -9,6 +9,7 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.CustomerManagerActivity
 import com.example.we2026_5.TerminRegel
+import com.example.we2026_5.TerminRegelErstellenActivity
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.databinding.ActivityCustomerDetailBinding
@@ -147,32 +148,18 @@ class CustomerDetailCallbacks(
     }
     
     /**
-     * Zeigt Dialog zur Auswahl einer Termin-Regel.
+     * Öffnet das Termin-Regeln-Fenster zur Auswahl einer Regel.
+     * Immer das richtige Fenster, kein Dialog.
+     * Übergibt die Customer-ID, damit beim Auswählen einer Regel geprüft werden kann,
+     * ob bereits Intervalle vorhanden sind.
      */
     fun showRegelAuswahlDialog() {
-        CoroutineScope(Dispatchers.Main).launch {
-            try {
-                val regeln = regelRepository.getAllRegeln()
-                
-                if (regeln.isEmpty()) {
-                    Toast.makeText(activity, "Keine Regeln vorhanden. Bitte erstellen Sie zuerst eine Regel.", Toast.LENGTH_LONG).show()
-                    return@launch
-                }
-                
-                val regelNamen = regeln.map { it.name }.toTypedArray()
-                
-                AlertDialog.Builder(activity)
-                    .setTitle("Termin-Regel auswählen")
-                    .setItems(regelNamen) { _, which ->
-                        val ausgewaehlteRegel = regeln[which]
-                        wendeRegelAn(ausgewaehlteRegel)
-                    }
-                    .setNegativeButton("Abbrechen", null)
-                    .show()
-            } catch (e: Exception) {
-                Toast.makeText(activity, "Fehler beim Laden der Regeln: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+        // Immer direkt das Termin-Regeln-Fenster öffnen
+        // Customer-ID mitgeben, damit beim Auswählen geprüft werden kann, ob bereits Intervalle vorhanden sind
+        val intent = Intent(activity, com.example.we2026_5.TerminRegelManagerActivity::class.java).apply {
+            putExtra("CUSTOMER_ID", customerId)
         }
+        activity.startActivity(intent)
     }
     
     /**
@@ -220,5 +207,91 @@ class CustomerDetailCallbacks(
      */
     fun updateCurrentCustomer(customer: Customer?) {
         currentCustomer = customer
+    }
+    
+    /**
+     * Zeigt den Info-Dialog für eine Termin-Regel.
+     */
+    fun showRegelInfoDialog(regelId: String) {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val regel = regelRepository.getRegelById(regelId)
+                if (regel != null) {
+                    showRegelInfoDialogInternal(regel)
+                } else {
+                    Toast.makeText(activity, "Regel nicht gefunden", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(activity, "Fehler beim Laden der Regel: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    private fun showRegelInfoDialogInternal(regel: TerminRegel) {
+        val wochentage = arrayOf("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
+        
+        val infoText = buildString {
+            append("Name: ${regel.name}\n\n")
+            
+            if (regel.beschreibung.isNotEmpty()) {
+                append("Beschreibung: ${regel.beschreibung}\n\n")
+            }
+            
+            if (regel.wochentagBasiert) {
+                append("Typ: Wochentag-basiert\n\n")
+                
+                if (regel.startDatum > 0) {
+                    val startDateText = com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(regel.startDatum)
+                    append("Startdatum: $startDateText\n")
+                }
+                
+                if (regel.abholungWochentag >= 0) {
+                    append("Abholung: ${wochentage[regel.abholungWochentag]}\n")
+                }
+                
+                if (regel.auslieferungWochentag >= 0) {
+                    append("Auslieferung: ${wochentage[regel.auslieferungWochentag]}\n")
+                }
+                
+                // Start-Woche Option wurde entfernt - Berechnung erfolgt automatisch basierend auf Startdatum
+                append("\n")
+            } else {
+                append("Typ: Datum-basiert\n\n")
+                
+                val abholungText = if (regel.abholungDatum > 0) {
+                    com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(regel.abholungDatum)
+                } else {
+                    "Heute"
+                }
+                append("Abholung: $abholungText\n")
+                
+                val auslieferungText = if (regel.auslieferungDatum > 0) {
+                    com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(regel.auslieferungDatum)
+                } else {
+                    "Heute"
+                }
+                append("Auslieferung: $auslieferungText\n\n")
+            }
+            
+            if (regel.wiederholen) {
+                append("Wiederholen: Ja\n")
+                append("Intervall: Alle ${regel.intervallTage} Tage\n")
+                if (regel.intervallAnzahl > 0) {
+                    append("Anzahl: ${regel.intervallAnzahl} Wiederholungen\n")
+                } else {
+                    append("Anzahl: Unbegrenzt\n")
+                }
+            } else {
+                append("Wiederholen: Nein\n")
+            }
+            
+            append("\nVerwendungsanzahl: ${regel.verwendungsanzahl}x")
+        }
+        
+        AlertDialog.Builder(activity)
+            .setTitle("Regel-Informationen")
+            .setMessage(infoText)
+            .setPositiveButton("Schließen", null)
+            .show()
     }
 }

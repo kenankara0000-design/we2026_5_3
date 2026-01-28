@@ -82,12 +82,15 @@ class CustomerDetailActivity : AppCompatActivity() {
             intervalle = intervalle
         )
 
+        // Callbacks VOR setupUI initialisieren (für temporäre Verwendung)
+        var tempCallbacks: CustomerDetailCallbacks? = null
+        
         // UI-Setup ZUERST durchführen, damit Adapter initialisiert werden
         uiSetup.setupUI(
-            onTerminAnlegenClick = { callbacks.showRegelAuswahlDialog() },
+            onTerminAnlegenClick = { tempCallbacks?.showRegelAuswahlDialog() },
             onBackClick = { finish() },
-            onAdresseClick = { callbacks.startNavigation() },
-            onTelefonClick = { callbacks.startPhoneCall() },
+            onAdresseClick = { tempCallbacks?.startNavigation() },
+            onTelefonClick = { tempCallbacks?.startPhoneCall() },
             onTakePhotoClick = { photoManager.showPhotoOptionsDialog() },
             onEditClick = { editManager.toggleEditMode(true, currentCustomer) },
             onSaveClick = { 
@@ -95,7 +98,7 @@ class CustomerDetailActivity : AppCompatActivity() {
                     // Nach erfolgreichem Speichern
                 }
             },
-            onDeleteClick = { callbacks.showDeleteConfirmation() },
+            onDeleteClick = { tempCallbacks?.showDeleteConfirmation() },
             onDatumSelected = { position, isAbholung ->
                 aktuellesIntervallPosition = position
                 aktuellesDatumTyp = isAbholung
@@ -122,6 +125,26 @@ class CustomerDetailActivity : AppCompatActivity() {
             intervallAdapter = uiSetup.intervallAdapter,
             currentCustomer = currentCustomer
         )
+        tempCallbacks = callbacks
+        
+        // IntervallViewAdapter mit Callback für Regel-Klick initialisieren
+        uiSetup.intervallViewAdapter = IntervallViewAdapter(emptyList()) { regelId ->
+            callbacks.showRegelInfoDialog(regelId)
+        }
+        binding.rvDetailIntervalleView.adapter = uiSetup.intervallViewAdapter
+        
+        // Click-Listener mit echten Callbacks aktualisieren
+        binding.btnTerminAnlegen.setOnClickListener { callbacks.showRegelAuswahlDialog() }
+        binding.btnTerminAnlegenView.setOnClickListener { callbacks.showRegelAuswahlDialog() }
+        binding.tvDetailAdresse.setOnClickListener { callbacks.startNavigation() }
+        binding.tvDetailTelefon.setOnClickListener { callbacks.startPhoneCall() }
+        binding.btnEditCustomer.setOnClickListener { editManager.toggleEditMode(true, currentCustomer) }
+        binding.btnSaveCustomer.setOnClickListener { 
+            editManager.handleSave(currentCustomer) {
+                // Nach erfolgreichem Speichern
+            }
+        }
+        binding.btnDeleteCustomer.setOnClickListener { callbacks.showDeleteConfirmation() }
         
         // EditManager initialisieren
         editManager = CustomerEditManager(

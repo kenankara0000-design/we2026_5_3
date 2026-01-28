@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.we2026_5.CustomerAdapter
 import com.example.we2026_5.CustomerDetailActivity
-import com.example.we2026_5.WeekViewAdapter
 import com.example.we2026_5.databinding.ActivityTourPlannerBinding
 
 /**
@@ -24,17 +23,13 @@ class TourPlannerUISetup(
 ) {
     
     /**
-     * Initialisiert die Adapter (Tages- und Wochenansicht)
+     * Initialisiert den Adapter für die Tagesansicht
      */
     fun setupAdapters(
-        adapter: CustomerAdapter,
-        weekAdapter: WeekViewAdapter
+        adapter: CustomerAdapter
     ) {
         binding.rvTourList.layoutManager = LinearLayoutManager(activity)
         binding.rvTourList.adapter = adapter
-        
-        binding.rvWeekView.layoutManager = LinearLayoutManager(activity)
-        binding.rvWeekView.adapter = weekAdapter
         
         // Drag & Drop für Kunden
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
@@ -62,22 +57,12 @@ class TourPlannerUISetup(
     }
     
     /**
-     * Aktualisiert die View-Mode (Tag/Woche)
+     * Stellt sicher, dass die Tagesansicht aktiv ist.
      */
-    fun updateViewMode(isWeekView: Boolean) {
-        if (isWeekView) {
-            binding.rvTourList.visibility = View.GONE
-            binding.rvWeekView.visibility = View.VISIBLE
-            binding.btnPrevDay.contentDescription = "Vorherige Woche"
-            binding.btnNextDay.contentDescription = "Nächste Woche"
-            binding.btnToggleView.contentDescription = "Tagesansicht"
-        } else {
-            binding.rvTourList.visibility = View.VISIBLE
-            binding.rvWeekView.visibility = View.GONE
-            binding.btnPrevDay.contentDescription = "Vorheriger Tag"
-            binding.btnNextDay.contentDescription = "Nächster Tag"
-            binding.btnToggleView.contentDescription = "Wochenansicht"
-        }
+    fun updateViewMode() {
+        binding.rvTourList.visibility = View.VISIBLE
+        binding.btnPrevDay.contentDescription = "Vorheriger Tag"
+        binding.btnNextDay.contentDescription = "Nächster Tag"
     }
     
     /**
@@ -100,14 +85,10 @@ class TourPlannerUISetup(
                 binding.btnMapView.setTextColor(textColor)
                 binding.btnMapView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
                 
-                // Inaktive Buttons: Blau Hintergrund
+                // Inaktiver Button: Blau Hintergrund
                 binding.btnToday.setBackgroundColor(inactiveBackgroundColor)
                 binding.btnToday.setTextColor(textColor)
                 binding.btnToday.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-                
-                binding.btnToggleView.setBackgroundColor(inactiveBackgroundColor)
-                binding.btnToggleView.setTextColor(textColor)
-                binding.btnToggleView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
             }
             "Heute" -> {
                 // Aktiver Button: Orange Hintergrund
@@ -115,29 +96,10 @@ class TourPlannerUISetup(
                 binding.btnToday.setTextColor(textColor)
                 binding.btnToday.iconTint = android.content.res.ColorStateList.valueOf(textColor)
                 
-                // Inaktive Buttons: Blau Hintergrund
+                // Inaktiver Button: Blau Hintergrund
                 binding.btnMapView.setBackgroundColor(inactiveBackgroundColor)
                 binding.btnMapView.setTextColor(textColor)
                 binding.btnMapView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-                
-                binding.btnToggleView.setBackgroundColor(inactiveBackgroundColor)
-                binding.btnToggleView.setTextColor(textColor)
-                binding.btnToggleView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-            }
-            "Woche" -> {
-                // Aktiver Button: Orange Hintergrund
-                binding.btnToggleView.setBackgroundColor(activeBackgroundColor)
-                binding.btnToggleView.setTextColor(textColor)
-                binding.btnToggleView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-                
-                // Inaktive Buttons: Blau Hintergrund
-                binding.btnMapView.setBackgroundColor(inactiveBackgroundColor)
-                binding.btnMapView.setTextColor(textColor)
-                binding.btnMapView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-                
-                binding.btnToday.setBackgroundColor(inactiveBackgroundColor)
-                binding.btnToday.setTextColor(textColor)
-                binding.btnToday.iconTint = android.content.res.ColorStateList.valueOf(textColor)
             }
             else -> {
                 // Kein Button gedrückt: Alle blau
@@ -148,10 +110,6 @@ class TourPlannerUISetup(
                 binding.btnToday.setBackgroundColor(inactiveBackgroundColor)
                 binding.btnToday.setTextColor(textColor)
                 binding.btnToday.iconTint = android.content.res.ColorStateList.valueOf(textColor)
-                
-                binding.btnToggleView.setBackgroundColor(inactiveBackgroundColor)
-                binding.btnToggleView.setTextColor(textColor)
-                binding.btnToggleView.iconTint = android.content.res.ColorStateList.valueOf(textColor)
             }
         }
     }
@@ -173,21 +131,13 @@ class TourPlannerUISetup(
     /**
      * Aktualisiert die Empty-State-Sichtbarkeit
      */
-    fun updateEmptyState(isEmpty: Boolean, isWeekView: Boolean) {
+    fun updateEmptyState(isEmpty: Boolean) {
         if (isEmpty) {
             binding.emptyStateLayout.visibility = View.VISIBLE
-            if (isWeekView) {
-                binding.rvWeekView.visibility = View.GONE
-            } else {
-                binding.rvTourList.visibility = View.GONE
-            }
+            binding.rvTourList.visibility = View.GONE
         } else {
             binding.emptyStateLayout.visibility = View.GONE
-            if (isWeekView) {
-                binding.rvWeekView.visibility = View.VISIBLE
-            } else {
-                binding.rvTourList.visibility = View.VISIBLE
-            }
+            binding.rvTourList.visibility = View.VISIBLE
         }
     }
 }

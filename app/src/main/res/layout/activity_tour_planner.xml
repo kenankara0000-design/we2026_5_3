@@ -160,27 +160,7 @@
             android:minHeight="48dp"
             android:contentDescription="Heute" />
         
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnToggleView"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Woche"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="normal"
-            app:icon="@drawable/ic_view_week"
-            app:iconGravity="textStart"
-            app:iconTint="#FFFFFF"
-            app:iconPadding="8dp"
-            app:cornerRadius="20dp"
-            app:backgroundTint="@color/button_blue"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingTop="12dp"
-            android:paddingBottom="12dp"
-            android:minHeight="48dp"
-            android:contentDescription="Wochenansicht" />
+        <!-- Toggle-Button für Wochenansicht wurde entfernt -->
     </LinearLayout>
     
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -202,13 +182,6 @@
                 android:id="@+id/rvTourList"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
-            
-            <!-- Wochenansicht -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvWeekView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/emptyStateLayout"

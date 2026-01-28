@@ -282,7 +282,8 @@ class CustomerViewHolderBinder(
             val wurdeHeuteErledigt = customer.abholungErledigtAm > 0 &&
                 TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) == viewDateStart
             val warUeberfaellig = customer.faelligAmDatum > 0
-            val sollAButtonAnzeigen = hatAbholungHeute || hatUeberfaelligeAbholung || (wurdeHeuteErledigt && warUeberfaellig)
+            // Button anzeigen wenn: heute fällig, überfällig, oder am angezeigten Tag erledigt (unabhängig von Überfälligkeit)
+            val sollAButtonAnzeigen = hatAbholungHeute || hatUeberfaelligeAbholung || wurdeHeuteErledigt
             val istAmTatsaechlichenAbholungTag = hatAbholungHeute && !hatUeberfaelligeAbholung
             
             holder.binding.btnAbholung.visibility = if (sollAButtonAnzeigen) View.VISIBLE else View.GONE
@@ -328,7 +329,8 @@ class CustomerViewHolderBinder(
             val wurdeHeuteErledigtL = customer.auslieferungErledigtAm > 0 &&
                 TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart
             val warUeberfaelligL = customer.faelligAmDatum > 0
-            val sollLButtonAnzeigen = hatAuslieferungHeute || hatUeberfaelligeAuslieferung || (wurdeHeuteErledigtL && warUeberfaelligL)
+            // Button anzeigen wenn: heute fällig, überfällig, oder am angezeigten Tag erledigt (unabhängig von Überfälligkeit)
+            val sollLButtonAnzeigen = hatAuslieferungHeute || hatUeberfaelligeAuslieferung || wurdeHeuteErledigtL
             val istAmTatsaechlichenAuslieferungTag = hatAuslieferungHeute && !hatUeberfaelligeAuslieferung
             
             holder.binding.btnAuslieferung.visibility = if (sollLButtonAnzeigen) View.VISIBLE else View.GONE

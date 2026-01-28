@@ -12,5 +12,6 @@ data class CustomerIntervall(
     val wiederholen: Boolean = false, // Ob das Intervall wiederholt wird
     val intervallTage: Int = 7, // Intervall in Tagen (1-365), nur relevant wenn wiederholen=true
     val intervallAnzahl: Int = 0, // Anzahl der Wiederholungen (0 = unbegrenzt), nur relevant wenn wiederholen=true
-    val erstelltAm: Long = System.currentTimeMillis()
+    val erstelltAm: Long = System.currentTimeMillis(),
+    val terminRegelId: String = "" // ID der Termin-Regel, aus der dieses Intervall erstellt wurde (optional)
 )
