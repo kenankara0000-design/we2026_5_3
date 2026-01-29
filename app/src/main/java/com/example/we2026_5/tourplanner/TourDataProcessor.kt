@@ -242,30 +242,35 @@ class TourDataProcessor {
             
             val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
             
+            // "Am Tag relevant" = fällig am Tag ODER überfällig und heute angezeigt (damit A+L beide nötig sind)
+            val hatAbholungRelevantAmTag = hatAbholungAmTag || hatUeberfaelligeAbholung
+            val hatAuslieferungRelevantAmTag = hatAuslieferungAmTag || hatUeberfaelligeAuslieferung
+            val beideRelevantAmTag = hatAbholungRelevantAmTag && hatAuslieferungRelevantAmTag
+            
             // Prüfe ob Kunde erledigt ist UND am angezeigten Tag einen Termin hat/hatte
             val sollAlsErledigtAnzeigen = if (isDone) {
-                // Prüfe ob überfällig war und am Datum erledigt wurde
-                val warUeberfaelligUndErledigt = if (customer.faelligAmDatum > 0) {
-                    val faelligAmStart = categorizer.getStartOfDay(customer.faelligAmDatum)
-                    val erledigtAmStart = if (customer.abholungErledigtAm > 0) {
-                        categorizer.getStartOfDay(customer.abholungErledigtAm)
-                    } else if (customer.auslieferungErledigtAm > 0) {
-                        categorizer.getStartOfDay(customer.auslieferungErledigtAm)
-                    } else {
-                        0L
-                    }
-                    viewDateStart == faelligAmStart || (erledigtAmStart > 0 && viewDateStart == erledigtAmStart)
+                val wurdeAmTagErledigt = wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungRelevantAmTag, hatAuslieferungRelevantAmTag)
+                
+                // Wenn heute BEIDE A und L relevant (z. B. überfälliges A + fälliges L): nur vollständig erledigt zählt
+                if (beideRelevantAmTag) {
+                    wurdeAmTagErledigt
                 } else {
-                    false
+                    // Sonst: überfällig war und erledigt ODER am Tag vollständig erledigt
+                    val warUeberfaelligUndErledigt = if (customer.faelligAmDatum > 0) {
+                        val faelligAmStart = categorizer.getStartOfDay(customer.faelligAmDatum)
+                        val erledigtAmStart = if (customer.abholungErledigtAm > 0) {
+                            categorizer.getStartOfDay(customer.abholungErledigtAm)
+                        } else if (customer.auslieferungErledigtAm > 0) {
+                            categorizer.getStartOfDay(customer.auslieferungErledigtAm)
+                        } else {
+                            0L
+                        }
+                        viewDateStart == faelligAmStart || (erledigtAmStart > 0 && viewDateStart == erledigtAmStart)
+                    } else {
+                        false
+                    }
+                    warUeberfaelligUndErledigt || wurdeAmTagErledigt
                 }
-                
-                // Prüfe ob am angezeigten Tag ein Termin erledigt wurde (wenn A und L am Tag: beide müssen erledigt sein)
-                val wurdeAmTagErledigt = wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTag, hatAuslieferungAmTag)
-                
-                // Erledigte Kunden anzeigen wenn:
-                // 1. Überfällig war und am Datum erledigt wurde, ODER
-                // 2. Am Tag vollständig erledigt (bei A+L: beide müssen erledigt sein)
-                warUeberfaelligUndErledigt || wurdeAmTagErledigt
             } else {
                 false
             }

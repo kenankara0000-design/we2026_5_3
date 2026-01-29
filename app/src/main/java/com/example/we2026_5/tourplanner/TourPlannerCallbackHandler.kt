@@ -341,6 +341,7 @@ class TourPlannerCallbackHandler(
                 )
                 if (success == true) {
                     android.widget.Toast.makeText(context, "Rückgängig gemacht", android.widget.Toast.LENGTH_SHORT).show()
+                    adapter.clearPressedButtons()
                     reloadCurrentView()
                 }
             }

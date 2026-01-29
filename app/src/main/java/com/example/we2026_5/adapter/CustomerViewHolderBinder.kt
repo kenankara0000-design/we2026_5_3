@@ -221,13 +221,37 @@ class CustomerViewHolderBinder(
     }
     
     private fun setupCompletionHints(holder: CustomerViewHolder, customer: Customer) {
+        val heuteStart = getStartOfDay(System.currentTimeMillis())
+        val viewDateStart = displayedDateMillis?.let {
+            TerminBerechnungUtils.getStartOfDay(it)
+        } ?: heuteStart
+        val istHeute = viewDateStart == heuteStart
+        
         val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
+        
+        // Prüfe ob am angezeigten Tag (Tag X oder Tag Y) erledigt wurde oder überfällig war
+        val abholungErledigtAmTag = customer.abholungErfolgt && customer.abholungErledigtAm > 0 &&
+            TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) == viewDateStart
+        val auslieferungErledigtAmTag = customer.auslieferungErfolgt && customer.auslieferungErledigtAm > 0 &&
+            TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart
+        val warUeberfaelligAmTag = customer.faelligAmDatum > 0 &&
+            TerminBerechnungUtils.getStartOfDay(customer.faelligAmDatum) == viewDateStart
+        
+        // Hinweise anzeigen wenn: am Tag erledigt ODER überfällig war am Tag ODER am Tag "Heute"
+        val sollHinweiseAnzeigen = abholungErledigtAmTag || auslieferungErledigtAmTag || warUeberfaelligAmTag || istHeute
+        
+        if (!sollHinweiseAnzeigen || !isDone) {
+            holder.binding.tvErledigungsHinweise.visibility = View.GONE
+            holder.binding.tvUeberfaelligIndikator.visibility = View.GONE
+            return
+        }
+        
         if (isDone) {
             val hinweise = mutableListOf<String>()
             val warUeberfaellig = customer.faelligAmDatum > 0
             
-            // Überfällig-Indikator anzeigen
-            if (warUeberfaellig) {
+            // Überfällig-Indikator: anzeigen wenn überfällig war UND (am Tag erledigt ODER am Tag "Heute")
+            if (warUeberfaelligAmTag || (warUeberfaellig && istHeute)) {
                 holder.binding.tvUeberfaelligIndikator.visibility = View.VISIBLE
                 val faelligStr = DateFormatter.formatDate(customer.faelligAmDatum)
                 holder.binding.tvUeberfaelligIndikator.text = "Überfällig: $faelligStr"
@@ -235,22 +259,35 @@ class CustomerViewHolderBinder(
                 holder.binding.tvUeberfaelligIndikator.visibility = View.GONE
             }
             
-            // Abholung erledigt
-            if (customer.abholungErfolgt && customer.abholungZeitstempel > 0) {
-                val datumStr = DateFormatter.formatDateTime(customer.abholungZeitstempel)
-                hinweise.add("Abholung: $datumStr")
-            } else if (customer.abholungErfolgt && customer.abholungErledigtAm > 0) {
-                val erledigtStr = DateFormatter.formatDate(customer.abholungErledigtAm)
-                hinweise.add("Abholung: $erledigtStr")
+            // Abholung erledigt: anzeigen wenn
+            // - am angezeigten Tag erledigt ODER
+            // - am Tag "Heute" erledigt ODER
+            // - am Tag X (Fälligkeitstag) überfällig war und inzwischen erledigt
+            val sollAbholungHinweisAnzeigen = abholungErledigtAmTag || 
+                (customer.abholungErfolgt && istHeute) ||
+                (customer.abholungErfolgt && warUeberfaelligAmTag)
+            if (sollAbholungHinweisAnzeigen) {
+                if (customer.abholungErfolgt && customer.abholungZeitstempel > 0) {
+                    val datumStr = DateFormatter.formatDateTime(customer.abholungZeitstempel)
+                    hinweise.add("Abholung: $datumStr")
+                } else if (customer.abholungErfolgt && customer.abholungErledigtAm > 0) {
+                    val erledigtStr = DateFormatter.formatDate(customer.abholungErledigtAm)
+                    hinweise.add("Abholung: $erledigtStr")
+                }
             }
             
-            // Auslieferung erledigt
-            if (customer.auslieferungErfolgt && customer.auslieferungZeitstempel > 0) {
-                val datumStr = DateFormatter.formatDateTime(customer.auslieferungZeitstempel)
-                hinweise.add("Auslieferung: $datumStr")
-            } else if (customer.auslieferungErfolgt && customer.auslieferungErledigtAm > 0) {
-                val erledigtStr = DateFormatter.formatDate(customer.auslieferungErledigtAm)
-                hinweise.add("Auslieferung: $erledigtStr")
+            // Auslieferung erledigt: gleiche Logik wie Abholung
+            val sollAuslieferungHinweisAnzeigen = auslieferungErledigtAmTag || 
+                (customer.auslieferungErfolgt && istHeute) ||
+                (customer.auslieferungErfolgt && warUeberfaelligAmTag)
+            if (sollAuslieferungHinweisAnzeigen) {
+                if (customer.auslieferungErfolgt && customer.auslieferungZeitstempel > 0) {
+                    val datumStr = DateFormatter.formatDateTime(customer.auslieferungZeitstempel)
+                    hinweise.add("Auslieferung: $datumStr")
+                } else if (customer.auslieferungErfolgt && customer.auslieferungErledigtAm > 0) {
+                    val erledigtStr = DateFormatter.formatDate(customer.auslieferungErledigtAm)
+                    hinweise.add("Auslieferung: $erledigtStr")
+                }
             }
             
             if (hinweise.isNotEmpty()) {
@@ -418,7 +455,10 @@ class CustomerViewHolderBinder(
             val istHeute = viewDateStart == heuteStart
             holder.binding.btnAbholung.visibility = if (sollAButtonAnzeigen) View.VISIBLE else View.GONE
             holder.binding.btnAbholung.isClickable = istHeute
-            if (customer.abholungErfolgt || pressedButton == "A") {
+            // WICHTIG: A-Button nur grau, wenn am Tag "Heute" erledigt wurde
+            val wurdeHeuteErledigtA = istHeute && customer.abholungErledigtAm > 0 &&
+                TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) == heuteStart
+            if (wurdeHeuteErledigtA || pressedButton == "A") {
                 holder.binding.btnAbholung.background = ContextCompat.getDrawable(context, R.drawable.button_gray)
                 holder.binding.btnAbholung.setTextColor(ContextCompat.getColor(context, R.color.white))
                 holder.binding.btnAbholung.alpha = 0.7f
@@ -457,16 +497,19 @@ class CustomerViewHolderBinder(
                 }
             }
             
-            val wurdeHeuteErledigtL = customer.auslieferungErledigtAm > 0 &&
+            val wurdeAmTagErledigtL = customer.auslieferungErledigtAm > 0 &&
                 TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart
             val warUeberfaelligL = customer.faelligAmDatum > 0
             // Button anzeigen wenn: heute fällig, überfällig, oder am angezeigten Tag erledigt (unabhängig von Überfälligkeit)
-            val sollLButtonAnzeigen = hatAuslieferungHeute || hatUeberfaelligeAuslieferung || wurdeHeuteErledigtL
+            val sollLButtonAnzeigen = hatAuslieferungHeute || hatUeberfaelligeAuslieferung || wurdeAmTagErledigtL
             val istAmTatsaechlichenAuslieferungTag = hatAuslieferungHeute && !hatUeberfaelligeAuslieferung
             
             holder.binding.btnAuslieferung.visibility = if (sollLButtonAnzeigen) View.VISIBLE else View.GONE
             holder.binding.btnAuslieferung.isClickable = istHeute
-            if (customer.auslieferungErfolgt || pressedButton == "L") {
+            // WICHTIG: L-Button nur grau, wenn am Tag "Heute" erledigt wurde
+            val wurdeHeuteErledigtL = istHeute && customer.auslieferungErledigtAm > 0 &&
+                TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) == heuteStart
+            if (wurdeHeuteErledigtL || pressedButton == "L") {
                 holder.binding.btnAuslieferung.background = ContextCompat.getDrawable(context, R.drawable.button_gray)
                 holder.binding.btnAuslieferung.setTextColor(ContextCompat.getColor(context, R.color.white))
                 holder.binding.btnAuslieferung.alpha = 0.7f
@@ -564,7 +607,24 @@ class CustomerViewHolderBinder(
                 false
             }
             
-            holder.binding.btnRueckgaengig.visibility = if (hatErledigtenATerminAmDatum || hatErledigtenLTerminAmDatum) View.VISIBLE else View.GONE
+            // Prüfe ob beide A und L heute relevant sind (fällig oder überfällig)
+            val hatAbholungRelevantAmTag = hatAbholungHeute || hatUeberfaelligeAbholung
+            val hatAuslieferungRelevantAmTag = hatAuslieferungHeute || hatUeberfaelligeAuslieferung
+            val beideRelevantAmTag = hatAbholungRelevantAmTag && hatAuslieferungRelevantAmTag
+            
+            // Rückgängig-Button: Wenn beide A und L relevant, nur anzeigen wenn beide erledigt
+            // WICHTIG: Rückgängig-Button nur am Tag "Heute" anzeigen
+            val sollRueckgaengigAnzeigen = if (istHeute) {
+                if (beideRelevantAmTag) {
+                    hatErledigtenATerminAmDatum && hatErledigtenLTerminAmDatum
+                } else {
+                    hatErledigtenATerminAmDatum || hatErledigtenLTerminAmDatum
+                }
+            } else {
+                false
+            }
+            
+            holder.binding.btnRueckgaengig.visibility = if (sollRueckgaengigAnzeigen) View.VISIBLE else View.GONE
         } else {
             // In CustomerManager: Buttons ausblenden UND nicht klickbar machen
             holder.binding.btnAbholung.visibility = View.GONE
@@ -604,6 +664,62 @@ class CustomerViewHolderBinder(
         
         val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
         
+        // Prüfe ob beide A und L heute relevant sind (für vollständige Erledigung)
+        val hatAbholungRelevantAmTag = run {
+            val alleTermine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                customer = customer,
+                startDatum = viewDateStart - TimeUnit.DAYS.toMillis(365),
+                tageVoraus = 730
+            )
+            val hatAbholungAmTag = alleTermine.any { 
+                TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart && it.typ == com.example.we2026_5.TerminTyp.ABHOLUNG
+            }
+            val hatUeberfaelligeAbholung = alleTermine.any { termin ->
+                val terminStart = TerminBerechnungUtils.getStartOfDay(termin.datum)
+                val istAbholung = termin.typ == com.example.we2026_5.TerminTyp.ABHOLUNG
+                val istNichtErledigt = !customer.abholungErfolgt
+                val istAmTagXFaellig = terminStart == viewDateStart
+                val warVorHeuteFaellig = terminStart < heuteStart
+                val istHeute = viewDateStart == heuteStart
+                val istHeuteFaellig = terminStart == heuteStart
+                val istUeberfaellig = (istAmTagXFaellig || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
+                istAbholung && istNichtErledigt && istUeberfaellig
+            }
+            hatAbholungAmTag || hatUeberfaelligeAbholung
+        }
+        
+        val hatAuslieferungRelevantAmTag = run {
+            val alleTermine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                customer = customer,
+                startDatum = viewDateStart - TimeUnit.DAYS.toMillis(365),
+                tageVoraus = 730
+            )
+            val hatAuslieferungAmTag = alleTermine.any { 
+                TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart && it.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG
+            }
+            val hatUeberfaelligeAuslieferung = alleTermine.any { termin ->
+                val terminStart = TerminBerechnungUtils.getStartOfDay(termin.datum)
+                val istAuslieferung = termin.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG
+                val istNichtErledigt = !customer.auslieferungErfolgt
+                val istAmTagXFaellig = terminStart == viewDateStart
+                val warVorHeuteFaellig = terminStart < heuteStart
+                val istHeute = viewDateStart == heuteStart
+                val istHeuteFaellig = terminStart == heuteStart
+                val istUeberfaellig = (istAmTagXFaellig || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
+                istAuslieferung && istNichtErledigt && istUeberfaellig
+            }
+            hatAuslieferungAmTag || hatUeberfaelligeAuslieferung
+        }
+        
+        val beideRelevantAmTag = hatAbholungRelevantAmTag && hatAuslieferungRelevantAmTag
+        
+        // "ERLEDIGT" Badge: Wenn beide A und L relevant, nur anzeigen wenn beide erledigt
+        val sollAlsErledigtAnzeigen = if (beideRelevantAmTag) {
+            customer.abholungErfolgt && customer.auslieferungErfolgt
+        } else {
+            isDone
+        }
+        
         // Gleiche Logik wie in setupButtonVisibility verwenden
         val istUeberfaellig = run {
             val alleTermine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
@@ -624,11 +740,11 @@ class CustomerViewHolderBinder(
             }
         }
         
-        val showAsOverdue = istUeberfaellig && !isDone
+        val showAsOverdue = istUeberfaellig && !sollAlsErledigtAnzeigen
         val cardView = holder.itemView as? androidx.cardview.widget.CardView
         
         when {
-            isDone -> {
+            sollAlsErledigtAnzeigen -> {
                 holder.binding.tvStatusLabel.text = "ERLEDIGT"
                 holder.binding.tvStatusLabel.setBackgroundResource(R.drawable.status_badge_done)
                 holder.binding.tvStatusLabel.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white))
