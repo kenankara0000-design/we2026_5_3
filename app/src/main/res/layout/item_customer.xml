@@ -97,6 +97,28 @@
                     android:visibility="gone" />
 
                 <TextView
+                    android:id="@+id/btnKw"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="KW"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:minWidth="48dp"
+                    android:minHeight="52dp"
+                    android:layout_marginEnd="6dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="@drawable/button_kw_glossy"
+                    android:textColor="#FFFFFF"
+                    android:contentDescription="Keine Wäsche"
+                    android:visibility="gone" />
+
+                <TextView
                     android:id="@+id/btnAbholung"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

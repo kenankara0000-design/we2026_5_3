@@ -89,10 +89,9 @@ class CustomerDetailUISetup(
         // Kunden-Typ Button (G/P/L) anzeigen
         com.example.we2026_5.ui.CustomerTypeButtonHelper.setupButton(binding.btnKundenTyp, customer, activity)
         
-        // Intervalle im View-Mode anzeigen (nur für Gewerblich und Liste)
-        // CardView wird immer angezeigt, wenn Kunde Gewerblich oder Liste ist (auch ohne Intervalle),
-        // damit der "Termin Anlegen" Button sichtbar ist
-        val sollIntervallAnzeigen = customer.kundenArt == "Gewerblich" || customer.kundenArt == "Liste"
+        // Intervalle im View-Mode anzeigen (für alle Kundentypen: Gewerblich, Privat, Liste)
+        // CardView wird immer angezeigt, damit der "Termin Anlegen" Button für alle sichtbar ist
+        val sollIntervallAnzeigen = true
         if (sollIntervallAnzeigen) {
             binding.cardDetailIntervallView.visibility = View.VISIBLE
             if (customer.intervalle.isNotEmpty()) {

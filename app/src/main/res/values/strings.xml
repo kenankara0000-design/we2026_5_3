@@ -7,4 +7,5 @@
     <string name="delete_confirm">Bist du sicher, dass du diesen Kunden löschen möchtest?</string>
     <string name="back">Zurück</string>
     <string name="search_hint">Suchen...</string>
+    <string name="no_termin_regeln">Keine Termin-Regeln</string>
 </resources>

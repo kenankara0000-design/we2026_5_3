@@ -5,7 +5,9 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerAdapter
 import com.example.we2026_5.FirebaseRetryHelper
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.util.TerminBerechnungUtils
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -19,6 +21,7 @@ import java.util.concurrent.TimeUnit
 class TourPlannerCallbackHandler(
     private val context: Context,
     private val repository: CustomerRepository,
+    private val listeRepository: KundenListeRepository,
     private val dateUtils: TourPlannerDateUtils,
     private val viewDate: Calendar,
     private val adapter: CustomerAdapter,
@@ -36,6 +39,9 @@ class TourPlannerCallbackHandler(
         adapter.onAuslieferung = { customer ->
             handleAuslieferung(customer)
         }
+        
+        // Keine Wäsche (KW): A+KW = erledigt Abholungstag, L+KW = erledigt Auslieferungstag
+        adapter.onKw = { customer -> handleKw(customer) }
         
         // Tour-Zyklus zurücksetzen
         adapter.onResetTourCycle = { customerId ->
@@ -66,6 +72,17 @@ class TourPlannerCallbackHandler(
         adapter.getAuslieferungDatum = { customer ->
             val viewDateStart = dateUtils.getStartOfDay(viewDate.timeInMillis)
             dateUtils.calculateAuslieferungDatum(customer, viewDateStart, dateUtils.getStartOfDay(System.currentTimeMillis()))
+        }
+        
+        // Nächstes Tour-Datum (für "Nächste Tour" auf der Karte; Listen-Kunden: Termin-Regel der Liste)
+        adapter.getNaechstesTourDatum = { customer -> dateUtils.getNaechstesTourDatum(customer) }
+
+        // Termine für Kunde (mit Liste bei Listen-Kunden – einheitliche A/L/KW/Ü-Logik)
+        adapter.getTermineFuerKunde = { customer, startDatum, tageVoraus ->
+            runBlocking {
+                val liste = if (customer.listeId.isNotBlank()) listeRepository.getListeById(customer.listeId) else null
+                TerminBerechnungUtils.berechneAlleTermineFuerKunde(customer, liste, startDatum, tageVoraus)
+            }
         }
     }
     
@@ -128,6 +145,52 @@ class TourPlannerCallbackHandler(
         }
     }
     
+    private fun handleKw(customer: Customer) {
+        CoroutineScope(Dispatchers.Main).launch {
+            val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+            val hatAbholungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.ABHOLUNG, heuteStart)
+            val hatAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart)
+            if (!hatAbholungHeute && !hatAuslieferungHeute) {
+                android.widget.Toast.makeText(context, "KW (Keine Wäsche) nur an Abholungs- oder Auslieferungstag.", android.widget.Toast.LENGTH_LONG).show()
+                adapter.clearPressedButtons()
+                return@launch
+            }
+            val erledigtAm = heuteStart
+            val updates = mutableMapOf<String, Any>()
+            updates["keinerWäscheErfolgt"] = true
+            updates["keinerWäscheErledigtAm"] = erledigtAm
+            if (hatAbholungHeute && !customer.abholungErfolgt) {
+                updates["abholungErfolgt"] = true
+                updates["abholungErledigtAm"] = erledigtAm
+                updates["abholungZeitstempel"] = System.currentTimeMillis()
+                val faelligAmDatum = dateUtils.getFaelligAmDatumFuerAbholung(customer, heuteStart)
+                if (faelligAmDatum > 0) updates["faelligAmDatum"] = faelligAmDatum
+            }
+            if (hatAuslieferungHeute && !customer.auslieferungErfolgt) {
+                updates["auslieferungErfolgt"] = true
+                updates["auslieferungErledigtAm"] = erledigtAm
+                updates["auslieferungZeitstempel"] = System.currentTimeMillis()
+                if (customer.faelligAmDatum == 0L) {
+                    val faelligAmL = dateUtils.getFaelligAmDatumFuerAuslieferung(customer, heuteStart)
+                    if (faelligAmL > 0) updates["faelligAmDatum"] = faelligAmL
+                }
+            }
+            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
+                operation = { repository.updateCustomer(customer.id, updates) },
+                context = context,
+                errorMessage = "Fehler beim Registrieren „Keine Wäsche“. Bitte erneut versuchen.",
+                maxRetries = 3
+            )
+            if (success == true) {
+                android.widget.Toast.makeText(context, "Keine Wäsche registriert", android.widget.Toast.LENGTH_SHORT).show()
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    adapter.clearPressedButtons()
+                    reloadCurrentView()
+                }, 2000)
+            }
+        }
+    }
+
     private fun handleAuslieferung(customer: Customer) {
         if (!customer.auslieferungErfolgt) {
             // WICHTIG: Geschäftslogik - L darf nicht erledigt werden, solange A nicht erledigt ist
@@ -286,6 +349,9 @@ class TourPlannerCallbackHandler(
                 hatAuslieferungHeute
             )
             
+            val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
+                TerminBerechnungUtils.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+            
             // Prüfe ob beide am gleichen Tag erledigt wurden
             val beideAmGleichenTagErledigt = abholungErledigtAmTag && auslieferungErledigtAmTag &&
                 customer.abholungErledigtAm > 0 && customer.auslieferungErledigtAm > 0 &&
@@ -294,8 +360,24 @@ class TourPlannerCallbackHandler(
             
             val updates = mutableMapOf<String, Any>()
             
-            // WICHTIG: Nur das zurücksetzen, was am angezeigten Tag erledigt wurde
-            if (beideAmGleichenTagErledigt && customer.abholungErfolgt && customer.auslieferungErfolgt) {
+            // KW (Keine Wäsche) am Tag zurücksetzen
+            if (kwErledigtAmTag) {
+                updates["keinerWäscheErfolgt"] = false
+                updates["keinerWäscheErledigtAm"] = 0L
+                // Wenn A/L am gleichen Tag durch KW gesetzt wurden, auch zurücksetzen
+                if (abholungErledigtAmTag) {
+                    updates["abholungErfolgt"] = false
+                    updates["abholungErledigtAm"] = 0L
+                    updates["abholungZeitstempel"] = 0L
+                }
+                if (auslieferungErledigtAmTag) {
+                    updates["auslieferungErfolgt"] = false
+                    updates["auslieferungErledigtAm"] = 0L
+                    updates["auslieferungZeitstempel"] = 0L
+                }
+            }
+            // WICHTIG: Nur das zurücksetzen, was am angezeigten Tag erledigt wurde (wenn nicht schon via KW)
+            else if (beideAmGleichenTagErledigt && customer.abholungErfolgt && customer.auslieferungErfolgt) {
                 // Beide am gleichen Tag erledigt: beide zurücksetzen
                 updates["abholungErfolgt"] = false
                 updates["auslieferungErfolgt"] = false
@@ -359,11 +441,14 @@ class TourPlannerCallbackHandler(
      * 2. Er überfällig ist und heute angezeigt wird (Container 2)
      */
     private fun istTerminHeuteFaellig(customer: Customer, terminTyp: com.example.we2026_5.TerminTyp, heuteStart: Long): Boolean {
-        // Berechne alle Termine für den Kunden (gestern, heute, morgen)
+        val liste = if (customer.listeId.isNotBlank()) {
+            runBlocking { listeRepository.getListeById(customer.listeId) }
+        } else null
         val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
             customer = customer,
+            liste = liste,
             startDatum = heuteStart - TimeUnit.DAYS.toMillis(1),
-            tageVoraus = 2 // Nur 2 Tage (gestern, heute, morgen)
+            tageVoraus = 2
         )
         
         // Prüfe ob heute ein Termin des gewünschten Typs fällig ist (normal fällig)

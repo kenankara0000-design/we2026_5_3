@@ -51,8 +51,10 @@ class TourDataProcessor {
                     } ?: false
                     if (customerImUrlaub || listeImUrlaub) return@filter false
                     
-                    val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
-                    
+                    val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
+                        categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                    val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
+
                     // WICHTIG: Erledigte Kunden aus Listen werden angezeigt wenn sie erledigt sind UND am Tag einen Termin haben
                     if (isDone) {
                         val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
@@ -111,15 +113,17 @@ class TourDataProcessor {
         val alleKundenInListenIds = kundenNachListen.values.flatten().map { it.id }.toSet()
         val kundenInListenIds = listenMitKunden.values.flatten().map { it.id }.toSet()
         
-        // Gewerblich-Kunden ohne Liste filtern (Kunden aus Listen sind bereits oben angezeigt)
+        // Gewerblich- und Privat-Kunden ohne Liste filtern (Fällig-/Überfällig-Logik für alle Kundentypen)
         // WICHTIG: Filtere ALLE Kunden mit listeId heraus, unabhängig von kundenArt
         // Kunden aus Listen werden nur in Listen-Bereichen angezeigt, nicht in normalen Bereichen
-        val gewerblichKundenOhneListe = kundenOhneListe.filter { 
-            it.kundenArt == "Gewerblich" && it.listeId.isEmpty() && it.id !in alleKundenInListenIds 
+        val kundenOhneListeMitTerminen = kundenOhneListe.filter { 
+            (it.kundenArt == "Gewerblich" || it.kundenArt == "Privat") && it.listeId.isEmpty() && it.id !in alleKundenInListenIds 
         }
-        val filteredGewerblich = gewerblichKundenOhneListe.filter { customer ->
-            val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
-            
+        val filteredGewerblich = kundenOhneListeMitTerminen.filter { customer ->
+            val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
+                categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+            val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
+
             // Erledigte Kunden: Prüfe ob am Tag ein Termin vorhanden ist
             if (isDone) {
                 val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
@@ -240,8 +244,10 @@ class TourDataProcessor {
                 istAuslieferung && istNichtErledigt && istUeberfaellig
             }
             
-            val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
-            
+            val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
+                categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+            val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
+
             // "Am Tag relevant" = fällig am Tag ODER überfällig und heute angezeigt (damit A+L beide nötig sind)
             val hatAbholungRelevantAmTag = hatAbholungAmTag || hatUeberfaelligeAbholung
             val hatAuslieferungRelevantAmTag = hatAuslieferungAmTag || hatUeberfaelligeAuslieferung
@@ -357,9 +363,11 @@ class TourDataProcessor {
                         return@forEach // Überspringe überfällige Kunden - sie werden oben angezeigt
                     }
                     
-                    val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
+                    val kwErledigtAmTagListe = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
+                        categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                    val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTagListe
                     val listeDone = liste.abholungErfolgt || liste.auslieferungErfolgt
-                    
+
                     // Prüfe ob Kunde erledigt ist UND am angezeigten Tag einen Termin hat/hatte
                     val sollAlsErledigtAnzeigen = if (isDone || listeDone) {
                         // Berechne alle Termine für den Kunden

@@ -90,6 +90,7 @@ class CustomerAdapter(
     // Callbacks für Firebase-Operationen (statt direkter Firebase-Aufrufe)
     var onAbholung: ((Customer) -> Unit)? = null
     var onAuslieferung: ((Customer) -> Unit)? = null
+    var onKw: ((Customer) -> Unit)? = null // Keine Wäsche (A+KW / L+KW erledigt)
     var onResetTourCycle: ((String) -> Unit)? = null
     var onVerschieben: ((Customer, Long, Boolean) -> Unit)? = null // customer, newDate, alleVerschieben
     var onUrlaub: ((Customer, Long, Long) -> Unit)? = null // customer, von, bis
@@ -99,7 +100,10 @@ class CustomerAdapter(
     // Callbacks für Datum-Berechnung (für A/L Button-Aktivierung)
     var getAbholungDatum: ((Customer) -> Long)? = null // Gibt Abholungsdatum für heute zurück
     var getAuslieferungDatum: ((Customer) -> Long)? = null // Gibt Auslieferungsdatum für heute zurück
-    
+    var getNaechstesTourDatum: ((Customer) -> Long)? = null // Nächstes Tour-Datum (für Listen-Kunden: Termin-Regel der Liste)
+    /** Termine für Kunde (mit Liste bei Listen-Kunden). Für einheitliche A/L/KW/Ü-Logik bei Listen. */
+    var getTermineFuerKunde: ((Customer, Long, Int) -> List<com.example.we2026_5.util.TerminInfo>)? = null
+
     // Drag & Drop Support
     fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
         // Nur Kunden-Items verschieben, keine Section Headers
@@ -144,6 +148,7 @@ class CustomerAdapter(
             context = context,
             onAbholung = onAbholung,
             onAuslieferung = onAuslieferung,
+            onKw = onKw,
             onSectionToggle = onSectionToggle
         )
     }
@@ -262,11 +267,14 @@ class CustomerAdapter(
             isMultiSelectMode = isMultiSelectMode,
             getAbholungDatum = getAbholungDatum,
             getAuslieferungDatum = getAuslieferungDatum,
+            getNaechstesTourDatum = getNaechstesTourDatum,
+            getTermineFuerKunde = getTermineFuerKunde,
             onTerminClick = onTerminClick,
             onClick = onClick,
             dialogHelper = dialogHelper,
             onAbholung = { customer -> callbacks.handleAbholung(customer) },
             onAuslieferung = { customer -> callbacks.handleAuslieferung(customer) },
+            onKw = { customer -> callbacks.handleKw(customer) },
             enableMultiSelectMode = { enableMultiSelectMode() },
             toggleCustomerSelection = { customerId, holder -> toggleCustomerSelection(customerId, holder as com.example.we2026_5.adapter.CustomerViewHolder) }
         )

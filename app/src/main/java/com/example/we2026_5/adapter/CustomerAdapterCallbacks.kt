@@ -14,9 +14,10 @@ class CustomerAdapterCallbacks(
     private val context: Context,
     private val onAbholung: ((Customer) -> Unit)?,
     private val onAuslieferung: ((Customer) -> Unit)?,
+    private val onKw: ((Customer) -> Unit)?,
     private val onSectionToggle: ((SectionType) -> Unit)?
 ) {
-    
+
     /**
      * Behandelt Abholung-Erledigung
      */
@@ -24,13 +25,20 @@ class CustomerAdapterCallbacks(
         if (customer.abholungErfolgt) return
         onAbholung?.invoke(customer)
     }
-    
+
     /**
      * Behandelt Auslieferung-Erledigung
      */
     fun handleAuslieferung(customer: Customer) {
         if (customer.auslieferungErfolgt) return
         onAuslieferung?.invoke(customer)
+    }
+
+    /**
+     * Behandelt Keine Wäsche (KW): A+KW = erledigt Abholungstag, L+KW = erledigt Auslieferungstag
+     */
+    fun handleKw(customer: Customer) {
+        onKw?.invoke(customer)
     }
     
     /**

@@ -2,12 +2,16 @@ package com.example.we2026_5
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.databinding.ActivityTourPlannerBinding
+import com.example.we2026_5.databinding.DialogCustomerOverviewBinding
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.example.we2026_5.tourplanner.TourPlannerDialogHelper
 import com.example.we2026_5.tourplanner.TourPlannerDateUtils
@@ -18,6 +22,7 @@ import com.example.we2026_5.FirebaseRetryHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -30,6 +35,7 @@ class TourPlannerActivity : AppCompatActivity() {
     private val viewModel: TourPlannerViewModel by viewModel()
     private val repository: CustomerRepository by inject()
     private val listeRepository: com.example.we2026_5.data.repository.KundenListeRepository by inject()
+    private val regelRepository: TerminRegelRepository by inject()
     private lateinit var adapter: CustomerAdapter
     private var viewDate = Calendar.getInstance()
     private lateinit var networkMonitor: NetworkMonitor
@@ -66,12 +72,7 @@ class TourPlannerActivity : AppCompatActivity() {
         adapter = CustomerAdapter(
             items = mutableListOf(),
             context = this,
-            onClick = { customer ->
-                val intent = Intent(this, CustomerDetailActivity::class.java).apply {
-                    putExtra("CUSTOMER_ID", customer.id)
-                }
-                startActivity(intent)
-            }
+            onClick = { customer -> showCustomerOverviewDialog(customer) }
         )
         
         // Callbacks für Firebase-Operationen setzen (initialisiert auch callbackHandler)
@@ -265,6 +266,7 @@ class TourPlannerActivity : AppCompatActivity() {
         callbackHandler = TourPlannerCallbackHandler(
             context = this,
             repository = repository,
+            listeRepository = listeRepository,
             dateUtils = dateUtils,
             viewDate = viewDate,
             adapter = adapter,
@@ -277,6 +279,47 @@ class TourPlannerActivity : AppCompatActivity() {
         adapter.onTerminClick = { customer, terminDatum ->
             dialogHelper.showTerminDetailDialog(customer, terminDatum)
         }
+    }
+    
+    /**
+     * Zeigt das Kunden-Übersichtsfenster (Termin-Regeln elegant, nur Namen, ohne Kasten).
+     * Bei Klick auf "Details öffnen" → CustomerDetailActivity.
+     */
+    private fun showCustomerOverviewDialog(customer: Customer) {
+        val dialogBinding = DialogCustomerOverviewBinding.inflate(LayoutInflater.from(this))
+        dialogBinding.tvOverviewCustomerName.text = customer.name
+        
+        // Regelnamen asynchron laden (nur Namen, elegant)
+        CoroutineScope(Dispatchers.Main).launch {
+            val regelNamen = withContext(Dispatchers.IO) {
+                val namen = mutableListOf<String>()
+                for (intervall in customer.intervalle) {
+                    if (intervall.terminRegelId.isNotEmpty()) {
+                        regelRepository.getRegelById(intervall.terminRegelId)?.name?.let { namen.add(it) }
+                    }
+                }
+                namen.distinct()
+            }
+            dialogBinding.tvOverviewRegelNames.text = if (regelNamen.isNotEmpty()) {
+                regelNamen.joinToString("\n")
+            } else {
+                getString(R.string.no_termin_regeln)
+            }
+        }
+        
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogBinding.root)
+            .create()
+        
+        dialogBinding.btnOverviewDetails.setOnClickListener {
+            dialog.dismiss()
+            val intent = Intent(this, CustomerDetailActivity::class.java).apply {
+                putExtra("CUSTOMER_ID", customer.id)
+            }
+            startActivity(intent)
+        }
+        
+        dialog.show()
     }
     
     // Alle Callback-Funktionen entfernt - jetzt in TourPlannerCallbackHandler

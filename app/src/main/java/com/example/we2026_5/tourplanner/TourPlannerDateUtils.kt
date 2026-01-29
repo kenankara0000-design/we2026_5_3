@@ -253,4 +253,32 @@ class TourPlannerDateUtils(
         
         return ueberfaelligeAuslieferung?.datum ?: 0L
     }
+    
+    /**
+     * Nächstes Tour-Datum für einen Kunden (für "Nächste Tour" auf der Karte).
+     * Berücksichtigt Listen-Kunden: Termin-Regel der Liste wird verwendet.
+     */
+    fun getNaechstesTourDatum(customer: Customer): Long {
+        val heuteStart = getStartOfDay(System.currentTimeMillis())
+        if (customer.listeId.isNotBlank()) {
+            var liste: com.example.we2026_5.KundenListe? = null
+            runBlocking {
+                liste = listeRepository.getListeById(customer.listeId)
+            }
+            if (liste != null) {
+                val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                    customer = customer,
+                    liste = liste,
+                    startDatum = heuteStart,
+                    tageVoraus = 365
+                )
+                val naechstes = termine.firstOrNull {
+                    it.datum >= heuteStart &&
+                    !TerminFilterUtils.istTerminGeloescht(it.datum, customer.geloeschteTermine + liste!!.geloeschteTermine)
+                }
+                return naechstes?.datum ?: 0L
+            }
+        }
+        return customer.getFaelligAm()
+    }
 }

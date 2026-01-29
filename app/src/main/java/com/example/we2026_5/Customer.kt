@@ -34,6 +34,9 @@ data class Customer(
     // Status
     val abholungErfolgt: Boolean = false,
     val auslieferungErfolgt: Boolean = false,
+    /** Keine Wäsche (KW): A+KW = erledigt Abholungstag, L+KW = erledigt Auslieferungstag */
+    val keinerWäscheErfolgt: Boolean = false,
+    val keinerWäscheErledigtAm: Long = 0,
     val urlaubVon: Long = 0,
     val urlaubBis: Long = 0,
     
