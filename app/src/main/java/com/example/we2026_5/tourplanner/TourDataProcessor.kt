@@ -319,7 +319,51 @@ class TourDataProcessor {
             }
         }
         
-        // REIHENFOLGE: 1. Listen, 2. Überfällig (unsichtbar), 3. Normal, 4. Erledigt
+        // REIHENFOLGE: 1. Überfällig (unsichtbar), 2. Listen, 3. Normal, 4. Erledigt
+        
+        // 1. Überfällige Kunden (unsichtbarer Bereich, nur zur Trennung) - GANZ OBEN
+        // Sammle ALLE überfälligen Kunden (mit und ohne Liste)
+        val alleUeberfaelligeKunden = mutableListOf<Customer>()
+        
+        // Überfällige Kunden ohne Liste
+        alleUeberfaelligeKunden.addAll(overdueGewerblich)
+        
+        // Überfällige Kunden aus Listen hinzufügen
+        listenMitKunden.values.flatten().forEach { customer ->
+            val istUeberfaellig = filter.istKundeUeberfaellig(customer, allListen.find { it.id == customer.listeId }, viewDateStart, heuteStart)
+            if (istUeberfaellig) {
+                alleUeberfaelligeKunden.add(customer)
+            }
+        }
+        
+        val overdueOhneListen = alleUeberfaelligeKunden.sortedWith(compareBy<Customer> { customer ->
+            // Sortiere nach ältestem Überfälligkeitsdatum
+            val liste = if (customer.listeId.isNotEmpty()) allListen.find { it.id == customer.listeId } else null
+            val alleTermine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                customer = customer,
+                liste = liste,
+                startDatum = viewDateStart - TimeUnit.DAYS.toMillis(365),
+                tageVoraus = 730
+            )
+            val ueberfaelligeDaten = alleTermine.filter { termin ->
+                val terminStart = categorizer.getStartOfDay(termin.datum)
+                val istAmTagXFaellig = terminStart == viewDateStart
+                val warVorHeuteFaellig = terminStart < heuteStart
+                val istHeute = viewDateStart == heuteStart
+                val istHeuteFaellig = terminStart == heuteStart
+                val istUeberfaellig = (istAmTagXFaellig || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
+                val istNichtErledigt = (termin.typ == com.example.we2026_5.TerminTyp.ABHOLUNG && !customer.abholungErfolgt) ||
+                        (termin.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG && !customer.auslieferungErfolgt)
+                istUeberfaellig && istNichtErledigt
+            }.map { categorizer.getStartOfDay(it.datum) }
+            
+            ueberfaelligeDaten.minOrNull() ?: Long.MAX_VALUE
+        }.thenBy { it.name })
+        
+        // 1. Überfällige Kunden ganz oben, ohne Container, sortiert nach ältester Überfälligkeit
+        if (overdueOhneListen.isNotEmpty()) {
+            overdueOhneListen.forEach { items.add(ListItem.CustomerItem(it)) }
+        }
         
         // 2. Kunden nach Listen gruppiert
         allListen.sortedBy { it.name }.forEach { liste ->
@@ -330,6 +374,12 @@ class TourDataProcessor {
                 val erledigteKundenInListe = mutableListOf<Customer>()
                 
                 kundenInListe.forEach { customer ->
+                    // Überfällige Kunden aus Listen werden oben im Überfällig-Bereich angezeigt, nicht hier
+                    val istUeberfaellig = filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)
+                    if (istUeberfaellig) {
+                        return@forEach // Überspringe überfällige Kunden - sie werden oben angezeigt
+                    }
+                    
                     val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
                     val listeDone = liste.abholungErfolgt || liste.auslieferungErfolgt
                     
@@ -402,36 +452,7 @@ class TourDataProcessor {
             }
         }
         
-        // 1. Überfällige Kunden (unsichtbarer Bereich, nur zur Trennung)
-        val overdueOhneListen = overdueGewerblich.sortedWith(compareBy<Customer> { customer ->
-            // Sortiere nach ältestem Überfälligkeitsdatum
-            val alleTermine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                customer = customer,
-                startDatum = viewDateStart - TimeUnit.DAYS.toMillis(365),
-                tageVoraus = 730
-            )
-            val ueberfaelligeDaten = alleTermine.filter { termin ->
-                val terminStart = categorizer.getStartOfDay(termin.datum)
-                val istAmTagXFaellig = terminStart == viewDateStart
-                val warVorHeuteFaellig = terminStart < heuteStart
-                val istHeute = viewDateStart == heuteStart
-                val istHeuteFaellig = terminStart == heuteStart
-                val istUeberfaellig = (istAmTagXFaellig || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
-                val istNichtErledigt = (termin.typ == com.example.we2026_5.TerminTyp.ABHOLUNG && !customer.abholungErfolgt) ||
-                        (termin.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG && !customer.auslieferungErfolgt)
-                istUeberfaellig && istNichtErledigt
-            }.map { categorizer.getStartOfDay(it.datum) }
-            
-            ueberfaelligeDaten.minOrNull() ?: Long.MAX_VALUE
-        }.thenBy { it.name })
-        
-        if (overdueOhneListen.isNotEmpty()) {
-            // Unsichtbarer Header (leerer Titel) - nur zur visuellen Trennung
-            items.add(ListItem.SectionHeader("", overdueOhneListen.size, 0, SectionType.OVERDUE, emptyList()))
-            overdueOhneListen.forEach { items.add(ListItem.CustomerItem(it)) }
-        }
-        
-        // 2. Normale Kunden
+        // 3. Normale Kunden
         val normalOhneListen = normalGewerblich.sortedBy { it.name }
         normalOhneListen.forEach { items.add(ListItem.CustomerItem(it)) }
         

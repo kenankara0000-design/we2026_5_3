@@ -177,38 +177,12 @@ class CustomerAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val item = items[position]) {
             is ListItem.CustomerItem -> {
-                // Im CustomerManager: Alle Kunden immer anzeigen (alphabetisch sortiert)
-                val isInCustomerManager = displayedDateMillis == null
-                
-                // Prüfe ob Kunde zu einer Liste gehört (nur für CustomerManager relevant)
-                val prevItem = if (position > 0) items[position - 1] else null
-                val isInListe = prevItem is ListItem.ListeHeader && item.customer.listeId == prevItem.listeId
-                
-                // Liste-Kunden werden nicht mehr als separate Items hinzugefügt im TourPlanner,
-                // daher brauchen wir keine Versteck-Logik mehr!
-                if (isInListe && !isInCustomerManager) {
-                    // Im TourPlanner sollte dieser Fall nicht mehr auftreten,
-                    // da Liste-Kunden nicht mehr als separate Items hinzugefügt werden
-                    holder.itemView.visibility = View.GONE
-                } else {
-                    // Section-Kunden werden nicht mehr als separate Items hinzugefügt,
-                    // daher brauchen wir keine Versteck-Logik mehr!
-                    // Im CustomerManager: Alle Kunden immer anzeigen
-                    // Im TourPlanner: Gewerblich-Kunde oder nicht in Liste/Section
-                    // WICHTIG: Kunden mit listeId sollten NUR in Listen-Containern angezeigt werden
-                    val customer = item.customer
-                    if (customer.listeId.isNotEmpty() && !isInCustomerManager) {
-                        // Kunde gehört zu einer Liste - sollte nicht als separates Item angezeigt werden
-                        holder.itemView.visibility = View.GONE
-                    } else if (shouldShowCustomer(customer)) {
-                        // Komplette Button-Logik (Sichtbarkeit/Stil) liegt im CustomerViewHolderBinder.
-                        // Hier wird nur noch gebunden und die Card sichtbar gemacht.
-                        bindCustomerViewHolder(holder as CustomerViewHolder, customer)
-                        holder.itemView.visibility = View.VISIBLE
-                    } else {
-                        holder.itemView.visibility = View.GONE
-                    }
-                }
+                // Kunden werden bereits gefiltert vom ViewModel/TourDataProcessor
+                // Liste-Kunden werden nicht mehr als separate Items hinzugefügt (nur in ListeHeader)
+                // Section-Kunden werden nicht mehr als separate Items hinzugefügt (nur in SectionHeader)
+                // Daher: Alle CustomerItems hier sind gültig und sollten angezeigt werden
+                bindCustomerViewHolder(holder as CustomerViewHolder, item.customer)
+                holder.itemView.visibility = View.VISIBLE
             }
             is ListItem.ListeHeader -> {
                 // Im CustomerManager: Liste-Header ausblenden (alle Kunden untereinander)
@@ -234,6 +208,7 @@ class CustomerAdapter(
                     holder.itemView.visibility = View.GONE
                 } else {
                     itemHelper.bindSectionHeaderViewHolder(holder as SectionHeaderViewHolder, item)
+                    holder.itemView.visibility = View.VISIBLE
                     // Click-Listener setzen
                     holder.itemView.setOnClickListener {
                         toggleSection(item.sectionType)
@@ -390,16 +365,6 @@ class CustomerAdapter(
         return expandedSections.contains(sectionType)
     }
     
-    fun shouldShowCustomer(customer: Customer): Boolean {
-        // Im TourPlanner: Alle Kunden anzeigen (wurde bereits vom ViewModel gefiltert)
-        if (displayedDateMillis != null) {
-            return true
-        }
-        
-        // Im CustomerManager: Alle Kunden immer anzeigen (alphabetisch sortiert, keine Sections)
-        return true
-    }
-
     private fun getStartOfDay(ts: Long): Long {
         return Calendar.getInstance().apply {
             timeInMillis = ts

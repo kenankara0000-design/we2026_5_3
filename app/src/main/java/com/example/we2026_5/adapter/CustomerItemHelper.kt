@@ -44,13 +44,7 @@ class CustomerItemHelper(
         holder: SectionHeaderViewHolder,
         header: ListItem.SectionHeader
     ) {
-        // Wenn Titel leer ist → Header unsichtbar machen (nur zur Trennung)
-        if (header.title.isEmpty()) {
-            holder.binding.cardSectionHeader.visibility = View.GONE
-            holder.binding.containerKunden.visibility = View.GONE
-            return
-        }
-        
+        // Header sollte immer einen Titel haben (wird nicht hinzugefügt wenn leer)
         holder.binding.cardSectionHeader.visibility = View.VISIBLE
         holder.binding.tvSectionTitle.text = header.title
         holder.binding.tvSectionCount.text = "${header.erledigtCount}/${header.count}"

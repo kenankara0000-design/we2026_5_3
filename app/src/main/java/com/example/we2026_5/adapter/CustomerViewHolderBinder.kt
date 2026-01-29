@@ -43,15 +43,15 @@ class CustomerViewHolderBinder(
         setupNavigation(holder, customer)
         resetStyles(holder)
         
-        // Status-Styles anwenden wenn im TourPlanner
+        setupClickListeners(holder, customer)
+        applyMultiSelectStyles(holder, customer)
+        
+        // Status-Styles ZULETZT anwenden (nach MultiSelect, damit sie nicht überschrieben werden)
         if (displayedDateMillis != null) {
             applyStatusStyles(holder, customer)
         } else {
             holder.binding.tvStatusLabel.visibility = View.GONE
         }
-        
-        setupClickListeners(holder, customer)
-        applyMultiSelectStyles(holder, customer)
         setupCompletionHints(holder, customer)
         setupButtonVisibility(holder, customer)
     }
@@ -100,11 +100,23 @@ class CustomerViewHolderBinder(
     private fun setupClickListeners(holder: CustomerViewHolder, customer: Customer) {
         // Button-Handler - nur setzen wenn im TourPlanner (displayedDateMillis != null)
         if (displayedDateMillis != null) {
+            val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+            val viewDateStart = TerminBerechnungUtils.getStartOfDay(displayedDateMillis!!)
+            val istHeute = viewDateStart == heuteStart
+            
             holder.binding.btnAbholung.setOnClickListener {
+                if (!istHeute) {
+                    android.widget.Toast.makeText(context, "Termine können nur am Tag Heute erledigt werden.", android.widget.Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
                 pressedButtons[customer.id] = "A"
                 onAbholung(customer)
             }
             holder.binding.btnAuslieferung.setOnClickListener {
+                if (!istHeute) {
+                    android.widget.Toast.makeText(context, "Termine können nur am Tag Heute erledigt werden.", android.widget.Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
                 pressedButtons[customer.id] = "L"
                 onAuslieferung(customer)
             }
@@ -302,13 +314,14 @@ class CustomerViewHolderBinder(
             }
             
             val hatUeberfaelligeTermine = hatUeberfaelligeAbholungFuerUeButton || hatUeberfaelligeAuslieferungFuerUeButton
+            val istZukunft = viewDateStart > heuteStart
             
-            // Ü-Button und Pfeil anzeigen wenn überfällige Termine vorhanden
-            holder.binding.btnUeberfaellig.visibility = if (hatUeberfaelligeTermine) View.VISIBLE else View.GONE
-            holder.binding.arrowUeberfaellig.visibility = if (hatUeberfaelligeTermine) View.VISIBLE else View.GONE
+            // Ü-Button und Pfeil entfernt - immer versteckt
+            holder.binding.btnUeberfaellig.visibility = View.GONE
+            holder.binding.arrowUeberfaellig.visibility = View.GONE
             
-            // Überfällig-Hinweis: Zeige welche Termine überfällig sind und von wann
-            if (hatUeberfaelligeTermine) {
+            // Überfällig-Hinweis: nur wenn NICHT in der Zukunft (Zukunft hat keine überfälligen Termine)
+            if (!istZukunft && hatUeberfaelligeTermine) {
                 val ueberfaelligeTermineInfo = mutableListOf<String>()
                 val ueberfaelligeDaten = mutableSetOf<Long>()
                 
@@ -350,10 +363,20 @@ class CustomerViewHolderBinder(
                     val aeltestesDatum = ueberfaelligeDaten.minOrNull() ?: 0L
                     val datumStr = if (aeltestesDatum > 0) DateFormatter.formatDate(aeltestesDatum) else ""
                     
-                    // A-Button anzeigen wenn A überfällig
-                    holder.binding.btnUeberfaelligA.visibility = if (hatA) View.VISIBLE else View.GONE
-                    // L-Button anzeigen wenn L überfällig
-                    holder.binding.btnUeberfaelligL.visibility = if (hatL) View.VISIBLE else View.GONE
+                    // A-Button anzeigen wenn A überfällig - rot machen
+                    if (hatA) {
+                        holder.binding.btnUeberfaelligA.visibility = View.VISIBLE
+                        holder.binding.btnUeberfaelligA.background = ContextCompat.getDrawable(context, R.drawable.button_a_overdue)
+                    } else {
+                        holder.binding.btnUeberfaelligA.visibility = View.GONE
+                    }
+                    // L-Button anzeigen wenn L überfällig - rot machen
+                    if (hatL) {
+                        holder.binding.btnUeberfaelligL.visibility = View.VISIBLE
+                        holder.binding.btnUeberfaelligL.background = ContextCompat.getDrawable(context, R.drawable.button_l_overdue)
+                    } else {
+                        holder.binding.btnUeberfaelligL.visibility = View.GONE
+                    }
                     // Datum anzeigen
                     holder.binding.tvUeberfaelligDatum.text = datumStr
                     holder.binding.tvUeberfaelligDatum.visibility = if (datumStr.isNotEmpty()) View.VISIBLE else View.GONE
@@ -392,7 +415,9 @@ class CustomerViewHolderBinder(
             val sollAButtonAnzeigen = hatAbholungHeute || hatUeberfaelligeAbholung || wurdeHeuteErledigt
             val istAmTatsaechlichenAbholungTag = hatAbholungHeute && !hatUeberfaelligeAbholung
             
+            val istHeute = viewDateStart == heuteStart
             holder.binding.btnAbholung.visibility = if (sollAButtonAnzeigen) View.VISIBLE else View.GONE
+            holder.binding.btnAbholung.isClickable = istHeute
             if (customer.abholungErfolgt || pressedButton == "A") {
                 holder.binding.btnAbholung.background = ContextCompat.getDrawable(context, R.drawable.button_gray)
                 holder.binding.btnAbholung.setTextColor(ContextCompat.getColor(context, R.color.white))
@@ -440,6 +465,7 @@ class CustomerViewHolderBinder(
             val istAmTatsaechlichenAuslieferungTag = hatAuslieferungHeute && !hatUeberfaelligeAuslieferung
             
             holder.binding.btnAuslieferung.visibility = if (sollLButtonAnzeigen) View.VISIBLE else View.GONE
+            holder.binding.btnAuslieferung.isClickable = istHeute
             if (customer.auslieferungErfolgt || pressedButton == "L") {
                 holder.binding.btnAuslieferung.background = ContextCompat.getDrawable(context, R.drawable.button_gray)
                 holder.binding.btnAuslieferung.setTextColor(ContextCompat.getColor(context, R.color.white))
@@ -578,20 +604,24 @@ class CustomerViewHolderBinder(
         
         val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
         
-        val istUeberfaellig = if (customer.intervalle.isNotEmpty()) {
-            val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+        // Gleiche Logik wie in setupButtonVisibility verwenden
+        val istUeberfaellig = run {
+            val alleTermine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
                 customer = customer,
-                startDatum = heuteStart - TimeUnit.DAYS.toMillis(365),
+                startDatum = viewDateStart - TimeUnit.DAYS.toMillis(365),
                 tageVoraus = 730
             )
-            termine.any { termin ->
-                TerminFilterUtils.istUeberfaellig(termin.datum, heuteStart, false) &&
-                TerminFilterUtils.sollUeberfaelligAnzeigen(termin.datum, viewDateStart, heuteStart)
+            alleTermine.any { termin ->
+                val terminStart = TerminBerechnungUtils.getStartOfDay(termin.datum)
+                val istAmTagXFaellig = terminStart == viewDateStart
+                val warVorHeuteFaellig = terminStart < heuteStart
+                val istHeute = viewDateStart == heuteStart
+                val istHeuteFaellig = terminStart == heuteStart
+                val istUeberfaellig = (istAmTagXFaellig || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
+                val istNichtErledigt = (termin.typ == com.example.we2026_5.TerminTyp.ABHOLUNG && !customer.abholungErfolgt) ||
+                        (termin.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG && !customer.auslieferungErfolgt)
+                istUeberfaellig && istNichtErledigt
             }
-        } else {
-            val faelligAm = if (customer.verschobenAufDatum > 0) customer.verschobenAufDatum
-                else customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
-            !isDone && faelligAm < heuteStart && faelligAm > 0 && viewDateStart >= faelligAm && viewDateStart <= heuteStart
         }
         
         val showAsOverdue = istUeberfaellig && !isDone
@@ -607,9 +637,7 @@ class CustomerViewHolderBinder(
                 cardView?.setCardBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.customer_done_bg))
             }
             showAsOverdue -> {
-                holder.binding.tvStatusLabel.text = "ÜBERFÄLLIG"
-                holder.binding.tvStatusLabel.setBackgroundResource(R.drawable.status_badge_overdue)
-                holder.binding.tvStatusLabel.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white))
+                holder.binding.tvStatusLabel.visibility = View.GONE
                 holder.binding.tvItemName.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.status_overdue))
                 holder.binding.tvItemName.setTypeface(null, Typeface.BOLD)
                 cardView?.setCardBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.customer_overdue_bg))
