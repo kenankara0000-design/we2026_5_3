@@ -83,6 +83,7 @@ class TourPlannerCallbackHandler(
                         "Abholung kann nur erledigt werden, wenn das Datum heute ist.",
                         android.widget.Toast.LENGTH_LONG
                     ).show()
+                    adapter.clearPressedButtons()
                     return@launch
                 }
                 
@@ -136,6 +137,7 @@ class TourPlannerCallbackHandler(
                     "Auslieferung kann nicht erledigt werden, solange die Abholung nicht erledigt ist.",
                     android.widget.Toast.LENGTH_LONG
                 ).show()
+                adapter.clearPressedButtons()
             } else {
                 CoroutineScope(Dispatchers.Main).launch {
                     val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
@@ -149,6 +151,7 @@ class TourPlannerCallbackHandler(
                             "Auslieferung kann nur erledigt werden, wenn das Datum heute ist.",
                             android.widget.Toast.LENGTH_LONG
                         ).show()
+                        adapter.clearPressedButtons()
                         return@launch
                     }
                     
