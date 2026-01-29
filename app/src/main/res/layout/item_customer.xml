@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
+    android:layout_margin="12dp"
     app:cardCornerRadius="12dp"
     app:cardElevation="2dp"
     app:cardBackgroundColor="@color/surface_white">
@@ -53,7 +53,7 @@
                 android:textStyle="bold"
                 android:textColor="@color/primary_blue_dark"/>
 
-            <!-- Buttons A L V U rechts ausgerichtet -->
+            <!-- Buttons Ü → A L V U rechts ausgerichtet -->
             <LinearLayout
                 android:id="@+id/buttonContainer"
                 android:layout_width="wrap_content"
@@ -62,6 +62,39 @@
                 android:layout_centerVertical="true"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
+
+                <!-- Ü-Button (Überfällig) - nur sichtbar wenn überfällig -->
+                <TextView
+                    android:id="@+id/btnUeberfaellig"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ü"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:minWidth="52dp"
+                    android:minHeight="52dp"
+                    android:layout_marginEnd="4dp"
+                    android:gravity="center"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:background="@drawable/button_ue_glossy"
+                    android:textColor="#FFFFFF"
+                    android:contentDescription="Überfällig"
+                    android:visibility="gone" />
+
+                <!-- Pfeil zwischen Ü und nächstem Button -->
+                <ImageView
+                    android:id="@+id/arrowUeberfaellig"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginEnd="4dp"
+                    android:src="@drawable/arrow_right"
+                    android:contentDescription="Pfeil"
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/btnAbholung"
@@ -208,51 +241,132 @@
                 android:visibility="gone"/>
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvStatusLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
-            android:background="@drawable/status_badge_overdue"
-            android:textColor="@color/white"
-            android:text="ÜBERFÄLLIG"
-            android:visibility="gone"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:textAllCaps="true"/>
-
-        <!-- Überfällig-Indikator (rötlicher Hintergrund wenn überfällig war) -->
-        <TextView
-            android:id="@+id/tvUeberfaelligIndikator"
+        <!-- Überfällig-Status und Hinweis in einer Zeile -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="horizontal"
             android:layout_marginTop="8dp"
-            android:padding="8dp"
-            android:background="@drawable/status_badge_overdue"
-            android:textColor="@color/white"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:text="Überfällig war"
-            android:visibility="gone"
-            android:gravity="center"/>
+            android:gravity="center_vertical">
+            
+            <TextView
+                android:id="@+id/tvStatusLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:text="ÜBERFÄLLIG"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:minWidth="52dp"
+                android:minHeight="52dp"
+                android:gravity="center"
+                android:background="@drawable/button_ue_glossy"
+                android:textColor="#FFFFFF"
+                android:visibility="gone"
+                android:textAllCaps="true"
+                android:contentDescription="Überfällig" />
 
-        <!-- Erledigungs-Hinweise (Fälligkeitsdatum, Erledigungsdatum, Zeitstempel) -->
-        <TextView
-            android:id="@+id/tvErledigungsHinweise"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:padding="8dp"
-            android:background="@drawable/status_badge_done"
-            android:textColor="@color/white"
-            android:textSize="11sp"
-            android:textStyle="italic"
-            android:visibility="gone"
-            android:lineSpacingExtra="2dp"/>
+            <!-- Überfällig A-Button (nur Anzeige, keine Funktion) -->
+            <TextView
+                android:id="@+id/btnUeberfaelligA"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:text="A"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:minWidth="40dp"
+                android:minHeight="40dp"
+                android:gravity="center"
+                android:background="@drawable/button_a_glossy"
+                android:textColor="#FFFFFF"
+                android:visibility="gone"
+                android:contentDescription="Überfällig A" />
+
+            <!-- Überfällig L-Button (nur Anzeige, keine Funktion) -->
+            <TextView
+                android:id="@+id/btnUeberfaelligL"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="L"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:minWidth="40dp"
+                android:minHeight="40dp"
+                android:gravity="center"
+                android:background="@drawable/button_l_glossy"
+                android:textColor="#FFFFFF"
+                android:visibility="gone"
+                android:contentDescription="Überfällig L" />
+
+            <!-- Datum als Button (orange) -->
+            <TextView
+                android:id="@+id/tvUeberfaelligDatum"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:text="25.01.2026"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:minWidth="52dp"
+                android:minHeight="52dp"
+                android:gravity="center"
+                android:background="@drawable/button_datum_glossy"
+                android:textColor="#FFFFFF"
+                android:visibility="gone"
+                android:contentDescription="Überfälligkeitsdatum" />
+
+            <!-- Überfällig-Indikator (rötlicher Hintergrund wenn überfällig war - nur bei erledigten) -->
+            <TextView
+                android:id="@+id/tvUeberfaelligIndikator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:background="@drawable/status_badge_overdue"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:text="Überfällig:"
+                android:visibility="gone"
+                android:gravity="center"/>
+
+            <!-- Erledigungs-Hinweise (Fälligkeitsdatum, Erledigungsdatum, Zeitstempel) -->
+            <TextView
+                android:id="@+id/tvErledigungsHinweise"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:background="@drawable/status_badge_done"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:textStyle="italic"
+                android:visibility="gone"
+                android:lineSpacingExtra="2dp"/>
+        </LinearLayout>
 
         <!-- Rückgängig-Button (nur bei erledigten Kunden) -->
         <com.google.android.material.button.MaterialButton

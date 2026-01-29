@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.databinding.ActivityTerminRegelErstellenBinding
+import com.example.we2026_5.util.TerminRegelManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -354,6 +355,10 @@ class TerminRegelErstellenActivity : AppCompatActivity() {
 
                 val success = regelRepository.saveRegel(regel)
                 if (success) {
+                    // Wenn Regel bearbeitet wurde, alle betroffenen Kunden aktualisieren
+                    if (regelId != null) {
+                        aktualisiereBetroffeneKunden(regel)
+                    }
                     Toast.makeText(this@TerminRegelErstellenActivity, "Regel gespeichert", Toast.LENGTH_SHORT).show()
                     finish()
                 } else {
@@ -425,6 +430,56 @@ class TerminRegelErstellenActivity : AppCompatActivity() {
         } catch (e: Exception) {
             // Bei Fehler annehmen, dass Regel verwendet wird (sicherer)
             true
+        }
+    }
+    
+    /**
+     * Aktualisiert alle Kunden, die die bearbeitete Regel verwenden.
+     * Ersetzt das alte Intervall durch ein neues, basierend auf der aktualisierten Regel.
+     */
+    private suspend fun aktualisiereBetroffeneKunden(regel: TerminRegel) {
+        try {
+            val allCustomers = customerRepository.getAllCustomers()
+            var aktualisierteKunden = 0
+            
+            allCustomers.forEach { customer ->
+                // Prüfe ob Kunde ein Intervall mit dieser Regel-ID hat
+                val intervallIndex = customer.intervalle.indexOfFirst { it.terminRegelId == regel.id }
+                
+                if (intervallIndex != -1) {
+                    // Neues Intervall mit der aktualisierten Regel berechnen
+                    val neuesIntervall = TerminRegelManager.wendeRegelAufKundeAn(regel, customer)
+                    
+                    // Altes Intervall durch neues ersetzen (ID beibehalten für Konsistenz)
+                    val aktualisierteIntervalle = customer.intervalle.toMutableList()
+                    aktualisierteIntervalle[intervallIndex] = neuesIntervall.copy(id = customer.intervalle[intervallIndex].id)
+                    
+                    // Kunden mit aktualisierten Intervallen speichern
+                    // Intervalle müssen als Map-Liste für Firebase serialisiert werden
+                    val intervalleMap = aktualisierteIntervalle.mapIndexed { index, intervall ->
+                        mapOf(
+                            "id" to intervall.id,
+                            "abholungDatum" to intervall.abholungDatum,
+                            "auslieferungDatum" to intervall.auslieferungDatum,
+                            "wiederholen" to intervall.wiederholen,
+                            "intervallTage" to intervall.intervallTage,
+                            "intervallAnzahl" to intervall.intervallAnzahl,
+                            "erstelltAm" to intervall.erstelltAm,
+                            "terminRegelId" to intervall.terminRegelId
+                        )
+                    }
+                    val updates = mapOf("intervalle" to intervalleMap)
+                    customerRepository.updateCustomer(customer.id, updates)
+                    aktualisierteKunden++
+                }
+            }
+            
+            if (aktualisierteKunden > 0) {
+                android.util.Log.d("TerminRegelErstellen", "$aktualisierteKunden Kunden wurden aktualisiert")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("TerminRegelErstellen", "Fehler beim Aktualisieren der Kunden", e)
+            // Fehler wird stillschweigend behandelt, um den Regel-Speichervorgang nicht zu blockieren
         }
     }
     

@@ -27,8 +27,21 @@ import java.util.concurrent.TimeUnit
 
 sealed class ListItem {
     data class CustomerItem(val customer: Customer) : ListItem()
-    data class SectionHeader(val title: String, val count: Int, val erledigtCount: Int, val sectionType: SectionType) : ListItem()
-    data class ListeHeader(val listeName: String, val kundenCount: Int, val erledigtCount: Int, val listeId: String) : ListItem()
+    data class SectionHeader(
+        val title: String, 
+        val count: Int, 
+        val erledigtCount: Int, 
+        val sectionType: SectionType,
+        val kunden: List<Customer> = emptyList() // Kunden direkt im Header speichern
+    ) : ListItem()
+    data class ListeHeader(
+        val listeName: String, 
+        val kundenCount: Int, 
+        val erledigtCount: Int, 
+        val listeId: String,
+        val nichtErledigteKunden: List<Customer> = emptyList(),
+        val erledigteKunden: List<Customer> = emptyList()
+    ) : ListItem()
 }
 
 enum class SectionType {
@@ -164,53 +177,22 @@ class CustomerAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val item = items[position]) {
             is ListItem.CustomerItem -> {
-                // Prüfe ob Kunde zu einer Liste gehört
-                val prevItem = if (position > 0) items[position - 1] else null
-                val isInListe = prevItem is ListItem.ListeHeader && item.customer.listeId == prevItem.listeId
-                
-                // Prüfe ob Kunde tatsächlich zu einem Section gehört (wird in CardView angezeigt)
-                val isInSection = if (prevItem is ListItem.SectionHeader && displayedDateMillis != null) {
-                    // Prüfe ob Kunde tatsächlich zu diesem Section gehört
-                    val customer = item.customer
-                    val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt
-                    when (prevItem.sectionType) {
-                        SectionType.OVERDUE -> {
-                            val heuteStart = getStartOfDay(System.currentTimeMillis())
-                            val viewDateStart = displayedDateMillis?.let { getStartOfDay(it) } ?: heuteStart
-                            val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                                customer = customer,
-                                startDatum = heuteStart - java.util.concurrent.TimeUnit.DAYS.toMillis(365),
-                                tageVoraus = 730
-                            )
-                            val isOverdue = termine.any { termin ->
-                                val terminStart = getStartOfDay(termin.datum)
-                                terminStart < heuteStart && terminStart != viewDateStart && // Nicht überfällig wenn genau am angezeigten Tag
-                                com.example.we2026_5.util.TerminFilterUtils.sollUeberfaelligAnzeigen(
-                                    terminDatum = termin.datum,
-                                    anzeigeDatum = viewDateStart,
-                                    aktuellesDatum = heuteStart
-                                )
-                            }
-                            isOverdue && !isDone
-                        }
-                        SectionType.DONE -> isDone
-                        else -> false
-                    }
-                } else {
-                    false
-                }
-                
                 // Im CustomerManager: Alle Kunden immer anzeigen (alphabetisch sortiert)
                 val isInCustomerManager = displayedDateMillis == null
                 
+                // Prüfe ob Kunde zu einer Liste gehört (nur für CustomerManager relevant)
+                val prevItem = if (position > 0) items[position - 1] else null
+                val isInListe = prevItem is ListItem.ListeHeader && item.customer.listeId == prevItem.listeId
+                
+                // Liste-Kunden werden nicht mehr als separate Items hinzugefügt im TourPlanner,
+                // daher brauchen wir keine Versteck-Logik mehr!
                 if (isInListe && !isInCustomerManager) {
-                    // Im TourPlanner: Kunde gehört zu einer Liste - wird im Container angezeigt, also hier verstecken
-                    // Kunden aus Listen werden nur im Container der CardView angezeigt, nicht als separate Items
-                    holder.itemView.visibility = View.GONE
-                } else if (isInSection && !isInCustomerManager) {
-                    // Kunde gehört tatsächlich zu einem Section - wird in CardView angezeigt, also hier verstecken
+                    // Im TourPlanner sollte dieser Fall nicht mehr auftreten,
+                    // da Liste-Kunden nicht mehr als separate Items hinzugefügt werden
                     holder.itemView.visibility = View.GONE
                 } else {
+                    // Section-Kunden werden nicht mehr als separate Items hinzugefügt,
+                    // daher brauchen wir keine Versteck-Logik mehr!
                     // Im CustomerManager: Alle Kunden immer anzeigen
                     // Im TourPlanner: Gewerblich-Kunde oder nicht in Liste/Section
                     // WICHTIG: Kunden mit listeId sollten NUR in Listen-Containern angezeigt werden

@@ -69,7 +69,21 @@ class TourPlannerDateUtils(
             }
             return 0L // Nicht fällig an diesem Tag
         } else {
-            // Für Kunden ohne Liste
+            // NEUE STRUKTUR: Verwende Intervalle-Liste wenn vorhanden (aus TerminRegeln)
+            if (customer.intervalle.isNotEmpty()) {
+                val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                    customer = customer,
+                    startDatum = viewDateStart - TimeUnit.DAYS.toMillis(1),
+                    tageVoraus = 2 // Nur 2 Tage (gestern, heute, morgen)
+                )
+                // Prüfe ob am angezeigten Tag ein Abholungstermin vorhanden ist
+                return termine.firstOrNull { 
+                    it.typ == com.example.we2026_5.TerminTyp.ABHOLUNG &&
+                    TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart
+                }?.datum ?: 0L
+            }
+            
+            // ALTE STRUKTUR: Rückwärtskompatibilität für Kunden ohne Intervalle
             if (customer.verschobenAufDatum > 0) {
                 val verschobenStart = getStartOfDay(customer.verschobenAufDatum)
                 if (verschobenStart == viewDateStart) return customer.verschobenAufDatum
@@ -141,7 +155,21 @@ class TourPlannerDateUtils(
             }
             return 0L // Nicht fällig an diesem Tag
         } else {
-            // Für Kunden ohne Liste
+            // NEUE STRUKTUR: Verwende Intervalle-Liste wenn vorhanden (aus TerminRegeln)
+            if (customer.intervalle.isNotEmpty()) {
+                val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                    customer = customer,
+                    startDatum = viewDateStart - TimeUnit.DAYS.toMillis(1),
+                    tageVoraus = 2 // Nur 2 Tage (gestern, heute, morgen)
+                )
+                // Prüfe ob am angezeigten Tag ein Auslieferungstermin vorhanden ist
+                return termine.firstOrNull { 
+                    it.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG &&
+                    TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart
+                }?.datum ?: 0L
+            }
+            
+            // ALTE STRUKTUR: Rückwärtskompatibilität für Kunden ohne Intervalle
             if (customer.verschobenAufDatum > 0) {
                 val verschobenStart = getStartOfDay(customer.verschobenAufDatum)
                 if (verschobenStart == viewDateStart) return customer.verschobenAufDatum
