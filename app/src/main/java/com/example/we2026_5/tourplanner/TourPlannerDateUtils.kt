@@ -1,18 +1,18 @@
 package com.example.we2026_5.tourplanner
 
 import com.example.we2026_5.Customer
+import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListeIntervall
-import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.TerminFilterUtils
 import java.util.concurrent.TimeUnit
-import kotlinx.coroutines.runBlocking
 
 /**
- * Helper-Klasse für Datum-Berechnungen in der TourPlannerActivity
+ * Helper-Klasse für Datum-Berechnungen in der TourPlannerActivity.
+ * getListen liefert Listen aus dem ViewModel (ohne runBlocking).
  */
 class TourPlannerDateUtils(
-    private val listeRepository: KundenListeRepository
+    private val getListen: () -> List<KundenListe>
 ) {
     
     fun getStartOfDay(ts: Long): Long {
@@ -31,15 +31,9 @@ class TourPlannerDateUtils(
         heuteStart: Long
     ): Long {
         if (customer.listeId.isNotBlank()) {
-            // Kunde gehört zu einer Liste
-            var liste: com.example.we2026_5.KundenListe? = null
-            runBlocking {
-                liste = listeRepository.getListeById(customer.listeId)
-            }
-            
+            val liste = getListen().find { it.id == customer.listeId }
             if (liste != null) {
-                // Prüfe alle Intervalle der Liste
-                liste!!.intervalle.forEach { intervall ->
+                liste.intervalle.forEach { intervall ->
                     val abholungStart = getStartOfDay(intervall.abholungDatum)
                     
                     if (!intervall.wiederholen) {
@@ -117,15 +111,9 @@ class TourPlannerDateUtils(
         heuteStart: Long
     ): Long {
         if (customer.listeId.isNotBlank()) {
-            // Kunde gehört zu einer Liste
-            var liste: com.example.we2026_5.KundenListe? = null
-            runBlocking {
-                liste = listeRepository.getListeById(customer.listeId)
-            }
-            
+            val liste = getListen().find { it.id == customer.listeId }
             if (liste != null) {
-                // Prüfe alle Intervalle der Liste
-                liste!!.intervalle.forEach { intervall ->
+                liste.intervalle.forEach { intervall ->
                     val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
                     
                     if (!intervall.wiederholen) {
@@ -261,10 +249,7 @@ class TourPlannerDateUtils(
     fun getNaechstesTourDatum(customer: Customer): Long {
         val heuteStart = getStartOfDay(System.currentTimeMillis())
         if (customer.listeId.isNotBlank()) {
-            var liste: com.example.we2026_5.KundenListe? = null
-            runBlocking {
-                liste = listeRepository.getListeById(customer.listeId)
-            }
+            val liste = getListen().find { it.id == customer.listeId }
             if (liste != null) {
                 val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
                     customer = customer,
@@ -274,7 +259,7 @@ class TourPlannerDateUtils(
                 )
                 val naechstes = termine.firstOrNull {
                     it.datum >= heuteStart &&
-                    !TerminFilterUtils.istTerminGeloescht(it.datum, customer.geloeschteTermine + liste!!.geloeschteTermine)
+                    !TerminFilterUtils.istTerminGeloescht(it.datum, customer.geloeschteTermine + liste.geloeschteTermine)
                 }
                 return naechstes?.datum ?: 0L
             }

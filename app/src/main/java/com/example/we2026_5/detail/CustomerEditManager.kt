@@ -11,7 +11,6 @@ import com.example.we2026_5.databinding.ActivityCustomerDetailBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 /**
  * Manager für Edit-Mode-Logik in CustomerDetailActivity.

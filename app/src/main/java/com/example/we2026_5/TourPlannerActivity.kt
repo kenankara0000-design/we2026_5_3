@@ -54,7 +54,7 @@ class TourPlannerActivity : AppCompatActivity() {
         setContentView(binding.root)
         
         // Helper initialisieren
-        dateUtils = TourPlannerDateUtils(listeRepository)
+        dateUtils = TourPlannerDateUtils { viewModel.getListen() }
         dialogHelper = TourPlannerDialogHelper(
             activity = this,
             onKundeAnzeigen = { customer ->
@@ -267,6 +267,7 @@ class TourPlannerActivity : AppCompatActivity() {
             context = this,
             repository = repository,
             listeRepository = listeRepository,
+            getListen = { viewModel.getListen() },
             dateUtils = dateUtils,
             viewDate = viewDate,
             adapter = adapter,

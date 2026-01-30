@@ -103,5 +103,6 @@ class TourPlannerViewModel(
         return expandedSections.contains(sectionType)
     }
     
-    // Alle Datenverarbeitungsfunktionen entfernt - jetzt in TourDataProcessor
+    /** Aktuelle Listen (für TourPlanner ohne runBlocking). */
+    fun getListen(): List<KundenListe> = _listenStateFlow.value
 }

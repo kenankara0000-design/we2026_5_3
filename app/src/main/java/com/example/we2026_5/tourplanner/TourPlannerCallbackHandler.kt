@@ -4,24 +4,26 @@ import android.content.Context
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerAdapter
 import com.example.we2026_5.FirebaseRetryHelper
+import com.example.we2026_5.KundenListe
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.util.TerminBerechnungUtils
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 /**
  * Handler für alle Callbacks des CustomerAdapters im TourPlanner.
- * Extrahiert die komplexe Callback-Logik aus TourPlannerActivity.
+ * getListen liefert Listen aus dem ViewModel (ohne runBlocking).
  */
 class TourPlannerCallbackHandler(
     private val context: Context,
     private val repository: CustomerRepository,
     private val listeRepository: KundenListeRepository,
+    private val getListen: () -> List<KundenListe>,
     private val dateUtils: TourPlannerDateUtils,
     private val viewDate: Calendar,
     private val adapter: CustomerAdapter,
@@ -79,10 +81,8 @@ class TourPlannerCallbackHandler(
 
         // Termine für Kunde (mit Liste bei Listen-Kunden – einheitliche A/L/KW/Ü-Logik)
         adapter.getTermineFuerKunde = { customer, startDatum, tageVoraus ->
-            runBlocking {
-                val liste = if (customer.listeId.isNotBlank()) listeRepository.getListeById(customer.listeId) else null
-                TerminBerechnungUtils.berechneAlleTermineFuerKunde(customer, liste, startDatum, tageVoraus)
-            }
+            val liste = if (customer.listeId.isNotBlank()) getListen().find { it.id == customer.listeId } else null
+            TerminBerechnungUtils.berechneAlleTermineFuerKunde(customer, liste, startDatum, tageVoraus)
         }
     }
     
@@ -90,9 +90,10 @@ class TourPlannerCallbackHandler(
         if (!customer.abholungErfolgt) {
             CoroutineScope(Dispatchers.Main).launch {
                 val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-                
-                // Prüfe ob Abholung heute fällig ist (nicht überfällig)
-                val istAbholungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.ABHOLUNG, heuteStart)
+                val liste = withContext(Dispatchers.IO) {
+                    if (customer.listeId.isNotBlank()) listeRepository.getListeById(customer.listeId) else null
+                }
+                val istAbholungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.ABHOLUNG, heuteStart, liste)
                 
                 if (!istAbholungHeute) {
                     android.widget.Toast.makeText(
@@ -148,8 +149,11 @@ class TourPlannerCallbackHandler(
     private fun handleKw(customer: Customer) {
         CoroutineScope(Dispatchers.Main).launch {
             val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-            val hatAbholungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.ABHOLUNG, heuteStart)
-            val hatAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart)
+            val liste = withContext(Dispatchers.IO) {
+                if (customer.listeId.isNotBlank()) listeRepository.getListeById(customer.listeId) else null
+            }
+            val hatAbholungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.ABHOLUNG, heuteStart, liste)
+            val hatAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart, liste)
             if (!hatAbholungHeute && !hatAuslieferungHeute) {
                 android.widget.Toast.makeText(context, "KW (Keine Wäsche) nur an Abholungs- oder Auslieferungstag.", android.widget.Toast.LENGTH_LONG).show()
                 adapter.clearPressedButtons()
@@ -204,9 +208,10 @@ class TourPlannerCallbackHandler(
             } else {
                 CoroutineScope(Dispatchers.Main).launch {
                     val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-                    
-                    // Prüfe ob Auslieferung heute fällig ist (nicht überfällig)
-                    val istAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart)
+                    val liste = withContext(Dispatchers.IO) {
+                        if (customer.listeId.isNotBlank()) listeRepository.getListeById(customer.listeId) else null
+                    }
+                    val istAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart, liste)
                     
                     if (!istAuslieferungHeute) {
                         android.widget.Toast.makeText(
@@ -432,18 +437,9 @@ class TourPlannerCallbackHandler(
     
     /**
      * Prüft, ob ein Termin heute erledigt werden kann (auch für überfällige Termine).
-     * 
-     * Container 1: Tag der ursprünglichen Abholung/Auslieferung - zeigt überfällig an
-     * Container 2: Tag der Überfälligkeit (heute) - kann erledigt werden
-     * 
-     * Ein Termin kann erledigt werden, wenn:
-     * 1. Er heute normal fällig ist, ODER
-     * 2. Er überfällig ist und heute angezeigt wird (Container 2)
+     * Liste wird vom Aufrufer mit withContext(IO) geladen.
      */
-    private fun istTerminHeuteFaellig(customer: Customer, terminTyp: com.example.we2026_5.TerminTyp, heuteStart: Long): Boolean {
-        val liste = if (customer.listeId.isNotBlank()) {
-            runBlocking { listeRepository.getListeById(customer.listeId) }
-        } else null
+    private fun istTerminHeuteFaellig(customer: Customer, terminTyp: com.example.we2026_5.TerminTyp, heuteStart: Long, liste: KundenListe?): Boolean {
         val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
             customer = customer,
             liste = liste,
