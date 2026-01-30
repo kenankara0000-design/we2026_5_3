@@ -8,4 +8,57 @@
     <string name="back">Zurück</string>
     <string name="search_hint">Suchen...</string>
     <string name="no_termin_regeln">Keine Termin-Regeln</string>
+
+    <!-- TourPlanner / Erledigung -->
+    <string name="toast_termine_nur_heute">Termine können nur am Tag Heute erledigt werden.</string>
+    <string name="toast_abholung_nur_heute">Abholung kann nur erledigt werden, wenn das Datum heute ist.</string>
+    <string name="toast_auslieferung_nur_nach_abholung">Auslieferung kann nicht erledigt werden, solange die Abholung nicht erledigt ist.</string>
+    <string name="toast_auslieferung_nur_heute">Auslieferung kann nur erledigt werden, wenn das Datum heute ist.</string>
+    <string name="toast_kw_nur_abholung_auslieferung">KW (Keine Wäsche) nur an Abholungs- oder Auslieferungstag.</string>
+    <string name="error_abholung_registrieren">Fehler beim Registrieren der Abholung. Bitte erneut versuchen.</string>
+    <string name="toast_abholung_registriert">Abholung registriert</string>
+    <string name="error_auslieferung_registrieren">Fehler beim Registrieren der Auslieferung. Bitte erneut versuchen.</string>
+    <string name="toast_auslieferung_registriert">Auslieferung registriert</string>
+    <string name="error_kw_registrieren">Fehler beim Registrieren „Keine Wäsche“. Bitte erneut versuchen.</string>
+    <string name="toast_kw_registriert">Keine Wäsche registriert</string>
+    <string name="error_verschieben">Fehler beim Verschieben. Bitte erneut versuchen.</string>
+    <string name="toast_termine_verschoben">Alle zukünftigen Termine verschoben</string>
+    <string name="toast_termin_verschoben">Termin verschoben</string>
+    <string name="error_urlaub">Fehler beim Eintragen des Urlaubs. Bitte erneut versuchen.</string>
+    <string name="toast_urlaub_eingetragen">Urlaub eingetragen</string>
+    <string name="error_rueckgaengig">Fehler beim Rückgängigmachen. Bitte erneut versuchen.</string>
+    <string name="toast_rueckgaengig_gemacht">Rückgängig gemacht</string>
+
+    <!-- TerminRegelErstellen -->
+    <string name="termin_regel_titel_bearbeiten">Regel bearbeiten</string>
+    <string name="termin_regel_titel_neu">Neue Regel erstellen</string>
+    <string name="termin_regel_startdatum">Startdatum: %1$s</string>
+    <string name="termin_regel_abholung_heute">Abholung: Heute</string>
+    <string name="termin_regel_auslieferung_heute">Auslieferung: Heute</string>
+    <string name="termin_regel_abholung_datum">Abholung: %1$s</string>
+    <string name="termin_regel_auslieferung_datum">Auslieferung: %1$s</string>
+    <string name="termin_regel_wochentag_waehlen">Wochentag wählen</string>
+    <string name="termin_regel_abbrechen">Abbrechen</string>
+    <string name="termin_regel_abholung">Abholung</string>
+    <string name="termin_regel_auslieferung">Auslieferung</string>
+    <string name="termin_regel_heute_verwenden">Heute verwenden</string>
+    <string name="termin_regel_datum_waehlen">Datum wählen</string>
+    <string name="error_laden">Fehler beim Laden: %1$s</string>
+    <string name="validierung_regel_name">Bitte geben Sie einen Regel-Namen ein</string>
+    <string name="validierung_intervall_min">Intervall muss mindestens 1 Tag sein</string>
+    <string name="validierung_startdatum">Bitte wählen Sie ein Startdatum</string>
+    <string name="validierung_abholung_wochentag">Bitte wählen Sie einen Abholung-Wochentag</string>
+    <string name="validierung_auslieferung_wochentag">Bitte wählen Sie einen Auslieferung-Wochentag</string>
+    <string name="toast_regel_gespeichert">Regel gespeichert</string>
+    <string name="toast_fehler_speichern">Fehler beim Speichern</string>
+    <string name="toast_fehler">Fehler: %1$s</string>
+    <string name="dialog_regel_loeschen_titel">Regel kann nicht gelöscht werden</string>
+    <string name="dialog_regel_loeschen_message">Diese Regel wird noch von einem oder mehreren Kunden verwendet. Bitte entfernen Sie die Regel zuerst von allen Kunden, bevor Sie sie löschen können.</string>
+    <string name="dialog_regel_loeschen_confirm_titel">Regel löschen?</string>
+    <string name="dialog_regel_loeschen_confirm_message">Möchten Sie diese Regel wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.</string>
+    <string name="dialog_loeschen">Löschen</string>
+    <string name="dialog_ok">OK</string>
+    <string name="toast_fehler_pruefen">Fehler beim Prüfen: %1$s</string>
+    <string name="toast_regel_geloescht">Regel gelöscht</string>
+    <string name="toast_fehler_loeschen">Fehler beim Löschen</string>
 </resources>

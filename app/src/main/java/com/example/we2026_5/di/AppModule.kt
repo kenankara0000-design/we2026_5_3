@@ -4,6 +4,7 @@ import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.ui.customermanager.CustomerManagerViewModel
+import com.example.we2026_5.ui.terminregel.TerminRegelErstellenViewModel
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -29,4 +30,5 @@ val appModule = module {
     // ViewModels
     viewModel { CustomerManagerViewModel(get()) }
     viewModel { TourPlannerViewModel(get(), get()) }
+    viewModel { TerminRegelErstellenViewModel(get<TerminRegelRepository>(), get<CustomerRepository>()) }
 }

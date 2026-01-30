@@ -75,8 +75,9 @@ class CustomerViewHolderBinder(
             holder.binding.tvStatusLabel.visibility = View.GONE
         }
         if (displayedDateMillis != null) {
+            val dateMillis = displayedDateMillis
             val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-            val viewDateStart = TerminBerechnungUtils.getStartOfDay(displayedDateMillis!!)
+            val viewDateStart = TerminBerechnungUtils.getStartOfDay(dateMillis)
             CompletionHintsHelper.apply(holder.binding, customer, viewDateStart, heuteStart)
         } else {
             holder.binding.tvErledigungsHinweise.visibility = View.GONE
@@ -128,14 +129,15 @@ class CustomerViewHolderBinder(
     
     private fun setupClickListeners(holder: CustomerViewHolder, customer: Customer) {
         // Button-Handler - nur setzen wenn im TourPlanner (displayedDateMillis != null)
-        if (displayedDateMillis != null) {
+        displayedDateMillis?.let { dateMillis ->
             val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-            val viewDateStart = TerminBerechnungUtils.getStartOfDay(displayedDateMillis!!)
+            val viewDateStart = TerminBerechnungUtils.getStartOfDay(dateMillis)
             val istHeute = viewDateStart == heuteStart
-            
+            val msgTermineNurHeute = context.getString(R.string.toast_termine_nur_heute)
+
             holder.binding.btnAbholung.setOnClickListener {
                 if (!istHeute) {
-                    android.widget.Toast.makeText(context, "Termine können nur am Tag Heute erledigt werden.", android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(context, msgTermineNurHeute, android.widget.Toast.LENGTH_LONG).show()
                     return@setOnClickListener
                 }
                 pressedButtons[customer.id] = "A"
@@ -143,7 +145,7 @@ class CustomerViewHolderBinder(
             }
             holder.binding.btnAuslieferung.setOnClickListener {
                 if (!istHeute) {
-                    android.widget.Toast.makeText(context, "Termine können nur am Tag Heute erledigt werden.", android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(context, msgTermineNurHeute, android.widget.Toast.LENGTH_LONG).show()
                     return@setOnClickListener
                 }
                 pressedButtons[customer.id] = "L"
@@ -151,7 +153,7 @@ class CustomerViewHolderBinder(
             }
             holder.binding.btnKw.setOnClickListener {
                 if (!istHeute) {
-                    android.widget.Toast.makeText(context, "Termine können nur am Tag Heute erledigt werden.", android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(context, msgTermineNurHeute, android.widget.Toast.LENGTH_LONG).show()
                     return@setOnClickListener
                 }
                 pressedButtons[customer.id] = "KW"
@@ -168,7 +170,7 @@ class CustomerViewHolderBinder(
             holder.binding.btnRueckgaengig.setOnClickListener {
                 dialogHelper.showRueckgaengigDialog(customer)
             }
-        } else {
+        } ?: run {
             // Im CustomerManager: Click-Listener entfernen, damit sie keine Clicks abfangen
             holder.binding.btnAbholung.setOnClickListener(null)
             holder.binding.btnAuslieferung.setOnClickListener(null)

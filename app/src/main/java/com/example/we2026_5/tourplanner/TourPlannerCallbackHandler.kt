@@ -2,6 +2,7 @@ package com.example.we2026_5.tourplanner
 
 import android.content.Context
 import com.example.we2026_5.Customer
+import com.example.we2026_5.R
 import com.example.we2026_5.CustomerAdapter
 import com.example.we2026_5.FirebaseRetryHelper
 import com.example.we2026_5.KundenListe
@@ -12,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.widget.Toast
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -96,52 +98,20 @@ class TourPlannerCallbackHandler(
                 val istAbholungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.ABHOLUNG, heuteStart, liste)
                 
                 if (!istAbholungHeute) {
-                    android.widget.Toast.makeText(
-                        context,
-                        "Abholung kann nur erledigt werden, wenn das Datum heute ist.",
-                        android.widget.Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(context, context.getString(R.string.toast_abholung_nur_heute), Toast.LENGTH_LONG).show()
                     adapter.clearPressedButtons()
                     return@launch
                 }
-                
-                // Prüfe ob A und L am gleichen Tag sind
-                val sindAmGleichenTag = checkSindAmGleichenTag(customer)
-                
-                // Berechne Fälligkeitsdatum (wenn überfällig)
                 val faelligAmDatum = dateUtils.getFaelligAmDatumFuerAbholung(customer, heuteStart)
-                
-                // Aktuelles Datum und Zeitstempel
                 val jetzt = System.currentTimeMillis()
                 val erledigtAm = TerminBerechnungUtils.getStartOfDay(jetzt)
-                
                 val updates = mutableMapOf<String, Any>()
                 updates["abholungErfolgt"] = true
                 updates["abholungErledigtAm"] = erledigtAm
                 updates["abholungZeitstempel"] = jetzt
-                
-                // Fälligkeitsdatum speichern, wenn überfällig war
-                if (faelligAmDatum > 0) {
-                    updates["faelligAmDatum"] = faelligAmDatum
-                }
-                
-                android.util.Log.d("TourPlanner", "Abholung erledigen für ${customer.name}: updates=$updates, sindAmGleichenTag=$sindAmGleichenTag")
-                
-                val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                    operation = { 
-                        repository.updateCustomer(customer.id, updates)
-                    },
-                    context = context,
-                    errorMessage = "Fehler beim Registrieren der Abholung. Bitte erneut versuchen.",
-                    maxRetries = 3
-                )
-                if (success == true) {
-                    android.widget.Toast.makeText(context, "Abholung registriert", android.widget.Toast.LENGTH_SHORT).show()
-                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                        adapter.clearPressedButtons()
-                        reloadCurrentView()
-                    }, 2000)
-                }
+                if (faelligAmDatum > 0) updates["faelligAmDatum"] = faelligAmDatum
+                android.util.Log.d("TourPlanner", "Abholung erledigen für ${customer.name}: updates=$updates")
+                executeErledigung(customer.id, updates, R.string.error_abholung_registrieren, R.string.toast_abholung_registriert)
             }
         }
     }
@@ -155,7 +125,7 @@ class TourPlannerCallbackHandler(
             val hatAbholungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.ABHOLUNG, heuteStart, liste)
             val hatAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart, liste)
             if (!hatAbholungHeute && !hatAuslieferungHeute) {
-                android.widget.Toast.makeText(context, "KW (Keine Wäsche) nur an Abholungs- oder Auslieferungstag.", android.widget.Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.toast_kw_nur_abholung_auslieferung), Toast.LENGTH_LONG).show()
                 adapter.clearPressedButtons()
                 return@launch
             }
@@ -179,19 +149,7 @@ class TourPlannerCallbackHandler(
                     if (faelligAmL > 0) updates["faelligAmDatum"] = faelligAmL
                 }
             }
-            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                operation = { repository.updateCustomer(customer.id, updates) },
-                context = context,
-                errorMessage = "Fehler beim Registrieren „Keine Wäsche“. Bitte erneut versuchen.",
-                maxRetries = 3
-            )
-            if (success == true) {
-                android.widget.Toast.makeText(context, "Keine Wäsche registriert", android.widget.Toast.LENGTH_SHORT).show()
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    adapter.clearPressedButtons()
-                    reloadCurrentView()
-                }, 2000)
-            }
+            executeErledigung(customer.id, updates, R.string.error_kw_registrieren, R.string.toast_kw_registriert)
         }
     }
 
@@ -199,11 +157,7 @@ class TourPlannerCallbackHandler(
         if (!customer.auslieferungErfolgt) {
             // WICHTIG: Geschäftslogik - L darf nicht erledigt werden, solange A nicht erledigt ist
             if (!customer.abholungErfolgt) {
-                android.widget.Toast.makeText(
-                    context,
-                    "Auslieferung kann nicht erledigt werden, solange die Abholung nicht erledigt ist.",
-                    android.widget.Toast.LENGTH_LONG
-                ).show()
+                Toast.makeText(context, context.getString(R.string.toast_auslieferung_nur_nach_abholung), Toast.LENGTH_LONG).show()
                 adapter.clearPressedButtons()
             } else {
                 CoroutineScope(Dispatchers.Main).launch {
@@ -212,54 +166,21 @@ class TourPlannerCallbackHandler(
                         if (customer.listeId.isNotBlank()) listeRepository.getListeById(customer.listeId) else null
                     }
                     val istAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart, liste)
-                    
                     if (!istAuslieferungHeute) {
-                        android.widget.Toast.makeText(
-                            context,
-                            "Auslieferung kann nur erledigt werden, wenn das Datum heute ist.",
-                            android.widget.Toast.LENGTH_LONG
-                        ).show()
+                        Toast.makeText(context, context.getString(R.string.toast_auslieferung_nur_heute), Toast.LENGTH_LONG).show()
                         adapter.clearPressedButtons()
                         return@launch
                     }
-                    
-                    // Prüfe ob A und L am gleichen Tag sind
-                    val sindAmGleichenTag = checkSindAmGleichenTag(customer)
-                    
-                    // Berechne Fälligkeitsdatum (wenn überfällig)
                     val faelligAmDatum = dateUtils.getFaelligAmDatumFuerAuslieferung(customer, heuteStart)
-                    
-                    // Aktuelles Datum und Zeitstempel
                     val jetzt = System.currentTimeMillis()
                     val erledigtAm = TerminBerechnungUtils.getStartOfDay(jetzt)
-                    
                     val updates = mutableMapOf<String, Any>()
                     updates["auslieferungErfolgt"] = true
                     updates["auslieferungErledigtAm"] = erledigtAm
                     updates["auslieferungZeitstempel"] = jetzt
-                    
-                    // Fälligkeitsdatum speichern, wenn überfällig war (nur wenn noch nicht gesetzt)
-                    if (faelligAmDatum > 0 && customer.faelligAmDatum == 0L) {
-                        updates["faelligAmDatum"] = faelligAmDatum
-                    }
-                    
-                    android.util.Log.d("TourPlanner", "Auslieferung erledigen für ${customer.name}: updates=$updates, sindAmGleichenTag=$sindAmGleichenTag")
-                    
-                    val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                        operation = { 
-                            repository.updateCustomer(customer.id, updates)
-                        },
-                        context = context,
-                        errorMessage = "Fehler beim Registrieren der Auslieferung. Bitte erneut versuchen.",
-                        maxRetries = 3
-                    )
-                    if (success == true) {
-                        android.widget.Toast.makeText(context, "Auslieferung registriert", android.widget.Toast.LENGTH_SHORT).show()
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            adapter.clearPressedButtons()
-                            reloadCurrentView()
-                        }, 2000)
-                    }
+                    if (faelligAmDatum > 0 && customer.faelligAmDatum == 0L) updates["faelligAmDatum"] = faelligAmDatum
+                    android.util.Log.d("TourPlanner", "Auslieferung erledigen für ${customer.name}: updates=$updates")
+                    executeErledigung(customer.id, updates, R.string.error_auslieferung_registrieren, R.string.toast_auslieferung_registriert)
                 }
             }
         }
@@ -268,37 +189,33 @@ class TourPlannerCallbackHandler(
     private fun handleVerschieben(customer: Customer, newDate: Long, alleVerschieben: Boolean) {
         CoroutineScope(Dispatchers.Main).launch {
             val success = if (alleVerschieben) {
-                // Alle zukünftigen Termine verschieben
                 val aktuellerFaelligAm = if (customer.verschobenAufDatum > 0) customer.verschobenAufDatum
                                          else customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
                 val diff = newDate - aktuellerFaelligAm
                 val neuerLetzterTermin = customer.letzterTermin + diff
                 FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                    operation = { 
+                    operation = {
                         repository.updateCustomer(customer.id, mapOf(
                             "letzterTermin" to neuerLetzterTermin,
                             "verschobenAufDatum" to 0
                         ))
                     },
                     context = context,
-                    errorMessage = "Fehler beim Verschieben. Bitte erneut versuchen.",
+                    errorMessage = context.getString(R.string.error_verschieben),
                     maxRetries = 3
                 )
             } else {
-                // Nur diesen Termin verschieben
                 FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                    operation = { 
-                        repository.updateCustomer(customer.id, mapOf("verschobenAufDatum" to newDate))
-                    },
+                    operation = { repository.updateCustomer(customer.id, mapOf("verschobenAufDatum" to newDate)) },
                     context = context,
-                    errorMessage = "Fehler beim Verschieben. Bitte erneut versuchen.",
+                    errorMessage = context.getString(R.string.error_verschieben),
                     maxRetries = 3
                 )
             }
             if (success == true) {
-                android.widget.Toast.makeText(context, 
-                    if (alleVerschieben) "Alle zukünftigen Termine verschoben" else "Termin verschoben", 
-                    android.widget.Toast.LENGTH_SHORT).show()
+                Toast.makeText(context,
+                    if (alleVerschieben) context.getString(R.string.toast_termine_verschoben) else context.getString(R.string.toast_termin_verschoben),
+                    Toast.LENGTH_SHORT).show()
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                     adapter.clearPressedButtons()
                     reloadCurrentView()
@@ -306,22 +223,19 @@ class TourPlannerCallbackHandler(
             }
         }
     }
-    
+
     private fun handleUrlaub(customer: Customer, von: Long, bis: Long) {
         CoroutineScope(Dispatchers.Main).launch {
             val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                operation = { 
-                    repository.updateCustomer(customer.id, mapOf(
-                        "urlaubVon" to von, 
-                        "urlaubBis" to bis
-                    ))
+                operation = {
+                    repository.updateCustomer(customer.id, mapOf("urlaubVon" to von, "urlaubBis" to bis))
                 },
                 context = context,
-                errorMessage = "Fehler beim Eintragen des Urlaubs. Bitte erneut versuchen.",
+                errorMessage = context.getString(R.string.error_urlaub),
                 maxRetries = 3
             )
             if (success == true) {
-                android.widget.Toast.makeText(context, "Urlaub eingetragen", android.widget.Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.toast_urlaub_eingetragen), Toast.LENGTH_SHORT).show()
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                     adapter.clearPressedButtons()
                     reloadCurrentView()
@@ -419,76 +333,76 @@ class TourPlannerCallbackHandler(
             
             if (updates.isNotEmpty()) {
                 val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                    operation = { 
-                        repository.updateCustomer(customer.id, updates)
-                    },
+                    operation = { repository.updateCustomer(customer.id, updates) },
                     context = context,
-                    errorMessage = "Fehler beim Rückgängigmachen. Bitte erneut versuchen.",
+                    errorMessage = context.getString(R.string.error_rueckgaengig),
                     maxRetries = 3
                 )
                 if (success == true) {
-                    android.widget.Toast.makeText(context, "Rückgängig gemacht", android.widget.Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.toast_rueckgaengig_gemacht), Toast.LENGTH_SHORT).show()
                     adapter.clearPressedButtons()
                     reloadCurrentView()
                 }
             }
         }
     }
-    
+
+    /**
+     * Führt Erledigung aus: Firebase-Update mit Retry, bei Erfolg Toast und Reload.
+     */
+    private suspend fun executeErledigung(
+        customerId: String,
+        updates: Map<String, Any>,
+        errorMessageResId: Int,
+        successMessageResId: Int
+    ) {
+        val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
+            operation = { repository.updateCustomer(customerId, updates) },
+            context = context,
+            errorMessage = context.getString(errorMessageResId),
+            maxRetries = 3
+        )
+        if (success == true) {
+            Toast.makeText(context, context.getString(successMessageResId), Toast.LENGTH_SHORT).show()
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                adapter.clearPressedButtons()
+                reloadCurrentView()
+            }, 2000)
+        }
+    }
+
     /**
      * Prüft, ob ein Termin heute erledigt werden kann (auch für überfällige Termine).
-     * Liste wird vom Aufrufer mit withContext(IO) geladen.
+     * Nutzt direkte Prüfung: hatTerminAmDatum(customer, liste, heuteStart, typ).
      */
     private fun istTerminHeuteFaellig(customer: Customer, terminTyp: com.example.we2026_5.TerminTyp, heuteStart: Long, liste: KundenListe?): Boolean {
-        val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-            customer = customer,
-            liste = liste,
-            startDatum = heuteStart - TimeUnit.DAYS.toMillis(1),
-            tageVoraus = 2
-        )
-        
-        // Prüfe ob heute ein Termin des gewünschten Typs fällig ist (normal fällig)
-        val terminHeute = termine.firstOrNull { 
-            it.typ == terminTyp &&
-            TerminBerechnungUtils.getStartOfDay(it.datum) == heuteStart
-        }
-        
-        if (terminHeute != null) {
+        // Direkte Prüfung: Hat der Kunde heute einen Termin dieses Typs?
+        if (TerminBerechnungUtils.hatTerminAmDatum(customer, liste, heuteStart, terminTyp)) {
             return true
         }
-        
-        // Prüfe ob ein überfälliger Termin heute angezeigt werden soll (Container 2)
-        // Überfällige Termine werden angezeigt, wenn:
-        // 1. Am tatsächlichen Fälligkeitstag (Container 1) - zeigt überfällig an
-        // 2. Am heutigen Tag, wenn noch überfällig (Container 2) - HIER kann erledigt werden
-        val ueberfaelligeTermine = termine.filter { 
-            it.typ == terminTyp &&
-            TerminBerechnungUtils.getStartOfDay(it.datum) < heuteStart
-        }
-        
-        // Prüfe ob ein überfälliger Termin heute angezeigt werden soll (Container 2)
-        // WICHTIG: Nur wenn der Termin noch nicht erledigt ist
+        // Überfällig-Pfad: Termin war vor heute fällig, wird heute angezeigt, noch nicht erledigt
         val istErledigt = if (terminTyp == com.example.we2026_5.TerminTyp.ABHOLUNG) {
             customer.abholungErfolgt
         } else {
             customer.auslieferungErfolgt
         }
-        
-        if (!istErledigt) {
-            val ueberfaelligerTerminHeuteAnzeigen = ueberfaelligeTermine.any { termin ->
-                com.example.we2026_5.util.TerminFilterUtils.sollUeberfaelligAnzeigen(
-                    terminDatum = termin.datum,
-                    anzeigeDatum = heuteStart,
-                    aktuellesDatum = heuteStart
-                )
-            }
-            
-            if (ueberfaelligerTerminHeuteAnzeigen) {
-                return true
-            }
+        if (istErledigt) return false
+        val vergangeneTermine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+            customer = customer,
+            liste = liste,
+            startDatum = heuteStart - TimeUnit.DAYS.toMillis(60),
+            tageVoraus = 60
+        )
+        val ueberfaelligeTermine = vergangeneTermine.filter {
+            it.typ == terminTyp && TerminBerechnungUtils.getStartOfDay(it.datum) < heuteStart
         }
-        
-        return false
+        return ueberfaelligeTermine.any { termin ->
+            com.example.we2026_5.util.TerminFilterUtils.sollUeberfaelligAnzeigen(
+                terminDatum = termin.datum,
+                anzeigeDatum = heuteStart,
+                aktuellesDatum = heuteStart
+            )
+        }
     }
     
     private fun checkSindAmGleichenTag(customer: Customer): Boolean {

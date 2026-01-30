@@ -242,6 +242,31 @@ object TerminBerechnungUtils {
         return alleTermine.sortedBy { it.datum }
     }
     
+    /**
+     * Direkte Prüfung: Hat der Kunde am angegebenen Datum einen Termin des Typs (A oder L)?
+     * Kein "Suchen" im Aufrufer – eine klare Ja/Nein-Antwort für genau dieses Datum.
+     * Intern wird ein sicherer Bereich um das Datum herum berechnet (Implementierungsdetail).
+     */
+    fun hatTerminAmDatum(
+        customer: Customer,
+        liste: KundenListe?,
+        datum: Long,
+        typ: TerminTyp
+    ): Boolean {
+        val datumStart = getStartOfDay(datum)
+        // Sicherer Bereich um das eine Datum (7 Tage zurück, 14 Tage Länge), damit
+        // wochentags- und intervallbasierte Regeln den Tag treffen
+        val termine = berechneAlleTermineFuerKunde(
+            customer = customer,
+            liste = liste,
+            startDatum = datumStart - TimeUnit.DAYS.toMillis(7),
+            tageVoraus = 14
+        )
+        return termine.any {
+            getStartOfDay(it.datum) == datumStart && it.typ == typ
+        }
+    }
+    
     // Filter-Funktionen entfernt - jetzt in TerminFilterUtils
 }
 

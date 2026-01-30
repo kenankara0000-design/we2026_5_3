@@ -36,10 +36,10 @@ class TourDataCategorizer {
                 val abholungStart = getStartOfDay(intervall.abholungDatum)
                 val auslieferungStart = getStartOfDay(intervall.auslieferungDatum)
                 
-                if (abholungStart >= abDatumStart && !geloeschteTermine.contains(abholungStart) && (naechstesDatum == null || abholungStart < naechstesDatum!!)) {
+                if (abholungStart >= abDatumStart && !geloeschteTermine.contains(abholungStart) && (naechstesDatum == null || naechstesDatum != null && abholungStart < naechstesDatum)) {
                     naechstesDatum = abholungStart
                 }
-                if (auslieferungStart >= abDatumStart && !geloeschteTermine.contains(auslieferungStart) && (naechstesDatum == null || auslieferungStart < naechstesDatum!!)) {
+                if (auslieferungStart >= abDatumStart && !geloeschteTermine.contains(auslieferungStart) && (naechstesDatum == null || naechstesDatum != null && auslieferungStart < naechstesDatum)) {
                     naechstesDatum = auslieferungStart
                 }
             } else {
@@ -90,7 +90,7 @@ class TourDataCategorizer {
                     }
                 }
                 
-                if (naechsteAbholung != null && (naechstesDatum == null || naechsteAbholung < naechstesDatum!!)) {
+                if (naechsteAbholung != null && (naechstesDatum == null || naechstesDatum != null && naechsteAbholung < naechstesDatum)) {
                     naechstesDatum = naechsteAbholung
                 }
                 
@@ -137,7 +137,7 @@ class TourDataCategorizer {
                     }
                 }
                 
-                if (naechsteAuslieferung != null && (naechstesDatum == null || naechsteAuslieferung < naechstesDatum!!)) {
+                if (naechsteAuslieferung != null && (naechstesDatum == null || naechstesDatum != null && naechsteAuslieferung < naechstesDatum)) {
                     naechstesDatum = naechsteAuslieferung
                 }
             }

@@ -1,26 +1,23 @@
 package com.example.we2026_5
 
-import android.app.DatePickerDialog
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.example.we2026_5.data.repository.CustomerRepository
-import com.example.we2026_5.data.repository.TerminRegelRepository
+import com.example.we2026_5.R
 import com.example.we2026_5.databinding.ActivityTerminRegelErstellenBinding
-import com.example.we2026_5.util.TerminRegelManager
+import com.example.we2026_5.util.TerminRegelDatePickerHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.Calendar
 
 class TerminRegelErstellenActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityTerminRegelErstellenBinding
-    private val regelRepository: TerminRegelRepository by inject()
-    private val customerRepository: CustomerRepository by inject()
+    private val viewModel: com.example.we2026_5.ui.terminregel.TerminRegelErstellenViewModel by viewModel()
     private var regelId: String? = null // null = neue Regel, sonst = bearbeiten
     private var abholungDatum: Long = 0 // 0 = heute
     private var auslieferungDatum: Long = 0 // 0 = heute
@@ -35,15 +32,14 @@ class TerminRegelErstellenActivity : AppCompatActivity() {
         binding = ActivityTerminRegelErstellenBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Prüfe ob Regel bearbeitet wird
         regelId = intent.getStringExtra("REGEL_ID")
         if (regelId != null) {
-            binding.tvTitle.text = "Regel bearbeiten"
-            binding.btnLoeschen.visibility = View.VISIBLE // Löschen-Button nur im Bearbeiten-Modus anzeigen
+            binding.tvTitle.text = getString(R.string.termin_regel_titel_bearbeiten)
+            binding.btnLoeschen.visibility = View.VISIBLE
             loadRegel()
         } else {
-            binding.tvTitle.text = "Neue Regel erstellen"
-            binding.btnLoeschen.visibility = View.GONE // Löschen-Button ausblenden bei neuer Regel
+            binding.tvTitle.text = getString(R.string.termin_regel_titel_neu)
+            binding.btnLoeschen.visibility = View.GONE
         }
 
         setupClickListeners()
@@ -124,159 +120,97 @@ class TerminRegelErstellenActivity : AppCompatActivity() {
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
         val day = calendar.get(Calendar.DAY_OF_MONTH)
-
-        // Material Design DatePicker für bessere Lesbarkeit
-        val datePickerDialog = DatePickerDialog(
-            this,
-            android.R.style.Theme_Material_Dialog_Alert,
-            { _, selectedYear, selectedMonth, selectedDay ->
-                val selectedCalendar = Calendar.getInstance()
-                selectedCalendar.set(selectedYear, selectedMonth, selectedDay, 0, 0, 0)
-                selectedCalendar.set(Calendar.MILLISECOND, 0)
-                startDatum = selectedCalendar.timeInMillis
-                val dateText = String.format("%02d.%02d.%04d", selectedDay, selectedMonth + 1, selectedYear)
-                binding.btnStartDatum.text = "Startdatum: $dateText"
-            },
-            year,
-            month,
-            day
-        )
-        datePickerDialog.show()
+        TerminRegelDatePickerHelper.showDatePicker(this, year, month, day) { timestamp ->
+            startDatum = timestamp
+            binding.btnStartDatum.text = getString(R.string.termin_regel_startdatum, TerminRegelDatePickerHelper.formatDateFromMillis(timestamp))
+        }
     }
 
     private fun showWochentagPicker(isAbholung: Boolean) {
         AlertDialog.Builder(this)
-            .setTitle("Wochentag wählen")
+            .setTitle(R.string.termin_regel_wochentag_waehlen)
             .setItems(wochentage) { _, which ->
-                // Automatisch beide (Abholung und Auslieferung) auf den ausgewählten Tag setzen
                 abholungWochentag = which
                 auslieferungWochentag = which
-                binding.btnAbholungWochentag.text = "Abholung: ${wochentage[which]}"
-                binding.btnAuslieferungWochentag.text = "Auslieferung: ${wochentage[which]}"
+                binding.btnAbholungWochentag.text = getString(R.string.termin_regel_abholung_datum, wochentage[which])
+                binding.btnAuslieferungWochentag.text = getString(R.string.termin_regel_auslieferung_datum, wochentage[which])
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(R.string.termin_regel_abbrechen, null)
             .show()
     }
 
     private fun showDatePicker(isAbholung: Boolean) {
         AlertDialog.Builder(this)
-            .setTitle(if (isAbholung) "Abholung" else "Auslieferung")
-            .setItems(arrayOf("Heute verwenden", "Datum wählen")) { _, which ->
+            .setTitle(if (isAbholung) R.string.termin_regel_abholung else R.string.termin_regel_auslieferung)
+            .setItems(arrayOf(getString(R.string.termin_regel_heute_verwenden), getString(R.string.termin_regel_datum_waehlen))) { _, which ->
                 when (which) {
                     0 -> {
-                        // Heute verwenden
                         if (isAbholung) {
                             abholungDatum = 0
-                            binding.btnAbholungDatum.text = "Abholung: Heute"
+                            binding.btnAbholungDatum.text = getString(R.string.termin_regel_abholung_heute)
                         } else {
                             auslieferungDatum = 0
-                            binding.btnAuslieferungDatum.text = "Auslieferung: Heute"
+                            binding.btnAuslieferungDatum.text = getString(R.string.termin_regel_auslieferung_heute)
                         }
                     }
                     1 -> {
-                        // Datum wählen
                         val year = calendar.get(Calendar.YEAR)
                         val month = calendar.get(Calendar.MONTH)
                         val day = calendar.get(Calendar.DAY_OF_MONTH)
-
-                        // Material Design DatePicker für bessere Lesbarkeit
-                        val datePickerDialog = DatePickerDialog(
-                            this,
-                            android.R.style.Theme_Material_Dialog_Alert,
-                            { _, selectedYear, selectedMonth, selectedDay ->
-                                val selectedCalendar = Calendar.getInstance()
-                                selectedCalendar.set(selectedYear, selectedMonth, selectedDay, 0, 0, 0)
-                                selectedCalendar.set(Calendar.MILLISECOND, 0)
-                                val timestamp = selectedCalendar.timeInMillis
-
-                                if (isAbholung) {
-                                    abholungDatum = timestamp
-                                    val dateText = String.format("%02d.%02d.%04d", selectedDay, selectedMonth + 1, selectedYear)
-                                    binding.btnAbholungDatum.text = "Abholung: $dateText"
-                                } else {
-                                    auslieferungDatum = timestamp
-                                    val dateText = String.format("%02d.%02d.%04d", selectedDay, selectedMonth + 1, selectedYear)
-                                    binding.btnAuslieferungDatum.text = "Auslieferung: $dateText"
-                                }
-                            },
-                            year,
-                            month,
-                            day
-                        )
-                        datePickerDialog.show()
+                        TerminRegelDatePickerHelper.showDatePicker(this, year, month, day) { timestamp ->
+                            val dateText = TerminRegelDatePickerHelper.formatDateFromMillis(timestamp)
+                            if (isAbholung) {
+                                abholungDatum = timestamp
+                                binding.btnAbholungDatum.text = getString(R.string.termin_regel_abholung_datum, dateText)
+                            } else {
+                                auslieferungDatum = timestamp
+                                binding.btnAuslieferungDatum.text = getString(R.string.termin_regel_auslieferung_datum, dateText)
+                            }
+                        }
                     }
                 }
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(R.string.termin_regel_abbrechen, null)
             .show()
     }
 
     private fun loadRegel() {
-        regelId?.let { id ->
-            CoroutineScope(Dispatchers.Main).launch {
-                try {
-                    val regel = regelRepository.getRegelById(id)
-                    if (regel != null) {
-                        binding.etRegelName.setText(regel.name)
-                        binding.etBeschreibung.setText(regel.beschreibung)
-                        binding.cbWiederholen.isChecked = regel.wiederholen
-                        binding.etIntervallTage.setText(regel.intervallTage.toString())
-                        binding.etIntervallAnzahl.setText(regel.intervallAnzahl.toString())
-
-                        // Wochentag-basiert laden
-                        binding.cbWochentagBasiert.isChecked = regel.wochentagBasiert
-                        if (regel.startDatum > 0) {
-                            startDatum = regel.startDatum
-                            val calendar = Calendar.getInstance().apply { timeInMillis = regel.startDatum }
-                            val dateText = String.format(
-                                "%02d.%02d.%04d",
-                                calendar.get(Calendar.DAY_OF_MONTH),
-                                calendar.get(Calendar.MONTH) + 1,
-                                calendar.get(Calendar.YEAR)
-                            )
-                            binding.btnStartDatum.text = "Startdatum: $dateText"
-                        }
-                        if (regel.abholungWochentag >= 0) {
-                            abholungWochentag = regel.abholungWochentag
-                            binding.btnAbholungWochentag.text = "Abholung: ${wochentage[regel.abholungWochentag]}"
-                        }
-                        if (regel.auslieferungWochentag >= 0) {
-                            auslieferungWochentag = regel.auslieferungWochentag
-                            binding.btnAuslieferungWochentag.text = "Auslieferung: ${wochentage[regel.auslieferungWochentag]}"
-                        }
-                        // startWocheOption wird nicht mehr verwendet - automatische Berechnung basierend auf Startdatum
-
-                        // Datum-basiert laden
-                        if (regel.abholungDatum > 0) {
-                            abholungDatum = regel.abholungDatum
-                            val calendar = Calendar.getInstance().apply { timeInMillis = regel.abholungDatum }
-                            val dateText = String.format(
-                                "%02d.%02d.%04d",
-                                calendar.get(Calendar.DAY_OF_MONTH),
-                                calendar.get(Calendar.MONTH) + 1,
-                                calendar.get(Calendar.YEAR)
-                            )
-                            binding.btnAbholungDatum.text = "Abholung: $dateText"
-                        }
-
-                        if (regel.auslieferungDatum > 0) {
-                            auslieferungDatum = regel.auslieferungDatum
-                            val calendar = Calendar.getInstance().apply { timeInMillis = regel.auslieferungDatum }
-                            val dateText = String.format(
-                                "%02d.%02d.%04d",
-                                calendar.get(Calendar.DAY_OF_MONTH),
-                                calendar.get(Calendar.MONTH) + 1,
-                                calendar.get(Calendar.YEAR)
-                            )
-                            binding.btnAuslieferungDatum.text = "Auslieferung: $dateText"
-                        }
-
-                        binding.layoutIntervall.visibility = if (regel.wiederholen) View.VISIBLE else View.GONE
-                        updateWochentagMode(regel.wochentagBasiert)
+        val id = regelId ?: return
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val regel = viewModel.loadRegel(id)
+                if (regel != null) {
+                    binding.etRegelName.setText(regel.name)
+                    binding.etBeschreibung.setText(regel.beschreibung)
+                    binding.cbWiederholen.isChecked = regel.wiederholen
+                    binding.etIntervallTage.setText(regel.intervallTage.toString())
+                    binding.etIntervallAnzahl.setText(regel.intervallAnzahl.toString())
+                    binding.cbWochentagBasiert.isChecked = regel.wochentagBasiert
+                    if (regel.startDatum > 0) {
+                        startDatum = regel.startDatum
+                        binding.btnStartDatum.text = getString(R.string.termin_regel_startdatum, TerminRegelDatePickerHelper.formatDateFromMillis(regel.startDatum))
                     }
-                } catch (e: Exception) {
-                    Toast.makeText(this@TerminRegelErstellenActivity, "Fehler beim Laden: ${e.message}", Toast.LENGTH_SHORT).show()
+                    if (regel.abholungWochentag >= 0) {
+                        abholungWochentag = regel.abholungWochentag
+                        binding.btnAbholungWochentag.text = getString(R.string.termin_regel_abholung_datum, wochentage[regel.abholungWochentag])
+                    }
+                    if (regel.auslieferungWochentag >= 0) {
+                        auslieferungWochentag = regel.auslieferungWochentag
+                        binding.btnAuslieferungWochentag.text = getString(R.string.termin_regel_auslieferung_datum, wochentage[regel.auslieferungWochentag])
+                    }
+                    if (regel.abholungDatum > 0) {
+                        abholungDatum = regel.abholungDatum
+                        binding.btnAbholungDatum.text = getString(R.string.termin_regel_abholung_datum, TerminRegelDatePickerHelper.formatDateFromMillis(regel.abholungDatum))
+                    }
+                    if (regel.auslieferungDatum > 0) {
+                        auslieferungDatum = regel.auslieferungDatum
+                        binding.btnAuslieferungDatum.text = getString(R.string.termin_regel_auslieferung_datum, TerminRegelDatePickerHelper.formatDateFromMillis(regel.auslieferungDatum))
+                    }
+                    binding.layoutIntervall.visibility = if (regel.wiederholen) View.VISIBLE else View.GONE
+                    updateWochentagMode(regel.wochentagBasiert)
                 }
+            } catch (e: Exception) {
+                Toast.makeText(this@TerminRegelErstellenActivity, getString(R.string.error_laden, e.message.orEmpty()), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -284,60 +218,39 @@ class TerminRegelErstellenActivity : AppCompatActivity() {
     private fun saveRegel() {
         val name = binding.etRegelName.text.toString().trim()
         if (name.isEmpty()) {
-            Toast.makeText(this, "Bitte geben Sie einen Regel-Namen ein", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.validierung_regel_name), Toast.LENGTH_SHORT).show()
             return
         }
-
         val beschreibung = binding.etBeschreibung.text.toString().trim()
         val wiederholen = binding.cbWiederholen.isChecked
         val intervallTage = binding.etIntervallTage.text.toString().toIntOrNull() ?: 7
         val intervallAnzahl = binding.etIntervallAnzahl.text.toString().toIntOrNull() ?: 0
         val wochentagBasiert = binding.cbWochentagBasiert.isChecked
-        // startWocheOption wird nicht mehr verwendet - automatische Berechnung basierend auf Startdatum
 
         if (wiederholen && intervallTage < 1) {
-            Toast.makeText(this, "Intervall muss mindestens 1 Tag sein", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.validierung_intervall_min), Toast.LENGTH_SHORT).show()
             return
         }
-
         if (wochentagBasiert) {
             if (startDatum == 0L) {
-                Toast.makeText(this, "Bitte wählen Sie ein Startdatum", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.validierung_startdatum), Toast.LENGTH_SHORT).show()
                 return
             }
             if (abholungWochentag == -1) {
-                Toast.makeText(this, "Bitte wählen Sie einen Abholung-Wochentag", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.validierung_abholung_wochentag), Toast.LENGTH_SHORT).show()
                 return
             }
             if (auslieferungWochentag == -1) {
-                Toast.makeText(this, "Bitte wählen Sie einen Auslieferung-Wochentag", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.validierung_auslieferung_wochentag), Toast.LENGTH_SHORT).show()
                 return
             }
         }
 
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val regel = if (regelId != null) {
-                    // Bestehende Regel aktualisieren
-                    val existingRegel = regelRepository.getRegelById(regelId!!)
-                    existingRegel?.copy(
-                        name = name,
-                        beschreibung = beschreibung,
-                        abholungDatum = abholungDatum,
-                        auslieferungDatum = auslieferungDatum,
-                        wiederholen = wiederholen,
-                        intervallTage = intervallTage,
-                        intervallAnzahl = intervallAnzahl,
-                        wochentagBasiert = wochentagBasiert,
-                        startDatum = startDatum,
-                        abholungWochentag = abholungWochentag,
-                        auslieferungWochentag = auslieferungWochentag,
-                        // startWocheOption wird nicht mehr verwendet - automatische Berechnung
-                        geaendertAm = System.currentTimeMillis()
-                    ) ?: return@launch
-                } else {
-                    // Neue Regel erstellen
-                    TerminRegel(
+                val currentRegelId = regelId
+                val regel = when {
+                    currentRegelId == null -> TerminRegel(
                         name = name,
                         beschreibung = beschreibung,
                         abholungDatum = abholungDatum,
@@ -349,23 +262,38 @@ class TerminRegelErstellenActivity : AppCompatActivity() {
                         startDatum = startDatum,
                         abholungWochentag = abholungWochentag,
                         auslieferungWochentag = auslieferungWochentag
-                        // startWocheOption wird nicht mehr verwendet - automatische Berechnung
                     )
+                    else -> {
+                        val existing = viewModel.loadRegel(currentRegelId) ?: return@launch
+                        existing.copy(
+                            name = name,
+                            beschreibung = beschreibung,
+                            abholungDatum = abholungDatum,
+                            auslieferungDatum = auslieferungDatum,
+                            wiederholen = wiederholen,
+                            intervallTage = intervallTage,
+                            intervallAnzahl = intervallAnzahl,
+                            wochentagBasiert = wochentagBasiert,
+                            startDatum = startDatum,
+                            abholungWochentag = abholungWochentag,
+                            auslieferungWochentag = auslieferungWochentag,
+                            geaendertAm = System.currentTimeMillis()
+                        )
+                    }
                 }
 
-                val success = regelRepository.saveRegel(regel)
+                val success = viewModel.saveRegel(regel)
                 if (success) {
-                    // Wenn Regel bearbeitet wurde, alle betroffenen Kunden aktualisieren
                     if (regelId != null) {
-                        aktualisiereBetroffeneKunden(regel)
+                        viewModel.aktualisiereBetroffeneKunden(regel)
                     }
-                    Toast.makeText(this@TerminRegelErstellenActivity, "Regel gespeichert", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@TerminRegelErstellenActivity, getString(R.string.toast_regel_gespeichert), Toast.LENGTH_SHORT).show()
                     finish()
                 } else {
-                    Toast.makeText(this@TerminRegelErstellenActivity, "Fehler beim Speichern", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@TerminRegelErstellenActivity, getString(R.string.toast_fehler_speichern), Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@TerminRegelErstellenActivity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@TerminRegelErstellenActivity, getString(R.string.toast_fehler, e.message.orEmpty()), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -376,128 +304,41 @@ class TerminRegelErstellenActivity : AppCompatActivity() {
      */
     private fun showDeleteConfirmation() {
         val id = regelId ?: return
-        
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                // Prüfen, ob Regel verwendet wird
-                val wirdVerwendet = istRegelVerwendet(id)
-                
+                val wirdVerwendet = viewModel.istRegelVerwendet(id)
                 if (wirdVerwendet) {
                     AlertDialog.Builder(this@TerminRegelErstellenActivity)
-                        .setTitle("Regel kann nicht gelöscht werden")
-                        .setMessage("Diese Regel wird noch von einem oder mehreren Kunden verwendet. Bitte entfernen Sie die Regel zuerst von allen Kunden, bevor Sie sie löschen können.")
-                        .setPositiveButton("OK", null)
+                        .setTitle(R.string.dialog_regel_loeschen_titel)
+                        .setMessage(R.string.dialog_regel_loeschen_message)
+                        .setPositiveButton(R.string.dialog_ok, null)
                         .show()
                 } else {
                     AlertDialog.Builder(this@TerminRegelErstellenActivity)
-                        .setTitle("Regel löschen?")
-                        .setMessage("Möchten Sie diese Regel wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.")
-                        .setPositiveButton("Löschen") { _, _ ->
-                            deleteRegel(id)
-                        }
-                        .setNegativeButton("Abbrechen", null)
+                        .setTitle(R.string.dialog_regel_loeschen_confirm_titel)
+                        .setMessage(R.string.dialog_regel_loeschen_confirm_message)
+                        .setPositiveButton(R.string.dialog_loeschen) { _, _ -> deleteRegel(id) }
+                        .setNegativeButton(R.string.termin_regel_abbrechen, null)
                         .show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@TerminRegelErstellenActivity, "Fehler beim Prüfen: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@TerminRegelErstellenActivity, getString(R.string.toast_fehler_pruefen, e.message.orEmpty()), Toast.LENGTH_SHORT).show()
             }
         }
     }
-    
-    /**
-     * Prüft, ob eine Regel von einem Kunden oder einer Liste verwendet wird.
-     * Eine Regel wird verwendet, wenn mindestens ein Kunde ein Intervall mit dieser Regel-ID hat.
-     * (Listen verwenden aktuell keine Regel-IDs, daher nur Kunden-Prüfung)
-     */
-    private suspend fun istRegelVerwendet(regelId: String): Boolean {
-        return try {
-            val allCustomers = customerRepository.getAllCustomers()
-            val wirdVonKundenVerwendet = allCustomers.any { customer ->
-                customer.intervalle.any { intervall ->
-                    intervall.terminRegelId == regelId
-                }
-            }
-            
-            // TODO: Wenn Listen auch Regel-IDs speichern, hier auch Listen prüfen
-            // val allListen = listeRepository.getAllListen()
-            // val wirdVonListenVerwendet = allListen.any { liste ->
-            //     liste.intervalle.any { intervall ->
-            //         intervall.terminRegelId == regelId
-            //     }
-            // }
-            
-            wirdVonKundenVerwendet // || wirdVonListenVerwendet
-        } catch (e: Exception) {
-            // Bei Fehler annehmen, dass Regel verwendet wird (sicherer)
-            true
-        }
-    }
-    
-    /**
-     * Aktualisiert alle Kunden, die die bearbeitete Regel verwenden.
-     * Ersetzt das alte Intervall durch ein neues, basierend auf der aktualisierten Regel.
-     */
-    private suspend fun aktualisiereBetroffeneKunden(regel: TerminRegel) {
-        try {
-            val allCustomers = customerRepository.getAllCustomers()
-            var aktualisierteKunden = 0
-            
-            allCustomers.forEach { customer ->
-                // Prüfe ob Kunde ein Intervall mit dieser Regel-ID hat
-                val intervallIndex = customer.intervalle.indexOfFirst { it.terminRegelId == regel.id }
-                
-                if (intervallIndex != -1) {
-                    // Neues Intervall mit der aktualisierten Regel berechnen
-                    val neuesIntervall = TerminRegelManager.wendeRegelAufKundeAn(regel, customer)
-                    
-                    // Altes Intervall durch neues ersetzen (ID beibehalten für Konsistenz)
-                    val aktualisierteIntervalle = customer.intervalle.toMutableList()
-                    aktualisierteIntervalle[intervallIndex] = neuesIntervall.copy(id = customer.intervalle[intervallIndex].id)
-                    
-                    // Kunden mit aktualisierten Intervallen speichern
-                    // Intervalle müssen als Map-Liste für Firebase serialisiert werden
-                    val intervalleMap = aktualisierteIntervalle.mapIndexed { index, intervall ->
-                        mapOf(
-                            "id" to intervall.id,
-                            "abholungDatum" to intervall.abholungDatum,
-                            "auslieferungDatum" to intervall.auslieferungDatum,
-                            "wiederholen" to intervall.wiederholen,
-                            "intervallTage" to intervall.intervallTage,
-                            "intervallAnzahl" to intervall.intervallAnzahl,
-                            "erstelltAm" to intervall.erstelltAm,
-                            "terminRegelId" to intervall.terminRegelId
-                        )
-                    }
-                    val updates = mapOf("intervalle" to intervalleMap)
-                    customerRepository.updateCustomer(customer.id, updates)
-                    aktualisierteKunden++
-                }
-            }
-            
-            if (aktualisierteKunden > 0) {
-                android.util.Log.d("TerminRegelErstellen", "$aktualisierteKunden Kunden wurden aktualisiert")
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("TerminRegelErstellen", "Fehler beim Aktualisieren der Kunden", e)
-            // Fehler wird stillschweigend behandelt, um den Regel-Speichervorgang nicht zu blockieren
-        }
-    }
-    
-    /**
-     * Löscht die Regel.
-     */
+
     private fun deleteRegel(regelId: String) {
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val success = regelRepository.deleteRegel(regelId)
+                val success = viewModel.deleteRegel(regelId)
                 if (success) {
-                    Toast.makeText(this@TerminRegelErstellenActivity, "Regel gelöscht", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@TerminRegelErstellenActivity, getString(R.string.toast_regel_geloescht), Toast.LENGTH_SHORT).show()
                     finish()
                 } else {
-                    Toast.makeText(this@TerminRegelErstellenActivity, "Fehler beim Löschen", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@TerminRegelErstellenActivity, getString(R.string.toast_fehler_loeschen), Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@TerminRegelErstellenActivity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@TerminRegelErstellenActivity, getString(R.string.toast_fehler, e.message.orEmpty()), Toast.LENGTH_SHORT).show()
             }
         }
     }
