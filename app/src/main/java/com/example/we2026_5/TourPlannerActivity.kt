@@ -1,263 +1,71 @@
 package com.example.we2026_5
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
+import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.livedata.observeAsState
+import com.example.we2026_5.adapter.CustomerButtonVisibilityHelper
+import com.example.we2026_5.adapter.CustomerDialogHelper
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.TerminRegelRepository
-import com.example.we2026_5.databinding.ActivityTourPlannerBinding
-import com.example.we2026_5.databinding.DialogCustomerOverviewBinding
+import com.example.we2026_5.ui.tourplanner.ErledigungSheetArgs
+import com.example.we2026_5.ui.tourplanner.TourPlannerScreen
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
-import com.example.we2026_5.tourplanner.TourPlannerDialogHelper
-import com.example.we2026_5.tourplanner.TourPlannerDateUtils
-import com.example.we2026_5.tourplanner.TourPlannerCallbackHandler
-import com.example.we2026_5.tourplanner.TourPlannerUISetup
-import com.example.we2026_5.tourplanner.ErledigungBottomSheetDialogFragment
 import com.example.we2026_5.tourplanner.ErledigungSheetState
-import com.example.we2026_5.adapter.CustomerDialogHelper
-import com.example.we2026_5.tourplanner.TourPlannerGestureHandler
-import com.example.we2026_5.FirebaseRetryHelper
-import kotlinx.coroutines.CoroutineScope
+import com.example.we2026_5.tourplanner.TourPlannerCallbackHandler
+import com.example.we2026_5.tourplanner.TourPlannerDateUtils
+import com.example.we2026_5.tourplanner.TourPlannerDialogHelper
+import com.example.we2026_5.util.TerminBerechnungUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.*
-import java.util.concurrent.TimeUnit
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
-class TourPlannerActivity : AppCompatActivity(), ErledigungBottomSheetDialogFragment.ErledigungSheetCallbacks {
+class TourPlannerActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityTourPlannerBinding
     private val viewModel: TourPlannerViewModel by viewModel()
     private val repository: CustomerRepository by inject()
     private val listeRepository: com.example.we2026_5.data.repository.KundenListeRepository by inject()
     private val regelRepository: TerminRegelRepository by inject()
-    private lateinit var adapter: CustomerAdapter
-    private var viewDate = Calendar.getInstance()
-    private lateinit var networkMonitor: NetworkMonitor
-    private var pressedHeaderButton: String? = null // "Karte", "Heute", "Woche"
-    
-    // Helper-Klassen
-    private lateinit var dialogHelper: TourPlannerDialogHelper
     private lateinit var dateUtils: TourPlannerDateUtils
+    private lateinit var dialogHelper: TourPlannerDialogHelper
     private lateinit var callbackHandler: TourPlannerCallbackHandler
     private var sheetDialogHelper: CustomerDialogHelper? = null
-    private lateinit var uiSetup: TourPlannerUISetup
-    private lateinit var gestureHandler: TourPlannerGestureHandler
+    private lateinit var networkMonitor: NetworkMonitor
+    private val viewDate = Calendar.getInstance()
+
+    private var pressedHeaderButton by mutableStateOf<String?>(null)
+    private var erledigungSheet by mutableStateOf<ErledigungSheetArgs?>(null)
+    private var overviewCustomer by mutableStateOf<Customer?>(null)
+    /** ID des Kunden für „Details öffnen“ – beim Tippen gesetzt, damit die richtige ID übergeben wird. */
+    private var overviewCustomerId by mutableStateOf<String?>(null)
+    private var overviewRegelNamen by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityTourPlannerBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        
-        // Helper initialisieren
+
         dateUtils = TourPlannerDateUtils { viewModel.getListen() }
+        viewModel.selectedTimestamp.observe(this) { ts -> ts?.let { viewDate.timeInMillis = it } }
+
         dialogHelper = TourPlannerDialogHelper(
             activity = this,
             onKundeAnzeigen = { customer ->
-                val intent = Intent(this, CustomerDetailActivity::class.java).apply {
+                startActivity(Intent(this, CustomerDetailActivity::class.java).apply {
                     putExtra("CUSTOMER_ID", customer.id)
-                }
-                startActivity(intent)
+                })
             },
-            onTerminLoeschen = { customer, terminDatum ->
-                loescheEinzelnenTermin(customer, terminDatum)
-            }
+            onTerminLoeschen = { customer, terminDatum -> loescheEinzelnenTermin(customer, terminDatum) }
         )
-
-        // Adapter ZUERST initialisieren (wird von callbackHandler benötigt)
-        adapter = CustomerAdapter(
-            items = mutableListOf(),
-            context = this,
-            onClick = { customer -> showCustomerOverviewDialog(customer) }
-        )
-        
-        // Callbacks für Firebase-Operationen setzen (initialisiert auch callbackHandler)
-        setupAdapterCallbacks()
-        
-        // UI-Setup initialisieren
-        uiSetup = TourPlannerUISetup(
-            activity = this,
-            binding = binding,
-            setupAdapterCallbacks = { setupAdapterCallbacks() },
-            setupAdapterCallbacksForAdapter = { adapter -> setupAdapterCallbacksForAdapter(adapter) }
-        )
-        uiSetup.setupAdapters(adapter)
-        
-        // Callback für Section-Toggle setzen
-        adapter.callbacks = adapter.callbacks.copy(
-            onSectionToggle = { sectionType ->
-                viewModel.toggleSection(sectionType)
-                reloadCurrentView() // Daten neu laden wenn Section getoggelt wird
-            }
-        )
-        
-        // Datum im ViewModel setzen (Single Source of Truth)
-        viewModel.setSelectedTimestamp(Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis)
-        // Initial: Tagesansicht
-        updateViewMode()
-        uiSetup.updateHeaderButtonStates(pressedHeaderButton)
-        observeViewModel()
-
-        binding.btnBackFromTour.setOnClickListener { finish() }
-
-        binding.btnPrevDay.setOnClickListener {
-            viewModel.prevDay()
-        }
-
-        binding.btnNextDay.setOnClickListener {
-            viewModel.nextDay()
-        }
-
-        binding.btnToday.setOnClickListener {
-            pressedHeaderButton = "Heute"
-            uiSetup.updateHeaderButtonStates(pressedHeaderButton)
-            viewModel.goToToday()
-        }
-
-        binding.btnMapView.setOnClickListener {
-            pressedHeaderButton = "Karte"
-            uiSetup.updateHeaderButtonStates(pressedHeaderButton)
-            val intent = Intent(this, MapViewActivity::class.java)
-            startActivity(intent)
-            // Nach Rückkehr Button-Zustand zurücksetzen
-            pressedHeaderButton = null
-            uiSetup.updateHeaderButtonStates(pressedHeaderButton)
-        }
-        
-        // Pull-to-Refresh
-        binding.swipeRefresh.setOnRefreshListener {
-            reloadCurrentView()
-            binding.swipeRefresh.isRefreshing = false
-        }
-        
-        // Offline-Status-Monitoring
-        networkMonitor = NetworkMonitor(this)
-        networkMonitor.startMonitoring()
-        networkMonitor.isOnline.observe(this) { isOnline ->
-            binding.tvOfflineStatus.visibility = if (isOnline) View.GONE else View.VISIBLE
-        }
-        
-        // Swipe-Gesten für Datum-Wechsel einrichten
-        gestureHandler = TourPlannerGestureHandler(
-            binding = binding,
-            viewDate = viewDate,
-            onDateChanged = { updateDisplay() }
-        )
-        gestureHandler.setupSwipeGestures()
-    }
-    
-    override fun onDestroy() {
-        super.onDestroy()
-        networkMonitor.stopMonitoring()
-    }
-    
-
-    override fun onStart() {
-        super.onStart()
-        updateDisplay()
-        // Button-Zustand zurücksetzen wenn von MapViewActivity zurückgekehrt
-        if (pressedHeaderButton == "Karte") {
-            pressedHeaderButton = null
-            uiSetup.updateHeaderButtonStates(pressedHeaderButton)
-        }
-    }
-
-    private fun observeViewModel() {
-        // Datum aus ViewModel sync (Anzeige + viewDate für Helper)
-        viewModel.selectedTimestamp.observe(this) { ts ->
-            ts?.let {
-                viewDate.timeInMillis = it
-                val fmt = SimpleDateFormat("EEE, dd.MM.yyyy", Locale.GERMANY)
-                binding.tvCurrentDate.text = fmt.format(viewDate.time)
-                updateTodayButtonState()
-                setupAdapterCallbacksForAdapter(adapter)
-            }
-        }
-        // Tour-Items beobachten (Tagesansicht)
-        viewModel.tourItems.observe(this) { items ->
-            val ts = viewModel.getSelectedTimestamp() ?: viewDate.timeInMillis
-            adapter.updateData(items, dateUtils.getStartOfDay(ts))
-            uiSetup.updateEmptyState(items.isEmpty())
-        }
-        // Loading-State beobachten
-        viewModel.isLoading.observe(this) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-            if (isLoading) {
-                binding.emptyStateLayout.visibility = View.GONE
-                binding.errorStateLayout.visibility = View.GONE
-            }
-        }
-        
-        // Error-State beobachten
-        viewModel.error.observe(this) { errorMessage ->
-            if (errorMessage != null) {
-                showErrorState(errorMessage)
-            } else {
-                binding.errorStateLayout.visibility = View.GONE
-            }
-        }
-    }
-
-    private fun updateDisplay() {
-        // Datum aus ViewModel lesen und Anzeige + loadTourData aktualisieren
-        val ts = viewModel.getSelectedTimestamp() ?: Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-        viewDate.timeInMillis = ts
-        val fmt = SimpleDateFormat("EEE, dd.MM.yyyy", Locale.GERMANY)
-        binding.tvCurrentDate.text = fmt.format(viewDate.time)
-        loadTourData(ts)
-        setupAdapterCallbacksForAdapter(adapter)
-    }
-    
-    private fun updateViewMode() {
-        uiSetup.updateViewMode()
-        uiSetup.updateHeaderButtonStates(pressedHeaderButton) // Button-Zustände aktualisieren
-        updateDisplay()
-    }
-    
-    private fun updateTodayButtonState() {
-        // Diese Funktion wird jetzt von updateHeaderButtonStates() übernommen
-        // Behalten für Kompatibilität, aber Logik ist in updateHeaderButtonStates()
-        uiSetup.updateHeaderButtonStates(pressedHeaderButton)
-    }
-
-    private fun loadTourData(selectedTimestamp: Long) {
-        viewModel.loadTourData(selectedTimestamp) { sectionType ->
-            viewModel.isSectionExpanded(sectionType)
-        }
-    }
-        
-    private fun reloadCurrentView() {
-        viewModel.getSelectedTimestamp()?.let { loadTourData(it) }
-    }
-    
-    private fun showErrorState(message: String) {
-        uiSetup.showErrorState(message) {
-            reloadCurrentView()
-        }
-    }
-
-    private fun setupAdapterCallbacks() {
-        setupAdapterCallbacksForAdapter(adapter)
-    }
-    
-    private fun setupAdapterCallbacksForAdapter(adapter: CustomerAdapter) {
-        // Aktualisiere CallbackHandler mit neuem Adapter
         callbackHandler = TourPlannerCallbackHandler(
             context = this,
             repository = repository,
@@ -265,120 +73,156 @@ class TourPlannerActivity : AppCompatActivity(), ErledigungBottomSheetDialogFrag
             getListen = { viewModel.getListen() },
             dateUtils = dateUtils,
             viewDate = viewDate,
-            adapter = adapter,
+            adapter = null,
             reloadCurrentView = { reloadCurrentView() },
             resetTourCycle = { customerId -> resetTourCycle(customerId) },
             onError = { msg -> viewModel.setError(msg) }
         )
-        callbackHandler.setupCallbacks()
-
         sheetDialogHelper = CustomerDialogHelper(
             context = this,
-            onVerschieben = { c, newDate, alle -> adapter.callbacks.onVerschieben?.invoke(c, newDate, alle) },
-            onUrlaub = { c, von, bis -> adapter.callbacks.onUrlaub?.invoke(c, von, bis) },
-            onRueckgaengig = { c -> adapter.callbacks.onRueckgaengig?.invoke(c) },
+            onVerschieben = { c, newDate, alle -> callbackHandler.handleVerschiebenPublic(c, newDate, alle) },
+            onUrlaub = { c, von, bis -> callbackHandler.handleUrlaubPublic(c, von, bis) },
+            onRueckgaengig = { c -> callbackHandler.handleRueckgaengigPublic(c) },
             onButtonStateReset = { reloadCurrentView() }
         )
-        
-        adapter.callbacks = adapter.callbacks.copy(
-            onTerminClick = { customer, terminDatum ->
-                dialogHelper.showTerminDetailDialog(customer, terminDatum)
-            },
-            onAktionenClick = { customer, state ->
-                showErledigungSheet(customer, state)
-            }
-        )
-    }
 
-    private fun showErledigungSheet(customer: Customer, state: ErledigungSheetState) {
-        val sheet = ErledigungBottomSheetDialogFragment.newInstance(customer, viewDate.timeInMillis, state)
-        sheet.show(supportFragmentManager, "ErledigungSheet")
-    }
+        viewModel.setSelectedTimestamp(Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis)
 
-    override fun onAbholung(customer: Customer) { callbackHandler.handleAbholungPublic(customer) }
-    override fun onAuslieferung(customer: Customer) { callbackHandler.handleAuslieferungPublic(customer) }
-    override fun onKw(customer: Customer) { callbackHandler.handleKwPublic(customer) }
-    override fun onRueckgaengig(customer: Customer) { callbackHandler.handleRueckgaengigPublic(customer) }
-    override fun onVerschieben(customer: Customer) { sheetDialogHelper?.showVerschiebenDialog(customer) }
-    override fun onUrlaub(customer: Customer) { sheetDialogHelper?.showUrlaubDialog(customer) }
-    override fun getNaechstesTourDatum(customer: Customer): Long? = adapter.callbacks.getNaechstesTourDatum?.invoke(customer)
-    
-    /**
-     * Zeigt das Kunden-Übersichtsfenster (Termin-Regeln elegant, nur Namen, ohne Kasten).
-     * Bei Klick auf "Details öffnen" → CustomerDetailActivity.
-     */
-    private fun showCustomerOverviewDialog(customer: Customer) {
-        val dialogBinding = DialogCustomerOverviewBinding.inflate(LayoutInflater.from(this))
-        dialogBinding.tvOverviewCustomerName.text = customer.name
-        
-        // Regelnamen asynchron laden (nur Namen, elegant)
-        CoroutineScope(Dispatchers.Main).launch {
-            val regelNamen = withContext(Dispatchers.IO) {
-                val namen = mutableListOf<String>()
-                for (intervall in customer.intervalle) {
-                    if (intervall.terminRegelId.isNotEmpty()) {
-                        regelRepository.getRegelById(intervall.terminRegelId)?.name?.let { namen.add(it) }
-                    }
+        networkMonitor = NetworkMonitor(this)
+        networkMonitor.startMonitoring()
+
+        setContent {
+            val tourItems by viewModel.tourItems.observeAsState(initial = emptyList())
+            val selectedTimestamp by viewModel.selectedTimestamp.observeAsState(initial = null)
+            val isLoading by viewModel.isLoading.observeAsState(initial = false)
+            val errorMessage by viewModel.error.observeAsState(initial = null)
+            val isOnline by networkMonitor.isOnline.observeAsState(initial = true)
+            val isOffline = !isOnline
+
+            val dateText = selectedTimestamp?.let { ts ->
+                val cal = Calendar.getInstance().apply { timeInMillis = ts }
+                SimpleDateFormat("EEE, dd.MM.yyyy", Locale.GERMANY).format(cal.time)
+            } ?: getString(R.string.tour_label_date)
+
+            fun getStatusBadgeText(customer: Customer): String {
+                val ts = viewModel.getSelectedTimestamp() ?: return ""
+                val viewDateStart = dateUtils.getStartOfDay(ts)
+                val heuteStart = dateUtils.getStartOfDay(System.currentTimeMillis())
+                val getAbholungDatum: (Customer) -> Long = { c -> dateUtils.calculateAbholungDatum(c, viewDateStart, heuteStart) }
+                val getAuslieferungDatum: (Customer) -> Long = { c -> dateUtils.calculateAuslieferungDatum(c, viewDateStart, heuteStart) }
+                val getTermineFuerKunde = { c: Customer, start: Long, days: Int ->
+                    TerminBerechnungUtils.berechneAlleTermineFuerKunde(c, viewModel.getListen().find { l -> l.id == c.listeId }, start, days)
                 }
-                namen.distinct()
+                val helper = CustomerButtonVisibilityHelper(this@TourPlannerActivity, ts, emptyMap(), getAbholungDatum, getAuslieferungDatum, getTermineFuerKunde)
+                return helper.getSheetState(customer)?.statusBadgeText ?: ""
             }
-            dialogBinding.tvOverviewRegelNames.text = if (regelNamen.isNotEmpty()) {
-                regelNamen.joinToString("\n")
-            } else {
-                getString(R.string.no_termin_regeln)
-            }
-        }
-        
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogBinding.root)
-            .create()
-        
-        dialogBinding.btnOverviewDetails.setOnClickListener {
-            dialog.dismiss()
-            val intent = Intent(this, CustomerDetailActivity::class.java).apply {
-                putExtra("CUSTOMER_ID", customer.id)
-            }
-            startActivity(intent)
-        }
-        
-        dialog.show()
-    }
-    
-    // Alle Callback-Funktionen entfernt - jetzt in TourPlannerCallbackHandler
-    
-    private fun calculateAbholungDatum(customer: Customer, viewDateStart: Long): Long {
-        val heuteStart = dateUtils.getStartOfDay(System.currentTimeMillis())
-        return dateUtils.calculateAbholungDatum(customer, viewDateStart, heuteStart)
-    }
-    
-    // Alte Implementierung entfernt - jetzt in TourPlannerDateUtils
-    
-    private fun calculateAuslieferungDatum(customer: Customer, viewDateStart: Long): Long {
-        // NEUE STRUKTUR: Verwende Intervalle-Liste wenn vorhanden
-        if (customer.intervalle.isNotEmpty()) {
-            val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                customer = customer,
-                startDatum = viewDateStart - java.util.concurrent.TimeUnit.DAYS.toMillis(1),
-                tageVoraus = 2 // Nur 2 Tage (gestern, heute, morgen)
+
+            TourPlannerScreen(
+                tourItems = tourItems,
+                dateText = dateText,
+                isLoading = isLoading,
+                errorMessage = errorMessage,
+                isOffline = isOffline,
+                pressedHeaderButton = pressedHeaderButton,
+                erledigungSheet = erledigungSheet,
+                onBack = { finish() },
+                onPrevDay = { viewModel.prevDay() },
+                onNextDay = { viewModel.nextDay() },
+                onToday = {
+                    pressedHeaderButton = "Heute"
+                    viewModel.goToToday()
+                },
+                onMap = {
+                    pressedHeaderButton = "Karte"
+                    startActivity(Intent(this@TourPlannerActivity, MapViewActivity::class.java))
+                    pressedHeaderButton = null
+                },
+                onRefresh = { reloadCurrentView() },
+                onRetry = { reloadCurrentView() },
+                isSectionExpanded = { viewModel.isSectionExpanded(it) },
+                getStatusBadgeText = { getStatusBadgeText(it) },
+                onToggleSection = { sectionType ->
+                    viewModel.toggleSection(sectionType)
+                    reloadCurrentView()
+                },
+                onCustomerClick = { customer ->
+                    overviewCustomer = customer
+                    overviewCustomerId = customer.id
+                    overviewRegelNamen = null
+                    lifecycleScope.launch {
+                        val namen = withContext(Dispatchers.IO) {
+                            customer.intervalle
+                                .filter { it.terminRegelId.isNotBlank() }
+                                .mapNotNull { regelRepository.getRegelById(it.terminRegelId)?.name }
+                                .distinct()
+                                .joinToString("\n")
+                        }
+                        overviewRegelNamen = if (namen.isNotEmpty()) namen else null
+                    }
+                },
+                onAktionenClick = { customer ->
+                    val ts = viewModel.getSelectedTimestamp() ?: return@TourPlannerScreen
+                    val viewDateStart = dateUtils.getStartOfDay(ts)
+                    val heuteStart = dateUtils.getStartOfDay(System.currentTimeMillis())
+                    val getAbholungDatum: (Customer) -> Long = { c -> dateUtils.calculateAbholungDatum(c, viewDateStart, heuteStart) }
+                    val getAuslieferungDatum: (Customer) -> Long = { c -> dateUtils.calculateAuslieferungDatum(c, viewDateStart, heuteStart) }
+                    val getTermineFuerKunde = { c: Customer, start: Long, days: Int ->
+                        TerminBerechnungUtils.berechneAlleTermineFuerKunde(c, viewModel.getListen().find { l -> l.id == c.listeId }, start, days)
+                    }
+                    val helper = CustomerButtonVisibilityHelper(this@TourPlannerActivity, ts, emptyMap(), getAbholungDatum, getAuslieferungDatum, getTermineFuerKunde)
+                    val state: ErledigungSheetState? = helper.getSheetState(customer)
+                    if (state != null) {
+                        erledigungSheet = ErledigungSheetArgs(customer, ts, state)
+                    }
+                },
+                onDismissErledigungSheet = { erledigungSheet = null },
+                onAbholung = { callbackHandler.handleAbholungPublic(it) },
+                onAuslieferung = { callbackHandler.handleAuslieferungPublic(it) },
+                onKw = { callbackHandler.handleKwPublic(it) },
+                onRueckgaengig = { callbackHandler.handleRueckgaengigPublic(it) },
+                onVerschieben = { sheetDialogHelper?.showVerschiebenDialog(it) ?: Unit },
+                onUrlaub = { sheetDialogHelper?.showUrlaubDialog(it) ?: Unit },
+                getNaechstesTourDatum = { dateUtils.getNaechstesTourDatum(it) },
+                showToast = { msg -> Toast.makeText(this@TourPlannerActivity, msg, Toast.LENGTH_LONG).show() },
+                onTelefonClick = { tel -> startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$tel"))) },
+                overviewCustomer = overviewCustomer,
+                overviewRegelNamen = overviewRegelNamen,
+                onDismissOverview = { overviewCustomer = null; overviewCustomerId = null; overviewRegelNamen = null },
+                onOpenDetails = { customerId ->
+                    overviewCustomer = null
+                    overviewCustomerId = null
+                    overviewRegelNamen = null
+                    if (customerId.isNotBlank()) {
+                        startActivity(Intent(this@TourPlannerActivity, CustomerDetailActivity::class.java).apply { putExtra("CUSTOMER_ID", customerId) })
+                    }
+                },
+                overviewCustomerIdForDetails = overviewCustomerId
             )
-            // Prüfe ob am angezeigten Tag ein Auslieferungstermin vorhanden ist
-            return termine.firstOrNull { 
-                it.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG &&
-                com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart
-            }?.datum ?: 0L
         }
-        
-        // Verwende DateUtils für Listen-Kunden und andere Fälle
-        val heuteStart = dateUtils.getStartOfDay(System.currentTimeMillis())
-        return dateUtils.calculateAuslieferungDatum(customer, viewDateStart, heuteStart)
+
+        viewModel.getSelectedTimestamp()?.let { viewModel.loadTourData(it) { viewModel.isSectionExpanded(it) } }
     }
-    
-    private fun isIntervallFaelligAm(intervall: com.example.we2026_5.ListeIntervall, datum: Long): Boolean {
-        return dateUtils.isIntervallFaelligAm(intervall, datum)
+
+    override fun onDestroy() {
+        networkMonitor.stopMonitoring()
+        super.onDestroy()
     }
-    
-    // Alte Implementierungen entfernt - jetzt in TourPlannerDateUtils und TourPlannerDialogHelper
-    
+
+    override fun onStart() {
+        super.onStart()
+        viewModel.getSelectedTimestamp()?.let { viewModel.loadTourData(it) { viewModel.isSectionExpanded(it) } }
+        if (pressedHeaderButton == "Karte") pressedHeaderButton = null
+    }
+
+    private fun reloadCurrentView() {
+        viewModel.getSelectedTimestamp()?.let { viewModel.loadTourData(it) { viewModel.isSectionExpanded(it) } }
+    }
+
     private fun loescheEinzelnenTermin(customer: Customer, terminDatum: Long) {
         lifecycleScope.launch {
             when (val result = viewModel.deleteTerminFromCustomer(customer, terminDatum)) {
@@ -394,7 +238,7 @@ class TourPlannerActivity : AppCompatActivity(), ErledigungBottomSheetDialogFrag
             }
         }
     }
-    
+
     private fun resetTourCycle(customerId: String) {
         lifecycleScope.launch {
             when (val result = viewModel.resetTourCycle(customerId)) {
@@ -409,23 +253,5 @@ class TourPlannerActivity : AppCompatActivity(), ErledigungBottomSheetDialogFrag
                 }
             }
         }
-    }
-
-    private fun getStartOfDay(ts: Long): Long {
-        return dateUtils.getStartOfDay(ts)
-    }
-    
-    /**
-     * Berechnet das Fälligkeitsdatum für Abholung (wenn überfällig)
-     */
-    private fun getFaelligAmDatumFuerAbholung(customer: Customer, heuteStart: Long): Long {
-        return dateUtils.getFaelligAmDatumFuerAbholung(customer, heuteStart)
-    }
-    
-    /**
-     * Berechnet das Fälligkeitsdatum für Auslieferung (wenn überfällig)
-     */
-    private fun getFaelligAmDatumFuerAuslieferung(customer: Customer, heuteStart: Long): Long {
-        return dateUtils.getFaelligAmDatumFuerAuslieferung(customer, heuteStart)
     }
 }

@@ -45,7 +45,7 @@ Reihenfolge nach Risiko (einfach → komplex).
 | LoginActivity | Sehr wenig UI (aktuell ggf. nur Splash/Redirect). Wenn sichtbare Login-UI kommt → in Compose. | [ ] |
 | ListeErstellenActivity | Relativ überschaubar; Formular. | [x] |
 | TerminRegelErstellenActivity | Formular-Screen. | [x] |
-| MapViewActivity | Heute nur Trampolin zu Maps; wenn In-App-Karte kommt → Compose. | [ ] |
+| MapViewActivity | Heute nur Trampolin zu Maps; wenn In-App-Karte kommt → Compose. | [x] |
 
 ---
 
@@ -53,10 +53,10 @@ Reihenfolge nach Risiko (einfach → komplex).
 
 | Screen | Begründung | Status |
 |--------|------------|--------|
-| TerminRegelManagerActivity | Liste + Aktionen. | [ ] |
-| KundenListenActivity | Listen-UI. | [ ] |
-| ListeBearbeitenActivity | Bearbeitung + Listen. | [ ] |
-| AddCustomerActivity | Formular mit mehr Feldern. | [ ] |
+| TerminRegelManagerActivity | Liste + Aktionen. | [x] |
+| KundenListenActivity | Listen-UI. | [x] |
+| ListeBearbeitenActivity | Bearbeitung + Listen. | [x] |
+| AddCustomerActivity | Formular mit mehr Feldern. | [x] |
 
 ---
 
@@ -66,11 +66,11 @@ Viele Helper, RecyclerViews, Fragments – erst wenn Phase 1–3 sicher laufen.
 
 | Screen / Teil | Begründung | Status |
 |---------------|------------|--------|
-| MainActivity | Zentrale Navigation; kann zuletzt oder als Compose-Insel (nur Inhalt) migriert werden. | [ ] |
-| CustomerManagerActivity | Tabs, Suche, RecyclerView, Adapter. | [ ] |
-| CustomerDetailActivity | Detail, Fotos, Intervalle, viele Callbacks. | [ ] |
-| TourPlannerActivity | Tourenplaner, Bottom-Sheet, Gesten, Kartenliste. | [ ] |
-| ErledigungBottomSheetDialogFragment | Bottom-Sheet → kann als Compose-BottomSheet neu gebaut werden. | [ ] |
+| MainActivity | Zentrale Navigation; kann zuletzt oder als Compose-Insel (nur Inhalt) migriert werden. | [x] |
+| CustomerManagerActivity | Tabs, Suche, RecyclerView, Adapter. | [x] |
+| CustomerDetailActivity | Detail, Fotos, Intervalle, viele Callbacks. | [x] |
+| TourPlannerActivity | Tourenplaner, Bottom-Sheet, Gesten, Kartenliste. | [x] |
+| ErledigungBottomSheetDialogFragment | Bottom-Sheet → kann als Compose-BottomSheet neu gebaut werden. | [x] |
 
 ---
 
@@ -87,4 +87,4 @@ Jede **neue** UI (neuer Screen, neues Dialog, neues Bottom-Sheet, neuer Abschnit
 
 ---
 
-*Letzte Aktualisierung: Phase 2 – TerminRegelErstellenActivity auf Compose umgestellt (TerminRegelErstellenViewModel, TerminRegelErstellenScreen.kt, activity_termin_regel_erstellen.xml entfernt). Nächster Schritt: TerminRegelErstellen testen oder Phase 2 abschließen (LoginActivity, MapViewActivity).*
+*Letzte Aktualisierung: Kunden-Übersicht-Dialog im Tourenplaner auf Compose umgestellt (AlertDialog in TourPlannerScreen mit overviewCustomer/overviewRegelNamen). dialog_customer_overview.xml entfernt. Keine weiteren Screens zur Migration offen (LoginActivity ohne sichtbare UI).*

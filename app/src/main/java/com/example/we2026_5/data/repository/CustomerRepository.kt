@@ -27,7 +27,8 @@ class CustomerRepository(
             override fun onDataChange(snapshot: DataSnapshot) {
                 val customers = mutableListOf<Customer>()
                 snapshot.children.forEach { child ->
-                    val customer = child.getValue(Customer::class.java)
+                    val key = child.key ?: return@forEach
+                    val customer = child.getValue(Customer::class.java)?.copy(id = key)
                     customer?.let { customers.add(it) }
                 }
                 // Sortieren nach Name
@@ -52,7 +53,8 @@ class CustomerRepository(
         val ref = customersRef.child(customerId)
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                trySend(snapshot.getValue(Customer::class.java))
+                val customer = snapshot.getValue(Customer::class.java)?.copy(id = customerId)
+                trySend(customer)
             }
             override fun onCancelled(error: DatabaseError) {
                 close(Exception(error.message))
@@ -69,7 +71,8 @@ class CustomerRepository(
         val snapshot = customersRef.get().await()
         val customers = mutableListOf<Customer>()
         snapshot.children.forEach { child ->
-            val customer = child.getValue(Customer::class.java)
+            val key = child.key ?: return@forEach
+            val customer = child.getValue(Customer::class.java)?.copy(id = key)
             customer?.let { customers.add(it) }
         }
         // Sortieren nach Name
@@ -81,7 +84,7 @@ class CustomerRepository(
      */
     override suspend fun getCustomerById(customerId: String): Customer? {
         val snapshot = customersRef.child(customerId).get().await()
-        return snapshot.getValue(Customer::class.java)
+        return snapshot.getValue(Customer::class.java)?.copy(id = customerId)
     }
     
     /**

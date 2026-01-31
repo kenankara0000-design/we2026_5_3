@@ -1,129 +1,101 @@
 package com.example.we2026_5
 
 import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.lifecycleScope
 import com.example.we2026_5.data.repository.CustomerRepository
-import com.example.we2026_5.databinding.ActivityAddCustomerBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.example.we2026_5.ui.addcustomer.AddCustomerScreen
+import com.example.we2026_5.ui.addcustomer.AddCustomerState
+import com.example.we2026_5.ui.addcustomer.AddCustomerViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.*
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.util.UUID
 
 class AddCustomerActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityAddCustomerBinding
+    private val viewModel: AddCustomerViewModel by viewModel()
     private val repository: CustomerRepository by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityAddCustomerBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        val initialName = intent.getStringExtra("CUSTOMER_NAME").orEmpty()
 
-        // Gesuchter Name aus Intent übernehmen (falls vorhanden)
-        val customerName = intent.getStringExtra("CUSTOMER_NAME")
-        if (!customerName.isNullOrEmpty()) {
-            binding.etName.setText(customerName)
-        }
-
-
-        binding.btnBack.setOnClickListener { finish() }
-
-        binding.btnSaveCustomer.setOnClickListener {
-            val name = binding.etName.text.toString().trim()
-            if (name.isEmpty()) {
-                binding.etName.error = getString(R.string.validation_name_missing)
-                return@setOnClickListener
-            }
-
-            // Adresse und Telefon sind optional - keine Validierung
-            val adresse = binding.etAdresse.text.toString().trim()
-            val telefon = binding.etTelefon.text.toString().trim()
-
-            // Kunden-Art bestimmen
-            val kundenArt = when {
-                binding.rbPrivat.isChecked -> "Privat"
-                binding.rbListe.isChecked -> "Liste"
-                else -> "Gewerblich"
-            }
-            
-            // Button sofort deaktivieren und visuelles Feedback geben
-            binding.btnSaveCustomer.isEnabled = false
-            binding.btnSaveCustomer.text = getString(R.string.save_in_progress)
-            binding.btnSaveCustomer.alpha = 0.6f
-            
-            CoroutineScope(Dispatchers.Main).launch {
-                val customerId = java.util.UUID.randomUUID().toString()
-                
-                // Kunden werden ohne Intervalle erstellt - Intervalle werden später über Regeln hinzugefügt
-                val customer = Customer(
-                    id = customerId,
-                    name = name,
-                    adresse = adresse,
-                    telefon = telefon,
-                    notizen = binding.etNotizen.text.toString().trim(),
-                    // Kunden-Art
-                    kundenArt = kundenArt,
-                    listeId = "", // Keine Liste-Zuordnung mehr
-                    // Intervalle werden später über "Termin Anlegen" hinzugefügt
-                    intervalle = emptyList(),
-                    // ALTE STRUKTUR: Für Rückwärtskompatibilität (alle auf 0/false gesetzt)
-                    abholungDatum = 0,
-                    auslieferungDatum = 0,
-                    wiederholen = false,
-                    intervallTage = 0,
-                    letzterTermin = 0,
-                    wochentag = 0,
-                    istImUrlaub = false
-                )
-
-                // Speichern mit Retry-Logik
-                var success: Boolean? = null
-                try {
-                    success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                        operation = { 
-                            repository.saveCustomer(customer)
-                        },
-                        context = this@AddCustomerActivity,
-                        errorMessage = getString(R.string.error_save_generic),
-                        maxRetries = 3
-                    )
-                } catch (e: Exception) {
-                    android.util.Log.e("AddCustomer", "Exception in save operation", e)
-                    success = null
+        setContent {
+            MaterialTheme {
+                val state by viewModel.state.observeAsState(initial = AddCustomerState())
+                LaunchedEffect(Unit) {
+                    if (initialName.isNotEmpty()) viewModel.setInitialName(initialName)
                 }
-                
-                // Prüfen ob erfolgreich
-                val saveSuccessful = (success == true)
-                
-                // UI-Update auf Main-Thread
-                runOnUiThread {
-                    if (saveSuccessful) {
-                        // Erfolg: Button-Text ändern und dann Activity schließen
-                        binding.btnSaveCustomer.text = getString(R.string.toast_saved_success)
-                        binding.btnSaveCustomer.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                            resources.getColor(com.example.we2026_5.R.color.status_done, theme)
-                        )
-                        binding.btnSaveCustomer.alpha = 1.0f
-                        
-                        // Kurz warten, damit der Benutzer das Feedback sieht, dann Activity schließen
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            if (!isFinishing) {
-                                finish()
-                            }
-                        }, 800)
-                    } else {
-                        // Fehler: Button wieder aktivieren
-                        binding.btnSaveCustomer.isEnabled = true
-                        binding.btnSaveCustomer.text = getString(R.string.btn_save)
-                        binding.btnSaveCustomer.alpha = 1.0f
-                        // Toast wird bereits von FirebaseRetryHelper angezeigt (falls Fehler)
+                LaunchedEffect(state.success) {
+                    if (state.success) {
+                        delay(800)
+                        if (!isFinishing) finish()
                     }
                 }
+                LaunchedEffect(state.errorMessage) {
+                    state.errorMessage?.let { msg ->
+                        Toast.makeText(this@AddCustomerActivity, msg, Toast.LENGTH_SHORT).show()
+                        viewModel.setError(null)
+                    }
+                }
+                AddCustomerScreen(
+                    state = state,
+                    onBack = { finish() },
+                    onNameChange = { viewModel.setName(it) },
+                    onAdresseChange = { viewModel.setAdresse(it) },
+                    onTelefonChange = { viewModel.setTelefon(it) },
+                    onNotizenChange = { viewModel.setNotizen(it) },
+                    onKundenArtChange = { viewModel.setKundenArt(it) },
+                    onSave = { performSave(state) }
+                )
             }
         }
     }
 
-    // showDatumPicker Funktion entfernt - jetzt in IntervallManager
-    
+    private fun performSave(state: AddCustomerState) {
+        val name = state.name.trim()
+        if (name.isEmpty()) {
+            viewModel.setError(getString(R.string.validation_name_missing))
+            return
+        }
+        viewModel.setSaving(true)
+        viewModel.setError(null)
+        val customer = Customer(
+            id = UUID.randomUUID().toString(),
+            name = name,
+            adresse = state.adresse.trim(),
+            telefon = state.telefon.trim(),
+            notizen = state.notizen.trim(),
+            kundenArt = state.kundenArt,
+            listeId = "",
+            intervalle = emptyList(),
+            abholungDatum = 0,
+            auslieferungDatum = 0,
+            wiederholen = false,
+            intervallTage = 0,
+            letzterTermin = 0,
+            wochentag = 0,
+            istImUrlaub = false
+        )
+        lifecycleScope.launch {
+            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
+                operation = { repository.saveCustomer(customer) },
+                context = this@AddCustomerActivity,
+                errorMessage = getString(R.string.error_save_generic),
+                maxRetries = 3
+            )
+            viewModel.setSaving(false)
+            if (success == true) {
+                viewModel.setSuccess()
+            }
+        }
+    }
 }

@@ -190,7 +190,7 @@ class ListeBearbeitenCallbacks(
     }
     
     /**
-     * Wendet eine Regel auf die Liste an
+     * Wendet eine Regel auf die Liste an (mit RecyclerView-Adapter für XML-UI).
      */
     fun wendeRegelAn(
         regel: TerminRegel,
@@ -199,43 +199,47 @@ class ListeBearbeitenCallbacks(
         intervallAdapter: com.example.we2026_5.ListeIntervallAdapter,
         onSuccess: (KundenListe) -> Unit
     ) {
+        wendeRegelAnInternal(regel, liste) { updatedListe ->
+            intervalle.clear()
+            intervalle.addAll(updatedListe.intervalle)
+            intervallAdapter.updateIntervalle(updatedListe.intervalle)
+            onSuccess(updatedListe)
+        }
+    }
+
+    /**
+     * Wendet eine Regel auf die Liste an (ohne Adapter, z. B. für Compose).
+     */
+    fun wendeRegelAn(
+        regel: TerminRegel,
+        liste: KundenListe,
+        onSuccess: (KundenListe) -> Unit
+    ) {
+        wendeRegelAnInternal(regel, liste, onSuccess)
+    }
+
+    private fun wendeRegelAnInternal(
+        regel: TerminRegel,
+        liste: KundenListe,
+        onComplete: (KundenListe) -> Unit
+    ) {
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                // Regel auf Liste anwenden
                 val neuesIntervall = TerminRegelManager.wendeRegelAufListeAn(regel, liste)
-                
-                // Intervall zur Liste hinzufügen
-                val neueIntervalle = liste.intervalle.toMutableList()
-                neueIntervalle.add(neuesIntervall)
-                
-                // Liste aktualisieren
-                val intervalleMap = neueIntervalle.mapIndexed { index, intervall ->
+                val neueIntervalle = liste.intervalle.toMutableList().apply { add(neuesIntervall) }
+                val intervalleMap = neueIntervalle.map {
                     mapOf(
-                        "abholungDatum" to intervall.abholungDatum,
-                        "auslieferungDatum" to intervall.auslieferungDatum,
-                        "wiederholen" to intervall.wiederholen,
-                        "intervallTage" to intervall.intervallTage,
-                        "intervallAnzahl" to intervall.intervallAnzahl
+                        "abholungDatum" to it.abholungDatum,
+                        "auslieferungDatum" to it.auslieferungDatum,
+                        "wiederholen" to it.wiederholen,
+                        "intervallTage" to it.intervallTage,
+                        "intervallAnzahl" to it.intervallAnzahl
                     )
                 }
-                
-                val updates = mapOf(
-                    "intervalle" to intervalleMap
-                )
-                
-                listeRepository.updateListe(liste.id, updates)
-                
-                // Verwendungsanzahl erhöhen
+                listeRepository.updateListe(liste.id, mapOf("intervalle" to intervalleMap))
                 regelRepository.incrementVerwendungsanzahl(regel.id)
-                
-                // Lokale Liste aktualisieren
-                val updatedListe = liste.copy(intervalle = neueIntervalle)
-                intervalle.clear()
-                intervalle.addAll(neueIntervalle)
-                intervallAdapter.updateIntervalle(intervalle.toList())
-                
                 Toast.makeText(activity, "Regel '${regel.name}' angewendet", Toast.LENGTH_SHORT).show()
-                onSuccess(updatedListe)
+                onComplete(liste.copy(intervalle = neueIntervalle))
             } catch (e: Exception) {
                 Toast.makeText(activity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
             }

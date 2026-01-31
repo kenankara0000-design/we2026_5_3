@@ -8,6 +8,11 @@ import com.example.we2026_5.ui.statistics.StatisticsViewModel
 import com.example.we2026_5.ui.liste.ListeErstellenViewModel
 import com.example.we2026_5.ui.customermanager.CustomerManagerViewModel
 import com.example.we2026_5.ui.terminregel.TerminRegelErstellenViewModel
+import com.example.we2026_5.ui.terminregel.TerminRegelManagerViewModel
+import com.example.we2026_5.ui.addcustomer.AddCustomerViewModel
+import com.example.we2026_5.ui.kundenlisten.KundenListenViewModel
+import com.example.we2026_5.ui.listebearbeiten.ListeBearbeitenViewModel
+import com.example.we2026_5.ui.mapview.MapViewViewModel
 import com.example.we2026_5.ui.detail.CustomerDetailViewModel
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -38,5 +43,10 @@ val appModule = module {
     viewModel { CustomerManagerViewModel(get()) }
     viewModel { TourPlannerViewModel(get(), get()) }
     viewModel { TerminRegelErstellenViewModel(get<TerminRegelRepository>(), get<CustomerRepository>()) }
+    viewModel { TerminRegelManagerViewModel(get<TerminRegelRepository>()) }
+    viewModel { AddCustomerViewModel() }
+    viewModel { KundenListenViewModel(get(), get<CustomerRepository>()) }
+    viewModel { ListeBearbeitenViewModel(get(), get<CustomerRepository>()) }
+    viewModel { MapViewViewModel(get<CustomerRepository>(), get<KundenListeRepository>()) }
     viewModel { CustomerDetailViewModel(get()) }
 }

@@ -9,6 +9,8 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.util.Result
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -28,7 +30,8 @@ class CustomerManagerViewModel(
     
     // StateFlow für ausgewählten Tab (0=Gewerblich, 1=Privat, 2=Liste)
     private val selectedTabFlow = MutableStateFlow(0)
-    
+    val selectedTab: StateFlow<Int> = selectedTabFlow.asStateFlow()
+
     // Kombiniere customers, searchQuery und selectedTab für gefilterte Liste
     val filteredCustomers: LiveData<List<Customer>> = combine(
         customersFlow,
@@ -62,6 +65,28 @@ class CustomerManagerViewModel(
     
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> = _error
+
+    // Bulk-Auswahl (für Compose-Screen)
+    private val _isBulkMode = MutableStateFlow(false)
+    val isBulkMode: StateFlow<Boolean> = _isBulkMode.asStateFlow()
+
+    private val _selectedIds = MutableStateFlow<Set<String>>(emptySet())
+    val selectedIds: StateFlow<Set<String>> = _selectedIds.asStateFlow()
+
+    fun setBulkMode(enabled: Boolean) {
+        _isBulkMode.value = enabled
+        if (!enabled) _selectedIds.value = emptySet()
+    }
+
+    fun toggleSelection(customerId: String) {
+        _selectedIds.value = _selectedIds.value.toMutableSet().apply {
+            if (customerId in this) remove(customerId) else add(customerId)
+        }
+    }
+
+    fun clearSelection() {
+        _selectedIds.value = emptySet()
+    }
     
     // Diese Funktion wird nicht mehr benötigt, da Flow automatisch aktualisiert
     // Behalten für Kompatibilität, aber macht nichts mehr
