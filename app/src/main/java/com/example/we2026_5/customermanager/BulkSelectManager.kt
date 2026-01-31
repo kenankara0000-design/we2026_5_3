@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerAdapter
+import com.example.we2026_5.R
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.databinding.ActivityCustomerManagerBinding
 import kotlinx.coroutines.CoroutineScope
@@ -42,7 +43,7 @@ class BulkSelectManager(
         
         if (hasSelection) {
             val count = adapter.getSelectedCustomers().size
-            binding.tvSelectedCount.text = "$count ausgewählt"
+            binding.tvSelectedCount.text = activity.getString(R.string.cm_selected_count, count)
         }
     }
     

@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.view.View
 import androidx.core.content.ContextCompat
+import androidx.cardview.widget.CardView
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerAdapter
 import com.example.we2026_5.R
@@ -14,6 +15,7 @@ import com.example.we2026_5.util.TerminFilterUtils
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.TerminInfo
 import com.example.we2026_5.ui.CustomerTypeButtonHelper
+import com.example.we2026_5.tourplanner.ErledigungSheetState
 import java.util.concurrent.TimeUnit
 
 /**
@@ -26,11 +28,7 @@ class CustomerViewHolderBinder(
     private val pressedButtons: MutableMap<String, String>,
     private val selectedCustomers: MutableSet<String>,
     private val isMultiSelectMode: Boolean,
-    private val getAbholungDatum: ((Customer) -> Long)?,
-    private val getAuslieferungDatum: ((Customer) -> Long)?,
-    private val getNaechstesTourDatum: ((Customer) -> Long)?,
-    private val getTermineFuerKunde: ((Customer, Long, Int) -> List<com.example.we2026_5.util.TerminInfo>)?,
-    private val onTerminClick: ((Customer, Long) -> Unit)?,
+    private val callbacksConfig: CustomerAdapterCallbacksConfig,
     private val onClick: (Customer) -> Unit,
     private val dialogHelper: CustomerDialogHelper,
     private val onAbholung: (Customer) -> Unit,
@@ -41,7 +39,7 @@ class CustomerViewHolderBinder(
 ) {
 
     private val getAlleTermineLambda: (Customer, Long, Int) -> List<TerminInfo> = { customer, startDatum, tageVoraus ->
-        getTermineFuerKunde?.invoke(customer, startDatum, tageVoraus)
+        callbacksConfig.getTermineFuerKunde?.invoke(customer, startDatum, tageVoraus)
             ?: TerminBerechnungUtils.berechneAlleTermineFuerKunde(customer, null, startDatum, tageVoraus)
     }
 
@@ -49,17 +47,17 @@ class CustomerViewHolderBinder(
         context = context,
         displayedDateMillis = displayedDateMillis,
         pressedButtons = pressedButtons,
-        getAbholungDatum = getAbholungDatum,
-        getAuslieferungDatum = getAuslieferungDatum,
+        getAbholungDatum = callbacksConfig.getAbholungDatum,
+        getAuslieferungDatum = callbacksConfig.getAuslieferungDatum,
         getAlleTermine = getAlleTermineLambda
     )
 
     /** Termine für Kunde (nutzt Listen-Termin-Regel bei Listen-Kunden). */
     private fun getAlleTermine(customer: Customer, startDatum: Long, tageVoraus: Int): List<com.example.we2026_5.util.TerminInfo> =
-        getTermineFuerKunde?.invoke(customer, startDatum, tageVoraus)
+        callbacksConfig.getTermineFuerKunde?.invoke(customer, startDatum, tageVoraus)
             ?: TerminBerechnungUtils.berechneAlleTermineFuerKunde(customer, null, startDatum, tageVoraus)
     
-    fun bind(holder: CustomerViewHolder, customer: Customer) {
+    fun bind(holder: CustomerViewHolder, customer: Customer, isOverdue: Boolean = false) {
         setupBasicInfo(holder, customer)
         setupCustomerTypeButton(holder, customer)
         setupNavigation(holder, customer)
@@ -68,22 +66,50 @@ class CustomerViewHolderBinder(
         setupClickListeners(holder, customer)
         applyMultiSelectStyles(holder, customer)
         
-        // Status-Styles ZULETZT anwenden (nach MultiSelect, damit sie nicht überschrieben werden)
-        if (displayedDateMillis != null) {
-            applyStatusStyles(holder, customer)
-        } else {
-            holder.binding.tvStatusLabel.visibility = View.GONE
+        // Überfällig-Design NACH resetStyles/applyMultiSelectStyles, damit es nicht überschrieben wird
+        if (isOverdue) {
+            (holder.binding.root as? CardView)?.setCardBackgroundColor(
+                ContextCompat.getColor(context, R.color.customer_overdue_bg)
+            )
+            holder.binding.tvItemName.setTextColor(ContextCompat.getColor(context, R.color.status_overdue))
+            holder.binding.tvItemName.setTypeface(null, Typeface.BOLD)
         }
-        if (displayedDateMillis != null) {
-            val dateMillis = displayedDateMillis
-            val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-            val viewDateStart = TerminBerechnungUtils.getStartOfDay(dateMillis)
-            CompletionHintsHelper.apply(holder.binding, customer, viewDateStart, heuteStart)
+        
+        // Sheet-Modus (Tourenplaner): nur Aktionen-Button + Status-Badge; statusBlock bleibt ausgeblendet
+        if (displayedDateMillis != null && callbacksConfig.onAktionenClick != null) {
+            holder.binding.buttonContainer.visibility = View.GONE
+            holder.binding.btnAktionen.visibility = View.VISIBLE
+            val state = buttonVisibilityHelper.getSheetState(customer)
+            if (state != null) {
+                holder.binding.tvStatusBadge.text = state.statusBadgeText
+                holder.binding.tvStatusBadge.visibility = if (state.statusBadgeText.isNotEmpty()) View.VISIBLE else View.GONE
+                holder.binding.tvStatusBadge.setBackgroundResource(
+                    if (state.isOverdueBadge) R.drawable.status_badge_overdue else R.drawable.status_badge_today
+                )
+                holder.binding.btnAktionen.setOnClickListener { callbacksConfig.onAktionenClick?.invoke(customer, state) }
+            } else {
+                holder.binding.tvStatusBadge.visibility = View.GONE
+                holder.binding.btnAktionen.setOnClickListener(null)
+            }
+            holder.binding.tvNextTour.visibility = View.GONE
+            holder.binding.tvItemNotizen.visibility = View.GONE
         } else {
-            holder.binding.tvErledigungsHinweise.visibility = View.GONE
-            holder.binding.tvUeberfaelligIndikator.visibility = View.GONE
+            holder.binding.btnAktionen.visibility = View.GONE
+            holder.binding.buttonContainer.visibility = View.VISIBLE
+            holder.binding.tvStatusBadge.visibility = View.GONE
+            if (displayedDateMillis != null) {
+                applyStatusStyles(holder, customer)
+                val dateMillis = displayedDateMillis
+                val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+                val viewDateStart = TerminBerechnungUtils.getStartOfDay(dateMillis)
+                CompletionHintsHelper.apply(holder.binding, customer, viewDateStart, heuteStart)
+            } else {
+                holder.binding.tvStatusLabel.visibility = View.GONE
+                holder.binding.tvErledigungsHinweise.visibility = View.GONE
+                holder.binding.tvUeberfaelligIndikator.visibility = View.GONE
+            }
+            buttonVisibilityHelper.apply(holder.binding, customer)
         }
-        buttonVisibilityHelper.apply(holder.binding, customer)
     }
     
     private fun setupBasicInfo(holder: CustomerViewHolder, customer: Customer) {
@@ -92,7 +118,7 @@ class CustomerViewHolderBinder(
         
         // Telefon anzeigen (wenn vorhanden)
         if (customer.telefon.isNotBlank()) {
-            holder.binding.tvItemTelefon.text = "📞 ${customer.telefon}"
+            holder.binding.tvItemTelefon.text = context.getString(R.string.label_phone_with_number, customer.telefon)
             holder.binding.tvItemTelefon.visibility = View.VISIBLE
         } else {
             holder.binding.tvItemTelefon.visibility = View.GONE
@@ -100,20 +126,20 @@ class CustomerViewHolderBinder(
         
         // Notizen anzeigen (wenn vorhanden)
         if (customer.notizen.isNotBlank()) {
-            holder.binding.tvItemNotizen.text = "📝 ${customer.notizen}"
+            holder.binding.tvItemNotizen.text = context.getString(R.string.label_notes_with_prefix, customer.notizen)
             holder.binding.tvItemNotizen.visibility = View.VISIBLE
         } else {
             holder.binding.tvItemNotizen.visibility = View.GONE
         }
         
         // Nächstes Tour-Datum berechnen und anzeigen (Listen-Kunden: Termin-Regel der Liste)
-        val naechsteTour = getNaechstesTourDatum?.invoke(customer) ?: customer.getFaelligAm()
+        val naechsteTour = callbacksConfig.getNaechstesTourDatum?.invoke(customer) ?: customer.getFaelligAm()
         if (naechsteTour > 0) {
             val dateStr = DateFormatter.formatDate(naechsteTour)
-            holder.binding.tvNextTour.text = "Nächste Tour: $dateStr"
+            holder.binding.tvNextTour.text = context.getString(R.string.next_tour_format, dateStr)
             holder.binding.tvNextTour.visibility = View.VISIBLE
         } else {
-            holder.binding.tvNextTour.text = "Nächste Tour: Kein Termin"
+            holder.binding.tvNextTour.text = context.getString(R.string.next_tour_none)
             holder.binding.tvNextTour.visibility = View.VISIBLE
         }
     }
@@ -128,8 +154,15 @@ class CustomerViewHolderBinder(
     }
     
     private fun setupClickListeners(holder: CustomerViewHolder, customer: Customer) {
-        // Button-Handler - nur setzen wenn im TourPlanner (displayedDateMillis != null)
-        displayedDateMillis?.let { dateMillis ->
+        // Im Sheet-Modus: Aktionen-Button wird in bind() gesetzt; alte Buttons sind ausgeblendet
+        if (displayedDateMillis != null && callbacksConfig.onAktionenClick != null) {
+            holder.binding.btnAbholung.setOnClickListener(null)
+            holder.binding.btnAuslieferung.setOnClickListener(null)
+            holder.binding.btnKw.setOnClickListener(null)
+            holder.binding.btnVerschieben.setOnClickListener(null)
+            holder.binding.btnUrlaub.setOnClickListener(null)
+            holder.binding.btnRueckgaengig.setOnClickListener(null)
+        } else displayedDateMillis?.let { dateMillis ->
             val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
             val viewDateStart = TerminBerechnungUtils.getStartOfDay(dateMillis)
             val istHeute = viewDateStart == heuteStart
@@ -191,7 +224,7 @@ class CustomerViewHolderBinder(
                     } else {
                         customer.getFaelligAm()
                     }
-                    onTerminClick?.invoke(customer, terminDatum)
+                    callbacksConfig.onTerminClick?.invoke(customer, terminDatum)
                 }
             }
         } else {
@@ -355,7 +388,7 @@ class CustomerViewHolderBinder(
         
         when {
             sollAlsErledigtAnzeigen -> {
-                holder.binding.tvStatusLabel.text = "ERLEDIGT"
+                holder.binding.tvStatusLabel.text = context.getString(R.string.status_erledigt)
                 holder.binding.tvStatusLabel.setBackgroundResource(R.drawable.status_badge_done)
                 holder.binding.tvStatusLabel.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white))
                 holder.binding.itemContainer.setBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.customer_done_bg))
@@ -369,7 +402,7 @@ class CustomerViewHolderBinder(
                 cardView?.setCardBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.customer_overdue_bg))
             }
             customer.verschobenAufDatum > 0 -> {
-                holder.binding.tvStatusLabel.text = "VERSCHOBEN"
+                holder.binding.tvStatusLabel.text = context.getString(R.string.status_verschoben)
                 holder.binding.tvStatusLabel.setBackgroundResource(R.drawable.status_badge_verschoben)
                 holder.binding.tvStatusLabel.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white))
                 cardView?.setCardBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.surface_white))

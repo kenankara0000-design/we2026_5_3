@@ -2,6 +2,7 @@ package com.example.we2026_5.tourplanner
 
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListeIntervall
+import com.example.we2026_5.util.TerminBerechnungUtils
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -13,16 +14,9 @@ class TourDataCategorizer {
     
     /**
      * Berechnet den Start des Tages (00:00:00) für einen Timestamp.
+     * Delegiert an TerminBerechnungUtils (Single Source of Truth).
      */
-    fun getStartOfDay(ts: Long): Long {
-        return Calendar.getInstance().apply {
-            timeInMillis = ts
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-    }
+    fun getStartOfDay(ts: Long): Long = TerminBerechnungUtils.getStartOfDay(ts)
     
     /**
      * Berechnet das nächste Datum für eine Liste basierend auf ihren Intervallen.

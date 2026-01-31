@@ -1,0 +1,24 @@
+---
+description: Bei Umsetzung aus dem Tiefenanalyse-Bericht: Zukunftsplan = in ZUKUNFTSPLAENE.md eintragen, nicht bauen
+globs: BERICHT_TIEFENANALYSE_APP_2026.md,ZUKUNFTSPLAENE.md
+alwaysApply: false
+---
+
+# Zukunftsplan – TourPlaner 2026
+
+## Kontext
+
+Empfehlungen aus **BERICHT_TIEFENANALYSE_APP_2026.md** werden schrittweise abgearbeitet. Für **jeden** Punkt wird gefragt: umsetzen oder Zukunftsplan?
+
+## Regel
+
+- **Antwort „Ja“ / „bauen“:** Den Punkt umsetzen (Code ändern).
+- **Antwort „Zukunftsplan“ / „Zukunft“ / „später“:** Den Punkt **nicht** umsetzen. Stattdessen:
+  1. In **ZUKUNFTSPLAENE.md** unter „Ideen & Vorschläge“ einen Eintrag anlegen (Titel + kurze Beschreibung, optional Priorität aus dem Bericht).
+  2. Keinen Code für diesen Punkt ändern.
+
+## ZUKUNFTSPLAENE.md
+
+- Neue Ideen immer unter der bestehenden Sektion „Ideen & Vorschläge“ eintragen.
+- Format: `- **Titel:** Kurzbeschreibung. (Quelle: Abschnitt X.Y im Bericht, optional.)`
+- Nichts aus ZUKUNFTSPLAENE.md ohne ausdrückliche Freigabe des Nutzers umsetzen.

@@ -57,14 +57,14 @@ class ListeIntervallAdapter(
             if (intervall.abholungDatum > 0) {
                 binding.tvAbholungDatum.text = com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(intervall.abholungDatum)
             } else {
-                binding.tvAbholungDatum.text = "Nicht gesetzt"
+                binding.tvAbholungDatum.text = binding.root.context.getString(com.example.we2026_5.R.string.label_not_set)
             }
 
             // Auslieferungsdatum
             if (intervall.auslieferungDatum > 0) {
                 binding.tvAuslieferungDatum.text = com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(intervall.auslieferungDatum)
             } else {
-                binding.tvAuslieferungDatum.text = "Nicht gesetzt"
+                binding.tvAuslieferungDatum.text = binding.root.context.getString(com.example.we2026_5.R.string.label_not_set)
             }
 
             // Wiederholen-Switch

@@ -21,14 +21,14 @@
             android:layout_centerVertical="true"
             android:background="@drawable/button_icon_pressed"
             android:src="@drawable/ic_arrow_back"
-            android:contentDescription="Zurück"
+            android:contentDescription="@string/content_desc_back"
             android:padding="12dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Kunden Liste"
+            android:text="@string/menu_kunden"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -57,7 +57,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Offline"
+                android:text="@string/main_offline"
                 android:textColor="#FFEB3B"
                 android:textSize="12sp"
                 android:textStyle="bold"/>
@@ -85,7 +85,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:text="Auswählen"
+            android:text="@string/cm_btn_select"
             android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:textStyle="normal"
@@ -100,7 +100,7 @@
             android:paddingTop="12dp"
             android:paddingBottom="12dp"
             android:minHeight="48dp"
-            android:contentDescription="Mehrfachauswahl" />
+            android:contentDescription="@string/content_desc_multiselect" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnExport"
@@ -108,7 +108,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:text="Exportieren"
+            android:text="@string/content_desc_export"
             android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:textStyle="normal"
@@ -123,14 +123,14 @@
             android:paddingTop="12dp"
             android:paddingBottom="12dp"
             android:minHeight="48dp"
-            android:contentDescription="Exportieren" />
+            android:contentDescription="@string/content_desc_export" />
         
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btnNewCustomer"
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:src="@android:drawable/ic_input_add"
-            android:contentDescription="Neuen Kunden erstellen"
+            android:contentDescription="@string/content_desc_new_customer"
             app:tint="#FFFFFF"
             app:backgroundTint="@color/button_blue"
             app:elevation="6dp"
@@ -171,13 +171,14 @@
                 android:id="@+id/etSearch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Kunden suchen..."
+                android:hint="@string/hint_search_customer"
                 android:drawableStart="@android:drawable/ic_menu_search"
                 android:padding="12dp"
                 android:background="@color/surface_white"
                 android:layout_marginBottom="4dp"/>
 
-            <FrameLayout
+            <com.example.we2026_5.ui.customermanager.TabSwipeFrameLayout
+                android:id="@+id/tabSwipeContainer"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1">
@@ -206,7 +207,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Keine Kunden gefunden"
+                    android:text="@string/cm_empty_title"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_secondary"
@@ -215,7 +216,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Erstellen Sie einen neuen Kunden mit dem + Button."
+                    android:text="@string/cm_empty_subtitle"
                     android:textSize="14sp"
                     android:textColor="@color/text_secondary"
                     android:gravity="center"/>
@@ -247,7 +248,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Fehler beim Laden"
+                    android:text="@string/tour_error_title"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/status_overdue"
@@ -267,11 +268,11 @@
                     android:id="@+id/btnRetry"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Erneut versuchen"
+                    android:text="@string/tour_retry"
                     android:background="@drawable/button_bearbeiten_glossy"
                     android:textColor="#FFFFFF"/>
             </LinearLayout>
-        </FrameLayout>
+        </com.example.we2026_5.ui.customermanager.TabSwipeFrameLayout>
 
         </LinearLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
@@ -294,7 +295,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="0 ausgewählt"
+            android:text="@string/cm_selected_count_initial"
             android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:textStyle="bold"/>
@@ -303,7 +304,7 @@
             android:id="@+id/btnBulkDone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Als erledigt markieren"
+            android:text="@string/cm_mark_done"
             android:textSize="12sp"
             android:background="@drawable/button_speichern_glossy"
             android:textColor="#FFFFFF"
@@ -313,7 +314,7 @@
             android:id="@+id/btnBulkCancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Abbrechen"
+            android:text="@string/btn_cancel"
             android:textSize="12sp"
             android:background="@drawable/button_u_glossy"
             android:textColor="#FFFFFF"/>

@@ -17,7 +17,7 @@
             android:id="@+id/tvDayHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Montag"
+            android:text="@string/label_weekday_monday"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/primary_blue"

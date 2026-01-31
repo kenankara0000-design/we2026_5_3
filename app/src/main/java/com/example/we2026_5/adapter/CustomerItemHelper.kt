@@ -47,7 +47,12 @@ class CustomerItemHelper(
         // Header sollte immer einen Titel haben (wird nicht hinzugefügt wenn leer)
         holder.binding.cardSectionHeader.visibility = View.VISIBLE
         holder.binding.tvSectionTitle.text = header.title
-        holder.binding.tvSectionCount.text = "${header.erledigtCount}/${header.count}"
+        // Überfällig: „(n)“; ERLEDIGT: „erledigt/count“
+        holder.binding.tvSectionCount.text = when (header.sectionType) {
+            SectionType.OVERDUE -> "(${header.count})"
+            SectionType.DONE -> "${header.erledigtCount}/${header.count}"
+            else -> "${header.erledigtCount}/${header.count}"
+        }
         
         val isExpanded = expandedSections.contains(header.sectionType)
         // Plus/Minus Symbol: + (eingeklappt) / - (ausgeklappt)
@@ -119,7 +124,7 @@ class CustomerItemHelper(
         header: ListItem.ListeHeader
     ) {
         holder.binding.tvSectionTitle.text = header.listeName
-        holder.binding.tvSectionCount.text = "${header.erledigtCount}/${header.kundenCount}"
+        holder.binding.tvSectionCount.text = context.getString(com.example.we2026_5.R.string.label_section_count_format, header.erledigtCount, header.kundenCount)
         
         val isExpanded = expandedListen.contains(header.listeId)
         // Plus/Minus Symbol: + (eingeklappt) / - (ausgeklappt)

@@ -70,7 +70,7 @@ class IntervallViewAdapter(
                                 when {
                                     text.contains("Abholungsdatum") -> {
                                         // Ändere Label zu "Regel:"
-                                        subChild.text = "Regel:"
+                                        subChild.text = subChild.context.getString(com.example.we2026_5.R.string.intervall_regel_label)
                                         subChild.visibility = View.VISIBLE
                                     }
                                     text.contains("Auslieferungsdatum") -> {
@@ -114,13 +114,13 @@ class IntervallViewAdapter(
                         } else {
                             // Regel nicht gefunden - Fallback
                             binding.tvAbholungDatum.visibility = View.VISIBLE
-                            binding.tvAbholungDatum.text = "Regel nicht gefunden"
+                            binding.tvAbholungDatum.text = binding.root.context.getString(com.example.we2026_5.R.string.intervall_rule_not_found)
                             binding.tvAbholungDatum.isClickable = false
                             binding.tvAbholungDatum.setTextColor(binding.root.context.getColor(com.example.we2026_5.R.color.text_secondary))
                         }
                     } catch (e: Exception) {
                         binding.tvAbholungDatum.visibility = View.VISIBLE
-                        binding.tvAbholungDatum.text = "Fehler beim Laden"
+                        binding.tvAbholungDatum.text = binding.root.context.getString(com.example.we2026_5.R.string.stat_fehler_laden)
                         binding.tvAbholungDatum.isClickable = false
                         binding.tvAbholungDatum.setTextColor(binding.root.context.getColor(com.example.we2026_5.R.color.text_secondary))
                     }
@@ -128,7 +128,7 @@ class IntervallViewAdapter(
             } else {
                 // Keine Regel-ID - Fallback: "Manuell erstellt"
                 binding.tvAbholungDatum.visibility = View.VISIBLE
-                binding.tvAbholungDatum.text = "Manuell erstellt"
+                binding.tvAbholungDatum.text = binding.root.context.getString(com.example.we2026_5.R.string.intervall_manual_created)
                 binding.tvAbholungDatum.isClickable = false
                 binding.tvAbholungDatum.setTextColor(binding.root.context.getColor(com.example.we2026_5.R.color.text_secondary))
             }

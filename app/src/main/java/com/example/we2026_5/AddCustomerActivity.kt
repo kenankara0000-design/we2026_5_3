@@ -32,7 +32,7 @@ class AddCustomerActivity : AppCompatActivity() {
         binding.btnSaveCustomer.setOnClickListener {
             val name = binding.etName.text.toString().trim()
             if (name.isEmpty()) {
-                binding.etName.error = "Name fehlt"
+                binding.etName.error = getString(R.string.validation_name_missing)
                 return@setOnClickListener
             }
 
@@ -49,7 +49,7 @@ class AddCustomerActivity : AppCompatActivity() {
             
             // Button sofort deaktivieren und visuelles Feedback geben
             binding.btnSaveCustomer.isEnabled = false
-            binding.btnSaveCustomer.text = "Speichere..."
+            binding.btnSaveCustomer.text = getString(R.string.save_in_progress)
             binding.btnSaveCustomer.alpha = 0.6f
             
             CoroutineScope(Dispatchers.Main).launch {
@@ -85,7 +85,7 @@ class AddCustomerActivity : AppCompatActivity() {
                             repository.saveCustomer(customer)
                         },
                         context = this@AddCustomerActivity,
-                        errorMessage = "Fehler beim Speichern. Bitte erneut versuchen.",
+                        errorMessage = getString(R.string.error_save_generic),
                         maxRetries = 3
                     )
                 } catch (e: Exception) {
@@ -100,7 +100,7 @@ class AddCustomerActivity : AppCompatActivity() {
                 runOnUiThread {
                     if (saveSuccessful) {
                         // Erfolg: Button-Text ändern und dann Activity schließen
-                        binding.btnSaveCustomer.text = "✓ Gespeichert!"
+                        binding.btnSaveCustomer.text = getString(R.string.toast_saved_success)
                         binding.btnSaveCustomer.backgroundTintList = android.content.res.ColorStateList.valueOf(
                             resources.getColor(com.example.we2026_5.R.color.status_done, theme)
                         )
@@ -115,7 +115,7 @@ class AddCustomerActivity : AppCompatActivity() {
                     } else {
                         // Fehler: Button wieder aktivieren
                         binding.btnSaveCustomer.isEnabled = true
-                        binding.btnSaveCustomer.text = "Speichern"
+                        binding.btnSaveCustomer.text = getString(R.string.btn_save)
                         binding.btnSaveCustomer.alpha = 1.0f
                         // Toast wird bereits von FirebaseRetryHelper angezeigt (falls Fehler)
                     }

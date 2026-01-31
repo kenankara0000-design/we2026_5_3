@@ -15,15 +15,8 @@ class TourPlannerDateUtils(
     private val getListen: () -> List<KundenListe>
 ) {
     
-    fun getStartOfDay(ts: Long): Long {
-        val cal = java.util.Calendar.getInstance()
-        cal.timeInMillis = ts
-        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
-        cal.set(java.util.Calendar.MINUTE, 0)
-        cal.set(java.util.Calendar.SECOND, 0)
-        cal.set(java.util.Calendar.MILLISECOND, 0)
-        return cal.timeInMillis
-    }
+    /** Delegiert an TerminBerechnungUtils (Single Source of Truth). */
+    fun getStartOfDay(ts: Long): Long = TerminBerechnungUtils.getStartOfDay(ts)
     
     fun calculateAbholungDatum(
         customer: Customer,

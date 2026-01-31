@@ -28,19 +28,19 @@ object CustomerTypeButtonHelper {
         
         when (kundenArt) {
             "Gewerblich" -> {
-                button.text = "G"
+                button.text = context.getString(R.string.label_type_g)
                 // Kräftigeres, glänzenderes Blau mit Gradient-Hintergrund
                 button.setBackgroundResource(R.drawable.button_gewerblich_glossy)
                 button.visibility = View.VISIBLE
             }
             "Privat" -> {
-                button.text = "P"
+                button.text = context.getString(R.string.label_type_p_letter)
                 // Kräftigeres, glänzenderes Orange mit Gradient-Hintergrund
                 button.setBackgroundResource(R.drawable.button_privat_glossy)
                 button.visibility = View.VISIBLE
             }
             "Liste" -> {
-                button.text = "L"
+                button.text = context.getString(R.string.label_type_l_letter)
                 // Kräftigeres, glänzenderes Braun mit Gradient-Hintergrund
                 button.setBackgroundResource(R.drawable.button_liste_glossy)
                 button.visibility = View.VISIBLE

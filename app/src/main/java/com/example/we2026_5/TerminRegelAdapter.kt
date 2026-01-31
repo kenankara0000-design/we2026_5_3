@@ -70,7 +70,7 @@ class TerminRegelAdapter(
                 "Einmalig"
             }
             
-            binding.tvVerwendungsanzahl.text = "${regel.verwendungsanzahl}x verwendet"
+            binding.tvVerwendungsanzahl.text = binding.root.context.getString(com.example.we2026_5.R.string.label_used_count_format, regel.verwendungsanzahl)
             
             binding.root.setOnClickListener {
                 onRegelClick(regel)

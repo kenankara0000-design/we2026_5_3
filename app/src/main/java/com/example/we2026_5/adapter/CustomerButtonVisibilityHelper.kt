@@ -12,6 +12,7 @@ import com.example.we2026_5.util.TerminFilterUtils
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.TerminInfo
 import com.example.we2026_5.TerminTyp
+import com.example.we2026_5.tourplanner.ErledigungSheetState
 import java.util.concurrent.TimeUnit
 
 /**
@@ -135,6 +136,103 @@ class CustomerButtonVisibilityHelper(
         } else false
 
         binding.btnRueckgaengig.visibility = if (sollRueckgaengigAnzeigen) View.VISIBLE else View.GONE
+    }
+
+    /**
+     * Berechnet den Zustand für das Erledigungs-Bottom-Sheet (für alle Kundenarten inkl. Listen).
+     */
+    fun getSheetState(customer: Customer): ErledigungSheetState? {
+        if (displayedDateMillis == null) return null
+        val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+        val viewDateStart = TerminBerechnungUtils.getStartOfDay(displayedDateMillis)
+        val pressedButton = pressedButtons[customer.id]
+
+        val abholungDatumHeute = getAbholungDatum?.invoke(customer) ?: 0L
+        val hatAbholungHeute = abholungDatumHeute > 0
+        val hatUeberfaelligeAbholung = hasUeberfaelligeAbholung(customer, viewDateStart, heuteStart)
+        val wurdeHeuteErledigt = customer.abholungErledigtAm > 0 &&
+            TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) == viewDateStart
+        val sollAButtonAnzeigen = hatAbholungHeute || hatUeberfaelligeAbholung || wurdeHeuteErledigt
+        val istAmTatsaechlichenAbholungTag = hatAbholungHeute && !hatUeberfaelligeAbholung
+        val istHeute = viewDateStart == heuteStart
+
+        val auslieferungDatumHeute = getAuslieferungDatum?.invoke(customer) ?: 0L
+        val hatAuslieferungHeute = auslieferungDatumHeute > 0
+        val hatUeberfaelligeAuslieferung = hasUeberfaelligeAuslieferung(customer, viewDateStart, heuteStart)
+        val wurdeAmTagErledigtL = customer.auslieferungErledigtAm > 0 &&
+            TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart
+        val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
+            TerminBerechnungUtils.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+        var sollLButtonAnzeigen = hatAuslieferungHeute || hatUeberfaelligeAuslieferung || wurdeAmTagErledigtL
+        if (kwErledigtAmTag) sollLButtonAnzeigen = false
+        val istAmTatsaechlichenAuslieferungTag = hatAuslieferungHeute && !hatUeberfaelligeAuslieferung
+
+        val sollKwButtonAnzeigen = sollAButtonAnzeigen || (hatAuslieferungHeute || hatUeberfaelligeAuslieferung || wurdeAmTagErledigtL)
+        val wurdeKwHeuteErledigt = kwErledigtAmTag || (istHeute && pressedButton == "KW")
+
+        val hatVerschobenenTerminHeute = customer.verschobeneTermine.any { verschoben ->
+            val originalStart = TerminBerechnungUtils.getStartOfDay(verschoben.originalDatum)
+            val verschobenStart = TerminBerechnungUtils.getStartOfDay(verschoben.verschobenAufDatum)
+            originalStart == viewDateStart || verschobenStart == viewDateStart
+        }
+        val vButtonAktiv = customer.verschobenAufDatum > 0 || hatVerschobenenTerminHeute
+        val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
+
+        val hatTerminImUrlaub = if (customer.urlaubVon > 0 && customer.urlaubBis > 0) {
+            val termine = getAlleTermine(customer, viewDateStart - TimeUnit.DAYS.toMillis(1), 2)
+            termine.any { t ->
+                TerminBerechnungUtils.getStartOfDay(t.datum) == viewDateStart &&
+                    TerminFilterUtils.istTerminImUrlaub(t.datum, customer.urlaubVon, customer.urlaubBis)
+            }
+        } else false
+        val uButtonAktiv = customer.urlaubVon > 0 && customer.urlaubBis > 0 && hatTerminImUrlaub
+
+        val hatErledigtenATerminAmDatum = if (customer.abholungErfolgt) {
+            val abholungErledigtAmStart = if (customer.abholungErledigtAm > 0) TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) else 0L
+            if (abholungErledigtAmStart > 0 && viewDateStart == abholungErledigtAmStart) true
+            else abholungDatumHeute > 0 && TerminBerechnungUtils.getStartOfDay(abholungDatumHeute) == viewDateStart
+        } else false
+        val hatErledigtenLTerminAmDatum = if (customer.auslieferungErfolgt) {
+            val auslieferungErledigtAmStart = if (customer.auslieferungErledigtAm > 0) TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) else 0L
+            if (auslieferungErledigtAmStart > 0 && viewDateStart == auslieferungErledigtAmStart) true
+            else auslieferungDatumHeute > 0 && TerminBerechnungUtils.getStartOfDay(auslieferungDatumHeute) == viewDateStart
+        } else false
+        val hatAbholungRelevantAmTag = hatAbholungHeute || hatUeberfaelligeAbholung
+        val hatAuslieferungRelevantAmTag = hatAuslieferungHeute || hatUeberfaelligeAuslieferung
+        val beideRelevantAmTag = hatAbholungRelevantAmTag && hatAuslieferungRelevantAmTag
+        val hatKwErledigtAmDatum = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
+            TerminBerechnungUtils.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+        val sollRueckgaengigAnzeigen = if (istHeute) {
+            if (beideRelevantAmTag) hatErledigtenATerminAmDatum && hatErledigtenLTerminAmDatum
+            else hatErledigtenATerminAmDatum || hatErledigtenLTerminAmDatum || hatKwErledigtAmDatum
+        } else false
+
+        val enableA = sollAButtonAnzeigen && istHeute && !customer.abholungErfolgt && (istAmTatsaechlichenAbholungTag || hatUeberfaelligeAbholung)
+        val enableL = sollLButtonAnzeigen && istHeute && customer.abholungErfolgt && !customer.auslieferungErfolgt && (istAmTatsaechlichenAuslieferungTag || hatUeberfaelligeAuslieferung)
+        val enableKw = sollKwButtonAnzeigen && istHeute && !wurdeKwHeuteErledigt
+
+        val statusBadgeText = when {
+            (hatUeberfaelligeAbholung || hatUeberfaelligeAuslieferung) && viewDateStart <= heuteStart -> context.getString(com.example.we2026_5.R.string.status_badge_overdue)
+            sollAButtonAnzeigen && sollLButtonAnzeigen -> context.getString(com.example.we2026_5.R.string.status_badge_a_plus_l)
+            sollAButtonAnzeigen -> context.getString(com.example.we2026_5.R.string.status_badge_a)
+            sollLButtonAnzeigen -> context.getString(com.example.we2026_5.R.string.status_badge_l)
+            else -> ""
+        }
+
+        val isOverdueBadge = (hatUeberfaelligeAbholung || hatUeberfaelligeAuslieferung) && viewDateStart <= heuteStart
+        return ErledigungSheetState(
+            showAbholung = sollAButtonAnzeigen,
+            enableAbholung = enableA,
+            showAuslieferung = sollLButtonAnzeigen,
+            enableAuslieferung = enableL,
+            showKw = sollKwButtonAnzeigen,
+            enableKw = enableKw,
+            showVerschieben = !isDone && vButtonAktiv,
+            showUrlaub = !isDone && uButtonAktiv,
+            showRueckgaengig = sollRueckgaengigAnzeigen,
+            statusBadgeText = statusBadgeText,
+            isOverdueBadge = isOverdueBadge
+        )
     }
 
     private fun hideAllButtons(binding: ItemCustomerBinding) {

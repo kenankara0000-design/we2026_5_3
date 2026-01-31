@@ -3,6 +3,7 @@ package com.example.we2026_5.adapter
 import android.view.View
 import com.example.we2026_5.Customer
 import com.example.we2026_5.databinding.ItemCustomerBinding
+import com.example.we2026_5.R
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.DateFormatter
 
@@ -46,7 +47,7 @@ object CompletionHintsHelper {
 
             if (warUeberfaelligAmTag || (warUeberfaellig && istHeute)) {
                 binding.tvUeberfaelligIndikator.visibility = View.VISIBLE
-                binding.tvUeberfaelligIndikator.text = "Überfällig: ${DateFormatter.formatDate(customer.faelligAmDatum)}"
+                binding.tvUeberfaelligIndikator.text = binding.root.context.getString(R.string.overdue_date_format, DateFormatter.formatDate(customer.faelligAmDatum))
             } else {
                 binding.tvUeberfaelligIndikator.visibility = View.GONE
             }
@@ -56,14 +57,15 @@ object CompletionHintsHelper {
                 (customer.abholungErfolgt && warUeberfaelligAmTag)
             val kwErledigtAmTagHinweis = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
                 TerminBerechnungUtils.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+            val ctx = binding.root.context
             if (kwErledigtAmTagHinweis) {
-                hinweise.add("Keine Wäsche (A+KW / L+KW)")
+                hinweise.add(ctx.getString(R.string.hint_kw_done))
             }
             if (sollAbholungHinweisAnzeigen) {
                 if (customer.abholungErfolgt && customer.abholungZeitstempel > 0) {
-                    hinweise.add("Abholung: ${DateFormatter.formatDateTime(customer.abholungZeitstempel)}")
+                    hinweise.add(ctx.getString(R.string.label_abholung_with_date, DateFormatter.formatDateTime(customer.abholungZeitstempel)))
                 } else if (customer.abholungErfolgt && customer.abholungErledigtAm > 0) {
-                    hinweise.add("Abholung: ${DateFormatter.formatDate(customer.abholungErledigtAm)}")
+                    hinweise.add(ctx.getString(R.string.label_abholung_with_date, DateFormatter.formatDate(customer.abholungErledigtAm)))
                 }
             }
 
@@ -72,9 +74,9 @@ object CompletionHintsHelper {
                 (customer.auslieferungErfolgt && warUeberfaelligAmTag)
             if (sollAuslieferungHinweisAnzeigen) {
                 if (customer.auslieferungErfolgt && customer.auslieferungZeitstempel > 0) {
-                    hinweise.add("Auslieferung: ${DateFormatter.formatDateTime(customer.auslieferungZeitstempel)}")
+                    hinweise.add(ctx.getString(R.string.label_auslieferung_with_date, DateFormatter.formatDateTime(customer.auslieferungZeitstempel)))
                 } else if (customer.auslieferungErfolgt && customer.auslieferungErledigtAm > 0) {
-                    hinweise.add("Auslieferung: ${DateFormatter.formatDate(customer.auslieferungErledigtAm)}")
+                    hinweise.add(ctx.getString(R.string.label_auslieferung_with_date, DateFormatter.formatDate(customer.auslieferungErledigtAm)))
                 }
             }
 

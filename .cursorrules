@@ -10,12 +10,18 @@ Du bist der KI-Assistent für das Projekt "we2026_5". Dein Ziel ist es, die App 
 4. **Transparent Dependencies (Version Catalog):** Neue Bibliotheken (Room, Gemini AI, Firebase etc.) werden zuerst in `gradle/libs.versions.toml` definiert und dann per `alias` in die Gradle-Dateien integriert.
 5. **Immediate Stop Command (Honesty Protocol):** Wenn du ein technisches Hindernis bemerkst (unbehebbarer Fehler, unklarer Paketname), stoppe sofort und melde es ehrlich. Versuche nicht, es "irgendwie" zu lösen.
 
-## II. Das Drei-Schritte-Abgleich-Protokoll
+## II. Das Drei-Schritte-Abgleich-Protokoll (3pro)
+
+**Kurz: 3pro** = 1. Datei laden → 2. Datei ändern → 3. Abgleich vor/nach Änderung.
 
 Bei jeder Datei-Bearbeitung folgst du diesem Ablauf:
-1. **Laden & Bestätigen:** Lade die Originaldatei und bestätige den Inhalt.
-2. **Korrektur:** Führe die Reparaturen durch und erstelle die neue Version.
-3. **Abgleich:** Vergleiche Original und Korrektur. Stelle sicher: Kein Code gekürzt, keine Funktionen entfernt, Design identisch.
+1. **Datei laden:** Originaldatei laden und Inhalt bestätigen.
+2. **Datei ändern:** Nur die nötigen Änderungen durchführen.
+3. **Abgleich:** Datei vor und nach der Änderung vergleichen. Prüfen:
+   - Wurde **nur** das geändert, was nötig war?
+   - Wurden weder Code, Design noch Logik versehentlich kaputt gemacht?
+
+Regel: Nach Änderungen immer Abgleich (Diff/Review), ob nur die beabsichtigten Änderungen drin sind und nichts anderes beschädigt wurde.
 
 ## III. Projektspezifische Daten
 - **Projektname:** we2026_5 / githubwe2026
@@ -52,3 +58,10 @@ Bei jeder Datei-Bearbeitung folgst du diesem Ablauf:
 - **NUR zusammenfassen:** Analysieren, beschreiben, Vorschläge machen - aber KEINE Dateien ändern
 - **Code-Änderungen:** Nur wenn der Benutzer explizit "programmieren" oder ähnliche Anweisungen gibt
 - **Regel:** "zusammenfassen" = NUR Text-Ausgabe, KEINE Tool-Calls für Code-Änderungen
+
+## VII. Step-by-Step Umsetzung & Zukunftspläne
+- **Vor jeder Umsetzung fragen:** Bei Refactoring/Vorschlägen aus Berichten (z. B. BERICHT_TIEFENANALYSE_APP_2026.md) vor jeder einzelnen Umsetzung den Benutzer fragen: "Darf ich das umsetzen? (Ja / Nein / Zukunft)"
+- **Ja** = sofort umsetzen (mit 3pro).
+- **Nein** = nicht umsetzen, zum nächsten Punkt.
+- **Zukunft** = Idee/Vorschlag in **ZUKUNFTSPLAENE.md** eintragen (mit kurzer Beschreibung), nicht jetzt umsetzen. Erst wenn der Benutzer später explizit "bauen" oder die Nummer/den Namen des Zukunftsplans nennt, umsetzen.
+- **Regel Zukunftspläne:** Einträge in ZUKUNFTSPLAENE.md werden ohne ausdrückliche Freigabe des Benutzers nicht implementiert.

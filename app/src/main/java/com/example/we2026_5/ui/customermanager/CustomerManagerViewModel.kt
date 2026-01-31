@@ -7,6 +7,7 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.util.Result
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -78,17 +79,19 @@ class CustomerManagerViewModel(
     
     fun deleteCustomer(customerId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
-            try {
-                val success = repository.deleteCustomer(customerId)
-                if (success) {
-                    // Flow aktualisiert automatisch, keine manuelle Aktualisierung nötig
-                    onSuccess()
-                } else {
-                    onError("Fehler beim Löschen des Kunden")
+            _error.value = null
+            when (val result = repository.deleteCustomerResult(customerId)) {
+                is Result.Success -> onSuccess()
+                is Result.Error -> {
+                    _error.value = result.message
+                    onError(result.message)
                 }
-            } catch (e: Exception) {
-                onError(e.message ?: "Fehler beim Löschen")
             }
         }
+    }
+
+    /** Fehler-State zurücksetzen (z. B. nach Anzeige oder Retry). */
+    fun clearError() {
+        _error.value = null
     }
 }

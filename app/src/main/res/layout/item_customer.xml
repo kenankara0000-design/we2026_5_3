@@ -28,7 +28,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:text="G"
+                android:text="@string/label_type_g"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
@@ -46,14 +46,40 @@
                 android:id="@+id/tvItemName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_toStartOf="@id/btnAktionen"
                 android:layout_toEndOf="@id/btnKundenTyp"
                 android:layout_centerVertical="true"
-                android:text="Kunden Name"
+                android:text="@string/label_customer_name"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="@color/primary_blue_dark"/>
+                android:textColor="@color/primary_blue_dark"
+                android:ellipsize="end"
+                android:maxLines="1"/>
 
-            <!-- Buttons Ü → A L V U rechts ausgerichtet -->
+            <!-- Ein Button „Aktionen“ (Tourenplaner: öffnet Bottom Sheet) – hervorgehoben -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAktionen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:text="@string/sheet_aktionen"
+                android:textSize="13sp"
+                android:textColor="@color/white"
+                android:minHeight="40dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:visibility="gone"
+                android:contentDescription="@string/sheet_aktionen_desc"
+                app:cornerRadius="10dp"
+                app:backgroundTint="@color/primary_blue"
+                app:icon="@drawable/ic_checklist"
+                app:iconGravity="textStart"
+                app:iconSize="18dp"
+                app:iconPadding="6dp"
+                app:iconTint="@color/white"/>
+
+            <!-- Buttons Ü → A L KW A L V U (Legacy: ausgeblendet wenn btnAktionen sichtbar) -->
             <LinearLayout
                 android:id="@+id/buttonContainer"
                 android:layout_width="wrap_content"
@@ -83,7 +109,7 @@
                     android:focusable="false"
                     android:background="@drawable/button_ue_glossy"
                     android:textColor="#FFFFFF"
-                    android:contentDescription="Überfällig"
+                    android:contentDescription="@string/content_desc_overdue"
                     android:visibility="gone" />
 
                 <!-- Pfeil zwischen Ü und nächstem Button -->
@@ -93,7 +119,7 @@
                     android:layout_height="20dp"
                     android:layout_marginEnd="4dp"
                     android:src="@drawable/arrow_right"
-                    android:contentDescription="Pfeil"
+                    android:contentDescription="@string/content_desc_arrow"
                     android:visibility="gone" />
 
                 <TextView
@@ -115,7 +141,7 @@
                     android:focusable="true"
                     android:background="@drawable/button_kw_glossy"
                     android:textColor="#FFFFFF"
-                    android:contentDescription="Keine Wäsche"
+                    android:contentDescription="@string/content_desc_no_laundry"
                     android:visibility="gone" />
 
                 <TextView
@@ -137,7 +163,7 @@
                     android:focusable="true"
                     android:background="@drawable/button_a_glossy"
                     android:textColor="#FFFFFF"
-                    android:contentDescription="Abholung" />
+                    android:contentDescription="@string/content_desc_abholung" />
 
                 <TextView
                     android:id="@+id/btnAuslieferung"
@@ -158,7 +184,7 @@
                     android:focusable="true"
                     android:background="@drawable/button_l_glossy"
                     android:textColor="#FFFFFF"
-                    android:contentDescription="Auslieferung" />
+                    android:contentDescription="@string/content_desc_auslieferung" />
 
                 <TextView
                     android:id="@+id/btnVerschieben"
@@ -179,7 +205,7 @@
                     android:focusable="true"
                     android:background="@drawable/button_v_glossy"
                     android:textColor="#FFFFFF"
-                    android:contentDescription="Verschieben" />
+                    android:contentDescription="@string/content_desc_verschieben" />
 
                 <TextView
                     android:id="@+id/btnUrlaub"
@@ -199,7 +225,7 @@
                     android:focusable="true"
                     android:background="@drawable/button_u_glossy"
                     android:textColor="#FFFFFF"
-                    android:contentDescription="Urlaub" />
+                    android:contentDescription="@string/content_desc_urlaub" />
             </LinearLayout>
         </RelativeLayout>
 
@@ -211,6 +237,22 @@
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:layout_marginTop="4dp"/>
+
+        <!-- Status-Badge (Tourenplaner: z. B. „A+L heute“, „Überfällig“) -->
+        <TextView
+            android:id="@+id/tvStatusBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:background="@drawable/status_badge_done"
+            android:textColor="@color/white"
+            android:visibility="gone"/>
 
         <TextView
             android:id="@+id/tvItemTelefon"
@@ -258,17 +300,19 @@
                 android:background="@drawable/button_icon_pressed"
                 android:backgroundTint="@color/primary_blue"
                 android:tint="#FFFFFF"
-                android:contentDescription="Navigation"
+                android:contentDescription="@string/content_desc_navigation"
                 android:padding="10dp"
                 android:visibility="gone"/>
         </LinearLayout>
 
-        <!-- Erste Zeile: Status, Überfällig-Buttons, Erledigungs-Hinweise -->
+        <!-- Legacy: Status/Überfällig/Rückgängig – dauerhaft ausgeblendet (nur Sheet + Status-Badge) -->
         <LinearLayout
+            android:id="@+id/statusBlock"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="8dp"
+            android:visibility="gone">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -280,7 +324,7 @@
                 android:id="@+id/tvStatusLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ÜBERFÄLLIG"
+                android:text="@string/section_overdue"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:paddingStart="10dp"
@@ -294,7 +338,7 @@
                 android:background="@drawable/button_ue_glossy"
                 android:textColor="#FFFFFF"
                 android:visibility="gone"
-                android:contentDescription="Überfällig" />
+                android:contentDescription="@string/content_desc_overdue" />
 
             <!-- Überfällig A-Button (nur Anzeige, keine Funktion) -->
             <TextView
@@ -315,7 +359,7 @@
                 android:background="@drawable/button_a_glossy"
                 android:textColor="#FFFFFF"
                 android:visibility="gone"
-                android:contentDescription="Überfällig A" />
+                android:contentDescription="@string/content_desc_overdue_a" />
 
             <!-- Überfällig L-Button (nur Anzeige, keine Funktion) -->
             <TextView
@@ -336,7 +380,7 @@
                 android:background="@drawable/button_l_glossy"
                 android:textColor="#FFFFFF"
                 android:visibility="gone"
-                android:contentDescription="Überfällig L" />
+                android:contentDescription="@string/content_desc_overdue_l" />
 
             <!-- Datum als Button (orange) -->
             <TextView
@@ -357,7 +401,7 @@
                 android:background="@drawable/button_datum_glossy"
                 android:textColor="#FFFFFF"
                 android:visibility="gone"
-                android:contentDescription="Überfälligkeitsdatum" />
+                android:contentDescription="@string/content_desc_overdue_date" />
 
             <!-- Erledigungs-Hinweise (Abholung/Auslieferung: datum zeitstempel) -->
             <TextView
@@ -398,7 +442,7 @@
                 android:textColor="@color/white"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:text="Überfällig:"
+                android:text="@string/label_overdue_colon"
                 android:visibility="gone"
                 android:gravity="center_vertical"/>
 
@@ -407,7 +451,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="Rückgängig"
+                android:text="@string/sheet_rueckgaengig"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:backgroundTint="@color/button_rueckgaengig"

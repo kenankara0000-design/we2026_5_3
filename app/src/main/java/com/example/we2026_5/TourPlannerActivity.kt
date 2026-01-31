@@ -7,6 +7,7 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.TerminRegelRepository
@@ -17,6 +18,9 @@ import com.example.we2026_5.tourplanner.TourPlannerDialogHelper
 import com.example.we2026_5.tourplanner.TourPlannerDateUtils
 import com.example.we2026_5.tourplanner.TourPlannerCallbackHandler
 import com.example.we2026_5.tourplanner.TourPlannerUISetup
+import com.example.we2026_5.tourplanner.ErledigungBottomSheetDialogFragment
+import com.example.we2026_5.tourplanner.ErledigungSheetState
+import com.example.we2026_5.adapter.CustomerDialogHelper
 import com.example.we2026_5.tourplanner.TourPlannerGestureHandler
 import com.example.we2026_5.FirebaseRetryHelper
 import kotlinx.coroutines.CoroutineScope
@@ -29,7 +33,7 @@ import java.util.concurrent.TimeUnit
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class TourPlannerActivity : AppCompatActivity() {
+class TourPlannerActivity : AppCompatActivity(), ErledigungBottomSheetDialogFragment.ErledigungSheetCallbacks {
 
     private lateinit var binding: ActivityTourPlannerBinding
     private val viewModel: TourPlannerViewModel by viewModel()
@@ -45,6 +49,7 @@ class TourPlannerActivity : AppCompatActivity() {
     private lateinit var dialogHelper: TourPlannerDialogHelper
     private lateinit var dateUtils: TourPlannerDateUtils
     private lateinit var callbackHandler: TourPlannerCallbackHandler
+    private var sheetDialogHelper: CustomerDialogHelper? = null
     private lateinit var uiSetup: TourPlannerUISetup
     private lateinit var gestureHandler: TourPlannerGestureHandler
 
@@ -88,55 +93,39 @@ class TourPlannerActivity : AppCompatActivity() {
         uiSetup.setupAdapters(adapter)
         
         // Callback für Section-Toggle setzen
-        adapter.onSectionToggle = { sectionType ->
-            viewModel.toggleSection(sectionType)
-            reloadCurrentView() // Daten neu laden wenn Section getoggelt wird
-        }
+        adapter.callbacks = adapter.callbacks.copy(
+            onSectionToggle = { sectionType ->
+                viewModel.toggleSection(sectionType)
+                reloadCurrentView() // Daten neu laden wenn Section getoggelt wird
+            }
+        )
         
+        // Datum im ViewModel setzen (Single Source of Truth)
+        viewModel.setSelectedTimestamp(Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis)
         // Initial: Tagesansicht
         updateViewMode()
-        uiSetup.updateHeaderButtonStates(pressedHeaderButton) // Initial Header-Button-Zustand setzen
-        
-        // ViewModel Observer einrichten
+        uiSetup.updateHeaderButtonStates(pressedHeaderButton)
         observeViewModel()
 
         binding.btnBackFromTour.setOnClickListener { finish() }
 
         binding.btnPrevDay.setOnClickListener {
-            viewDate.add(Calendar.DAY_OF_YEAR, -1)
-            updateDisplay()
-            updateTodayButtonState()
+            viewModel.prevDay()
         }
 
         binding.btnNextDay.setOnClickListener {
-            viewDate.add(Calendar.DAY_OF_YEAR, 1)
-            updateDisplay()
-            updateTodayButtonState()
+            viewModel.nextDay()
         }
 
         binding.btnToday.setOnClickListener {
             pressedHeaderButton = "Heute"
             uiSetup.updateHeaderButtonStates(pressedHeaderButton)
-            // Auf heute springen - immer ein neues Calendar-Objekt erstellen
-            val heute = Calendar.getInstance()
-            val heuteStart = Calendar.getInstance().apply {
-                set(Calendar.YEAR, heute.get(Calendar.YEAR))
-                set(Calendar.MONTH, heute.get(Calendar.MONTH))
-                set(Calendar.DAY_OF_MONTH, heute.get(Calendar.DAY_OF_MONTH))
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-            
-            // Datum setzen
-            viewDate = heuteStart
-            
-            // Tagesansicht: Datum aktualisieren und Daten neu laden
-            val heuteTimestamp = dateUtils.getStartOfDay(heuteStart.timeInMillis)
-            loadTourData(heuteTimestamp)
-            updateDisplay()
-            updateTodayButtonState()
+            viewModel.goToToday()
         }
 
         binding.btnMapView.setOnClickListener {
@@ -188,14 +177,22 @@ class TourPlannerActivity : AppCompatActivity() {
     }
 
     private fun observeViewModel() {
+        // Datum aus ViewModel sync (Anzeige + viewDate für Helper)
+        viewModel.selectedTimestamp.observe(this) { ts ->
+            ts?.let {
+                viewDate.timeInMillis = it
+                val fmt = SimpleDateFormat("EEE, dd.MM.yyyy", Locale.GERMANY)
+                binding.tvCurrentDate.text = fmt.format(viewDate.time)
+                updateTodayButtonState()
+                setupAdapterCallbacksForAdapter(adapter)
+            }
+        }
         // Tour-Items beobachten (Tagesansicht)
         viewModel.tourItems.observe(this) { items ->
-            adapter.updateData(items, dateUtils.getStartOfDay(viewDate.timeInMillis))
-            
-            // Empty State anzeigen wenn keine Kunden vorhanden
+            val ts = viewModel.getSelectedTimestamp() ?: viewDate.timeInMillis
+            adapter.updateData(items, dateUtils.getStartOfDay(ts))
             uiSetup.updateEmptyState(items.isEmpty())
         }
-        
         // Loading-State beobachten
         viewModel.isLoading.observe(this) { isLoading ->
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
@@ -216,16 +213,14 @@ class TourPlannerActivity : AppCompatActivity() {
     }
 
     private fun updateDisplay() {
-        // Tagesansicht
+        // Datum aus ViewModel lesen und Anzeige + loadTourData aktualisieren
+        val ts = viewModel.getSelectedTimestamp() ?: Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        viewDate.timeInMillis = ts
         val fmt = SimpleDateFormat("EEE, dd.MM.yyyy", Locale.GERMANY)
         binding.tvCurrentDate.text = fmt.format(viewDate.time)
-        loadTourData(viewDate.timeInMillis)
-        
-        // WICHTIG:
-        // Callback-Handler (TourPlannerCallbackHandler) und die Adapter-Callbacks
-        // verwenden die aktuelle viewDate-Referenz, um A/L-Buttons (heute fällig / überfällig)
-        // korrekt zu berechnen. Da sich viewDate beim Datumswechsel ändert,
-        // müssen wir die Callbacks nach jedem Update neu setzen.
+        loadTourData(ts)
         setupAdapterCallbacksForAdapter(adapter)
     }
     
@@ -248,7 +243,7 @@ class TourPlannerActivity : AppCompatActivity() {
     }
         
     private fun reloadCurrentView() {
-        loadTourData(viewDate.timeInMillis)
+        viewModel.getSelectedTimestamp()?.let { loadTourData(it) }
     }
     
     private fun showErrorState(message: String) {
@@ -272,15 +267,41 @@ class TourPlannerActivity : AppCompatActivity() {
             viewDate = viewDate,
             adapter = adapter,
             reloadCurrentView = { reloadCurrentView() },
-            resetTourCycle = { customerId -> resetTourCycle(customerId) }
+            resetTourCycle = { customerId -> resetTourCycle(customerId) },
+            onError = { msg -> viewModel.setError(msg) }
         )
         callbackHandler.setupCallbacks()
+
+        sheetDialogHelper = CustomerDialogHelper(
+            context = this,
+            onVerschieben = { c, newDate, alle -> adapter.callbacks.onVerschieben?.invoke(c, newDate, alle) },
+            onUrlaub = { c, von, bis -> adapter.callbacks.onUrlaub?.invoke(c, von, bis) },
+            onRueckgaengig = { c -> adapter.callbacks.onRueckgaengig?.invoke(c) },
+            onButtonStateReset = { reloadCurrentView() }
+        )
         
-        // Termin-Klick: Öffne Termin-Detail-Dialog
-        adapter.onTerminClick = { customer, terminDatum ->
-            dialogHelper.showTerminDetailDialog(customer, terminDatum)
-        }
+        adapter.callbacks = adapter.callbacks.copy(
+            onTerminClick = { customer, terminDatum ->
+                dialogHelper.showTerminDetailDialog(customer, terminDatum)
+            },
+            onAktionenClick = { customer, state ->
+                showErledigungSheet(customer, state)
+            }
+        )
     }
+
+    private fun showErledigungSheet(customer: Customer, state: ErledigungSheetState) {
+        val sheet = ErledigungBottomSheetDialogFragment.newInstance(customer, viewDate.timeInMillis, state)
+        sheet.show(supportFragmentManager, "ErledigungSheet")
+    }
+
+    override fun onAbholung(customer: Customer) { callbackHandler.handleAbholungPublic(customer) }
+    override fun onAuslieferung(customer: Customer) { callbackHandler.handleAuslieferungPublic(customer) }
+    override fun onKw(customer: Customer) { callbackHandler.handleKwPublic(customer) }
+    override fun onRueckgaengig(customer: Customer) { callbackHandler.handleRueckgaengigPublic(customer) }
+    override fun onVerschieben(customer: Customer) { sheetDialogHelper?.showVerschiebenDialog(customer) }
+    override fun onUrlaub(customer: Customer) { sheetDialogHelper?.showUrlaubDialog(customer) }
+    override fun getNaechstesTourDatum(customer: Customer): Long? = adapter.callbacks.getNaechstesTourDatum?.invoke(customer)
     
     /**
      * Zeigt das Kunden-Übersichtsfenster (Termin-Regeln elegant, nur Namen, ohne Kasten).
@@ -359,53 +380,33 @@ class TourPlannerActivity : AppCompatActivity() {
     // Alte Implementierungen entfernt - jetzt in TourPlannerDateUtils und TourPlannerDialogHelper
     
     private fun loescheEinzelnenTermin(customer: Customer, terminDatum: Long) {
-        CoroutineScope(Dispatchers.Main).launch {
-            // Normalisiere das Datum auf Tagesanfang für Vergleich
-            val terminDatumStart = dateUtils.getStartOfDay(terminDatum)
-            
-            // Aktuelle gelöschte Termine holen und neues Datum hinzufügen
-            val aktuelleGeloeschteTermine = customer.geloeschteTermine.toMutableList()
-            if (!aktuelleGeloeschteTermine.contains(terminDatumStart)) {
-                aktuelleGeloeschteTermine.add(terminDatumStart)
-            }
-            
-            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                operation = {
-                    repository.updateCustomer(customer.id, mapOf(
-                        "geloeschteTermine" to aktuelleGeloeschteTermine
-                    ))
-                },
-                context = this@TourPlannerActivity,
-                errorMessage = "Fehler beim Löschen des Termins. Bitte erneut versuchen.",
-                maxRetries = 3
-            )
-            
-            if (success == true) {
-                android.widget.Toast.makeText(this@TourPlannerActivity, "Termin gelöscht", android.widget.Toast.LENGTH_SHORT).show()
-                reloadCurrentView() // Daten neu laden
+        lifecycleScope.launch {
+            when (val result = viewModel.deleteTerminFromCustomer(customer, terminDatum)) {
+                is com.example.we2026_5.util.Result.Success -> {
+                    viewModel.clearError()
+                    android.widget.Toast.makeText(this@TourPlannerActivity, getString(R.string.toast_termin_deleted), android.widget.Toast.LENGTH_SHORT).show()
+                    reloadCurrentView()
+                }
+                is com.example.we2026_5.util.Result.Error -> {
+                    viewModel.setError(result.message)
+                    android.widget.Toast.makeText(this@TourPlannerActivity, result.message, android.widget.Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
     
     private fun resetTourCycle(customerId: String) {
-        val resetData = mapOf(
-            "letzterTermin" to System.currentTimeMillis(),
-            "abholungErfolgt" to false,
-            "auslieferungErfolgt" to false,
-            "verschobenAufDatum" to 0
-        )
-        CoroutineScope(Dispatchers.Main).launch {
-            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                operation = { 
-                    repository.updateCustomer(customerId, resetData)
-                },
-                context = this@TourPlannerActivity,
-                errorMessage = "Fehler beim Zurücksetzen. Bitte erneut versuchen.",
-                maxRetries = 3
-            )
-            if (success == true) {
-                android.widget.Toast.makeText(this@TourPlannerActivity, "Tour abgeschlossen!", android.widget.Toast.LENGTH_SHORT).show()
-                reloadCurrentView() // Daten neu laden
+        lifecycleScope.launch {
+            when (val result = viewModel.resetTourCycle(customerId)) {
+                is com.example.we2026_5.util.Result.Success -> {
+                    viewModel.clearError()
+                    android.widget.Toast.makeText(this@TourPlannerActivity, getString(R.string.toast_tour_completed), android.widget.Toast.LENGTH_SHORT).show()
+                    reloadCurrentView()
+                }
+                is com.example.we2026_5.util.Result.Error -> {
+                    viewModel.setError(result.message)
+                    android.widget.Toast.makeText(this@TourPlannerActivity, result.message, android.widget.Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

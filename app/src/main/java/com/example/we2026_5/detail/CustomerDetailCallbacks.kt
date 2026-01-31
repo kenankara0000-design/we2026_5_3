@@ -14,14 +14,13 @@ import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.databinding.ActivityCustomerDetailBinding
 import com.example.we2026_5.util.TerminRegelManager
-import com.example.we2026_5.FirebaseRetryHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
  * Helper-Klasse für Callback-Handler in CustomerDetailActivity.
- * Extrahiert alle Callback-Funktionen aus CustomerDetailActivity.
+ * Löschen erfolgt über onDeleteRequested (z. B. ViewModel.deleteCustomer).
  */
 class CustomerDetailCallbacks(
     private val activity: AppCompatActivity,
@@ -31,7 +30,8 @@ class CustomerDetailCallbacks(
     private val customerId: String,
     private val intervalle: MutableList<CustomerIntervall>,
     private val intervallAdapter: com.example.we2026_5.IntervallAdapter,
-    private var currentCustomer: Customer?
+    private var currentCustomer: Customer?,
+    private val onDeleteRequested: () -> Unit
 ) {
     
     /**
@@ -98,50 +98,18 @@ class CustomerDetailCallbacks(
 
     /**
      * Zeigt Bestätigungsdialog zum Löschen des Kunden.
+     * Bei Bestätigung wird onDeleteRequested aufgerufen (z. B. ViewModel.deleteCustomer).
      */
     fun showDeleteConfirmation() {
-        AlertDialog.Builder(activity)
-            .setTitle("Kunde löschen")
-            .setMessage("Bist du sicher, dass du diesen Kunden endgültig löschen möchtest?")
-            .setPositiveButton("Löschen") { _, _ -> handleDelete() }
-            .setNegativeButton("Abbrechen", null)
-            .show()
-    }
-
-    /**
-     * Behandelt das Löschen des Kunden.
-     */
-    private fun handleDelete() {
         AlertDialog.Builder(activity)
             .setTitle("Kunde löschen?")
             .setMessage("Möchten Sie diesen Kunden wirklich löschen? Alle Termine dieses Kunden werden ebenfalls gelöscht.")
             .setPositiveButton("Löschen") { _, _ ->
-                // Optimistische UI-Aktualisierung: Sofort benachrichtigen, dass Kunde gelöscht wurde
-                // Damit die Liste in CustomerManagerActivity sofort aktualisiert wird
                 val resultIntent = Intent().apply {
                     putExtra("DELETED_CUSTOMER_ID", customerId)
                 }
                 activity.setResult(CustomerManagerActivity.RESULT_CUSTOMER_DELETED, resultIntent)
-                
-                CoroutineScope(Dispatchers.Main).launch {
-                    val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                        operation = { 
-                            // Kunde löschen - alle Termine werden automatisch gelöscht, da sie Teil des Kunden-Objekts sind
-                            repository.deleteCustomer(customerId)
-                        },
-                        context = activity,
-                        errorMessage = "Fehler beim Löschen. Bitte erneut versuchen.",
-                        maxRetries = 3
-                    )
-                    
-                    if (success == true) {
-                        Toast.makeText(activity, "Kunde und alle Termine gelöscht", Toast.LENGTH_LONG).show()
-                        activity.finish()
-                    } else {
-                        // Bei Fehler: Result zurücksetzen
-                        activity.setResult(AppCompatActivity.RESULT_CANCELED)
-                    }
-                }
+                onDeleteRequested()
             }
             .setNegativeButton("Abbrechen", null)
             .show()
@@ -208,6 +176,9 @@ class CustomerDetailCallbacks(
     fun updateCurrentCustomer(customer: Customer?) {
         currentCustomer = customer
     }
+
+    /** Für Coordinator/EditManager: aktueller Kunde (z. B. für handleSave, toggleEditMode). */
+    val currentCustomerForEdit: Customer? get() = currentCustomer
     
     /**
      * Zeigt den Info-Dialog für eine Termin-Regel.

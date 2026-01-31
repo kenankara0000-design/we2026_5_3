@@ -151,7 +151,7 @@ class CustomerPhotoManager(
                             repository.updateCustomer(customerId, mapOf("fotoUrls" to updatedUrls))
                         },
                         context = activity,
-                        errorMessage = "Fehler beim Speichern der Foto-URL.",
+                        errorMessage = activity.getString(com.example.we2026_5.R.string.error_save_generic),
                         maxRetries = 3
                     )
                     

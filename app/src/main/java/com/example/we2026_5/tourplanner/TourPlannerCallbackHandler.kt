@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
 import com.example.we2026_5.CustomerAdapter
+import com.example.we2026_5.adapter.CustomerAdapterCallbacksConfig
 import com.example.we2026_5.FirebaseRetryHelper
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.data.repository.CustomerRepository
@@ -30,63 +31,45 @@ class TourPlannerCallbackHandler(
     private val viewDate: Calendar,
     private val adapter: CustomerAdapter,
     private val reloadCurrentView: () -> Unit,
-    private val resetTourCycle: (String) -> Unit
+    private val resetTourCycle: (String) -> Unit,
+    private val onError: ((String) -> Unit)? = null
 ) {
     
     fun setupCallbacks() {
-        // Abholung
-        adapter.onAbholung = { customer ->
-            handleAbholung(customer)
-        }
-        
-        // Auslieferung
-        adapter.onAuslieferung = { customer ->
-            handleAuslieferung(customer)
-        }
-        
-        // Keine Wäsche (KW): A+KW = erledigt Abholungstag, L+KW = erledigt Auslieferungstag
-        adapter.onKw = { customer -> handleKw(customer) }
-        
-        // Tour-Zyklus zurücksetzen
-        adapter.onResetTourCycle = { customerId ->
-            resetTourCycle(customerId)
-        }
-        
-        // Verschieben
-        adapter.onVerschieben = { customer, newDate, alleVerschieben ->
-            handleVerschieben(customer, newDate, alleVerschieben)
-        }
-        
-        // Urlaub
-        adapter.onUrlaub = { customer, von, bis ->
-            handleUrlaub(customer, von, bis)
-        }
-        
-        // Rückgängig
-        adapter.onRueckgaengig = { customer ->
-            handleRueckgaengig(customer)
-        }
-        
-        // Callbacks für Datum-Berechnung (für A/L Button-Aktivierung)
-        adapter.getAbholungDatum = { customer ->
-            val viewDateStart = dateUtils.getStartOfDay(viewDate.timeInMillis)
-            dateUtils.calculateAbholungDatum(customer, viewDateStart, dateUtils.getStartOfDay(System.currentTimeMillis()))
-        }
-        
-        adapter.getAuslieferungDatum = { customer ->
-            val viewDateStart = dateUtils.getStartOfDay(viewDate.timeInMillis)
-            dateUtils.calculateAuslieferungDatum(customer, viewDateStart, dateUtils.getStartOfDay(System.currentTimeMillis()))
-        }
-        
-        // Nächstes Tour-Datum (für "Nächste Tour" auf der Karte; Listen-Kunden: Termin-Regel der Liste)
-        adapter.getNaechstesTourDatum = { customer -> dateUtils.getNaechstesTourDatum(customer) }
-
-        // Termine für Kunde (mit Liste bei Listen-Kunden – einheitliche A/L/KW/Ü-Logik)
-        adapter.getTermineFuerKunde = { customer, startDatum, tageVoraus ->
-            val liste = if (customer.listeId.isNotBlank()) getListen().find { it.id == customer.listeId } else null
-            TerminBerechnungUtils.berechneAlleTermineFuerKunde(customer, liste, startDatum, tageVoraus)
-        }
+        adapter.callbacks = adapter.callbacks.copy(
+            onAbholung = { customer -> handleAbholung(customer) },
+            onAuslieferung = { customer -> handleAuslieferung(customer) },
+            onKw = { customer -> handleKw(customer) },
+            onResetTourCycle = { customerId -> resetTourCycle(customerId) },
+            onVerschieben = { customer, newDate, alleVerschieben ->
+                handleVerschieben(customer, newDate, alleVerschieben)
+            },
+            onUrlaub = { customer, von, bis -> handleUrlaub(customer, von, bis) },
+            onRueckgaengig = { customer -> handleRueckgaengig(customer) },
+            getAbholungDatum = { customer ->
+                val viewDateStart = dateUtils.getStartOfDay(viewDate.timeInMillis)
+                dateUtils.calculateAbholungDatum(customer, viewDateStart, dateUtils.getStartOfDay(System.currentTimeMillis()))
+            },
+            getAuslieferungDatum = { customer ->
+                val viewDateStart = dateUtils.getStartOfDay(viewDate.timeInMillis)
+                dateUtils.calculateAuslieferungDatum(customer, viewDateStart, dateUtils.getStartOfDay(System.currentTimeMillis()))
+            },
+            getNaechstesTourDatum = { customer -> dateUtils.getNaechstesTourDatum(customer) },
+            getTermineFuerKunde = { customer, startDatum, tageVoraus ->
+                val liste = if (customer.listeId.isNotBlank()) getListen().find { it.id == customer.listeId } else null
+                TerminBerechnungUtils.berechneAlleTermineFuerKunde(customer, liste, startDatum, tageVoraus)
+            }
+        )
     }
+
+    /** Für Erledigungs-Bottom-Sheet: ruft handleAbholung auf. */
+    fun handleAbholungPublic(customer: Customer) = handleAbholung(customer)
+    /** Für Erledigungs-Bottom-Sheet: ruft handleAuslieferung auf. */
+    fun handleAuslieferungPublic(customer: Customer) = handleAuslieferung(customer)
+    /** Für Erledigungs-Bottom-Sheet: ruft handleKw auf. */
+    fun handleKwPublic(customer: Customer) = handleKw(customer)
+    /** Für Erledigungs-Bottom-Sheet: ruft handleRueckgaengig auf. */
+    fun handleRueckgaengigPublic(customer: Customer) = handleRueckgaengig(customer)
     
     private fun handleAbholung(customer: Customer) {
         if (!customer.abholungErfolgt) {
@@ -111,7 +94,7 @@ class TourPlannerCallbackHandler(
                 updates["abholungZeitstempel"] = jetzt
                 if (faelligAmDatum > 0) updates["faelligAmDatum"] = faelligAmDatum
                 android.util.Log.d("TourPlanner", "Abholung erledigen für ${customer.name}: updates=$updates")
-                executeErledigung(customer.id, updates, R.string.error_abholung_registrieren, R.string.toast_abholung_registriert)
+                executeErledigung(customer.id, updates, R.string.error_abholung_registrieren, R.string.toast_abholung_dann_auslieferung)
             }
         }
     }
@@ -220,6 +203,8 @@ class TourPlannerCallbackHandler(
                     adapter.clearPressedButtons()
                     reloadCurrentView()
                 }, 2000)
+            } else {
+                onError?.invoke(context.getString(R.string.error_verschieben))
             }
         }
     }
@@ -240,6 +225,8 @@ class TourPlannerCallbackHandler(
                     adapter.clearPressedButtons()
                     reloadCurrentView()
                 }, 2000)
+            } else {
+                onError?.invoke(context.getString(R.string.error_urlaub))
             }
         }
     }
@@ -250,7 +237,7 @@ class TourPlannerCallbackHandler(
             val viewDateStart = TerminBerechnungUtils.getStartOfDay(viewDate.timeInMillis)
             
             // Prüfe welches am angezeigten Tag erledigt wurde ODER ob am angezeigten Tag ein Termin fällig ist
-            val abholungDatumHeute = adapter.getAbholungDatum?.invoke(customer) ?: 0L
+            val abholungDatumHeute = adapter.callbacks.getAbholungDatum?.invoke(customer) ?: 0L
             val hatAbholungHeute = abholungDatumHeute > 0 && 
                 TerminBerechnungUtils.getStartOfDay(abholungDatumHeute) == viewDateStart
             val abholungErledigtAmTag = customer.abholungErfolgt && (
@@ -259,7 +246,7 @@ class TourPlannerCallbackHandler(
                 hatAbholungHeute
             )
             
-            val auslieferungDatumHeute = adapter.getAuslieferungDatum?.invoke(customer) ?: 0L
+            val auslieferungDatumHeute = adapter.callbacks.getAuslieferungDatum?.invoke(customer) ?: 0L
             val hatAuslieferungHeute = auslieferungDatumHeute > 0 && 
                 TerminBerechnungUtils.getStartOfDay(auslieferungDatumHeute) == viewDateStart
             val auslieferungErledigtAmTag = customer.auslieferungErfolgt && (
@@ -342,6 +329,8 @@ class TourPlannerCallbackHandler(
                     Toast.makeText(context, context.getString(R.string.toast_rueckgaengig_gemacht), Toast.LENGTH_SHORT).show()
                     adapter.clearPressedButtons()
                     reloadCurrentView()
+                } else {
+                    onError?.invoke(context.getString(R.string.error_rueckgaengig))
                 }
             }
         }
@@ -356,10 +345,11 @@ class TourPlannerCallbackHandler(
         errorMessageResId: Int,
         successMessageResId: Int
     ) {
+        val errorMsg = context.getString(errorMessageResId)
         val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
             operation = { repository.updateCustomer(customerId, updates) },
             context = context,
-            errorMessage = context.getString(errorMessageResId),
+            errorMessage = errorMsg,
             maxRetries = 3
         )
         if (success == true) {
@@ -368,6 +358,8 @@ class TourPlannerCallbackHandler(
                 adapter.clearPressedButtons()
                 reloadCurrentView()
             }, 2000)
+        } else {
+            onError?.invoke(errorMsg)
         }
     }
 

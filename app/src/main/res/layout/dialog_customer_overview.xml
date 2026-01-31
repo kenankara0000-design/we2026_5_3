@@ -12,7 +12,7 @@
         android:id="@+id/tvOverviewCustomerName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Kundenname"
+        android:text="@string/label_customer_name"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@color/primary_blue_dark"
@@ -29,7 +29,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Termin-Regeln"
+        android:text="@string/label_termine_regeln"
         android:textSize="13sp"
         android:textColor="@color/text_secondary"
         android:layout_marginBottom="8dp" />
@@ -49,6 +49,6 @@
         android:id="@+id/btnOverviewDetails"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Details öffnen"
+        android:text="@string/label_details_open"
         app:cornerRadius="8dp" />
 </LinearLayout>

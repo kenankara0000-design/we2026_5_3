@@ -1,51 +1,45 @@
 package com.example.we2026_5
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.databinding.ActivityCustomerDetailBinding
-import com.example.we2026_5.detail.CustomerPhotoManager
-import com.example.we2026_5.detail.CustomerEditManager
-import com.example.we2026_5.detail.CustomerDetailUISetup
-import com.example.we2026_5.detail.CustomerDetailCallbacks
-import com.example.we2026_5.util.IntervallManager
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.storage.FirebaseStorage
+import com.example.we2026_5.detail.CustomerDetailCoordinator
+import com.example.we2026_5.ui.detail.CustomerDetailViewModel
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
+/**
+ * Activity nur noch: Binding, ViewModel beobachten, Coordinator aufrufen, Launcher/Intents/Dialoge.
+ * Kein Repository-Zugriff, keine Geschäftslogik, keine vielen Helper-Instanzen.
+ */
 class CustomerDetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCustomerDetailBinding
+    private val viewModel: CustomerDetailViewModel by viewModel()
     private val repository: CustomerRepository by inject()
     private val regelRepository: TerminRegelRepository by inject()
-    private val storage: FirebaseStorage by inject()
-    private var customerListener: ValueEventListener? = null
-    private var currentCustomer: Customer? = null
-    private lateinit var customerId: String
 
-    private lateinit var photoManager: CustomerPhotoManager
-    private lateinit var editManager: CustomerEditManager
-    private lateinit var uiSetup: CustomerDetailUISetup
-    private lateinit var callbacks: CustomerDetailCallbacks
-    
-    // Intervalle-Verwaltung
-    private val intervalle = mutableListOf<CustomerIntervall>()
-    private var aktuellesIntervallPosition: Int = -1
-    private var aktuellesDatumTyp: Boolean = true // true = Abholung, false = Auslieferung
+    private var coordinatorRef: CustomerDetailCoordinator? = null
 
     private val takePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { isSuccess ->
-        photoManager.handleCameraResult(isSuccess)
+        coordinatorRef?.onTakePictureResult(isSuccess)
     }
-
-    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        photoManager.handleGalleryResult(uri)
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        coordinatorRef?.onPickImageResult(uri)
     }
-
-    private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-        photoManager.handleCameraPermissionResult(isGranted)
+    private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        coordinatorRef?.onCameraPermissionResult(granted)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,17 +49,20 @@ class CustomerDetailActivity : AppCompatActivity() {
 
         val id = intent.getStringExtra("CUSTOMER_ID")
         if (id == null) {
-            Toast.makeText(this, "Kunden-ID fehlt!", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.error_customer_id_missing), Toast.LENGTH_LONG).show()
             finish()
             return
         }
-        customerId = id
 
-        // PhotoManager initialisieren
-        photoManager = CustomerPhotoManager(
+        viewModel.setCustomerId(id)
+
+        val coordinator = CustomerDetailCoordinator(
             activity = this,
+            binding = binding,
+            viewModel = viewModel,
             repository = repository,
-            customerId = customerId,
+            regelRepository = regelRepository,
+            customerId = id,
             takePictureLauncher = takePictureLauncher,
             pickImageLauncher = pickImageLauncher,
             cameraPermissionLauncher = cameraPermissionLauncher,
@@ -73,129 +70,46 @@ class CustomerDetailActivity : AppCompatActivity() {
                 binding.progressBar.visibility = if (isVisible) android.view.View.VISIBLE else android.view.View.GONE
             }
         )
+        coordinatorRef = coordinator
+        coordinator.setupUi()
 
-        // UI-Setup initialisieren
-        uiSetup = CustomerDetailUISetup(
-            activity = this,
-            binding = binding,
-            photoManager = photoManager,
-            intervalle = intervalle
-        )
-
-        // Callbacks VOR setupUI initialisieren (für temporäre Verwendung)
-        var tempCallbacks: CustomerDetailCallbacks? = null
-        
-        // UI-Setup ZUERST durchführen, damit Adapter initialisiert werden
-        uiSetup.setupUI(
-            onTerminAnlegenClick = { tempCallbacks?.showRegelAuswahlDialog() },
-            onBackClick = { finish() },
-            onAdresseClick = { tempCallbacks?.startNavigation() },
-            onTelefonClick = { tempCallbacks?.startPhoneCall() },
-            onTakePhotoClick = { photoManager.showPhotoOptionsDialog() },
-            onEditClick = { editManager.toggleEditMode(true, currentCustomer) },
-            onSaveClick = { 
-                editManager.handleSave(currentCustomer) {
-                    // Nach erfolgreichem Speichern
-                }
-            },
-            onDeleteClick = { tempCallbacks?.showDeleteConfirmation() },
-            onDatumSelected = { position, isAbholung ->
-                aktuellesIntervallPosition = position
-                aktuellesDatumTyp = isAbholung
-                IntervallManager.showDatumPickerForCustomer(
-                    context = this@CustomerDetailActivity,
-                    intervalle = intervalle,
-                    position = position,
-                    isAbholung = isAbholung,
-                    onDatumSelected = { updatedIntervall ->
-                        uiSetup.intervallAdapter.updateIntervalle(intervalle.toList())
-                    }
-                )
-            }
-        )
-        
-        // Callbacks NACH setupUI initialisieren (benötigt intervallAdapter)
-        callbacks = CustomerDetailCallbacks(
-            activity = this,
-            binding = binding,
-            repository = repository,
-            regelRepository = regelRepository,
-            customerId = customerId,
-            intervalle = intervalle,
-            intervallAdapter = uiSetup.intervallAdapter,
-            currentCustomer = currentCustomer
-        )
-        tempCallbacks = callbacks
-        
-        // IntervallViewAdapter mit Callback für Regel-Klick initialisieren
-        uiSetup.intervallViewAdapter = IntervallViewAdapter(emptyList()) { regelId ->
-            callbacks.showRegelInfoDialog(regelId)
-        }
-        binding.rvDetailIntervalleView.adapter = uiSetup.intervallViewAdapter
-        
-        // Click-Listener mit echten Callbacks aktualisieren
-        binding.btnTerminAnlegen.setOnClickListener { callbacks.showRegelAuswahlDialog() }
-        binding.btnTerminAnlegenView.setOnClickListener { callbacks.showRegelAuswahlDialog() }
-        binding.tvDetailAdresse.setOnClickListener { callbacks.startNavigation() }
-        binding.tvDetailTelefon.setOnClickListener { callbacks.startPhoneCall() }
-        binding.btnEditCustomer.setOnClickListener { editManager.toggleEditMode(true, currentCustomer) }
-        binding.btnSaveCustomer.setOnClickListener { 
-            editManager.handleSave(currentCustomer) {
-                // Nach erfolgreichem Speichern
-            }
-        }
-        binding.btnDeleteCustomer.setOnClickListener { callbacks.showDeleteConfirmation() }
-        
-        // EditManager initialisieren
-        editManager = CustomerEditManager(
-            activity = this,
-            binding = binding,
-            repository = repository,
-            customerId = customerId,
-            intervalle = intervalle,
-            intervallAdapter = uiSetup.intervallAdapter,
-            onEditModeChanged = { isEditing -> /* Kann für weitere Logik verwendet werden */ },
-            onCustomerUpdated = { updatedCustomer -> 
-                currentCustomer = updatedCustomer
-                callbacks.updateCurrentCustomer(updatedCustomer)
-            },
-            onMapsLocationRequested = { callbacks.openMapsForLocationSelection() }
-        )
-        
-        loadCustomer()
-        editManager.toggleEditMode(false, null)
-    }
-
-    private fun loadCustomer() {
-        customerListener = repository.addCustomerListener(
-            customerId = customerId,
-            onUpdate = { customer ->
-                customer?.let {
-                    currentCustomer = it
-                    callbacks.updateCurrentCustomer(it)
-                    // UI immer aktualisieren, auch wenn im Edit-Mode (für Echtzeit-Updates)
-                    // Wenn im Edit-Mode, werden die EditTexts nicht überschrieben, aber andere Felder schon
-                    if (!editManager.isInEditMode()) {
-                        uiSetup.updateUi(it)
-                    } else {
-                        // Im Edit-Mode: Nur nicht-editierbare Felder aktualisieren (z.B. Fotos)
-                        uiSetup.photoAdapter.updatePhotos(it.fotoUrls)
-                    }
-                } ?: run {
-                    if (!isFinishing) {
-                        Toast.makeText(this, "Kunde nicht mehr vorhanden.", Toast.LENGTH_SHORT).show()
-                        finish()
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.currentCustomer.collectLatest { customer ->
+                        if (customer != null) {
+                            coordinator.updateCustomer(customer)
+                        } else if (!viewModel.isLoading.value) {
+                            Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_customer_not_found), Toast.LENGTH_SHORT).show()
+                            if (!isFinishing) finish()
+                        }
                     }
                 }
-            },
-            onError = { error ->
-                Toast.makeText(this, "Fehler: ${error.message}", Toast.LENGTH_SHORT).show()
+                launch {
+                    viewModel.deleted.collectLatest { deleted ->
+                        if (deleted) {
+                            setResult(CustomerManagerActivity.RESULT_CUSTOMER_DELETED, Intent().apply {
+                                putExtra("DELETED_CUSTOMER_ID", id)
+                            })
+                            Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_customer_deleted), Toast.LENGTH_LONG).show()
+                            finish()
+                        }
+                    }
+                }
+                launch {
+                    viewModel.errorMessage.collectLatest { msg ->
+                        msg?.let {
+                            Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_message_generic, it), Toast.LENGTH_SHORT).show()
+                            viewModel.clearErrorMessage()
+                        }
+                    }
+                }
             }
-        )
+        }
     }
 
-    override fun onStop() {
-        super.onStop()
-        customerListener?.let { repository.removeListener(it) }
+    override fun onDestroy() {
+        coordinatorRef = null
+        super.onDestroy()
     }
 }

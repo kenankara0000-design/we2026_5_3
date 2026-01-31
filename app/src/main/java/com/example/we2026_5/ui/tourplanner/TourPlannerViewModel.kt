@@ -12,6 +12,8 @@ import com.example.we2026_5.SectionType
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.tourplanner.TourDataProcessor
+import com.example.we2026_5.util.Result
+import com.example.we2026_5.util.TerminBerechnungUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -49,9 +51,11 @@ class TourPlannerViewModel(
         }
     }
     
-    // StateFlow für ausgewähltes Datum
+    // StateFlow für ausgewähltes Datum (Single Source of Truth für Tourenplaner-Datum)
     private val selectedTimestampFlow = MutableStateFlow<Long?>(null)
-    
+    /** Ausgewähltes Datum für UI (z. B. Anzeige, Prev/Next). */
+    val selectedTimestamp: LiveData<Long?> = selectedTimestampFlow.asLiveData()
+
     // StateFlow für erweiterte Sections
     private val expandedSectionsFlow = MutableStateFlow<Set<SectionType>>(emptySet())
     
@@ -79,10 +83,36 @@ class TourPlannerViewModel(
     private val expandedSections = mutableSetOf<SectionType>()
     
     fun loadTourData(selectedTimestamp: Long, isSectionExpanded: (SectionType) -> Boolean) {
-        // Aktualisiere selectedTimestamp - Flow wird automatisch aktualisiert
         selectedTimestampFlow.value = selectedTimestamp
-        // Aktualisiere expandedSections
         expandedSectionsFlow.value = expandedSections.toSet()
+    }
+
+    /** Setzt das anzuzeigende Datum (z. B. beim Start). */
+    fun setSelectedTimestamp(ts: Long) {
+        selectedTimestampFlow.value = ts
+        expandedSectionsFlow.value = expandedSections.toSet()
+    }
+
+    /** Nächster Tag. */
+    fun nextDay() {
+        val current = selectedTimestampFlow.value ?: return
+        selectedTimestampFlow.value = current + TimeUnit.DAYS.toMillis(1)
+    }
+
+    /** Vorheriger Tag. */
+    fun prevDay() {
+        val current = selectedTimestampFlow.value ?: return
+        selectedTimestampFlow.value = current - TimeUnit.DAYS.toMillis(1)
+    }
+
+    /** Springt auf heute. */
+    fun goToToday() {
+        val cal = Calendar.getInstance()
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        selectedTimestampFlow.value = cal.timeInMillis
     }
     
     // processTourData Funktion entfernt - jetzt in TourDataProcessor
@@ -105,4 +135,44 @@ class TourPlannerViewModel(
     
     /** Aktuelle Listen (für TourPlanner ohne runBlocking). */
     fun getListen(): List<KundenListe> = _listenStateFlow.value
+
+    /** Aktuell gewähltes Datum (für UI-Sync). */
+    fun getSelectedTimestamp(): Long? = selectedTimestampFlow.value
+
+    /** Fehlermeldung setzen (z. B. wenn Erledigung/Verschieben fehlschlägt). Activity zeigt nur an. */
+    fun setError(message: String?) {
+        _error.value = message
+    }
+
+    /** Fehler-State zurücksetzen. */
+    fun clearError() {
+        _error.value = null
+    }
+
+    /**
+     * Löscht einen Einzeltermin (fügt Datum zu geloeschteTermine hinzu).
+     * Activity ruft auf und zeigt Ergebnis (Toast/Error); Reload erfolgt in der Activity.
+     */
+    suspend fun deleteTerminFromCustomer(customer: Customer, terminDatum: Long): Result<Boolean> {
+        val terminDatumStart = TerminBerechnungUtils.getStartOfDay(terminDatum)
+        val aktuelleGeloeschteTermine = customer.geloeschteTermine.toMutableList()
+        if (!aktuelleGeloeschteTermine.contains(terminDatumStart)) {
+            aktuelleGeloeschteTermine.add(terminDatumStart)
+        }
+        return repository.updateCustomerResult(customer.id, mapOf("geloeschteTermine" to aktuelleGeloeschteTermine))
+    }
+
+    /**
+     * Setzt Tour-Zyklus zurück (letzterTermin = jetzt, A/L = false, verschobenAufDatum = 0).
+     * Activity ruft auf und zeigt Ergebnis.
+     */
+    suspend fun resetTourCycle(customerId: String): Result<Boolean> {
+        val resetData = mapOf(
+            "letzterTermin" to System.currentTimeMillis(),
+            "abholungErfolgt" to false,
+            "auslieferungErfolgt" to false,
+            "verschobenAufDatum" to 0
+        )
+        return repository.updateCustomerResult(customerId, resetData)
+    }
 }

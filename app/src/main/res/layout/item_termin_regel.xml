@@ -19,7 +19,7 @@
             android:id="@+id/tvRegelName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Regel Name"
+            android:text="@string/label_rule_name"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/white"
@@ -34,7 +34,7 @@
             android:id="@+id/tvRegelBeschreibung"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Beschreibung"
+            android:text="@string/label_desc"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="8dp"
@@ -50,7 +50,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Abholung:"
+                android:text="@string/label_abholung"
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary"/>
 
@@ -58,7 +58,7 @@
                 android:id="@+id/tvAbholung"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="--"
+                android:text="@string/placeholder_dash"
                 android:textSize="12sp"
                 android:textColor="@color/text_primary"/>
         </LinearLayout>
@@ -73,7 +73,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Auslieferung:"
+                android:text="@string/label_auslieferung"
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary"/>
 
@@ -81,7 +81,7 @@
                 android:id="@+id/tvAuslieferung"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="--"
+                android:text="@string/placeholder_dash"
                 android:textSize="12sp"
                 android:textColor="@color/text_primary"/>
         </LinearLayout>
@@ -96,7 +96,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Verwendungen:"
+                android:text="@string/label_verwendungen"
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary"/>
 

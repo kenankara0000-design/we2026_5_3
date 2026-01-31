@@ -21,15 +21,15 @@
             android:layout_height="48dp"
             android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_revert"
+            android:src="@drawable/ic_arrow_back"
             android:tint="#FFFFFF"
-            android:contentDescription="Zurück" />
+            android:contentDescription="@string/content_desc_back" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Neuen Kunden anlegen"
+            android:text="@string/add_customer_title"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -51,7 +51,7 @@
             android:id="@+id/etName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Name (Pflichtfeld)"
+            android:hint="@string/hint_name_required"
             android:inputType="textPersonName"
             android:padding="12dp"
             android:textColor="@color/text_primary"
@@ -63,7 +63,7 @@
             android:id="@+id/etAdresse"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Adresse (Optional)"
+            android:hint="@string/hint_address_optional"
             android:inputType="textPostalAddress"
             android:padding="12dp"
             android:textColor="@color/text_primary"
@@ -75,7 +75,7 @@
             android:id="@+id/etTelefon"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Telefon (Optional)"
+            android:hint="@string/hint_phone_optional"
             android:inputType="phone"
             android:padding="12dp"
             android:textColor="@color/text_primary"
@@ -87,7 +87,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Kunden-Art:"
+            android:text="@string/label_customer_type"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
             android:textSize="14sp"
@@ -105,7 +105,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Gewerblich"
+                android:text="@string/label_type_gewerblich"
                 android:textColor="@color/text_primary"
                 android:checked="true"/>
 
@@ -114,7 +114,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Privat"
+                android:text="@string/label_type_privat"
                 android:textColor="@color/text_primary"/>
 
             <RadioButton
@@ -122,7 +122,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Liste"
+                android:text="@string/label_type_liste"
                 android:textColor="@color/text_primary"/>
         </RadioGroup>
 
@@ -144,7 +144,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="💡 Hinweis"
+                    android:text="@string/add_customer_hint"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -153,7 +153,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Termine können nach dem Erstellen des Kunden über 'Termin Anlegen' hinzugefügt werden."
+                    android:text="@string/add_customer_hint_text"
                     android:textSize="12sp"
                     android:textColor="@color/text_secondary"/>
             </LinearLayout>
@@ -163,7 +163,7 @@
             android:id="@+id/etNotizen"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Notizen"
+            android:hint="@string/hint_notes"
             android:inputType="textMultiLine"
             android:minLines="3"
             android:gravity="top"
@@ -177,7 +177,7 @@
             android:id="@+id/btnSaveCustomer"
             android:layout_width="match_parent"
             android:layout_height="65dp"
-            android:text="Speichern"
+            android:text="@string/btn_save"
             android:background="@drawable/button_speichern_glossy"
             android:textColor="#FFFFFF"
             android:layout_marginBottom="12dp"/>

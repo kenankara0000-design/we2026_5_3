@@ -145,7 +145,7 @@ class KundenListenActivity : AppCompatActivity() {
                                     listeRepository.deleteListe(liste.id)
                                 },
                                 context = this@KundenListenActivity,
-                                errorMessage = "Fehler beim Löschen. Bitte erneut versuchen.",
+                                errorMessage = getString(R.string.error_delete_generic),
                                 maxRetries = 3
                             )
 
@@ -192,14 +192,14 @@ class KundenListenActivity : AppCompatActivity() {
             holder.binding.tvListeName.text = liste.name
             
             // Liste-Art anzeigen
-            holder.binding.tvListeArt.text = "Liste-Art: ${liste.listeArt}"
+            holder.binding.tvListeArt.text = holder.itemView.context.getString(R.string.list_art_format, liste.listeArt)
             holder.binding.tvListeArt.visibility = View.VISIBLE
             
             val anzahlKunden = kundenProListe[liste.id] ?: 0
-            holder.binding.tvIntervallInfo.text = "$anzahlKunden Kunde(n)"
+            holder.binding.tvIntervallInfo.text = holder.itemView.context.getString(R.string.label_customers_count, anzahlKunden)
             
             val erstelltAm = com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(liste.erstelltAm)
-            holder.binding.tvErstelltAm.text = "Erstellt: $erstelltAm"
+            holder.binding.tvErstelltAm.text = holder.itemView.context.getString(R.string.label_created, erstelltAm)
 
             holder.itemView.setOnClickListener {
                 onListeClick(liste)

@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TourPlaner 2026"
+        android:text="@string/app_title_tourplaner"
         android:textSize="28sp"
         android:textStyle="bold"
         android:textColor="#333333"
@@ -20,7 +20,7 @@
         android:id="@+id/etEmail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="E-Mail"
+        android:hint="@string/login_hint_email"
         android:inputType="textEmailAddress"
         android:padding="12dp"
         android:layout_marginBottom="16dp"
@@ -30,7 +30,7 @@
         android:id="@+id/etPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Passwort"
+        android:hint="@string/login_hint_password"
         android:inputType="textPassword"
         android:padding="12dp"
         android:layout_marginBottom="24dp"
@@ -40,18 +40,19 @@
         android:id="@+id/btnLogin"
         android:layout_width="match_parent"
         android:layout_height="70dp"
-        android:text="Anmelden / Registrieren"
+        android:text="@string/login_btn_text"
         android:backgroundTint="@color/primary_blue"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
-        android:textStyle="bold"/>
+        android:textStyle="bold"
+        android:contentDescription="@string/content_desc_login"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="16dp"
-        android:text="💡 Einfach E-Mail und Passwort eingeben\nBei erstem Login wird automatisch ein Konto erstellt"
+        android:text="@string/login_hint_text"
         android:textSize="12sp"
         android:textColor="#666666"
         android:gravity="center"/>

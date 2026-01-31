@@ -23,7 +23,7 @@
             android:layout_centerVertical="true"
             android:background="@drawable/button_icon_pressed"
             android:src="@drawable/ic_arrow_back"
-            android:contentDescription="Zurück"
+            android:contentDescription="@string/content_desc_back"
             android:padding="12dp" />
 
         <!-- Offline-Status-Indikator (unter Zurück-Button) -->
@@ -50,7 +50,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Offline"
+                android:text="@string/main_offline"
                 android:textColor="#FFEB3B"
                 android:textSize="10sp"
                 android:textStyle="bold"/>
@@ -73,7 +73,7 @@
                 android:layout_height="44dp"
                 android:background="@drawable/button_icon_pressed"
                 android:src="@drawable/ic_arrow_back"
-                android:contentDescription="Vorheriger Tag"
+                android:contentDescription="@string/content_desc_prev_day"
                 android:padding="10dp"
                 android:layout_marginEnd="8dp"/>
 
@@ -81,7 +81,7 @@
                 android:id="@+id/tvCurrentDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Datum"
+                android:text="@string/tour_label_date"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
@@ -94,7 +94,7 @@
                 android:layout_height="44dp"
                 android:background="@drawable/button_icon_pressed"
                 android:src="@drawable/ic_arrow_forward"
-                android:contentDescription="Nächster Tag"
+                android:contentDescription="@string/content_desc_next_day"
                 android:padding="10dp"
                 android:layout_marginStart="8dp"/>
         </LinearLayout>
@@ -120,7 +120,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:text="Karte"
+            android:text="@string/tour_btn_map"
             android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:textStyle="normal"
@@ -135,7 +135,7 @@
             android:paddingTop="12dp"
             android:paddingBottom="12dp"
             android:minHeight="48dp"
-            android:contentDescription="Kartenansicht" />
+            android:contentDescription="@string/content_desc_map" />
         
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnToday"
@@ -143,7 +143,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:text="Heute"
+            android:text="@string/tour_btn_today"
             android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:textStyle="normal"
@@ -158,7 +158,7 @@
             android:paddingTop="12dp"
             android:paddingBottom="12dp"
             android:minHeight="48dp"
-            android:contentDescription="Heute" />
+            android:contentDescription="@string/content_desc_today" />
         
         <!-- Toggle-Button für Wochenansicht wurde entfernt -->
     </LinearLayout>
@@ -202,7 +202,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Keine Touren für diesen Tag"
+                    android:text="@string/tour_empty_title"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_secondary"
@@ -211,7 +211,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Für diesen Wochentag sind keine Kunden eingetragen."
+                    android:text="@string/tour_empty_subtitle"
                     android:textSize="14sp"
                     android:textColor="@color/text_secondary"
                     android:gravity="center"/>
@@ -244,7 +244,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Fehler beim Laden"
+                android:text="@string/tour_error_title"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/status_overdue"
@@ -264,7 +264,7 @@
                 android:id="@+id/btnRetry"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Erneut versuchen"
+                android:text="@string/tour_retry"
                 android:backgroundTint="@color/primary_blue"
                 android:textColor="@color/white"/>
             </LinearLayout>

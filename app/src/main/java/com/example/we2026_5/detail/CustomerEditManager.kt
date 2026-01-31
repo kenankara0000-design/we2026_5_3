@@ -4,9 +4,7 @@ import android.view.View
 import android.widget.Toast
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
-import com.example.we2026_5.FirebaseRetryHelper
 import com.example.we2026_5.ValidationHelper
-import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.databinding.ActivityCustomerDetailBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,15 +12,15 @@ import kotlinx.coroutines.launch
 
 /**
  * Manager für Edit-Mode-Logik in CustomerDetailActivity.
- * Extrahiert die Edit-Mode-Umschaltung, Validierung und Speicher-Logik.
+ * Speichern erfolgt über Callback (z. B. ViewModel.saveCustomer), nicht direkt über Repository.
  */
 class CustomerEditManager(
     private val activity: android.app.Activity,
     private val binding: ActivityCustomerDetailBinding,
-    private val repository: CustomerRepository,
     private val customerId: String,
     private val intervalle: MutableList<CustomerIntervall>,
     private val intervallAdapter: com.example.we2026_5.IntervallAdapter,
+    private val onSaveUpdates: (Map<String, Any>, (Boolean) -> Unit) -> Unit,
     private val onEditModeChanged: (Boolean) -> Unit,
     private val onCustomerUpdated: (Customer) -> Unit,
     private val onMapsLocationRequested: () -> Unit
@@ -101,21 +99,21 @@ class CustomerEditManager(
     fun handleSave(currentCustomer: Customer?, onSaveComplete: () -> Unit) {
         val name = binding.etDetailName.text.toString().trim()
         if (name.isEmpty()) {
-            binding.etDetailName.error = "Name fehlt"
+            binding.etDetailName.error = activity.getString(com.example.we2026_5.R.string.validation_name_missing)
             return
         }
 
         // Adresse-Validierung
         val adresse = binding.etDetailAdresse.text.toString().trim()
         if (adresse.isNotEmpty() && !ValidationHelper.isValidAddress(adresse)) {
-            binding.etDetailAdresse.error = "Adresse sollte Straße und Hausnummer enthalten"
+            binding.etDetailAdresse.error = activity.getString(com.example.we2026_5.R.string.validation_adresse)
             return
         }
 
         // Telefon-Validierung
         val telefon = binding.etDetailTelefon.text.toString().trim()
         if (telefon.isNotEmpty() && !ValidationHelper.isValidPhoneNumber(telefon)) {
-            binding.etDetailTelefon.error = "Ungültiges Telefonnummer-Format"
+            binding.etDetailTelefon.error = activity.getString(com.example.we2026_5.R.string.validation_telefon)
             return
         }
 
@@ -124,7 +122,7 @@ class CustomerEditManager(
             activity.runOnUiThread {
                 binding.btnSaveCustomer.visibility = View.VISIBLE
                 binding.btnSaveCustomer.isEnabled = false
-                binding.btnSaveCustomer.text = "Speichere..."
+                binding.btnSaveCustomer.text = activity.getString(com.example.we2026_5.R.string.save_in_progress)
                 binding.btnSaveCustomer.alpha = 0.6f
             }
             
@@ -163,57 +161,40 @@ class CustomerEditManager(
                 }
             )
             
-            // Optimistische UI-Aktualisierung
-            currentCustomer?.let { customer ->
-                val updatedCustomer = customer.copy(
-                    name = name,
-                    adresse = adresse,
-                    telefon = telefon,
-                    notizen = binding.etDetailNotizen.text.toString().trim(),
-                    kundenArt = kundenArt,
-                    wochentag = 0,
-                    intervalle = customerIntervalle
-                )
-                onCustomerUpdated(updatedCustomer)
-            }
-            
-            updateCustomerData(updatedData, "Änderungen gespeichert") {
-                // Visuelles Feedback nach erfolgreichem Update
-                activity.runOnUiThread {
-                    binding.btnSaveCustomer.visibility = View.VISIBLE
-                    binding.btnSaveCustomer.text = "✓ Gespeichert!"
-                    binding.btnSaveCustomer.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                        activity.resources.getColor(com.example.we2026_5.R.color.status_done, activity.theme)
-                    )
-                    binding.btnSaveCustomer.alpha = 1.0f
-                    
-                    // Nach kurzer Verzögerung: Edit-Mode beenden
-                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                        toggleEditMode(false, currentCustomer)
-                        binding.btnSaveCustomer.isEnabled = true
-                        binding.btnSaveCustomer.text = "Speichern"
-                        binding.btnSaveCustomer.alpha = 1.0f
-                        onSaveComplete()
-                    }, 1500)
-                }
-            }
-        }
-    }
-    
-    private fun updateCustomerData(data: Map<String, Any>, toastMessage: String, onSuccess: (() -> Unit)? = null) {
-        CoroutineScope(Dispatchers.Main).launch {
-            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                operation = { 
-                    repository.updateCustomer(customerId, data)
-                },
-                context = activity,
-                errorMessage = "Fehler beim Speichern. Bitte erneut versuchen.",
-                maxRetries = 3
+            val updatedCustomerOptimistic = currentCustomer?.copy(
+                name = name,
+                adresse = adresse,
+                telefon = telefon,
+                notizen = binding.etDetailNotizen.text.toString().trim(),
+                kundenArt = kundenArt,
+                wochentag = 0,
+                intervalle = customerIntervalle
             )
-            
-            if (success == true) {
-                Toast.makeText(activity, toastMessage, Toast.LENGTH_SHORT).show()
-                onSuccess?.invoke()
+            updatedCustomerOptimistic?.let { onCustomerUpdated(it) }
+
+            onSaveUpdates(updatedData) { success ->
+                activity.runOnUiThread {
+                    if (success) {
+                        Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                        binding.btnSaveCustomer.visibility = View.VISIBLE
+                        binding.btnSaveCustomer.text = activity.getString(com.example.we2026_5.R.string.toast_gespeichert)
+                        binding.btnSaveCustomer.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                            activity.resources.getColor(com.example.we2026_5.R.color.status_done, activity.theme)
+                        )
+                        binding.btnSaveCustomer.alpha = 1.0f
+                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                            toggleEditMode(false, updatedCustomerOptimistic)
+                            binding.btnSaveCustomer.isEnabled = true
+                            binding.btnSaveCustomer.text = activity.getString(com.example.we2026_5.R.string.btn_save)
+                            binding.btnSaveCustomer.alpha = 1.0f
+                            onSaveComplete()
+                        }, 1500)
+                    } else {
+                        binding.btnSaveCustomer.isEnabled = true
+                        binding.btnSaveCustomer.text = activity.getString(com.example.we2026_5.R.string.btn_save)
+                        binding.btnSaveCustomer.alpha = 1.0f
+                    }
+                }
             }
         }
     }

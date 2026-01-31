@@ -106,7 +106,7 @@ class ListeBearbeitenActivity : AppCompatActivity() {
         binding.btnSaveListe.setOnClickListener { 
             val name = binding.etListeNameEdit.text.toString().trim()
             if (name.isEmpty()) {
-                binding.etListeNameEdit.error = "Name fehlt"
+                binding.etListeNameEdit.error = getString(R.string.validation_name_missing)
                 return@setOnClickListener
             }
             

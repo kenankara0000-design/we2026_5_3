@@ -17,16 +17,18 @@ import com.example.we2026_5.adapter.CustomerDialogHelper
 import com.example.we2026_5.adapter.CustomerViewHolderBinder
 import com.example.we2026_5.adapter.CustomerItemHelper
 import com.example.we2026_5.adapter.CustomerAdapterCallbacks
+import com.example.we2026_5.adapter.CustomerAdapterCallbacksConfig
 import com.example.we2026_5.adapter.CustomerViewHolder
 import com.example.we2026_5.adapter.SectionHeaderViewHolder
 import com.example.we2026_5.adapter.ListeHeaderViewHolder
 import com.example.we2026_5.databinding.ItemCustomerBinding
 import com.example.we2026_5.databinding.ItemSectionHeaderBinding
+import com.example.we2026_5.util.TerminBerechnungUtils
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 sealed class ListItem {
-    data class CustomerItem(val customer: Customer) : ListItem()
+    data class CustomerItem(val customer: Customer, val isOverdue: Boolean = false) : ListItem()
     data class SectionHeader(
         val title: String, 
         val count: Int, 
@@ -57,7 +59,6 @@ class CustomerAdapter(
     private var displayedDateMillis: Long? = null
     // Sections standardmäßig eingeklappt (collapsed)
     private var expandedSections = mutableSetOf<SectionType>()
-    var onSectionToggle: ((SectionType) -> Unit)? = null
     
     // Multi-Select für Bulk-Operationen
     private var isMultiSelectMode = false
@@ -66,18 +67,21 @@ class CustomerAdapter(
     // Button-Zustand: Welcher Button wurde für welchen Kunden gedrückt
     private val pressedButtons = mutableMapOf<String, String>() // customerId -> "A", "L", "V", "U"
     
+    /** Gebündelte Callbacks (Erledigung, Datum-Berechnung, Aktionen). */
+    var callbacks: CustomerAdapterCallbacksConfig = CustomerAdapterCallbacksConfig()
+    
     // Dialog-Helper für Verschieben, Urlaub, Rückgängig
     private val dialogHelper: CustomerDialogHelper by lazy {
         CustomerDialogHelper(
             context = context,
             onVerschieben = { customer, newDate, alleVerschieben ->
-                onVerschieben?.invoke(customer, newDate, alleVerschieben)
+                this@CustomerAdapter.callbacks.onVerschieben?.invoke(customer, newDate, alleVerschieben)
             },
             onUrlaub = { customer, von, bis ->
-                onUrlaub?.invoke(customer, von, bis)
+                this@CustomerAdapter.callbacks.onUrlaub?.invoke(customer, von, bis)
             },
             onRueckgaengig = { customer ->
-                onRueckgaengig?.invoke(customer)
+                this@CustomerAdapter.callbacks.onRueckgaengig?.invoke(customer)
             },
             onButtonStateReset = { customerId ->
                 pressedButtons.remove(customerId)
@@ -86,23 +90,9 @@ class CustomerAdapter(
             }
         )
     }
-    
-    // Callbacks für Firebase-Operationen (statt direkter Firebase-Aufrufe)
-    var onAbholung: ((Customer) -> Unit)? = null
-    var onAuslieferung: ((Customer) -> Unit)? = null
-    var onKw: ((Customer) -> Unit)? = null // Keine Wäsche (A+KW / L+KW erledigt)
-    var onResetTourCycle: ((String) -> Unit)? = null
-    var onVerschieben: ((Customer, Long, Boolean) -> Unit)? = null // customer, newDate, alleVerschieben
-    var onUrlaub: ((Customer, Long, Long) -> Unit)? = null // customer, von, bis
-    var onRueckgaengig: ((Customer) -> Unit)? = null
-    var onBulkMarkDone: ((List<Customer>) -> Unit)? = null // Für Bulk-Operationen
-    var onTerminClick: ((Customer, Long) -> Unit)? = null // customer, terminDatum - für Termin-Detail-Dialog
-    // Callbacks für Datum-Berechnung (für A/L Button-Aktivierung)
-    var getAbholungDatum: ((Customer) -> Long)? = null // Gibt Abholungsdatum für heute zurück
-    var getAuslieferungDatum: ((Customer) -> Long)? = null // Gibt Auslieferungsdatum für heute zurück
-    var getNaechstesTourDatum: ((Customer) -> Long)? = null // Nächstes Tour-Datum (für Listen-Kunden: Termin-Regel der Liste)
-    /** Termine für Kunde (mit Liste bei Listen-Kunden). Für einheitliche A/L/KW/Ü-Logik bei Listen. */
-    var getTermineFuerKunde: ((Customer, Long, Int) -> List<com.example.we2026_5.util.TerminInfo>)? = null
+
+    /** Binder einmal pro Adapter-Lifecycle (wird bei updateData invalidiert). */
+    private var binder: CustomerViewHolderBinder? = null
 
     // Drag & Drop Support
     fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
@@ -139,18 +129,12 @@ class CustomerAdapter(
             expandedSections = expandedSections,
             expandedListen = expandedListen,
             bindCustomerViewHolder = { holder, customer -> bindCustomerViewHolder(holder, customer) },
-            getStartOfDay = { ts -> getStartOfDay(ts) }
+            getStartOfDay = { ts -> TerminBerechnungUtils.getStartOfDay(ts) }
         )
     }
     
-    private val callbacks: CustomerAdapterCallbacks by lazy {
-        CustomerAdapterCallbacks(
-            context = context,
-            onAbholung = onAbholung,
-            onAuslieferung = onAuslieferung,
-            onKw = onKw,
-            onSectionToggle = onSectionToggle
-        )
+    private val callbackHelper: CustomerAdapterCallbacks by lazy {
+        CustomerAdapterCallbacks(context = context) { callbacks }
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -186,7 +170,7 @@ class CustomerAdapter(
                 // Liste-Kunden werden nicht mehr als separate Items hinzugefügt (nur in ListeHeader)
                 // Section-Kunden werden nicht mehr als separate Items hinzugefügt (nur in SectionHeader)
                 // Daher: Alle CustomerItems hier sind gültig und sollten angezeigt werden
-                bindCustomerViewHolder(holder as CustomerViewHolder, item.customer)
+                bindCustomerViewHolder(holder as CustomerViewHolder, item.customer, item.isOverdue)
                 holder.itemView.visibility = View.VISIBLE
             }
             is ListItem.ListeHeader -> {
@@ -248,48 +232,44 @@ class CustomerAdapter(
         notifyDataSetChanged()
         
         // TourPlannerActivity benachrichtigen, damit Daten neu geladen werden
-        onSectionToggle?.invoke(sectionType)
+        callbacks.onSectionToggle?.invoke(sectionType)
     }
 
-    private fun bindCustomerViewHolder(holder: CustomerViewHolder, customer: Customer) {
-        // Navigation-Button setzen
+    private fun bindCustomerViewHolder(holder: CustomerViewHolder, customer: Customer, isOverdue: Boolean = false) {
         holder.binding.btnNavigation.setOnClickListener {
-            callbacks.startNavigation(customer.adresse)
+            callbackHelper.startNavigation(customer.adresse)
         }
-        
-        // Verwende den ViewHolder-Binder für den Rest
-        // Aktualisiere den Binder mit aktuellen Werten (da lazy init nur einmal ausgeführt wird)
-        val binder = CustomerViewHolderBinder(
-            context = context,
-            displayedDateMillis = displayedDateMillis,
-            pressedButtons = pressedButtons,
-            selectedCustomers = selectedCustomers,
-            isMultiSelectMode = isMultiSelectMode,
-            getAbholungDatum = getAbholungDatum,
-            getAuslieferungDatum = getAuslieferungDatum,
-            getNaechstesTourDatum = getNaechstesTourDatum,
-            getTermineFuerKunde = getTermineFuerKunde,
-            onTerminClick = onTerminClick,
-            onClick = onClick,
-            dialogHelper = dialogHelper,
-            onAbholung = { customer -> callbacks.handleAbholung(customer) },
-            onAuslieferung = { customer -> callbacks.handleAuslieferung(customer) },
-            onKw = { customer -> callbacks.handleKw(customer) },
-            enableMultiSelectMode = { enableMultiSelectMode() },
-            toggleCustomerSelection = { customerId, holder -> toggleCustomerSelection(customerId, holder as com.example.we2026_5.adapter.CustomerViewHolder) }
-        )
-        binder.bind(holder, customer)
+        if (binder == null) {
+            binder = CustomerViewHolderBinder(
+                context = context,
+                displayedDateMillis = displayedDateMillis,
+                pressedButtons = pressedButtons,
+                selectedCustomers = selectedCustomers,
+                isMultiSelectMode = isMultiSelectMode,
+                callbacksConfig = callbacks,
+                onClick = onClick,
+                dialogHelper = dialogHelper,
+                onAbholung = { c -> callbackHelper.handleAbholung(c) },
+                onAuslieferung = { c -> callbackHelper.handleAuslieferung(c) },
+                onKw = { c -> callbackHelper.handleKw(c) },
+                enableMultiSelectMode = { enableMultiSelectMode() },
+                toggleCustomerSelection = { customerId, h -> toggleCustomerSelection(customerId, h as com.example.we2026_5.adapter.CustomerViewHolder) }
+            )
+        }
+        binder!!.bind(holder, customer, isOverdue)
     }
     
     fun enableMultiSelectMode() {
         isMultiSelectMode = true
         selectedCustomers.clear()
+        binder = null
         notifyDataSetChanged()
     }
     
     fun disableMultiSelectMode() {
         isMultiSelectMode = false
         selectedCustomers.clear()
+        binder = null
         notifyDataSetChanged()
     }
     
@@ -319,7 +299,7 @@ class CustomerAdapter(
         try {
             context.startActivity(mapIntent)
         } catch (e: Exception) {
-            Toast.makeText(context, "Google Maps ist nicht installiert.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.error_maps_not_installed), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -327,9 +307,9 @@ class CustomerAdapter(
     override fun getItemCount() = items.size
 
     fun updateData(newList: List<ListItem>, date: Long? = null) {
-        // Listen bleiben standardmäßig eingeklappt (collapsed)
         items = newList.toMutableList()
         displayedDateMillis = date
+        binder = null // Binder bei neuem Datum/Liste neu erstellen
         notifyDataSetChanged()
     }
     
@@ -373,17 +353,7 @@ class CustomerAdapter(
         return expandedSections.contains(sectionType)
     }
     
-    private fun getStartOfDay(ts: Long): Long {
-        return Calendar.getInstance().apply {
-            timeInMillis = ts
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-    }
-
     private fun resetTourCycle(customerId: String) {
-        onResetTourCycle?.invoke(customerId)
+        callbacks.onResetTourCycle?.invoke(customerId)
     }
 }

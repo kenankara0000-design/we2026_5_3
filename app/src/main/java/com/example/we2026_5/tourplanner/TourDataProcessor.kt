@@ -343,10 +343,8 @@ class TourDataProcessor {
             ueberfaelligeDaten.minOrNull() ?: Long.MAX_VALUE
         }.thenBy { it.name })
         
-        // 1. Überfällige Kunden ganz oben, ohne Container, sortiert nach ältester Überfälligkeit
-        if (overdueOhneListen.isNotEmpty()) {
-            overdueOhneListen.forEach { items.add(ListItem.CustomerItem(it)) }
-        }
+        // 1. Überfällige Kunden ganz oben – einzeln mit Überfällig-Design (kein Container)
+        overdueOhneListen.forEach { items.add(ListItem.CustomerItem(it, isOverdue = true)) }
         
         // 2. Kunden nach Listen gruppiert
         allListen.sortedBy { it.name }.forEach { liste ->
@@ -438,6 +436,25 @@ class TourDataProcessor {
         }
         
         return items
+    }
+
+    /**
+     * Gibt die Anzahl der Termine zurück, die am angegebenen Tag (nur Heute) fällig oder überfällig
+     * und noch nicht erledigt sind. Erledigte („erledigt heute“) werden nicht mitgezählt.
+     */
+    fun getFälligCount(
+        allCustomers: List<Customer>,
+        allListen: List<KundenListe>,
+        selectedTimestamp: Long
+    ): Int {
+        val items = processTourData(allCustomers, allListen, selectedTimestamp, emptySet())
+        return items.sumOf { item ->
+            when (item) {
+                is ListItem.CustomerItem -> 1
+                is ListItem.SectionHeader -> if (item.sectionType == SectionType.OVERDUE) item.kunden.size else 0
+                is ListItem.ListeHeader -> item.nichtErledigteKunden.size
+            }
+        }
     }
     
     /**

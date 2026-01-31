@@ -25,7 +25,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Intervall"
+                android:text="@string/label_intervall"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary_blue_dark"/>
@@ -42,7 +42,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Abholungsdatum:"
+            android:text="@string/label_abholung_date"
             android:textSize="12sp"
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="4dp"/>
@@ -51,7 +51,7 @@
             android:id="@+id/tvAbholungDatum"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Nicht gesetzt"
+            android:text="@string/label_not_set"
             android:textSize="14sp"
             android:textColor="@color/text_primary"
             android:padding="8dp"
@@ -63,7 +63,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Auslieferungsdatum:"
+            android:text="@string/label_auslieferung_date"
             android:textSize="12sp"
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="4dp"/>
@@ -72,7 +72,7 @@
             android:id="@+id/tvAuslieferungDatum"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Nicht gesetzt"
+            android:text="@string/label_not_set"
             android:textSize="14sp"
             android:textColor="@color/text_primary"
             android:padding="8dp"
@@ -92,7 +92,7 @@
                 android:id="@+id/switchWiederholen"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Wiederholen"
+                android:text="@string/label_repeat"
                 android:textSize="14sp"
                 android:textColor="@color/text_primary"/>
 
@@ -101,7 +101,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Intervall (Tage)"
+                android:hint="@string/termin_regel_label_interval_days"
                 android:inputType="number"
                 android:padding="8dp"
                 android:layout_marginStart="16dp"
@@ -123,7 +123,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Anzahl:"
+                android:text="@string/label_count"
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary"
                 android:layout_marginEnd="8dp"/>
@@ -133,7 +133,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Anzahl (0 = unbegrenzt)"
+                android:hint="@string/hint_repeat_unlimited"
                 android:inputType="number"
                 android:padding="8dp"
                 android:textColor="@color/text_primary"

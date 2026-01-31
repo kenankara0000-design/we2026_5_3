@@ -11,6 +11,7 @@ import com.example.we2026_5.TerminRegel
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.data.repository.TerminRegelRepository
+import com.example.we2026_5.R
 import com.example.we2026_5.util.TerminRegelManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +38,7 @@ class ListeBearbeitenCallbacks(
                     customerRepository.updateCustomer(customer.id, mapOf("listeId" to ""))
                 },
                 context = activity,
-                errorMessage = "Fehler beim Entfernen. Bitte erneut versuchen.",
+                errorMessage = activity.getString(R.string.error_delete_generic),
                 maxRetries = 3
             )
 
@@ -58,7 +59,7 @@ class ListeBearbeitenCallbacks(
                     customerRepository.updateCustomer(customer.id, mapOf("listeId" to listeId))
                 },
                 context = activity,
-                errorMessage = "Fehler beim Hinzufügen. Bitte erneut versuchen.",
+                errorMessage = activity.getString(R.string.error_save_generic),
                 maxRetries = 3
             )
 
@@ -103,7 +104,7 @@ class ListeBearbeitenCallbacks(
                         listeRepository.updateListe(liste.id, updatedData)
                     },
                     context = activity,
-                    errorMessage = "Fehler beim Speichern. Bitte erneut versuchen.",
+                    errorMessage = activity.getString(R.string.error_save_generic),
                     maxRetries = 3
                 )
                 
@@ -146,7 +147,7 @@ class ListeBearbeitenCallbacks(
                     listeRepository.deleteListe(listeId)
                 },
                 context = activity,
-                errorMessage = "Fehler beim Löschen. Bitte erneut versuchen.",
+                errorMessage = activity.getString(R.string.error_delete_generic),
                 maxRetries = 3
             )
             

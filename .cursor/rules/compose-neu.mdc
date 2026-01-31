@@ -1,0 +1,18 @@
+---
+description: Neue UI wird in Jetpack Compose gebaut; Migration bestehender Screens nach COMPOSE_MIGRATION_PROTOKOLL.md
+globs: "**/*.kt","**/res/layout/**"
+alwaysApply: false
+---
+
+# Compose für neue und migrierte UI
+
+## Regel
+
+- **Neue UI** (neuer Screen, neues Dialog, neues Bottom-Sheet, neuer sichtbarer Abschnitt): in **Jetpack Compose** implementieren, nicht in XML + ViewBinding.
+- **Bestehende Screens:** Umstellung nur schrittweise gemäß **COMPOSE_MIGRATION_PROTOKOLL.md**; dort Reihenfolge und „erledigt“-Markierung pflegen.
+
+## Anker-Datei
+
+- **COMPOSE_MIGRATION_PROTOKOLL.md** ist die zentrale Datei für die Compose-Migration.
+- Jeder migrierte Screen / jeder erledigte Schritt wird dort mit `[x]` markiert.
+- Bei neuen Compose-Screens oder abgeschlossenen Phasen: Protokoll aktualisieren.

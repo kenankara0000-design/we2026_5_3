@@ -3,6 +3,8 @@ package com.example.we2026_5
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
@@ -38,10 +40,13 @@ class CustomerManagerActivity : AppCompatActivity() {
     private lateinit var bulkSelectManager: BulkSelectManager
     private var pressedHeaderButton: String? = null // "Auswählen", "Exportieren", "NeuerKunde"
     private val deletedCustomerIds = mutableSetOf<String>() // Liste von gelöschten Kunden-IDs (optimistische UI-Aktualisierung)
-    
+    private val searchDebounceHandler = Handler(Looper.getMainLooper())
+    private var searchDebounceRunnable: Runnable? = null
+
     companion object {
         private const val REQUEST_CODE_CUSTOMER_DETAIL = 1001
         const val RESULT_CUSTOMER_DELETED = 2001
+        private const val SEARCH_DEBOUNCE_MS = 300L
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,12 +79,21 @@ class CustomerManagerActivity : AppCompatActivity() {
             override fun onTabSelected(tab: com.google.android.material.tabs.TabLayout.Tab?) {
                 tab?.position?.let { position ->
                     viewModel.setSelectedTab(position)
+                    binding.tabSwipeContainer.setCurrentTab(position)
                 }
             }
             
             override fun onTabUnselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
             override fun onTabReselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
         })
+        
+        // Swipe zwischen Gewerblich / Privat / Liste
+        binding.tabSwipeContainer.setCurrentTab(0)
+        binding.tabSwipeContainer.setOnTabChangeListener { newIndex ->
+            viewModel.setSelectedTab(newIndex)
+            binding.tabLayout.getTabAt(newIndex)?.select()
+            binding.tabSwipeContainer.setCurrentTab(newIndex)
+        }
         
         // Initial: Gewerblich-Tab ausgewählt
         viewModel.setSelectedTab(0)
@@ -130,7 +144,10 @@ class CustomerManagerActivity : AppCompatActivity() {
         binding.etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.filterCustomers(s.toString())
+                searchDebounceRunnable?.let { searchDebounceHandler.removeCallbacks(it) }
+                val query = s.toString()
+                searchDebounceRunnable = Runnable { viewModel.filterCustomers(query) }
+                searchDebounceHandler.postDelayed(searchDebounceRunnable!!, SEARCH_DEBOUNCE_MS)
             }
             override fun afterTextChanged(s: Editable?) {}
         })
@@ -246,6 +263,7 @@ class CustomerManagerActivity : AppCompatActivity() {
         binding.tvErrorMessage.text = message
         
         binding.btnRetry.setOnClickListener {
+            viewModel.clearError()
             viewModel.loadCustomers()
         }
     }

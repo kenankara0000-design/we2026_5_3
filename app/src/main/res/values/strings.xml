@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">we2026_5</string>
+    <string name="app_name">TourPlaner 2026</string>
     <string name="menu_kunden">Kunden Liste</string>
     <string name="menu_touren">Touren Planer</string>
     <string name="menu_neu">Neuer Kunde</string>
@@ -27,7 +27,10 @@
     <string name="error_urlaub">Fehler beim Eintragen des Urlaubs. Bitte erneut versuchen.</string>
     <string name="toast_urlaub_eingetragen">Urlaub eingetragen</string>
     <string name="error_rueckgaengig">Fehler beim Rückgängigmachen. Bitte erneut versuchen.</string>
+    <string name="error_firebase_allgemein">Verbindungsfehler. Bitte prüfen Sie die Internetverbindung und versuchen Sie es erneut.</string>
     <string name="toast_rueckgaengig_gemacht">Rückgängig gemacht</string>
+    <string name="toast_termin_deleted">Termin gelöscht</string>
+    <string name="toast_tour_completed">Tour abgeschlossen!</string>
 
     <!-- TerminRegelErstellen -->
     <string name="termin_regel_titel_bearbeiten">Regel bearbeiten</string>
@@ -61,4 +64,259 @@
     <string name="toast_fehler_pruefen">Fehler beim Prüfen: %1$s</string>
     <string name="toast_regel_geloescht">Regel gelöscht</string>
     <string name="toast_fehler_loeschen">Fehler beim Löschen</string>
+
+    <!-- Erledigungs-Bottom-Sheet -->
+    <string name="sheet_aktionen">Aktionen</string>
+    <string name="sheet_tab_erledigung">Erledigung</string>
+    <string name="sheet_tab_termin">Termin</string>
+    <string name="sheet_tab_details">Details</string>
+    <string name="sheet_abholung_erledigen">Abholung erledigen</string>
+    <string name="sheet_auslieferung_erledigen">Auslieferung erledigen</string>
+    <string name="sheet_keine_waesche">Keine Wäsche</string>
+    <string name="sheet_rueckgaengig">Rückgängig</string>
+    <string name="sheet_termin_verschieben">Termin verschieben</string>
+    <string name="sheet_urlaub_eintragen">Urlaub eintragen</string>
+    <string name="sheet_naechste_tour">Nächste Tour</string>
+    <string name="sheet_telefon">Telefon</string>
+    <string name="sheet_notizen">Notizen</string>
+    <string name="sheet_kein_termin">Kein Termin</string>
+    <string name="sheet_aktionen_desc">Aktionen für diesen Kunden anzeigen</string>
+
+    <!-- App-Titel (einheitlich) -->
+    <string name="app_title_tourplaner">TourPlaner 2026</string>
+
+    <!-- Hauptbildschirm -->
+    <string name="main_title">TourPlaner 2026</string>
+    <string name="main_offline">Offline</string>
+    <string name="main_sync_status">Synchronisiere…</string>
+    <string name="main_btn_neu_kunde">+ Neu Kunde</string>
+    <string name="main_btn_kunden">Kunden</string>
+    <string name="main_btn_touren">Touren Planer</string>
+    <string name="main_btn_listen">📋 Kunden Listen</string>
+    <string name="main_btn_statistiken">📊 Statistiken</string>
+    <string name="main_btn_termin_regeln">📋 Termin-Regeln</string>
+    <string name="main_tour_btn_with_count">Tour Planner (%1$d fällig)</string>
+    <string name="main_weitere">Weitere</string>
+    <string name="main_btn_neu_kunde_desc">Neuen Kunden anlegen</string>
+    <string name="main_btn_kunden_desc">Kunden verwalten</string>
+    <string name="main_btn_touren_desc">Touren Planer öffnen</string>
+    <string name="main_btn_listen_desc">Kunden Listen</string>
+    <string name="main_btn_statistiken_desc">Statistiken anzeigen</string>
+    <string name="main_btn_termin_regeln_desc">Termin-Regeln verwalten</string>
+
+    <!-- Offline / Sync -->
+    <string name="offline_sync_hinweis">Änderungen werden beim nächsten Online-Zustand synchronisiert.</string>
+
+    <!-- Erledigung UX -->
+    <string name="toast_abholung_dann_auslieferung">Abholung erledigt. Auslieferung jetzt erledigen?</string>
+
+    <!-- Statistiken -->
+    <string name="stat_title">Statistiken</string>
+    <string name="stat_heute_faellig">📅 Heute fällig</string>
+    <string name="stat_diese_woche">📆 Diese Woche</string>
+    <string name="stat_dieser_monat">🗓️ Dieser Monat</string>
+    <string name="stat_ueberfaellig">⚠️ Überfällig</string>
+    <string name="stat_erledigt_heute">✅ Erledigt heute</string>
+    <string name="stat_gesamt_kunden">👥 Gesamt Kunden</string>
+    <string name="stat_fehler_laden">Fehler beim Laden</string>
+    <string name="stat_loading">Laden…</string>
+    <string name="stat_erledigungsquote_heute">📊 Erledigungsquote heute</string>
+
+    <!-- Validierung / Speichern -->
+    <string name="validation_name_missing">Name fehlt</string>
+    <string name="validation_list_name_missing">Listen-Name fehlt</string>
+    <string name="validation_adresse">Adresse sollte Straße und Hausnummer enthalten</string>
+    <string name="validation_telefon">Ungültiges Telefonnummer-Format</string>
+    <string name="save_in_progress">Speichere…</string>
+    <string name="btn_save">Speichern</string>
+    <string name="toast_gespeichert">Änderungen gespeichert</string>
+    <string name="toast_customer_deleted">Kunde und alle Termine gelöscht</string>
+
+    <!-- Barrierefreiheit (contentDescription) -->
+    <string name="content_desc_navigation">Mit Google Maps zur Adresse navigieren</string>
+    <string name="content_desc_back">Zurück</string>
+    <string name="content_desc_prev_day">Vorheriger Tag</string>
+    <string name="content_desc_next_day">Nächster Tag</string>
+    <string name="content_desc_map">Kartenansicht</string>
+    <string name="content_desc_today">Heute</string>
+    <string name="content_desc_multiselect">Mehrfachauswahl</string>
+    <string name="content_desc_export">Exportieren</string>
+    <string name="content_desc_new_customer">Neuen Kunden erstellen</string>
+    <string name="content_desc_new_rule">Neue Regel erstellen</string>
+    <string name="content_desc_overdue">Überfällig</string>
+    <string name="content_desc_arrow">Pfeil</string>
+    <string name="content_desc_no_laundry">Keine Wäsche</string>
+    <string name="content_desc_abholung">Abholung</string>
+    <string name="content_desc_auslieferung">Auslieferung</string>
+    <string name="content_desc_verschieben">Verschieben</string>
+    <string name="content_desc_urlaub">Urlaub</string>
+    <string name="content_desc_overdue_a">Überfällig A</string>
+    <string name="content_desc_overdue_l">Überfällig L</string>
+    <string name="content_desc_overdue_date">Überfälligkeitsdatum</string>
+    <string name="content_desc_remove_from_list">Aus Liste entfernen</string>
+    <string name="content_desc_add_to_list">Zur Liste hinzufügen</string>
+    <string name="content_desc_delete_list">Liste löschen</string>
+    <string name="content_desc_fullscreen">Vollbild-Vorschau</string>
+    <string name="content_desc_new_list">Neue Liste erstellen</string>
+    <string name="list_btn_new">Neue Liste</string>
+
+    <!-- TourPlanner -->
+    <string name="tour_label_date">Datum</string>
+    <string name="tour_btn_map">Karte</string>
+    <string name="tour_btn_today">Heute</string>
+    <string name="tour_empty_title">Keine Touren für diesen Tag</string>
+    <string name="tour_empty_subtitle">Für diesen Wochentag sind keine Kunden eingetragen.</string>
+    <string name="tour_error_title">Fehler beim Laden</string>
+    <string name="tour_retry">Erneut versuchen</string>
+
+    <!-- CustomerManager -->
+    <string name="cm_btn_select">Auswählen</string>
+    <string name="cm_empty_title">Keine Kunden gefunden</string>
+    <string name="cm_empty_subtitle">Erstellen Sie einen neuen Kunden mit dem + Button.</string>
+    <string name="cm_selected_count">%1$d ausgewählt</string>
+    <string name="cm_selected_count_initial">0 ausgewählt</string>
+    <string name="cm_mark_done">Als erledigt markieren</string>
+
+    <!-- TerminRegel Manager/Erstellen -->
+    <string name="termin_regel_screen_title">Termin-Regeln</string>
+    <string name="termin_regel_btn_new">Neue Regel</string>
+    <string name="termin_regel_empty_title">Keine Regeln vorhanden</string>
+    <string name="termin_regel_empty_subtitle">Erstellen Sie eine neue Regel mit dem + Button.</string>
+    <string name="termin_regel_label_name">Regel-Name:</string>
+    <string name="termin_regel_label_desc_optional">Beschreibung (optional):</string>
+    <string name="termin_regel_label_weekday_hint">Wochentag-basiert (z.B. Montag zu Montag)</string>
+    <string name="termin_regel_label_startdate">Startdatum:</string>
+    <string name="termin_regel_btn_choose_startdate">Startdatum wählen</string>
+    <string name="termin_regel_label_abholung">Abholung:</string>
+    <string name="termin_regel_label_auslieferung">Auslieferung:</string>
+    <string name="termin_regel_label_repeat">Wiederholen:</string>
+    <string name="termin_regel_repeat_hint">Termin wiederholen</string>
+    <string name="termin_regel_label_interval_days">Intervall (Tage):</string>
+    <string name="termin_regel_label_repeat_count">Anzahl Wiederholungen (0 = unbegrenzt):</string>
+    <string name="termin_regel_btn_save">Speichern</string>
+    <string name="termin_regel_btn_delete">Löschen</string>
+    <string name="termin_regel_weekday_sample">Montag</string>
+
+    <!-- Item / Platzhalter -->
+    <string name="label_customer_name">Kundenname</string>
+    <string name="label_name">Name:</string>
+    <string name="label_rule_name">Regel Name</string>
+    <string name="label_desc">Beschreibung</string>
+    <string name="label_address">Adresse</string>
+    <string name="label_address_label">Adresse:</string>
+    <string name="label_phone">Telefon</string>
+    <string name="label_phone_label">Telefon:</string>
+    <string name="label_notes">Notizen</string>
+    <string name="label_notes_label">Notizen:</string>
+    <string name="label_customer_type">Kunden-Art:</string>
+    <string name="label_type_gewerblich">Gewerblich</string>
+    <string name="label_type_privat">Privat</string>
+    <string name="label_type_liste">Liste</string>
+    <string name="label_type_g">G</string>
+    <string name="label_type_p_letter">P</string>
+    <string name="label_type_l_letter">L</string>
+    <string name="label_type_gewerbe">Gewerbe</string>
+    <string name="label_abholung">Abholung:</string>
+    <string name="label_auslieferung">Auslieferung:</string>
+    <string name="label_verwendungen">Verwendungen:</string>
+    <string name="label_used_count_format">%1$dx verwendet</string>
+    <string name="label_phone_with_number">📞 %1$s</string>
+    <string name="label_notes_with_prefix">📝 %1$s</string>
+    <string name="sheet_title_format">%1$s – %2$s</string>
+    <string name="hint_kw_done">Keine Wäsche (A+KW / L+KW)</string>
+    <string name="label_abholung_with_date">Abholung: %1$s</string>
+    <string name="label_auslieferung_with_date">Auslieferung: %1$s</string>
+    <string name="placeholder_dash">--</string>
+    <string name="label_edit">Bearbeiten</string>
+    <string name="label_delete">Löschen</string>
+    <string name="label_docs_photos">Dokumentation &amp; Fotos</string>
+    <string name="label_add_photo">Foto hinzufügen</string>
+    <string name="label_termine_regeln">Termin-Regeln</string>
+    <string name="label_details_open">Details öffnen</string>
+    <string name="label_list_name">Liste Name</string>
+    <string name="label_list_name_field">Liste-Name:</string>
+    <string name="label_list_type">Liste-Art:</string>
+    <string name="label_list_edit">Liste bearbeiten</string>
+    <string name="label_intervals">Intervalle</string>
+    <string name="label_termine_anlegen">Termin Anlegen</string>
+    <string name="label_customers_in_list">Kunden in dieser Liste</string>
+    <string name="label_add_available_customers">Verfügbare Kunden hinzufügen</string>
+    <string name="label_termin_detail">Termin-Details</string>
+    <string name="label_termin">Termin:</string>
+    <string name="label_show_customer">Kunde anzeigen</string>
+    <string name="label_delete_termin">Termin löschen</string>
+    <string name="label_intervall">Intervall</string>
+    <string name="label_abholung_date">Abholungsdatum:</string>
+    <string name="label_auslieferung_date">Auslieferungsdatum:</string>
+    <string name="label_not_set">Nicht gesetzt</string>
+    <string name="label_repeat">Wiederholen</string>
+    <string name="label_count">Anzahl:</string>
+    <string name="label_customers_count">%1$d Kunde(n)</string>
+    <string name="label_customers_count_initial">0 Kunde(n)</string>
+    <string name="label_created">Erstellt: %1$s</string>
+    <string name="label_created_placeholder">Erstellt: --</string>
+    <string name="label_weekday_monday">Montag</string>
+    <string name="map_title">Kartenansicht</string>
+    <string name="map_empty">Keine Kunden mit Adressen gefunden</string>
+    <string name="map_filtered_today_toast">Zu viele Adressen. Es werden nur heute fällige Kunden angezeigt.</string>
+    <string name="list_screen_title">Kunden Listen</string>
+    <string name="list_empty_title">Keine Listen vorhanden</string>
+    <string name="list_empty_subtitle">Erstellen Sie Ihre erste Liste</string>
+    <string name="list_empty_customers">Keine Kunden gefunden</string>
+    <string name="hint_search_customer">Kunden suchen…</string>
+    <string name="hint_name">Name</string>
+    <string name="hint_address">Adresse</string>
+    <string name="hint_phone">Telefon</string>
+    <string name="hint_notes">Notizen</string>
+    <string name="hint_name_required">Name (Pflichtfeld)</string>
+    <string name="hint_address_optional">Adresse (Optional)</string>
+    <string name="hint_phone_optional">Telefon (Optional)</string>
+    <string name="hint_list_name">Listen-Name (z.B. Borna P)</string>
+    <string name="hint_list_name_short">Listen-Name</string>
+    <string name="hint_rule_name">z.B. Wöchentlich Montag, Alle 2 Wochen</string>
+    <string name="hint_desc_optional">Optionale Beschreibung</string>
+    <string name="hint_interval_days">z.B. 7 für wöchentlich, 14 für alle 2 Wochen</string>
+    <string name="hint_repeat_unlimited">0 = unbegrenzt</string>
+    <string name="add_customer_title">Neuen Kunden anlegen</string>
+    <string name="add_customer_hint">💡 Hinweis</string>
+    <string name="add_customer_hint_text">Termine können nach dem Erstellen des Kunden über \'Termin Anlegen\' hinzugefügt werden.</string>
+    <string name="list_create_title">Neue Liste erstellen</string>
+    <string name="list_create_hint">💡 Hinweis</string>
+    <string name="list_create_hint_text">Termine können nach dem Erstellen der Liste über \'Termin Anlegen\' hinzugefügt werden.</string>
+    <string name="section_overdue">ÜBERFÄLLIG</string>
+    <string name="label_overdue_colon">Überfällig:</string>
+    <string name="btn_cancel">Abbrechen</string>
+    <string name="stat_default_zero">0</string>
+    <string name="stat_default_dash">—</string>
+    <string name="toast_saved_success">✓ Gespeichert!</string>
+    <string name="next_tour_format">Nächste Tour: %1$s</string>
+    <string name="next_tour_none">Nächste Tour: Kein Termin</string>
+    <string name="status_erledigt">ERLEDIGT</string>
+    <string name="status_verschoben">VERSCHOBEN</string>
+    <string name="status_badge_overdue">Überfällig</string>
+    <string name="status_badge_a_plus_l">A+L heute</string>
+    <string name="status_badge_a">A heute</string>
+    <string name="status_badge_l">L heute</string>
+    <string name="label_section_count_format">%1$d/%2$d</string>
+    <string name="overdue_date_format">Überfällig: %1$s</string>
+    <string name="list_art_format">Liste-Art: %1$s</string>
+    <string name="intervall_regel_label">Regel:</string>
+    <string name="intervall_rule_not_found">Regel nicht gefunden</string>
+    <string name="intervall_manual_created">Manuell erstellt</string>
+    <string name="login_btn_text">Anmelden / Registrieren</string>
+    <string name="login_hint_text">Einfach E-Mail und Passwort eingeben. Bei erstem Login wird automatisch ein Konto erstellt.</string>
+    <string name="login_hint_email">E-Mail</string>
+    <string name="login_hint_password">Passwort</string>
+    <string name="content_desc_login">Anmelden oder Registrieren</string>
+
+    <!-- Kundendetail / Fehler -->
+    <string name="error_customer_id_missing">Kunden-ID fehlt!</string>
+    <string name="error_customer_not_found">Kunde nicht mehr vorhanden.</string>
+    <string name="error_message_generic">Fehler: %1$s</string>
+    <string name="error_maps_not_installed">Google Maps ist nicht installiert.</string>
+    <string name="error_save_generic">Fehler beim Speichern. Bitte erneut versuchen.</string>
+    <string name="error_delete_generic">Fehler beim Löschen. Bitte erneut versuchen.</string>
+    <string name="error_delete_termin">Fehler beim Löschen des Termins. Bitte erneut versuchen.</string>
+    <string name="error_reset_tour">Fehler beim Zurücksetzen. Bitte erneut versuchen.</string>
+    <string name="error_load_generic">Fehler beim Laden. Bitte erneut versuchen.</string>
 </resources>

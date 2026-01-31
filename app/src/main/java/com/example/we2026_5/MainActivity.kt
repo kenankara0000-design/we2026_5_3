@@ -5,19 +5,17 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.databinding.ActivityMainBinding
+import com.example.we2026_5.ui.main.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.ValueEventListener
-import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private val repository: CustomerRepository by inject()
+    private val viewModel: MainViewModel by viewModel()
     private val auth = FirebaseAuth.getInstance()
     private lateinit var networkMonitor: NetworkMonitor
-    private var customersListener: ValueEventListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,44 +58,30 @@ class MainActivity : AppCompatActivity() {
         networkMonitor = NetworkMonitor(this)
         networkMonitor.startMonitoring()
         
-        // Offline-Status beobachten
+        // Offline-Status beobachten (inkl. Hinweis zur Synchronisation)
         networkMonitor.isOnline.observe(this, Observer { isOnline ->
-            binding.tvOfflineStatus.visibility = if (isOnline) View.GONE else View.VISIBLE
+            val offline = !isOnline
+            binding.tvOfflineStatus.visibility = if (offline) View.VISIBLE else View.GONE
+            binding.tvOfflineSyncHinweis.visibility = if (offline) View.VISIBLE else View.GONE
         })
         
         // Synchronisierungs-Status beobachten
         networkMonitor.isSyncing.observe(this, Observer { isSyncing ->
             binding.tvSyncStatus.visibility = if (isSyncing) View.VISIBLE else View.GONE
         })
+
+        // Tour-Count aus ViewModel (Flow-basiert)
+        viewModel.tourFälligCount.observe(this, Observer { count ->
+            binding.btnTouren.text = getString(R.string.main_tour_btn_with_count, count)
+        })
     }
     
     override fun onDestroy() {
         super.onDestroy()
         networkMonitor.stopMonitoring()
-        customersListener?.let { repository.removeListener(it) }
     }
 
     override fun onStart() {
         super.onStart()
-        updateTourCount()
-    }
-
-    private fun updateTourCount() {
-        customersListener = repository.addCustomersListener(
-            onUpdate = { customers ->
-                val heute = System.currentTimeMillis()
-                val count = customers.count { customer ->
-                    val faelligAm = customer.getFaelligAm()
-                    // istImUrlaub konsistent berechnen wie in TourPlannerActivity
-                    val imUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && 
-                                   heute in customer.urlaubVon..customer.urlaubBis
-                    heute >= faelligAm && !imUrlaub
-                }
-                binding.btnTouren.text = "Tour Planner ($count fällig)"
-            },
-            onError = { 
-                // Fehler ignorieren für Tour-Count
-            }
-        )
     }
 }

@@ -22,7 +22,7 @@
             android:layout_centerVertical="true"
             android:background="@drawable/button_icon_pressed"
             android:src="@drawable/ic_arrow_back"
-            android:contentDescription="Zurück"
+            android:contentDescription="@string/content_desc_back"
             android:padding="12dp" />
 
         <TextView
@@ -30,7 +30,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Liste bearbeiten"
+            android:text="@string/label_list_edit"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -57,7 +57,7 @@
                 android:id="@+id/btnEditListe"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Liste bearbeiten"
+                android:text="@string/label_list_edit"
                 android:layout_marginBottom="16dp"/>
 
             <!-- Liste-Informationen (View Mode) -->
@@ -71,7 +71,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Liste-Name:"
+                    android:text="@string/label_list_name_field"
                     android:textStyle="bold"
                     android:textSize="14sp"
                     android:layout_marginBottom="4dp"/>
@@ -80,7 +80,7 @@
                     android:id="@+id/tvListeNameView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Liste Name"
+                    android:text="@string/label_list_name"
                     android:textSize="16sp"
                     android:padding="8dp"
                     android:background="#E0E0E0"
@@ -89,7 +89,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Liste-Art:"
+                    android:text="@string/label_list_type"
                     android:textStyle="bold"
                     android:textSize="14sp"
                     android:layout_marginBottom="4dp"/>
@@ -98,7 +98,7 @@
                     android:id="@+id/tvListeArtView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Gewerbe"
+                    android:text="@string/label_type_gewerbe"
                     android:textSize="16sp"
                     android:padding="8dp"
                     android:background="#E0E0E0"
@@ -124,7 +124,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Termin-Intervalle"
+                            android:text="@string/label_intervals"
                             android:textSize="16sp"
                             android:textStyle="bold"
                             android:textColor="@color/primary_blue_dark"
@@ -150,7 +150,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Liste-Name:"
+                    android:text="@string/label_list_name_field"
                     android:textStyle="bold"
                     android:textSize="14sp"
                     android:textColor="@color/text_primary"
@@ -160,7 +160,7 @@
                     android:id="@+id/etListeNameEdit"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Listen-Name"
+                    android:hint="@string/hint_list_name_short"
                     android:padding="8dp"
                     android:background="#FFFFFF"
                     android:textColor="@color/text_primary"
@@ -170,7 +170,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Liste-Art:"
+                    android:text="@string/label_list_type"
                     android:textStyle="bold"
                     android:textSize="14sp"
                     android:textColor="@color/text_primary"
@@ -188,7 +188,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Gewerbe"
+                        android:text="@string/label_type_gewerbe"
                         android:textColor="@color/text_primary"/>
 
                     <RadioButton
@@ -196,7 +196,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Privat"
+                        android:text="@string/label_type_privat"
                         android:textColor="@color/text_primary"/>
 
                     <RadioButton
@@ -204,7 +204,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Liste"
+                        android:text="@string/label_type_liste"
                         android:textColor="@color/text_primary"/>
                 </RadioGroup>
 
@@ -227,7 +227,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Intervalle"
+                            android:text="@string/label_intervals"
                             android:textSize="16sp"
                             android:textStyle="bold"
                             android:textColor="@color/primary_blue_dark"
@@ -243,7 +243,7 @@
                             android:id="@+id/btnTerminAnlegen"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Termin Anlegen"
+                            android:text="@string/label_termine_anlegen"
                             android:background="@drawable/button_speichern_glossy"
                             android:textColor="#FFFFFF"
                             android:padding="12dp"/>
@@ -261,7 +261,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Speichern"
+                        android:text="@string/btn_save"
                         android:textColor="#FFFFFF"
                         android:layout_marginEnd="4dp"
                         android:visibility="gone"
@@ -272,7 +272,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Löschen"
+                        android:text="@string/label_delete"
                         android:textColor="#FFFFFF"
                         android:layout_marginStart="4dp"
                         android:visibility="gone"
@@ -284,7 +284,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Kunden in dieser Liste"
+                android:text="@string/label_customers_in_list"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
@@ -301,7 +301,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Verfügbare Kunden hinzufügen"
+                android:text="@string/label_add_available_customers"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
@@ -334,7 +334,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Keine Kunden gefunden"
+                    android:text="@string/list_empty_customers"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_secondary"

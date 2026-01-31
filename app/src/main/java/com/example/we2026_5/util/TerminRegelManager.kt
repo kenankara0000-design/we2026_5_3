@@ -6,6 +6,7 @@ import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.TerminRegel
 import java.util.Calendar
+import com.example.we2026_5.util.TerminBerechnungUtils
 
 /**
  * Manager für die Anwendung von Termin-Regeln auf Kunden und Listen
@@ -28,7 +29,7 @@ object TerminRegelManager {
             val startDatum = if (regel.startDatum > 0) {
                 regel.startDatum
             } else {
-                getStartOfDay(heute)
+                TerminBerechnungUtils.getStartOfDay(heute)
             }
             
             abholungDatum = berechneNaechstenWochentag(
@@ -45,13 +46,13 @@ object TerminRegelManager {
             abholungDatum = if (regel.abholungDatum > 0) {
                 regel.abholungDatum
             } else {
-                getStartOfDay(heute)
+                TerminBerechnungUtils.getStartOfDay(heute)
             }
             
             auslieferungDatum = if (regel.auslieferungDatum > 0) {
                 regel.auslieferungDatum
             } else {
-                getStartOfDay(heute)
+                TerminBerechnungUtils.getStartOfDay(heute)
             }
         }
         
@@ -82,7 +83,7 @@ object TerminRegelManager {
             val startDatum = if (regel.startDatum > 0) {
                 regel.startDatum
             } else {
-                getStartOfDay(heute)
+                TerminBerechnungUtils.getStartOfDay(heute)
             }
             
             abholungDatum = berechneNaechstenWochentag(
@@ -99,13 +100,13 @@ object TerminRegelManager {
             abholungDatum = if (regel.abholungDatum > 0) {
                 regel.abholungDatum
             } else {
-                getStartOfDay(heute)
+                TerminBerechnungUtils.getStartOfDay(heute)
             }
             
             auslieferungDatum = if (regel.auslieferungDatum > 0) {
                 regel.auslieferungDatum
             } else {
-                getStartOfDay(heute)
+                TerminBerechnungUtils.getStartOfDay(heute)
             }
         }
         
@@ -130,7 +131,7 @@ object TerminRegelManager {
         wochentag: Int
     ): Long {
         if (wochentag < 0 || wochentag > 6) {
-            return getStartOfDay(startDatum)
+            return TerminBerechnungUtils.getStartOfDay(startDatum)
         }
         
         val calendar = Calendar.getInstance()
@@ -157,19 +158,6 @@ object TerminRegelManager {
         }
         
         calendar.add(Calendar.DAY_OF_YEAR, tageBisZiel)
-        return calendar.timeInMillis
-    }
-    
-    /**
-     * Hilfsfunktion: Start des Tages (00:00:00)
-     */
-    private fun getStartOfDay(timestamp: Long): Long {
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = timestamp
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
         return calendar.timeInMillis
     }
 }

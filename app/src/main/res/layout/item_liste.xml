@@ -25,7 +25,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Liste Name"
+            android:text="@string/label_list_name"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"/>
@@ -36,7 +36,7 @@
                 android:layout_height="40dp"
                 android:src="@android:drawable/ic_menu_delete"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Liste löschen"
+                android:contentDescription="@string/content_desc_delete_list"
                 android:tint="@color/status_overdue"/>
         </LinearLayout>
 
@@ -44,7 +44,7 @@
             android:id="@+id/tvListeArt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Gewerbe"
+            android:text="@string/label_type_gewerbe"
             android:textSize="13sp"
             android:textColor="@color/text_secondary"
             android:textStyle="italic"
@@ -54,7 +54,7 @@
             android:id="@+id/tvIntervallInfo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0 Kunde(n)"
+            android:text="@string/label_customers_count_initial"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
             android:layout_marginTop="8dp"/>
@@ -63,7 +63,7 @@
             android:id="@+id/tvErstelltAm"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Erstellt: --"
+            android:text="@string/label_created_placeholder"
             android:textSize="12sp"
             android:textColor="@color/text_secondary"
             android:layout_marginTop="4dp"/>

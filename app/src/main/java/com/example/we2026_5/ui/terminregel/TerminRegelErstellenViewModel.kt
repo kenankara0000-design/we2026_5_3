@@ -1,10 +1,40 @@
 package com.example.we2026_5.ui.terminregel
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.TerminRegel
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.util.TerminRegelManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+/** UI-State für Termin-Regel Erstellen/Bearbeiten. */
+data class TerminRegelState(
+    val currentRegelId: String? = null,
+    val name: String = "",
+    val beschreibung: String = "",
+    val wiederholen: Boolean = false,
+    val intervallTage: String = "7",
+    val intervallAnzahl: String = "0",
+    val wochentagBasiert: Boolean = false,
+    val startDatum: Long = 0,
+    val startDatumText: String = "",
+    val abholungDatum: Long = 0,
+    val abholungDatumText: String = "",
+    val auslieferungDatum: Long = 0,
+    val auslieferungDatumText: String = "",
+    val abholungWochentag: Int = -1,
+    val abholungWochentagText: String = "",
+    val auslieferungWochentag: Int = -1,
+    val auslieferungWochentagText: String = "",
+    val isSaving: Boolean = false,
+    val errorMessage: String? = null,
+    val success: Boolean = false
+)
 
 /**
  * ViewModel für Erstellen/Bearbeiten einer Termin-Regel.
@@ -15,14 +45,118 @@ class TerminRegelErstellenViewModel(
     private val customerRepository: CustomerRepository
 ) : ViewModel() {
 
-    suspend fun loadRegel(regelId: String): TerminRegel? =
+    private val _state = MutableLiveData(TerminRegelState())
+    val state: LiveData<TerminRegelState> = _state
+
+    fun setName(name: String) { updateState { copy(name = name, errorMessage = null) } }
+    fun setBeschreibung(beschreibung: String) { updateState { copy(beschreibung = beschreibung) } }
+    fun setWiederholen(wiederholen: Boolean) { updateState { copy(wiederholen = wiederholen) } }
+    fun setIntervallTage(s: String) { updateState { copy(intervallTage = s) } }
+    fun setIntervallAnzahl(s: String) { updateState { copy(intervallAnzahl = s) } }
+    fun setWochentagBasiert(b: Boolean) { updateState { copy(wochentagBasiert = b) } }
+    fun setStartDatum(timestamp: Long, text: String) { updateState { copy(startDatum = timestamp, startDatumText = text) } }
+    fun setAbholungDatum(timestamp: Long, text: String) { updateState { copy(abholungDatum = timestamp, abholungDatumText = text) } }
+    fun setAuslieferungDatum(timestamp: Long, text: String) { updateState { copy(auslieferungDatum = timestamp, auslieferungDatumText = text) } }
+    fun setAbholungWochentag(weekday: Int, text: String) { updateState { copy(abholungWochentag = weekday, abholungWochentagText = text) } }
+    fun setAuslieferungWochentag(weekday: Int, text: String) { updateState { copy(auslieferungWochentag = weekday, auslieferungWochentagText = text) } }
+
+    private fun updateState(block: TerminRegelState.() -> TerminRegelState) {
+        _state.value = (_state.value ?: TerminRegelState()).block()
+    }
+
+    fun loadRegel(regelId: String) {
+        viewModelScope.launch {
+            val regel = withContext(Dispatchers.IO) { regelRepository.getRegelById(regelId) }
+            if (regel != null) {
+                _state.value = (_state.value ?: TerminRegelState()).copy(
+                    currentRegelId = regel.id,
+                    name = regel.name,
+                    beschreibung = regel.beschreibung,
+                    wiederholen = regel.wiederholen,
+                    intervallTage = regel.intervallTage.toString(),
+                    intervallAnzahl = regel.intervallAnzahl.toString(),
+                    wochentagBasiert = regel.wochentagBasiert,
+                    startDatum = regel.startDatum,
+                    startDatumText = if (regel.startDatum > 0) com.example.we2026_5.util.TerminRegelDatePickerHelper.formatDateFromMillis(regel.startDatum) else "",
+                    abholungDatum = regel.abholungDatum,
+                    abholungDatumText = if (regel.abholungDatum > 0) com.example.we2026_5.util.TerminRegelDatePickerHelper.formatDateFromMillis(regel.abholungDatum) else "",
+                    auslieferungDatum = regel.auslieferungDatum,
+                    auslieferungDatumText = if (regel.auslieferungDatum > 0) com.example.we2026_5.util.TerminRegelDatePickerHelper.formatDateFromMillis(regel.auslieferungDatum) else "",
+                    abholungWochentag = regel.abholungWochentag,
+                    abholungWochentagText = if (regel.abholungWochentag >= 0) WOCENTAGE[regel.abholungWochentag] else "",
+                    auslieferungWochentag = regel.auslieferungWochentag,
+                    auslieferungWochentagText = if (regel.auslieferungWochentag >= 0) WOCENTAGE[regel.auslieferungWochentag] else ""
+                )
+            }
+        }
+    }
+
+    fun saveRegel() {
+        val s = _state.value ?: return
+        val name = s.name.trim()
+        if (name.isEmpty()) {
+            updateState { copy(errorMessage = "Regel-Name fehlt") }
+            return
+        }
+        val intervallTage = s.intervallTage.toIntOrNull() ?: 7
+        val intervallAnzahl = s.intervallAnzahl.toIntOrNull() ?: 0
+        if (s.wiederholen && intervallTage < 1) {
+            updateState { copy(errorMessage = "Intervall mindestens 1 Tag") }
+            return
+        }
+        if (s.wochentagBasiert) {
+            if (s.startDatum == 0L) { updateState { copy(errorMessage = "Startdatum fehlt") }; return }
+            if (s.abholungWochentag < 0) { updateState { copy(errorMessage = "Abholung-Wochentag fehlt") }; return }
+            if (s.auslieferungWochentag < 0) { updateState { copy(errorMessage = "Auslieferung-Wochentag fehlt") }; return }
+        }
+
+        viewModelScope.launch {
+            updateState { copy(isSaving = true, errorMessage = null) }
+            val regel = TerminRegel(
+                id = s.currentRegelId ?: java.util.UUID.randomUUID().toString(),
+                name = name,
+                beschreibung = s.beschreibung,
+                abholungDatum = s.abholungDatum,
+                auslieferungDatum = s.auslieferungDatum,
+                wiederholen = s.wiederholen,
+                intervallTage = intervallTage,
+                intervallAnzahl = intervallAnzahl,
+                wochentagBasiert = s.wochentagBasiert,
+                startDatum = s.startDatum,
+                abholungWochentag = s.abholungWochentag,
+                auslieferungWochentag = s.auslieferungWochentag,
+                geaendertAm = System.currentTimeMillis()
+            )
+            val success = withContext(Dispatchers.IO) { regelRepository.saveRegel(regel) }
+            if (success) {
+                if (s.currentRegelId != null) {
+                    withContext(Dispatchers.IO) { aktualisiereBetroffeneKunden(regel) }
+                }
+                _state.value = (_state.value ?: s).copy(isSaving = false, success = true)
+            } else {
+                _state.value = (_state.value ?: s).copy(isSaving = false, errorMessage = "Speichern fehlgeschlagen")
+            }
+        }
+    }
+
+    fun deleteRegel(regelId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            val success = withContext(Dispatchers.IO) { regelRepository.deleteRegel(regelId) }
+            if (success) {
+                _state.value = (_state.value ?: TerminRegelState()).copy(success = true)
+                onSuccess()
+            } else {
+                onError("Löschen fehlgeschlagen")
+            }
+        }
+    }
+
+    companion object {
+        val WOCENTAGE = arrayOf("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
+    }
+
+    suspend fun loadRegelById(regelId: String): TerminRegel? =
         regelRepository.getRegelById(regelId)
-
-    suspend fun saveRegel(regel: TerminRegel): Boolean =
-        regelRepository.saveRegel(regel)
-
-    suspend fun deleteRegel(regelId: String): Boolean =
-        regelRepository.deleteRegel(regelId)
 
     /**
      * Prüft, ob eine Regel von mindestens einem Kunden verwendet wird.
