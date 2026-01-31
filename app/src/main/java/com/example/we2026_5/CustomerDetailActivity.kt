@@ -62,7 +62,7 @@ class CustomerDetailActivity : AppCompatActivity() {
             takePictureLauncher = takePictureLauncher,
             pickImageLauncher = pickImageLauncher,
             cameraPermissionLauncher = cameraPermissionLauncher,
-            onProgressVisibilityChanged = { }
+            onProgressVisibilityChanged = { viewModel.setUploading(it) }
         )
 
         setContent {
@@ -70,12 +70,14 @@ class CustomerDetailActivity : AppCompatActivity() {
             val isInEditMode by viewModel.isInEditMode.collectAsState(initial = false)
             val editIntervalle by viewModel.editIntervalle.collectAsState(initial = emptyList())
             val isLoading by viewModel.isLoading.collectAsState(initial = false)
+            val isUploading by viewModel.isUploading.collectAsState(initial = false)
 
             CustomerDetailScreen(
                 customer = customer,
                 isInEditMode = isInEditMode,
                 editIntervalle = editIntervalle,
                 isLoading = isLoading,
+                isUploading = isUploading,
                 onBack = { finish() },
                 onEdit = { viewModel.setEditMode(true, customer) },
                 onSave = { updates ->
@@ -145,9 +147,16 @@ class CustomerDetailActivity : AppCompatActivity() {
                     ) { loadComplete, customer, isLoading ->
                         Triple(loadComplete, customer, isLoading)
                     }.collectLatest { (loadComplete, customer, isLoading) ->
-                        if (loadComplete && customer == null && !isLoading) {
-                            Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_customer_not_found), Toast.LENGTH_SHORT).show()
-                            if (!isFinishing) finish()
+                        // Nur beenden, wenn das Laden wirklich abgeschlossen ist, kein Kunde gefunden wurde, 
+                        // wir nicht gerade laden UND wir nicht gerade gelöscht haben.
+                        if (loadComplete && customer == null && !isLoading && !viewModel.deleted.value) {
+                            // Kurze Verzögerung, um Firebase Zeit zu geben (besonders offline)
+                            kotlinx.coroutines.delay(1000)
+                            // Erneute Prüfung nach Verzögerung
+                            if (viewModel.currentCustomer.value == null) {
+                                Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_customer_not_found), Toast.LENGTH_SHORT).show()
+                                if (!isFinishing) finish()
+                            }
                         }
                     }
                 }

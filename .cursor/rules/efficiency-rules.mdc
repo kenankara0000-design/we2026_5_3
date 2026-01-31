@@ -1,0 +1,24 @@
+# Effizienz & Token-Sparregeln (Strikte Befolgung)
+
+Diese Regeln dienen dazu, die API-Belastung zu minimieren und präzises Arbeiten sicherzustellen.
+
+## 1. Die "10-File-Batch-Rule" (Plan-Freigabe)
+- Bearbeite maximal **10 Dateien** pro Arbeitsschritt (Block).
+- **Ablauf:** Erstelle zuerst einen detaillierten Gesamtplan für den Block. Nach der Freigabe durch den Benutzer arbeite alle Dateien nacheinander ab.
+- Dies spart Zeit für den Benutzer und hält den Fokus hoch.
+
+## 2. Dynamische Kapazität & Rhythmus
+- **Einfache Aufgaben** (Strings, Design, Icons): **90 % Power** für schnelles Arbeiten.
+- **Komplexe Logik** (Datenbank, Terminalgorithmen): **50 % Power** für maximale Sicherheit.
+- Nutze die Zeit zwischen den Nachrichten (Benutzerinteraktion) zur Regeneration des TPM-Limits.
+
+## 3. TPM-Schutz (Anti-Halluzination & Import-Schutz)
+- **Ist-Zustand:** Nutze `grep` oder `rg`, um vor einer Änderung zu prüfen, ob sie evtl. schon eingebaut ist.
+- **Import-Block:** Lese bei jeder Dateibearbeitung grundsätzlich den Anfang der Datei (Imports) mit, um Kompilierfehler zu vermeiden.
+- **Minimaler Kontext:** Lese Dateien nur dann vollständig, wenn es absolut notwendig ist.
+
+## 4. Output-Minimierung
+- Nutze präzise Such-und-Ersetz-Befehle (`StrReplace`) statt ganzer Datei-Updates.
+
+## 5. RPM & Fehlerschutz
+- Verhindere Endlosschleifen: Wenn ein Fehler nach dem zweiten Korrekturversuch nicht behoben ist, stoppe sofort.

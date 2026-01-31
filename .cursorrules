@@ -51,15 +51,27 @@ Regel: Nach Änderungen immer Abgleich (Diff/Review), ob nur die beabsichtigten 
   - Neue Utility-Funktionen
   - Neue Manager-Klassen
   - Neue Adapter
-  - Jede andere neue Code-Struktur
+    - Jede andere neue Code-Struktur
 
-## VI. Code-Änderungen vs. Zusammenfassungen (KRITISCH)
+## VI. Effizienz & Token-Sparregeln (Strikte Befolgung)
+- **10-File-Batch-Rule (Plan-Freigabe):** Bearbeite maximal **10 Dateien** in einem Block. Erstelle vorab einen detaillierten Plan für den gesamten Block. Erst nach einmaliger Freigabe des Plans durch den Benutzer wird der gesamte Block am Stück abgearbeitet.
+- **Dynamische Kapazität:** 
+    - Einfache Aufgaben (Strings, UI-Design): **90 % Power** (schnell).
+    - Komplexe Logik (Datenbank, Algorithmen): **50 % Power** (höchste Präzision, doppelte Prüfung).
+- **TPM-Schutz (Input/Output):** 
+    - Nutze `grep`, um den **echten Ist-Zustand** zu verifizieren (Anti-Halluzination).
+    - Lese bei jeder Dateibearbeitung **immer den Import-Block** mit (Import-Schutz gegen Kompilierfehler).
+    - Nutze `StrReplace` für punktuelle Änderungen.
+- **RPM-Schutz (Loops):** Stoppe nach maximal zwei erfolglosen Reparaturversuchen und frage den Benutzer.
+- **Rhythmus:** Nutze die Pausen zwischen den Nachrichten bewusst zur Token-Regeneration.
+
+## VII. Code-Änderungen vs. Zusammenfassungen (KRITISCH)
 - **WICHTIG:** Wenn der Benutzer "zusammenfassen" schreibt, DARF KEIN Code geändert oder geschrieben werden!
 - **NUR zusammenfassen:** Analysieren, beschreiben, Vorschläge machen - aber KEINE Dateien ändern
 - **Code-Änderungen:** Nur wenn der Benutzer explizit "programmieren" oder ähnliche Anweisungen gibt
 - **Regel:** "zusammenfassen" = NUR Text-Ausgabe, KEINE Tool-Calls für Code-Änderungen
 
-## VII. Step-by-Step Umsetzung & Zukunftspläne
+## VIII. Step-by-Step Umsetzung & Zukunftspläne
 - **Vor jeder Umsetzung fragen:** Bei Refactoring/Vorschlägen aus Berichten (z. B. BERICHT_TIEFENANALYSE_APP_2026.md) vor jeder einzelnen Umsetzung den Benutzer fragen: "Darf ich das umsetzen? (Ja / Nein / Zukunft)"
 - **Ja** = sofort umsetzen (mit 3pro).
 - **Nein** = nicht umsetzen, zum nächsten Punkt.

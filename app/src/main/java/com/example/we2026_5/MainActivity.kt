@@ -3,6 +3,7 @@ package com.example.we2026_5
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -29,6 +30,7 @@ class MainActivity : AppCompatActivity() {
         networkMonitor = NetworkMonitor(this)
         networkMonitor.startMonitoring()
 
+        window.decorView.setBackgroundColor(ContextCompat.getColor(this, R.color.background_light))
         setContent {
             val tourCount by viewModel.tourFälligCount.observeAsState(0)
             val isOnline by networkMonitor.isOnline.observeAsState(true)

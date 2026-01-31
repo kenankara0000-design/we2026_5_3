@@ -1,5 +1,11 @@
 <resources>
     <string name="app_name">TourPlaner 2026</string>
+    <string name="main_title">TourPlaner 2026</string>
+    <string name="error_login_failed">Anmeldung fehlgeschlagen. Bitte Internetverbindung prüfen.</string>
+    <string name="label_wochentag">Wochentag:</string>
+    <string name="label_foto_uploading">Foto wird hochgeladen…</string>
+    <string name="label_fotos">Fotos</string>
+    <string name="label_add_photo">Foto hinzufügen</string>
     <string name="menu_kunden">Kunden Liste</string>
     <string name="menu_touren">Touren Planer</string>
     <string name="menu_neu">Neuer Kunde</string>

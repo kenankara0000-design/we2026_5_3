@@ -122,9 +122,13 @@ class TourPlannerActivity : AppCompatActivity() {
                 return helper.getSheetState(customer)?.statusBadgeText ?: ""
             }
 
+            val ts = selectedTimestamp
+            val isToday = ts != null &&
+                dateUtils.getStartOfDay(ts) == dateUtils.getStartOfDay(System.currentTimeMillis())
             TourPlannerScreen(
                 tourItems = tourItems,
                 dateText = dateText,
+                isToday = isToday,
                 isLoading = isLoading,
                 errorMessage = errorMessage,
                 isOffline = isOffline,

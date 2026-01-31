@@ -17,6 +17,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.We2026_5"
+        android:enableOnBackInvokedCallback="true"
         tools:targetApi="31">
 
         <activity
@@ -31,11 +32,13 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.We2026_5.LightBackground" />
 
         <activity
             android:name=".AddCustomerActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.We2026_5.LightBackground" />
 
         <activity
             android:name=".CustomerManagerActivity"

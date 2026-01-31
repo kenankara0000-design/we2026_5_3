@@ -48,6 +48,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
 
@@ -90,8 +91,10 @@ fun CustomerManagerScreen(
     val textSecondary = colorResource(R.color.text_secondary)
     val surfaceWhite = colorResource(R.color.surface_white)
     val statusWarning = colorResource(R.color.status_warning)
+    val backgroundLight = colorResource(R.color.background_light)
 
     Scaffold(
+        containerColor = backgroundLight,
         topBar = {
             Column {
                 TopAppBar(
@@ -202,6 +205,7 @@ fun CustomerManagerScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(backgroundLight)
                 .padding(paddingValues)
         ) {
             Column(
@@ -325,6 +329,11 @@ private fun CustomerRow(
     textSecondary: Color
 ) {
     val surfaceWhite = colorResource(R.color.surface_white)
+    val gplColor = when (customer.kundenArt) {
+        "Privat" -> colorResource(R.color.button_privat_glossy)
+        "Liste" -> colorResource(R.color.button_liste_glossy)
+        else -> colorResource(R.color.primary_blue)
+    }
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = surfaceWhite),
@@ -350,6 +359,20 @@ private fun CustomerRow(
                     .clickable(onClick = onClick)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (customer.fotoUrls.isNotEmpty()) {
+                        Card(
+                            modifier = Modifier.size(40.dp),
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            AsyncImage(
+                                model = customer.fotoUrls.first(),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                            )
+                        }
+                        Spacer(Modifier.size(8.dp))
+                    }
                     Text(
                         text = when (customer.kundenArt) {
                             "Privat" -> "P"
@@ -360,7 +383,7 @@ private fun CustomerRow(
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         modifier = Modifier
-                            .background(colorResource(R.color.primary_blue), RoundedCornerShape(8.dp))
+                            .background(gplColor, RoundedCornerShape(8.dp))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                     Spacer(Modifier.size(8.dp))

@@ -164,16 +164,21 @@ class CustomerPhotoManager(
     }
     
     fun showImageInDialog(url: String) {
-        val builder = AlertDialog.Builder(activity)
+        val dialog = AlertDialog.Builder(activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+            .create()
+        
         val inflater = LayoutInflater.from(activity)
         val dialogView = inflater.inflate(R.layout.dialog_fullscreen_image, null)
         val imageView = dialogView.findViewById<ImageView>(R.id.fullscreen_image)
+        
+        // Schließen beim Tippen auf das Bild
+        dialogView.setOnClickListener { dialog.dismiss() }
         
         Glide.with(activity)
             .load(url)
             .into(imageView)
         
-        builder.setView(dialogView)
-        builder.create().show()
+        dialog.setView(dialogView)
+        dialog.show()
     }
 }

@@ -429,10 +429,13 @@ class TourDataProcessor {
         val normalOhneListen = normalGewerblich.sortedBy { it.name }
         normalOhneListen.forEach { items.add(ListItem.CustomerItem(it)) }
         
-        // 4. Erledigt-Bereich – Kunden im Header-Container (wie Überfällig)
+        // 4. Erledigt-Bereich – Header + bei ausgeklappt einzelne CustomerItems
         val doneOhneListen = doneGewerblich.sortedBy { it.name }
         if (doneOhneListen.isNotEmpty()) {
             items.add(ListItem.SectionHeader("ERLEDIGT", doneOhneListen.size, doneOhneListen.size, SectionType.DONE, doneOhneListen))
+            if (SectionType.DONE in expandedSections) {
+                doneOhneListen.forEach { items.add(ListItem.CustomerItem(it)) }
+            }
         }
         
         return items

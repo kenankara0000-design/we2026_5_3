@@ -1,8 +1,10 @@
 package com.example.we2026_5
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +28,7 @@ class AddCustomerActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.decorView.setBackgroundColor(ContextCompat.getColor(this, R.color.background_light))
         val initialName = intent.getStringExtra("CUSTOMER_NAME").orEmpty()
 
         setContent {
@@ -37,7 +40,12 @@ class AddCustomerActivity : AppCompatActivity() {
                 LaunchedEffect(state.success) {
                     if (state.success) {
                         delay(800)
-                        if (!isFinishing) finish()
+                        if (!isFinishing) {
+                            startActivity(Intent(this@AddCustomerActivity, CustomerManagerActivity::class.java).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                            })
+                            finish()
+                        }
                     }
                 }
                 LaunchedEffect(state.errorMessage) {
@@ -82,7 +90,7 @@ class AddCustomerActivity : AppCompatActivity() {
             wiederholen = false,
             intervallTage = 0,
             letzterTermin = 0,
-            wochentag = 0,
+            wochentag = "",
             istImUrlaub = false
         )
         lifecycleScope.launch {

@@ -24,7 +24,8 @@ class LoginActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     startMainActivity()
                 } else {
-                    // Bei Fehler: App schließen oder Fehler anzeigen
+                    // Bei Fehler: Meldung anzeigen und beenden
+                    android.widget.Toast.makeText(this, getString(R.string.error_login_failed), android.widget.Toast.LENGTH_LONG).show()
                     finish()
                 }
             }

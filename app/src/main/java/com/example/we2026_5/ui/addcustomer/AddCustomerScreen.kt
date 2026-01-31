@@ -1,8 +1,10 @@
 package com.example.we2026_5.ui.addcustomer
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -48,10 +50,12 @@ fun AddCustomerScreen(
     val context = LocalContext.current
     val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
     val surfaceWhite = Color(ContextCompat.getColor(context, R.color.surface_white))
+    val backgroundLight = Color(ContextCompat.getColor(context, R.color.background_light))
     val textPrimary = Color(ContextCompat.getColor(context, R.color.text_primary))
     val textSecondary = Color(ContextCompat.getColor(context, R.color.text_secondary))
 
     Scaffold(
+        containerColor = backgroundLight,
         topBar = {
             TopAppBar(
                 title = {
@@ -78,6 +82,8 @@ fun AddCustomerScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .fillMaxSize()
+                .background(backgroundLight)
                 .padding(paddingValues)
                 .padding(20.dp)
                 .verticalScroll(rememberScrollState())

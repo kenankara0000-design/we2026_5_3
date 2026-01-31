@@ -6,6 +6,7 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.util.Result
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -28,18 +29,22 @@ class CustomerDetailViewModel(
     private val _customerId = MutableStateFlow<String?>(null)
 
     /** true, sobald getCustomerFlow mindestens einmal emittiert hat (dann ist null = wirklich nicht vorhanden). */
-    val loadComplete: StateFlow<Boolean> = _customerId
-        .flatMapLatest { id ->
-            if (id == null) flowOf(false)
-            else repository.getCustomerFlow(id).map { true }
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    private val _loadComplete = MutableStateFlow(false)
+    val loadComplete: StateFlow<Boolean> = _loadComplete.asStateFlow()
 
     /** Echtzeit-Kundendaten aus Repository. */
+    @OptIn(ExperimentalCoroutinesApi::class)
     val currentCustomer: StateFlow<Customer?> = _customerId
         .flatMapLatest { id ->
-            if (id == null) flowOf(null)
-            else repository.getCustomerFlow(id)
+            if (id == null) {
+                _loadComplete.value = false
+                flowOf(null)
+            } else {
+                repository.getCustomerFlow(id).map { customer ->
+                    _loadComplete.value = true
+                    customer
+                }
+            }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
@@ -50,6 +55,14 @@ class CustomerDetailViewModel(
     /** Kurzzeitig true während Speichern/Löschen. */
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    /** true während Foto-Upload. */
+    private val _isUploading = MutableStateFlow(false)
+    val isUploading: StateFlow<Boolean> = _isUploading.asStateFlow()
+
+    fun setUploading(uploading: Boolean) {
+        _isUploading.value = uploading
+    }
 
     /** Fehlermeldung für Toast/Snackbar. */
     private val _errorMessage = MutableStateFlow<String?>(null)

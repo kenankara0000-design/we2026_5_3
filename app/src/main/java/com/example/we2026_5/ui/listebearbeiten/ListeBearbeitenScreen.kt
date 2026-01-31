@@ -2,14 +2,7 @@ package com.example.we2026_5.ui.listebearbeiten
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -42,6 +35,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.we2026_5.Customer
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListeIntervall
@@ -291,6 +285,20 @@ private fun KundeInListeItem(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (kunde.fotoUrls.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.size(40.dp),
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    AsyncImage(
+                        model = kunde.fotoUrls.first(),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+                }
+                Spacer(Modifier.size(12.dp))
+            }
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(

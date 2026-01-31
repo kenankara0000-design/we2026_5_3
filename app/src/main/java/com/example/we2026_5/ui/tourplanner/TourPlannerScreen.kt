@@ -46,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.we2026_5.Customer
 import com.example.we2026_5.ListItem
 import com.example.we2026_5.R
@@ -63,6 +64,7 @@ data class ErledigungSheetArgs(
 fun TourPlannerScreen(
     tourItems: List<ListItem>,
     dateText: String,
+    isToday: Boolean, // true wenn angezeigtes Datum heute ist → Heute-Button orange
     isLoading: Boolean,
     errorMessage: String?,
     isOffline: Boolean,
@@ -257,7 +259,7 @@ fun TourPlannerScreen(
                         onClick = onToday,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (pressedHeaderButton == "Heute") statusWarning else buttonBlue
+                            containerColor = if (isToday) statusWarning else buttonBlue
                         )
                     ) {
                         Icon(
@@ -490,11 +492,27 @@ private fun TourCustomerRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = customer.name,
-                    color = nameColor,
-                    fontWeight = if (isOverdue) FontWeight.Bold else FontWeight.Normal
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (customer.fotoUrls.isNotEmpty()) {
+                        Card(
+                            modifier = Modifier.size(32.dp),
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            AsyncImage(
+                                model = customer.fotoUrls.first(),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                            )
+                        }
+                        Spacer(Modifier.size(8.dp))
+                    }
+                    Text(
+                        text = customer.name,
+                        color = nameColor,
+                        fontWeight = if (isOverdue) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
                 if (statusBadgeText.isNotEmpty()) {
                     Spacer(Modifier.height(4.dp))
                     Text(

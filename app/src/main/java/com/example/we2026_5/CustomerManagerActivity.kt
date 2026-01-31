@@ -121,7 +121,7 @@ class CustomerManagerActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        viewModel.loadCustomers()
+        // viewModel.loadCustomers() // Nicht mehr nötig durch Flow-Listener im ViewModel
         pressedHeaderButton = null
     }
 

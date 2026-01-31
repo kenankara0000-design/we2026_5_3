@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -50,6 +51,7 @@ fun MainScreen(
 
     Column(
         modifier = Modifier
+            .fillMaxSize()
             .fillMaxWidth()
             .background(backgroundLight)
             .padding(32.dp)
@@ -141,7 +143,7 @@ fun MainScreen(
                 .fillMaxWidth()
                 .height(88.dp),
             colors = ButtonDefaults.buttonColors(containerColor = primaryBlueDark),
-            shape = RoundedCornerShape(MaterialTheme.shapes.medium.topStart)
+            shape = RoundedCornerShape(12.dp)
         ) {
             Text(
                 stringResource(R.string.main_btn_neu_kunde),

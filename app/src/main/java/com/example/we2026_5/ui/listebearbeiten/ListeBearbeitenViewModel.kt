@@ -45,7 +45,7 @@ class ListeBearbeitenViewModel(
                 }
                 val alleKunden = withContext(Dispatchers.IO) { customerRepository.getAllCustomers() }
                 val inListe = alleKunden.filter { it.listeId == geladeneListe.id }.sortedBy { it.name }
-                val verfuegbar = alleKunden.filter { it.listeId.isEmpty() }.sortedBy { it.name }
+                val verfuegbar = alleKunden.filter { it.listeId.isEmpty() && it.kundenArt == "Liste" }.sortedBy { it.name }
                 val intervalle = if (_state.value.isInEditMode) _state.value.intervalle else geladeneListe.intervalle
                 _state.value = _state.value.copy(
                     liste = geladeneListe,
