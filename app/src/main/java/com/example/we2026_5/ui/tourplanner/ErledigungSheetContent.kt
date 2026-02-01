@@ -70,20 +70,33 @@ fun ErledigungSheetContent(
     val buttonVerschieben = colorResource(R.color.button_verschieben)
     val buttonUrlaub = colorResource(R.color.button_urlaub)
     val toastAbholungNurHeute = stringResource(R.string.toast_abholung_nur_heute)
+    val toastUeberfaelligNurHeute = stringResource(R.string.toast_ueberfaellig_nur_heute)
     val toastAuslieferungNachAbholung = stringResource(R.string.toast_auslieferung_nur_nach_abholung)
     val toastAuslieferungNurHeute = stringResource(R.string.toast_auslieferung_nur_heute)
     val toastKwNurAbholung = stringResource(R.string.toast_kw_nur_abholung_auslieferung)
+    val legendText = stringResource(R.string.sheet_legend)
+    val sheetFixedHeightDp = 520.dp
+    val hintVerschieben = stringResource(R.string.sheet_termin_verschieben_hint)
+    val hintUrlaub = stringResource(R.string.sheet_urlaub_eintragen_hint)
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .height(sheetFixedHeightDp)
             .padding(20.dp)
+            .padding(bottom = 32.dp)
     ) {
         Text(
             text = title,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = primaryBlueDark
+        )
+        Text(
+            text = legendText,
+            fontSize = 11.sp,
+            color = textSecondary,
+            modifier = Modifier.padding(top = 4.dp)
         )
         Spacer(Modifier.height(4.dp))
         Box(
@@ -120,13 +133,31 @@ fun ErledigungSheetContent(
 
         Spacer(Modifier.height(16.dp))
 
-        when (selectedTab) {
-            0 -> Column(
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            when (selectedTab) {
+                0 -> Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                if (state.overdueInfoText.isNotEmpty()) {
+                    Text(
+                        text = state.overdueInfoText,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = colorResource(R.color.status_overdue),
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
+                if (state.completedInfoText.isNotEmpty()) {
+                    Text(
+                        text = state.completedInfoText,
+                        fontSize = 12.sp,
+                        color = textSecondary,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
                 if (state.showAbholung) {
                     Button(
                         onClick = {
@@ -134,12 +165,14 @@ fun ErledigungSheetContent(
                                 onAbholung(customer)
                                 onDismiss()
                             } else {
-                                showToast(toastAbholungNurHeute)
+                                showToast(if (state.isOverdueBadge) toastUeberfaelligNurHeute else toastAbholungNurHeute)
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = buttonAbholung),
-                        enabled = state.enableAbholung
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (state.enableAbholung) buttonAbholung else buttonAbholung.copy(alpha = 0.5f)
+                        ),
+                        enabled = true
                     ) {
                         Icon(painter = painterResource(R.drawable.ic_pickup), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
                         Spacer(Modifier.size(10.dp))
@@ -154,37 +187,23 @@ fun ErledigungSheetContent(
                                 onDismiss()
                             } else {
                                 showToast(
-                                    if (!customer.abholungErfolgt) toastAuslieferungNachAbholung
-                                    else toastAuslieferungNurHeute
+                                    when {
+                                        !customer.abholungErfolgt -> toastAuslieferungNachAbholung
+                                        state.isOverdueBadge -> toastUeberfaelligNurHeute
+                                        else -> toastAuslieferungNurHeute
+                                    }
                                 )
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = buttonAuslieferung),
-                        enabled = state.enableAuslieferung
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (state.enableAuslieferung) buttonAuslieferung else buttonAuslieferung.copy(alpha = 0.5f)
+                        ),
+                        enabled = true
                     ) {
                         Icon(painter = painterResource(R.drawable.ic_delivery), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
                         Spacer(Modifier.size(10.dp))
                         Text(stringResource(R.string.sheet_auslieferung_erledigen), color = Color.White)
-                    }
-                }
-                if (state.showKw) {
-                    Button(
-                        onClick = {
-                            if (state.enableKw) {
-                                onKw(customer)
-                                onDismiss()
-                            } else {
-                                showToast(toastKwNurAbholung)
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.status_warning)),
-                        enabled = state.enableKw
-                    ) {
-                        Icon(painter = painterResource(R.drawable.ic_checklist), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
-                        Spacer(Modifier.size(10.dp))
-                        Text(stringResource(R.string.sheet_keine_waesche), color = Color.White)
                     }
                 }
                 if (state.showRueckgaengig) {
@@ -208,33 +227,58 @@ fun ErledigungSheetContent(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                if (state.showVerschieben) {
+                if (state.showKw) {
                     Button(
                         onClick = {
-                            onVerschieben(customer)
-                            onDismiss()
+                            if (state.enableKw) {
+                                onKw(customer)
+                                onDismiss()
+                            } else {
+                                showToast(toastKwNurAbholung)
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = buttonVerschieben)
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.status_warning)),
+                        enabled = state.enableKw
                     ) {
-                        Icon(painter = painterResource(R.drawable.ic_reschedule), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
+                        Icon(painter = painterResource(R.drawable.ic_checklist), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
                         Spacer(Modifier.size(10.dp))
-                        Text(stringResource(R.string.sheet_termin_verschieben), color = Color.White)
+                        Text(stringResource(R.string.sheet_keine_waesche), color = Color.White)
                     }
                 }
-                if (state.showUrlaub) {
-                    Button(
-                        onClick = {
+                Button(
+                    onClick = {
+                        if (state.showVerschieben) {
+                            onVerschieben(customer)
+                            onDismiss()
+                        } else {
+                            showToast(hintVerschieben)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = buttonVerschieben),
+                    enabled = state.showVerschieben
+                ) {
+                    Icon(painter = painterResource(R.drawable.ic_reschedule), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
+                    Spacer(Modifier.size(10.dp))
+                    Text(stringResource(R.string.sheet_termin_verschieben), color = Color.White)
+                }
+                Button(
+                    onClick = {
+                        if (state.showUrlaub) {
                             onUrlaub(customer)
                             onDismiss()
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = buttonUrlaub)
-                    ) {
-                        Icon(painter = painterResource(R.drawable.ic_vacation), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
-                        Spacer(Modifier.size(10.dp))
-                        Text(stringResource(R.string.sheet_urlaub_eintragen), color = Color.White)
-                    }
+                        } else {
+                            showToast(hintUrlaub)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = buttonUrlaub),
+                    enabled = state.showUrlaub
+                ) {
+                    Icon(painter = painterResource(R.drawable.ic_vacation), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
+                    Spacer(Modifier.size(10.dp))
+                    Text(stringResource(R.string.sheet_urlaub_eintragen), color = Color.White)
                 }
             }
             2 -> Column(
@@ -268,6 +312,7 @@ fun ErledigungSheetContent(
                     Text(stringResource(R.string.sheet_notizen), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = textSecondary)
                     Text(text = customer.notizen, fontSize = 15.sp, color = textPrimary, modifier = Modifier.fillMaxWidth())
                 }
+            }
             }
         }
     }

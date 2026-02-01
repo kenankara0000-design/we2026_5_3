@@ -16,8 +16,12 @@ data class ErledigungSheetState(
     val showVerschieben: Boolean,
     val showUrlaub: Boolean,
     val showRueckgaengig: Boolean,
-    /** Kurztext für Status-Badge auf der Karte, z. B. "A+L heute", "Überfällig", "" */
+    /** Kurztext für Status-Badge auf der Karte, z. B. "A+L heute", "Überfällig", "A", "L", "" */
     val statusBadgeText: String,
     /** true = Badge rot (überfällig), false = Badge blau (heute fällig) */
-    val isOverdueBadge: Boolean = false
+    val isOverdueBadge: Boolean = false,
+    /** Am Fälligkeitstag nur Info: z. B. "A überfällig" / "L überfällig" (keine Aktionen) */
+    val overdueInfoText: String = "",
+    /** Wenn überfälliger Termin erledigt: A/L mit Datum und Zeitstempel */
+    val completedInfoText: String = ""
 ) : Serializable

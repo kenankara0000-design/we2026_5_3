@@ -178,13 +178,16 @@ class TerminRegelManagerActivity : AppCompatActivity() {
     private fun regelHinzufuegenMitBestaetigung(customer: Customer, regel: TerminRegel) {
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val neuesIntervall = TerminRegelManager.wendeRegelAufKundeAn(regel, customer)
-                val abholungText = if (neuesIntervall.abholungDatum > 0) {
-                    com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(neuesIntervall.abholungDatum)
+                val neueIntervalle = TerminRegelManager.wendeRegelAufKundeAn(regel, customer)
+                if (neueIntervalle.isEmpty()) return@launch
+                val erstes = neueIntervalle.first()
+                val abholungText = if (erstes.abholungDatum > 0) {
+                    com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(erstes.abholungDatum)
                 } else "Heute"
-                val auslieferungText = if (neuesIntervall.auslieferungDatum > 0) {
-                    com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(neuesIntervall.auslieferungDatum)
+                val auslieferungText = if (erstes.auslieferungDatum > 0) {
+                    com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(erstes.auslieferungDatum)
                 } else "Heute"
+                val paarInfo = if (neueIntervalle.size > 1) " (${neueIntervalle.size} Termin-Paare)" else ""
 
                 val hinzufuegenText = if (customer.intervalle.isNotEmpty()) {
                     "Diese Regel wird zu den bestehenden ${customer.intervalle.size} Regel(n) hinzugefügt:\n\n"
@@ -195,13 +198,13 @@ class TerminRegelManagerActivity : AppCompatActivity() {
                 AlertDialog.Builder(this@TerminRegelManagerActivity)
                     .setTitle("Regel hinzufügen - Bestätigung")
                     .setMessage("$hinzufuegenText" +
-                            "Regel: ${regel.name}\n" +
+                            "Regel: ${regel.name}$paarInfo\n" +
                             "Abholung: $abholungText\n" +
                             "Auslieferung: $auslieferungText\n" +
-                            (if (neuesIntervall.wiederholen) "Wiederholen: Alle ${neuesIntervall.intervallTage} Tage\n" else "Wiederholen: Nein\n") +
+                            (if (erstes.wiederholen) "Wiederholen: Alle ${erstes.intervallTage} Tage\n" else "Wiederholen: Nein\n") +
                             "\nMöchten Sie fortfahren?")
                     .setPositiveButton("Ja, hinzufügen") { _, _ ->
-                        regelHinzufuegen(customer, regel, neuesIntervall)
+                        regelHinzufuegen(customer, regel, neueIntervalle)
                     }
                     .setNegativeButton("Abbrechen", null)
                     .show()
@@ -214,26 +217,29 @@ class TerminRegelManagerActivity : AppCompatActivity() {
     private fun regelErsetzenMitBestaetigung(customer: Customer, regel: TerminRegel, bestehendeRegelnText: String) {
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val neuesIntervall = TerminRegelManager.wendeRegelAufKundeAn(regel, customer)
-                val abholungText = if (neuesIntervall.abholungDatum > 0) {
-                    com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(neuesIntervall.abholungDatum)
+                val neueIntervalle = TerminRegelManager.wendeRegelAufKundeAn(regel, customer)
+                if (neueIntervalle.isEmpty()) return@launch
+                val erstes = neueIntervalle.first()
+                val abholungText = if (erstes.abholungDatum > 0) {
+                    com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(erstes.abholungDatum)
                 } else "Heute"
-                val auslieferungText = if (neuesIntervall.auslieferungDatum > 0) {
-                    com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(neuesIntervall.auslieferungDatum)
+                val auslieferungText = if (erstes.auslieferungDatum > 0) {
+                    com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(erstes.auslieferungDatum)
                 } else "Heute"
+                val paarInfo = if (neueIntervalle.size > 1) " (${neueIntervalle.size} Termin-Paare)" else ""
 
                 AlertDialog.Builder(this@TerminRegelManagerActivity)
                     .setTitle("Regeln ersetzen - Bestätigung")
                     .setMessage("ACHTUNG: Alle bestehenden Regeln werden gelöscht!\n\n" +
                             "Wird gelöscht (${customer.intervalle.size} Regel(n)):\n$bestehendeRegelnText\n\n" +
                             "Wird hinzugefügt:\n" +
-                            "Regel: ${regel.name}\n" +
+                            "Regel: ${regel.name}$paarInfo\n" +
                             "Abholung: $abholungText\n" +
                             "Auslieferung: $auslieferungText\n" +
-                            (if (neuesIntervall.wiederholen) "Wiederholen: Alle ${neuesIntervall.intervallTage} Tage\n" else "Wiederholen: Nein\n") +
+                            (if (erstes.wiederholen) "Wiederholen: Alle ${erstes.intervallTage} Tage\n" else "Wiederholen: Nein\n") +
                             "\nMöchten Sie wirklich fortfahren?")
                     .setPositiveButton("Ja, ersetzen") { _, _ ->
-                        regelErsetzen(customer, regel, neuesIntervall)
+                        regelErsetzen(customer, regel, neueIntervalle)
                     }
                     .setNegativeButton("Abbrechen", null)
                     .show()
@@ -243,13 +249,13 @@ class TerminRegelManagerActivity : AppCompatActivity() {
         }
     }
 
-    private fun regelHinzufuegen(customer: Customer, regel: TerminRegel, neuesIntervall: CustomerIntervall) {
+    private fun regelHinzufuegen(customer: Customer, regel: TerminRegel, neueIntervalle: List<CustomerIntervall>) {
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val neueIntervalle = customer.intervalle.toMutableList()
-                neueIntervalle.add(neuesIntervall)
+                val intervalle = customer.intervalle.toMutableList()
+                intervalle.addAll(neueIntervalle)
 
-                val updates = mapOf("intervalle" to neueIntervalle)
+                val updates = mapOf("intervalle" to intervalle)
                 val success = customerRepository.updateCustomer(customer.id, updates)
 
                 if (success) {
@@ -265,10 +271,9 @@ class TerminRegelManagerActivity : AppCompatActivity() {
         }
     }
 
-    private fun regelErsetzen(customer: Customer, regel: TerminRegel, neuesIntervall: CustomerIntervall) {
+    private fun regelErsetzen(customer: Customer, regel: TerminRegel, neueIntervalle: List<CustomerIntervall>) {
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val neueIntervalle = listOf(neuesIntervall)
 
                 val updates = mapOf("intervalle" to neueIntervalle)
                 val success = customerRepository.updateCustomer(customer.id, updates)

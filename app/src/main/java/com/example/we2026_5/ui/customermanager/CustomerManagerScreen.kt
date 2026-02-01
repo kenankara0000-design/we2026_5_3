@@ -332,7 +332,7 @@ private fun CustomerRow(
     val gplColor = when (customer.kundenArt) {
         "Privat" -> colorResource(R.color.button_privat_glossy)
         "Liste" -> colorResource(R.color.button_liste_glossy)
-        else -> colorResource(R.color.primary_blue)
+        else -> colorResource(R.color.button_gewerblich_glossy)
     }
     Card(
         modifier = Modifier.fillMaxWidth(),

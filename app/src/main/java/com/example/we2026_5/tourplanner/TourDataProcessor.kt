@@ -201,46 +201,29 @@ class TourDataProcessor {
             val hatAuslieferungAmTag = termineAmTag.any { it.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG }
             
             // Prüfe ob Kunde überfällige Termine hat (prüft ALLE Termine, nicht nur die am Tag)
-            // LOGIK: Überfällige Termine werden nur am Fälligkeitstag (Tag X) und am heutigen Tag (Tag Y) angezeigt
-            // - Am Tag X: Termin ist fällig und nicht erledigt → überfällig
-            // - Am Tag Y (heute): Termin war vor heute fällig und nicht erledigt → überfällig
-            // - Termine, die heute fällig sind (aber nicht überfällig) → normal behandelt
-            val hatUeberfaelligeAbholung = alleTermine.any { termin ->
+            // Überfällig = Fälligkeit VOR heute (terminStart < heuteStart). Nie „morgen“ als überfällig anzeigen.
+            val nurHeuteOderVergangenheit = viewDateStart <= heuteStart
+            val hatUeberfaelligeAbholung = nurHeuteOderVergangenheit && alleTermine.any { termin ->
                 val terminStart = categorizer.getStartOfDay(termin.datum)
                 val istAbholung = termin.typ == com.example.we2026_5.TerminTyp.ABHOLUNG
                 val istNichtErledigt = !customer.abholungErfolgt
-                
-                // Ein Termin ist überfällig, wenn:
-                // 1. Er am Tag X fällig ist (terminStart == viewDateStart) UND nicht erledigt → überfällig am Tag X
-                // 2. ODER er war vor heute fällig (terminStart < heuteStart) UND nicht erledigt UND wir sind heute (viewDateStart == heuteStart) → überfällig am Tag Y
-                // NICHT überfällig: Termine, die heute fällig sind (terminStart == heuteStart) → normal behandelt
-                
-                val istAmTagXFaellig = terminStart == viewDateStart // Termin ist am angezeigten Tag (Tag X) fällig
-                val warVorHeuteFaellig = terminStart < heuteStart // Termin war vor heute fällig
-                val istHeute = viewDateStart == heuteStart // Wir sind am heutigen Tag (Tag Y)
-                val istHeuteFaellig = terminStart == heuteStart // Termin ist heute fällig
-                
-                // Überfällig wenn:
-                // - Termin ist am Tag X fällig UND nicht erledigt (wird am Tag X angezeigt)
-                // - ODER Termin war vor heute fällig UND nicht erledigt UND wir sind heute (wird am Tag Y angezeigt)
-                // NICHT überfällig: Termine, die heute fällig sind (werden normal behandelt)
-                val istUeberfaellig = (istAmTagXFaellig || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
-                
+                val warVorHeuteFaellig = terminStart < heuteStart
+                val istAmFaelligkeitstag = terminStart == viewDateStart
+                val istHeute = viewDateStart == heuteStart
+                val istHeuteFaellig = terminStart == heuteStart
+                val istUeberfaellig = (istAmFaelligkeitstag || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
                 istAbholung && istNichtErledigt && istUeberfaellig
             }
             
-            val hatUeberfaelligeAuslieferung = alleTermine.any { termin ->
+            val hatUeberfaelligeAuslieferung = nurHeuteOderVergangenheit && alleTermine.any { termin ->
                 val terminStart = categorizer.getStartOfDay(termin.datum)
                 val istAuslieferung = termin.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG
                 val istNichtErledigt = !customer.auslieferungErfolgt
-                
-                val istAmTagXFaellig = terminStart == viewDateStart
                 val warVorHeuteFaellig = terminStart < heuteStart
+                val istAmFaelligkeitstag = terminStart == viewDateStart
                 val istHeute = viewDateStart == heuteStart
                 val istHeuteFaellig = terminStart == heuteStart
-                
-                val istUeberfaellig = (istAmTagXFaellig || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
-                
+                val istUeberfaellig = (istAmFaelligkeitstag || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
                 istAuslieferung && istNichtErledigt && istUeberfaellig
             }
             
@@ -329,12 +312,13 @@ class TourDataProcessor {
                 tageVoraus = 730
             )
             val ueberfaelligeDaten = alleTermine.filter { termin ->
+                if (viewDateStart > heuteStart) return@filter false
                 val terminStart = categorizer.getStartOfDay(termin.datum)
-                val istAmTagXFaellig = terminStart == viewDateStart
                 val warVorHeuteFaellig = terminStart < heuteStart
+                val istAmFaelligkeitstag = terminStart == viewDateStart
                 val istHeute = viewDateStart == heuteStart
                 val istHeuteFaellig = terminStart == heuteStart
-                val istUeberfaellig = (istAmTagXFaellig || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
+                val istUeberfaellig = (istAmFaelligkeitstag || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
                 val istNichtErledigt = (termin.typ == com.example.we2026_5.TerminTyp.ABHOLUNG && !customer.abholungErfolgt) ||
                         (termin.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG && !customer.auslieferungErfolgt)
                 istUeberfaellig && istNichtErledigt

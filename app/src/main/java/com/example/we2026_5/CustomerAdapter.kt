@@ -27,29 +27,6 @@ import com.example.we2026_5.util.TerminBerechnungUtils
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
-sealed class ListItem {
-    data class CustomerItem(val customer: Customer, val isOverdue: Boolean = false) : ListItem()
-    data class SectionHeader(
-        val title: String, 
-        val count: Int, 
-        val erledigtCount: Int, 
-        val sectionType: SectionType,
-        val kunden: List<Customer> = emptyList() // Kunden direkt im Header speichern
-    ) : ListItem()
-    data class ListeHeader(
-        val listeName: String, 
-        val kundenCount: Int, 
-        val erledigtCount: Int, 
-        val listeId: String,
-        val nichtErledigteKunden: List<Customer> = emptyList(),
-        val erledigteKunden: List<Customer> = emptyList()
-    ) : ListItem()
-}
-
-enum class SectionType {
-    OVERDUE, DONE, LISTE
-}
-
 class CustomerAdapter(
     private var items: MutableList<ListItem>,
     private val context: Context,

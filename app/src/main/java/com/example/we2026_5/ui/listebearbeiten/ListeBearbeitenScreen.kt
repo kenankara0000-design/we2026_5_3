@@ -5,14 +5,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -68,6 +72,7 @@ fun ListeBearbeitenScreen(
     var editName by remember(state.liste?.name) { mutableStateOf(state.liste?.name ?: "") }
     var editListeArt by remember(state.liste?.listeArt) { mutableStateOf(state.liste?.listeArt ?: "Gewerbe") }
     var nameError by remember { mutableStateOf<String?>(null) }
+    var overflowMenuExpanded by remember { mutableStateOf(false) }
     val validationNameMissing = stringResource(R.string.validation_name_missing)
 
     Scaffold(
@@ -97,6 +102,29 @@ fun ListeBearbeitenScreen(
                             contentDescription = stringResource(R.string.stat_loading),
                             tint = Color.White
                         )
+                    }
+                    if (state.isInEditMode) {
+                        Box {
+                            IconButton(onClick = { overflowMenuExpanded = true }) {
+                                Icon(
+                                    imageVector = Icons.Filled.MoreVert,
+                                    contentDescription = stringResource(R.string.content_desc_more_options),
+                                    tint = Color.White
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = overflowMenuExpanded,
+                                onDismissRequest = { overflowMenuExpanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.label_delete), color = statusOverdue) },
+                                    onClick = {
+                                        overflowMenuExpanded = false
+                                        onDelete()
+                                    }
+                                )
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue)
@@ -184,9 +212,12 @@ fun ListeBearbeitenScreen(
                                 if (name.isEmpty()) nameError = validationNameMissing
                                 else { nameError = null; onSave(name, editListeArt) }
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                containerColor = Color(ContextCompat.getColor(context, R.color.termin_regel_button_save)),
+                                contentColor = Color.White
+                            )
                         ) { Text(stringResource(R.string.btn_save)) }
-                        androidx.compose.material3.Button(onClick = onDelete, modifier = Modifier.weight(1f), colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = statusOverdue)) { Text(stringResource(R.string.label_delete)) }
                     }
                 }
 

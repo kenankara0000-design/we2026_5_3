@@ -40,9 +40,9 @@ class CustomerButtonVisibilityHelper(
         // Überfällig-Bereich (Ü-Button ausgeblendet, aber A/L überfällig anzeigen)
         applyUeberfaelligSection(binding, customer, viewDateStart, heuteStart)
 
-        // A (Abholung)
+        // A (Abholung) – nur anzeigen, wenn das Datum wirklich dem angezeigten Tag entspricht (z. B. erster Mo: nur A, kein L)
         val abholungDatumHeute = getAbholungDatum?.invoke(customer) ?: 0L
-        val hatAbholungHeute = abholungDatumHeute > 0
+        val hatAbholungHeute = abholungDatumHeute > 0 && TerminBerechnungUtils.getStartOfDay(abholungDatumHeute) == viewDateStart
         val hatUeberfaelligeAbholung = hasUeberfaelligeAbholung(customer, viewDateStart, heuteStart)
         val wurdeHeuteErledigt = customer.abholungErledigtAm > 0 &&
             TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) == viewDateStart
@@ -52,9 +52,9 @@ class CustomerButtonVisibilityHelper(
 
         applyAbholungButton(binding, customer, sollAButtonAnzeigen, istHeute, istAmTatsaechlichenAbholungTag, hatUeberfaelligeAbholung, pressedButton)
 
-        // L (Auslieferung)
+        // L (Auslieferung) – nur anzeigen, wenn am angezeigten Tag wirklich eine Auslieferung fällig ist (erster Abhol-Mo: keine L)
         val auslieferungDatumHeute = getAuslieferungDatum?.invoke(customer) ?: 0L
-        val hatAuslieferungHeute = auslieferungDatumHeute > 0
+        val hatAuslieferungHeute = auslieferungDatumHeute > 0 && TerminBerechnungUtils.getStartOfDay(auslieferungDatumHeute) == viewDateStart
         val hatUeberfaelligeAuslieferung = hasUeberfaelligeAuslieferung(customer, viewDateStart, heuteStart)
         val wurdeAmTagErledigtL = customer.auslieferungErledigtAm > 0 &&
             TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart
@@ -148,7 +148,7 @@ class CustomerButtonVisibilityHelper(
         val pressedButton = pressedButtons[customer.id]
 
         val abholungDatumHeute = getAbholungDatum?.invoke(customer) ?: 0L
-        val hatAbholungHeute = abholungDatumHeute > 0
+        val hatAbholungHeute = abholungDatumHeute > 0 && TerminBerechnungUtils.getStartOfDay(abholungDatumHeute) == viewDateStart
         val hatUeberfaelligeAbholung = hasUeberfaelligeAbholung(customer, viewDateStart, heuteStart)
         val wurdeHeuteErledigt = customer.abholungErledigtAm > 0 &&
             TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) == viewDateStart
@@ -157,7 +157,7 @@ class CustomerButtonVisibilityHelper(
         val istHeute = viewDateStart == heuteStart
 
         val auslieferungDatumHeute = getAuslieferungDatum?.invoke(customer) ?: 0L
-        val hatAuslieferungHeute = auslieferungDatumHeute > 0
+        val hatAuslieferungHeute = auslieferungDatumHeute > 0 && TerminBerechnungUtils.getStartOfDay(auslieferungDatumHeute) == viewDateStart
         val hatUeberfaelligeAuslieferung = hasUeberfaelligeAuslieferung(customer, viewDateStart, heuteStart)
         val wurdeAmTagErledigtL = customer.auslieferungErledigtAm > 0 &&
             TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart
@@ -211,27 +211,74 @@ class CustomerButtonVisibilityHelper(
         val enableL = sollLButtonAnzeigen && istHeute && customer.abholungErfolgt && !customer.auslieferungErfolgt && (istAmTatsaechlichenAuslieferungTag || hatUeberfaelligeAuslieferung)
         val enableKw = sollKwButtonAnzeigen && istHeute && !wurdeKwHeuteErledigt
 
-        val statusBadgeText = when {
-            (hatUeberfaelligeAbholung || hatUeberfaelligeAuslieferung) && viewDateStart <= heuteStart -> context.getString(com.example.we2026_5.R.string.status_badge_overdue)
-            sollAButtonAnzeigen && sollLButtonAnzeigen -> context.getString(com.example.we2026_5.R.string.status_badge_a_plus_l)
-            sollAButtonAnzeigen -> context.getString(com.example.we2026_5.R.string.status_badge_a)
-            sollLButtonAnzeigen -> context.getString(com.example.we2026_5.R.string.status_badge_l)
+        val istAmFaelligkeitstag = viewDateStart < heuteStart
+        val nurInfoAmFaelligkeitstag = istAmFaelligkeitstag && (hatUeberfaelligeAbholung || hatUeberfaelligeAuslieferung)
+
+        /** Echt überfällig = Fälligkeit vor heute (nicht „heute fällig“). Für Badge „Ü“ nur bei echt überfällig. */
+        val hatKlassischUeberfaelligeAbholung = hasKlassischUeberfaelligeAbholung(customer, viewDateStart, heuteStart)
+        val hatKlassischUeberfaelligeAuslieferung = hasKlassischUeberfaelligeAuslieferung(customer, viewDateStart, heuteStart)
+
+        val overdueInfoText = when {
+            !nurInfoAmFaelligkeitstag -> ""
+            hatUeberfaelligeAbholung && hatUeberfaelligeAuslieferung -> context.getString(com.example.we2026_5.R.string.info_overdue_a_l)
+            hatUeberfaelligeAbholung -> context.getString(com.example.we2026_5.R.string.info_overdue_a)
+            hatUeberfaelligeAuslieferung -> context.getString(com.example.we2026_5.R.string.info_overdue_l)
             else -> ""
         }
 
-        val isOverdueBadge = (hatUeberfaelligeAbholung || hatUeberfaelligeAuslieferung) && viewDateStart <= heuteStart
+        val showAbholungFinal = if (nurInfoAmFaelligkeitstag) false else sollAButtonAnzeigen
+        val showAuslieferungFinal = if (nurInfoAmFaelligkeitstag) false else sollLButtonAnzeigen
+        val showKwFinal = if (nurInfoAmFaelligkeitstag) false else sollKwButtonAnzeigen
+
+        val statusBadgeText = when {
+            nurInfoAmFaelligkeitstag -> when {
+                hatUeberfaelligeAbholung && hatUeberfaelligeAuslieferung -> context.getString(com.example.we2026_5.R.string.status_badge_a_plus_l_short)
+                hatUeberfaelligeAbholung -> context.getString(com.example.we2026_5.R.string.status_badge_a_short)
+                hatUeberfaelligeAuslieferung -> context.getString(com.example.we2026_5.R.string.status_badge_l_short)
+                else -> context.getString(com.example.we2026_5.R.string.status_badge_overdue_short)
+            }
+            (hatKlassischUeberfaelligeAbholung || hatKlassischUeberfaelligeAuslieferung) && viewDateStart <= heuteStart -> context.getString(com.example.we2026_5.R.string.status_badge_overdue_short)
+            sollAButtonAnzeigen && sollLButtonAnzeigen -> context.getString(com.example.we2026_5.R.string.status_badge_a_plus_l_short)
+            sollAButtonAnzeigen -> context.getString(com.example.we2026_5.R.string.status_badge_a_short)
+            sollLButtonAnzeigen -> context.getString(com.example.we2026_5.R.string.status_badge_l_short)
+            else -> ""
+        }
+
+        val isOverdueBadge = (hatKlassischUeberfaelligeAbholung || hatKlassischUeberfaelligeAuslieferung) && viewDateStart <= heuteStart
+
+        val completedInfoText = when {
+            !isDone -> ""
+            viewDateStart > heuteStart -> ""
+            else -> {
+                val parts = mutableListOf<String>()
+                if (customer.abholungErfolgt) {
+                    val ts = if (customer.abholungZeitstempel > 0) DateFormatter.formatDateTime(customer.abholungZeitstempel)
+                        else DateFormatter.formatDate(customer.abholungErledigtAm)
+                    parts.add(context.getString(com.example.we2026_5.R.string.info_erledigt_a, ts))
+                }
+                if (customer.auslieferungErfolgt) {
+                    val ts = if (customer.auslieferungZeitstempel > 0) DateFormatter.formatDateTime(customer.auslieferungZeitstempel)
+                        else DateFormatter.formatDate(customer.auslieferungErledigtAm)
+                    parts.add(context.getString(com.example.we2026_5.R.string.info_erledigt_l, ts))
+                }
+                parts.joinToString("\n")
+            }
+        }
+
         return ErledigungSheetState(
-            showAbholung = sollAButtonAnzeigen,
+            showAbholung = showAbholungFinal,
             enableAbholung = enableA,
-            showAuslieferung = sollLButtonAnzeigen,
+            showAuslieferung = showAuslieferungFinal,
             enableAuslieferung = enableL,
-            showKw = sollKwButtonAnzeigen,
+            showKw = showKwFinal,
             enableKw = enableKw,
             showVerschieben = !isDone && vButtonAktiv,
             showUrlaub = !isDone && uButtonAktiv,
             showRueckgaengig = sollRueckgaengigAnzeigen,
             statusBadgeText = statusBadgeText,
-            isOverdueBadge = isOverdueBadge
+            isOverdueBadge = isOverdueBadge,
+            overdueInfoText = overdueInfoText,
+            completedInfoText = completedInfoText
         )
     }
 
@@ -250,7 +297,8 @@ class CustomerButtonVisibilityHelper(
         binding.btnRueckgaengig.isClickable = false
     }
 
-    private fun hasUeberfaelligeAbholung(customer: Customer, viewDateStart: Long, heuteStart: Long): Boolean {
+    /** Echt überfällig Abholung = Fälligkeit vor heute (terminStart < heuteStart), nicht erledigt. Für Badge „Ü“. */
+    private fun hasKlassischUeberfaelligeAbholung(customer: Customer, viewDateStart: Long, heuteStart: Long): Boolean {
         val alleTermine = getAlleTermine(customer, viewDateStart - TimeUnit.DAYS.toMillis(365), 730)
         return alleTermine.any { termin ->
             termin.typ == TerminTyp.ABHOLUNG &&
@@ -259,13 +307,36 @@ class CustomerButtonVisibilityHelper(
         }
     }
 
-    private fun hasUeberfaelligeAuslieferung(customer: Customer, viewDateStart: Long, heuteStart: Long): Boolean {
+    private fun hasKlassischUeberfaelligeAuslieferung(customer: Customer, viewDateStart: Long, heuteStart: Long): Boolean {
         val alleTermine = getAlleTermine(customer, viewDateStart - TimeUnit.DAYS.toMillis(365), 730)
         return alleTermine.any { termin ->
             termin.typ == TerminTyp.AUSLIEFERUNG &&
                 TerminFilterUtils.istUeberfaellig(termin.datum, heuteStart, customer.auslieferungErfolgt) &&
                 TerminFilterUtils.sollUeberfaelligAnzeigen(termin.datum, viewDateStart, heuteStart)
         }
+    }
+
+    /** Überfällig = Fälligkeit vor heute ODER (heute fällig und Anzeige ist Heute) und nicht erledigt. */
+    private fun hasUeberfaelligeAbholung(customer: Customer, viewDateStart: Long, heuteStart: Long): Boolean {
+        val klassischUeberfaellig = hasKlassischUeberfaelligeAbholung(customer, viewDateStart, heuteStart)
+        val alleTermine = getAlleTermine(customer, viewDateStart - TimeUnit.DAYS.toMillis(365), 730)
+        val heuteFaelligNochNichtErledigt = viewDateStart == heuteStart && !customer.abholungErfolgt &&
+            alleTermine.any { termin ->
+                termin.typ == TerminTyp.ABHOLUNG &&
+                    TerminBerechnungUtils.getStartOfDay(termin.datum) == heuteStart
+            }
+        return klassischUeberfaellig || heuteFaelligNochNichtErledigt
+    }
+
+    private fun hasUeberfaelligeAuslieferung(customer: Customer, viewDateStart: Long, heuteStart: Long): Boolean {
+        val klassischUeberfaellig = hasKlassischUeberfaelligeAuslieferung(customer, viewDateStart, heuteStart)
+        val alleTermine = getAlleTermine(customer, viewDateStart - TimeUnit.DAYS.toMillis(365), 730)
+        val heuteFaelligNochNichtErledigt = viewDateStart == heuteStart && !customer.auslieferungErfolgt &&
+            alleTermine.any { termin ->
+                termin.typ == TerminTyp.AUSLIEFERUNG &&
+                    TerminBerechnungUtils.getStartOfDay(termin.datum) == heuteStart
+            }
+        return klassischUeberfaellig || heuteFaelligNochNichtErledigt
     }
 
     private fun applyUeberfaelligSection(binding: ItemCustomerBinding, customer: Customer, viewDateStart: Long, heuteStart: Long) {
@@ -288,7 +359,8 @@ class CustomerButtonVisibilityHelper(
                 val warVorHeuteFaellig = terminStart < heuteStart
                 val istHeute = viewDateStart == heuteStart
                 val istHeuteFaellig = terminStart == heuteStart
-                val istUeberfaellig = (istAmTagXFaellig || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
+                // Überfällig: am Fälligkeitstag, oder heute angezeigt und (vorher fällig oder heute fällig)
+                val istUeberfaellig = istAmTagXFaellig || (istHeute && (warVorHeuteFaellig || istHeuteFaellig))
 
                 if (istUeberfaellig) {
                     val terminTyp = when (termin.typ) {
@@ -334,6 +406,7 @@ class CustomerButtonVisibilityHelper(
     }
 
     private fun hasUeberfaelligeAbholungForUe(customer: Customer, viewDateStart: Long, heuteStart: Long): Boolean {
+        if (viewDateStart > heuteStart) return false
         val alleTermine = getAlleTermine(customer, viewDateStart - TimeUnit.DAYS.toMillis(365), 730)
         return alleTermine.any { termin ->
             val terminStart = TerminBerechnungUtils.getStartOfDay(termin.datum)
@@ -343,12 +416,13 @@ class CustomerButtonVisibilityHelper(
             val warVorHeuteFaellig = terminStart < heuteStart
             val istHeute = viewDateStart == heuteStart
             val istHeuteFaellig = terminStart == heuteStart
-            val istUeberfaellig = (istAmTagXFaellig || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
+            val istUeberfaellig = istAmTagXFaellig || (istHeute && (warVorHeuteFaellig || istHeuteFaellig))
             istAbholung && istNichtErledigt && istUeberfaellig
         }
     }
 
     private fun hasUeberfaelligeAuslieferungForUe(customer: Customer, viewDateStart: Long, heuteStart: Long): Boolean {
+        if (viewDateStart > heuteStart) return false
         val alleTermine = getAlleTermine(customer, viewDateStart - TimeUnit.DAYS.toMillis(365), 730)
         return alleTermine.any { termin ->
             val terminStart = TerminBerechnungUtils.getStartOfDay(termin.datum)
@@ -358,7 +432,7 @@ class CustomerButtonVisibilityHelper(
             val warVorHeuteFaellig = terminStart < heuteStart
             val istHeute = viewDateStart == heuteStart
             val istHeuteFaellig = terminStart == heuteStart
-            val istUeberfaellig = (istAmTagXFaellig || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
+            val istUeberfaellig = istAmTagXFaellig || (istHeute && (warVorHeuteFaellig || istHeuteFaellig))
             istAuslieferung && istNichtErledigt && istUeberfaellig
         }
     }

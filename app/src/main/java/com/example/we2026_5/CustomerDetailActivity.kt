@@ -8,9 +8,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
+import com.example.we2026_5.util.TerminRegelInfoText
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.we2026_5.data.repository.CustomerRepository
@@ -71,6 +78,18 @@ class CustomerDetailActivity : AppCompatActivity() {
             val editIntervalle by viewModel.editIntervalle.collectAsState(initial = emptyList())
             val isLoading by viewModel.isLoading.collectAsState(initial = false)
             val isUploading by viewModel.isUploading.collectAsState(initial = false)
+            var regelNameByRegelId by remember(customer?.id) { mutableStateOf<Map<String, String>>(emptyMap()) }
+
+            LaunchedEffect(customer) {
+                val c = customer ?: return@LaunchedEffect
+                val ids = c.intervalle.mapNotNull { i -> i.terminRegelId.takeIf { it.isNotBlank() } }.distinct()
+                val map = ids.associateWith { regelId ->
+                    withContext(Dispatchers.IO) {
+                        regelRepository.getRegelById(regelId)?.name ?: ""
+                    }
+                }
+                regelNameByRegelId = map
+            }
 
             CustomerDetailScreen(
                 customer = customer,
@@ -90,20 +109,27 @@ class CustomerDetailActivity : AppCompatActivity() {
                 },
                 onDelete = {
                     AlertDialog.Builder(this@CustomerDetailActivity)
-                        .setTitle("Kunde löschen?")
-                        .setMessage("Möchten Sie diesen Kunden wirklich löschen? Alle Termine dieses Kunden werden ebenfalls gelöscht.")
-                        .setPositiveButton("Löschen") { _, _ ->
+                        .setTitle(getString(R.string.dialog_delete_customer_title))
+                        .setMessage(getString(R.string.dialog_delete_customer_message))
+                        .setPositiveButton(getString(R.string.dialog_loeschen)) { _, _ ->
                             val resultIntent = Intent().apply { putExtra("DELETED_CUSTOMER_ID", id) }
                             setResult(com.example.we2026_5.CustomerManagerActivity.RESULT_CUSTOMER_DELETED, resultIntent)
                             viewModel.deleteCustomer()
                         }
-                        .setNegativeButton("Abbrechen", null)
+                        .setNegativeButton(getString(R.string.btn_cancel), null)
                         .show()
                 },
                 onTerminAnlegen = {
-                    startActivity(Intent(this@CustomerDetailActivity, TerminRegelManagerActivity::class.java).apply {
-                        putExtra("CUSTOMER_ID", id)
-                    })
+                    AlertDialog.Builder(this@CustomerDetailActivity)
+                        .setTitle(getString(R.string.dialog_termin_anlegen_title))
+                        .setMessage(getString(R.string.dialog_termin_anlegen_message))
+                        .setPositiveButton(getString(R.string.dialog_yes)) { _, _ ->
+                            startActivity(Intent(this@CustomerDetailActivity, TerminRegelManagerActivity::class.java).apply {
+                                putExtra("CUSTOMER_ID", id)
+                            })
+                        }
+                        .setNegativeButton(getString(R.string.btn_cancel), null)
+                        .show()
                 },
                 onTakePhoto = { photoManager?.showPhotoOptionsDialog() },
                 onAdresseClick = {
@@ -123,6 +149,15 @@ class CustomerDetailActivity : AppCompatActivity() {
                         } else Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_keine_telefonnummer), Toast.LENGTH_SHORT).show()
                     }
                 },
+                onDeleteIntervall = { index -> viewModel.removeIntervallAt(index) },
+                onRemoveRegel = { regelId ->
+                    AlertDialog.Builder(this@CustomerDetailActivity)
+                        .setTitle(R.string.dialog_regel_vom_kunden_entfernen_titel)
+                        .setMessage(R.string.dialog_regel_vom_kunden_entfernen_message)
+                        .setPositiveButton(R.string.dialog_loeschen) { _, _ -> viewModel.removeRegelFromEdit(regelId) }
+                        .setNegativeButton(R.string.btn_cancel, null)
+                        .show()
+                },
                 onPhotoClick = { url -> photoManager?.showImageInDialog(url) },
                 onDatumSelected = { position, isAbholung ->
                     val intervalle = editIntervalle.toMutableList()
@@ -133,6 +168,13 @@ class CustomerDetailActivity : AppCompatActivity() {
                         isAbholung = isAbholung,
                         onDatumSelected = { viewModel.updateEditIntervalle(intervalle) }
                     )
+                },
+                regelNameByRegelId = regelNameByRegelId,
+                onRegelClick = { regelId ->
+                    lifecycleScope.launch {
+                        val regel = withContext(Dispatchers.IO) { regelRepository.getRegelById(regelId) }
+                        regel?.let { showRegelDetailDialog(it) }
+                    }
                 }
             )
         }
@@ -179,6 +221,20 @@ class CustomerDetailActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun showRegelDetailDialog(regel: TerminRegel) {
+        val infoText = TerminRegelInfoText.build(regel)
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.dialog_regel_info_title))
+            .setMessage(infoText)
+            .setPositiveButton(getString(R.string.label_edit)) { _, _ ->
+                startActivity(Intent(this, TerminRegelErstellenActivity::class.java).apply {
+                    putExtra("REGEL_ID", regel.id)
+                })
+            }
+            .setNegativeButton(getString(R.string.dialog_close), null)
+            .show()
     }
 
     override fun onDestroy() {

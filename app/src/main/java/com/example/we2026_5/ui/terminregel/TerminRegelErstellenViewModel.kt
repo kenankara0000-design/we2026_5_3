@@ -13,7 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** UI-State für Termin-Regel Erstellen/Bearbeiten. */
+/** UI-State für Termin-Regel Erstellen/Bearbeiten. Mehrere Abhol- und Auslieferungswochentage; optional täglich. */
 data class TerminRegelState(
     val currentRegelId: String? = null,
     val name: String = "",
@@ -21,17 +21,11 @@ data class TerminRegelState(
     val wiederholen: Boolean = false,
     val intervallTage: String = "7",
     val intervallAnzahl: String = "0",
-    val wochentagBasiert: Boolean = false,
     val startDatum: Long = 0,
     val startDatumText: String = "",
-    val abholungDatum: Long = 0,
-    val abholungDatumText: String = "",
-    val auslieferungDatum: Long = 0,
-    val auslieferungDatumText: String = "",
-    val abholungWochentag: Int = -1,
-    val abholungWochentagText: String = "",
-    val auslieferungWochentag: Int = -1,
-    val auslieferungWochentagText: String = "",
+    val abholungWochentage: List<Int> = emptyList(), // 0=Mo..6=So, mehrere erlaubt
+    val auslieferungWochentage: List<Int> = emptyList(),
+    val taeglich: Boolean = false, // Täglich: Termine jeden Tag ab Startdatum
     val isSaving: Boolean = false,
     val errorMessageResId: Int? = null,
     val success: Boolean = false
@@ -54,12 +48,20 @@ class TerminRegelErstellenViewModel(
     fun setWiederholen(wiederholen: Boolean) { updateState { copy(wiederholen = wiederholen) } }
     fun setIntervallTage(s: String) { updateState { copy(intervallTage = s) } }
     fun setIntervallAnzahl(s: String) { updateState { copy(intervallAnzahl = s) } }
-    fun setWochentagBasiert(b: Boolean) { updateState { copy(wochentagBasiert = b) } }
     fun setStartDatum(timestamp: Long, text: String) { updateState { copy(startDatum = timestamp, startDatumText = text) } }
-    fun setAbholungDatum(timestamp: Long, text: String) { updateState { copy(abholungDatum = timestamp, abholungDatumText = text) } }
-    fun setAuslieferungDatum(timestamp: Long, text: String) { updateState { copy(auslieferungDatum = timestamp, auslieferungDatumText = text) } }
-    fun setAbholungWochentag(weekday: Int, text: String) { updateState { copy(abholungWochentag = weekday, abholungWochentagText = text) } }
-    fun setAuslieferungWochentag(weekday: Int, text: String) { updateState { copy(auslieferungWochentag = weekday, auslieferungWochentagText = text) } }
+    fun setTaeglich(taeglich: Boolean) { updateState { copy(taeglich = taeglich) } }
+    fun toggleAbholungWochentag(weekday: Int) {
+        updateState {
+            val list = if (weekday in abholungWochentage) abholungWochentage - weekday else abholungWochentage + weekday
+            copy(abholungWochentage = list.sorted().distinct())
+        }
+    }
+    fun toggleAuslieferungWochentag(weekday: Int) {
+        updateState {
+            val list = if (weekday in auslieferungWochentage) auslieferungWochentage - weekday else auslieferungWochentage + weekday
+            copy(auslieferungWochentage = list.sorted().distinct())
+        }
+    }
 
     private fun updateState(block: TerminRegelState.() -> TerminRegelState) {
         _state.value = (_state.value ?: TerminRegelState()).block()
@@ -69,6 +71,10 @@ class TerminRegelErstellenViewModel(
         viewModelScope.launch {
             val regel = withContext(Dispatchers.IO) { regelRepository.getRegelById(regelId) }
             if (regel != null) {
+                val abholList = regel.abholungWochentage?.filter { it in 0..6 }?.distinct()?.sorted()
+                    ?: (if (regel.abholungWochentag in 0..6) listOf(regel.abholungWochentag) else emptyList())
+                val auslList = regel.auslieferungWochentage?.filter { it in 0..6 }?.distinct()?.sorted()
+                    ?: (if (regel.auslieferungWochentag in 0..6) listOf(regel.auslieferungWochentag) else emptyList())
                 _state.value = (_state.value ?: TerminRegelState()).copy(
                     currentRegelId = regel.id,
                     name = regel.name,
@@ -76,17 +82,11 @@ class TerminRegelErstellenViewModel(
                     wiederholen = regel.wiederholen,
                     intervallTage = regel.intervallTage.toString(),
                     intervallAnzahl = regel.intervallAnzahl.toString(),
-                    wochentagBasiert = regel.wochentagBasiert,
                     startDatum = regel.startDatum,
                     startDatumText = if (regel.startDatum > 0) com.example.we2026_5.util.TerminRegelDatePickerHelper.formatDateFromMillis(regel.startDatum) else "",
-                    abholungDatum = regel.abholungDatum,
-                    abholungDatumText = if (regel.abholungDatum > 0) com.example.we2026_5.util.TerminRegelDatePickerHelper.formatDateFromMillis(regel.abholungDatum) else "",
-                    auslieferungDatum = regel.auslieferungDatum,
-                    auslieferungDatumText = if (regel.auslieferungDatum > 0) com.example.we2026_5.util.TerminRegelDatePickerHelper.formatDateFromMillis(regel.auslieferungDatum) else "",
-                    abholungWochentag = regel.abholungWochentag,
-                    abholungWochentagText = if (regel.abholungWochentag >= 0) WOCENTAGE[regel.abholungWochentag] else "",
-                    auslieferungWochentag = regel.auslieferungWochentag,
-                    auslieferungWochentagText = if (regel.auslieferungWochentag >= 0) WOCENTAGE[regel.auslieferungWochentag] else ""
+                    abholungWochentage = abholList,
+                    auslieferungWochentage = auslList,
+                    taeglich = regel.taeglich
                 )
             }
         }
@@ -105,10 +105,17 @@ class TerminRegelErstellenViewModel(
             updateState { copy(errorMessageResId = R.string.validierung_intervall_min) }
             return
         }
-        if (s.wochentagBasiert) {
-            if (s.startDatum == 0L) { updateState { copy(errorMessageResId = R.string.error_startdatum_fehlt) }; return }
-            if (s.abholungWochentag < 0) { updateState { copy(errorMessageResId = R.string.error_abholung_wochentag_fehlt) }; return }
-            if (s.auslieferungWochentag < 0) { updateState { copy(errorMessageResId = R.string.error_auslieferung_wochentag_fehlt) }; return }
+        if (s.taeglich) {
+            if (s.startDatum <= 0) {
+                updateState { copy(errorMessageResId = R.string.validierung_startdatum) }; return
+            }
+        } else {
+            if (s.abholungWochentage.isEmpty()) {
+                updateState { copy(errorMessageResId = R.string.error_abholung_wochentag_fehlt) }; return
+            }
+            if (s.auslieferungWochentage.isEmpty()) {
+                updateState { copy(errorMessageResId = R.string.error_auslieferung_wochentag_fehlt) }; return
+            }
         }
 
         viewModelScope.launch {
@@ -117,15 +124,18 @@ class TerminRegelErstellenViewModel(
                 id = s.currentRegelId ?: java.util.UUID.randomUUID().toString(),
                 name = name,
                 beschreibung = s.beschreibung,
-                abholungDatum = s.abholungDatum,
-                auslieferungDatum = s.auslieferungDatum,
+                abholungDatum = 0,
+                auslieferungDatum = 0,
                 wiederholen = s.wiederholen,
                 intervallTage = intervallTage,
                 intervallAnzahl = intervallAnzahl,
-                wochentagBasiert = s.wochentagBasiert,
+                wochentagBasiert = !s.taeglich,
                 startDatum = s.startDatum,
-                abholungWochentag = s.abholungWochentag,
-                auslieferungWochentag = s.auslieferungWochentag,
+                abholungWochentag = s.abholungWochentage.firstOrNull() ?: -1,
+                auslieferungWochentag = s.auslieferungWochentage.firstOrNull() ?: -1,
+                abholungWochentage = s.abholungWochentage,
+                auslieferungWochentage = s.auslieferungWochentage,
+                taeglich = s.taeglich,
                 geaendertAm = System.currentTimeMillis()
             )
             val success = withContext(Dispatchers.IO) { regelRepository.saveRegel(regel) }
@@ -182,12 +192,12 @@ class TerminRegelErstellenViewModel(
         try {
             val allCustomers = customerRepository.getAllCustomers()
             allCustomers.forEach { customer ->
-                val intervallIndex = customer.intervalle.indexOfFirst { it.terminRegelId == regel.id }
-                if (intervallIndex != -1) {
-                    val neuesIntervall = TerminRegelManager.wendeRegelAufKundeAn(regel, customer)
-                    val aktualisierteIntervalle = customer.intervalle.toMutableList()
-                    aktualisierteIntervalle[intervallIndex] = neuesIntervall.copy(id = customer.intervalle[intervallIndex].id)
-                    val intervalleMap = aktualisierteIntervalle.mapIndexed { _, intervall ->
+                val betroffeneIndices = customer.intervalle.mapIndexed { index, intervall -> if (intervall.terminRegelId == regel.id) index else -1 }.filter { it >= 0 }
+                if (betroffeneIndices.isNotEmpty()) {
+                    val neueIntervalle = TerminRegelManager.wendeRegelAufKundeAn(regel, customer)
+                    val aktualisierteIntervalle = customer.intervalle.filterIndexed { index, _ -> index !in betroffeneIndices.toSet() }.toMutableList()
+                    aktualisierteIntervalle.addAll(neueIntervalle)
+                    val intervalleMap = aktualisierteIntervalle.map { intervall ->
                         mapOf(
                             "id" to intervall.id,
                             "abholungDatum" to intervall.abholungDatum,

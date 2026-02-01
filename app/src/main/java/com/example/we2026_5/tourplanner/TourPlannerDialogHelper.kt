@@ -26,7 +26,7 @@ class TourPlannerDialogHelper(
         binding.tvKundenname.text = customer.name
         binding.tvAdresse.text = customer.adresse
         binding.tvTelefon.text = customer.telefon
-        binding.tvNotizen.text = customer.notizen.ifEmpty { "Keine Notizen" }
+        binding.tvNotizen.text = customer.notizen.ifEmpty { activity.getString(com.example.we2026_5.R.string.label_no_notes) }
         
         // Termin-Datum formatieren
         val dateStr = com.example.we2026_5.util.DateFormatter.formatDate(terminDatum)
@@ -47,9 +47,9 @@ class TourPlannerDialogHelper(
         binding.btnTerminLoeschen.setOnClickListener {
             com.example.we2026_5.util.DialogBaseHelper.showConfirmationDialog(
                 context = activity,
-                title = "Termin löschen",
-                message = "Möchten Sie diesen Termin wirklich löschen?",
-                positiveButtonText = "Löschen",
+                title = activity.getString(com.example.we2026_5.R.string.dialog_termin_loeschen_title),
+                message = activity.getString(com.example.we2026_5.R.string.dialog_termin_loeschen_message),
+                positiveButtonText = activity.getString(com.example.we2026_5.R.string.dialog_loeschen),
                 onPositive = {
                     onTerminLoeschen?.invoke(customer, terminDatum)
                     dialog.dismiss()

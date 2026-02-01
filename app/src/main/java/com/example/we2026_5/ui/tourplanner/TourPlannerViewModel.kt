@@ -78,19 +78,15 @@ class TourPlannerViewModel(
     
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> = _error
-    
-    // Sections standardmäßig eingeklappt (collapsed)
-    private val expandedSections = mutableSetOf<SectionType>()
-    
+
     fun loadTourData(selectedTimestamp: Long, isSectionExpanded: (SectionType) -> Boolean) {
         selectedTimestampFlow.value = selectedTimestamp
-        expandedSectionsFlow.value = expandedSections.toSet()
+        expandedSectionsFlow.value = expandedSectionsFlow.value
     }
 
     /** Setzt das anzuzeigende Datum (z. B. beim Start). */
     fun setSelectedTimestamp(ts: Long) {
         selectedTimestampFlow.value = ts
-        expandedSectionsFlow.value = expandedSections.toSet()
     }
 
     /** Nächster Tag. */
@@ -118,20 +114,17 @@ class TourPlannerViewModel(
     // processTourData Funktion entfernt - jetzt in TourDataProcessor
     
     fun toggleSection(sectionType: SectionType) {
-        val current = expandedSections.toMutableSet()
+        val current = expandedSectionsFlow.value.toMutableSet()
         if (current.contains(sectionType)) {
             current.remove(sectionType)
         } else {
             current.add(sectionType)
         }
-        expandedSections.clear()
-        expandedSections.addAll(current)
         expandedSectionsFlow.value = current
     }
-    
-    fun isSectionExpanded(sectionType: SectionType): Boolean {
-        return expandedSections.contains(sectionType)
-    }
+
+    fun isSectionExpanded(sectionType: SectionType): Boolean =
+        expandedSectionsFlow.value.contains(sectionType)
     
     /** Aktuelle Listen (für TourPlanner ohne runBlocking). */
     fun getListen(): List<KundenListe> = _listenStateFlow.value

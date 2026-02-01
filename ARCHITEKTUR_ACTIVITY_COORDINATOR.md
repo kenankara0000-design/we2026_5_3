@@ -45,20 +45,17 @@
 
 ---
 
-## 3. Geplant: TourPlanner
+## 3. Umgesetzt: TourPlanner
 
-### 3.1 Ziel
+### 3.1 Verantwortung
 
-- **TourPlannerCoordinator** kapselt: TourPlannerUISetup, TourPlannerCallbackHandler, TourPlannerDateUtils, TourPlannerDialogHelper, TourPlannerGestureHandler, CustomerDialogHelper (Sheet); Adapter-Erstellung und -Callbacks.
-- **TourPlannerActivity** nur noch: Binding, ViewModel beobachten (selectedTimestamp, tourItems, isLoading, error), Coordinator aufrufen (setupUi(), onDateChanged(ts), onTourItems(items, dateMillis), reloadCurrentView(), showErledigungSheet); Implementierung von ErledigungSheetCallbacks mit Delegation an Coordinator.
-- **Datum:** Bereits im ViewModel (selectedTimestamp); viewDate nur noch im Coordinator für Helper, die ein Calendar brauchen.
+- **TourPlannerCoordinator** kapselt: TourPlannerDateUtils, TourPlannerDialogHelper, TourPlannerCallbackHandler, CustomerDialogHelper (Sheet); erstellt und hält viewDate (Calendar), sync mit ViewModel.selectedTimestamp; deleteTermin(), resetTourCycle(), reloadCurrentView().
+- **TourPlannerActivity** nur noch: Coordinator erstellen, setContent mit TourPlannerScreen; ViewModel/NetworkMonitor beobachten; Compose-State (pressedHeaderButton, erledigungSheet, overviewCustomer) halten; alle Erledigungs-/Dialog-Aufrufe an coordinator weiterreichen.
+- **Datum:** Im ViewModel (selectedTimestamp); viewDate im Coordinator für Helper.
 
 ### 3.2 Nächste Schritte
 
-1. TourPlannerCoordinator anlegen: Konstruktor(activity, binding, viewModel, repository, listeRepository, regelRepository).
-2. Helper im Coordinator erstellen und in setupUi() verdrahten; Adapter im Coordinator halten, RecyclerView in setupUi() setzen.
-3. API des Coordinators: setupUi(), onDateChanged(ts: Long?), onTourItems(items, dateMillis), reloadCurrentView(), showCustomerOverviewDialog(customer), showErledigungSheet(customer, state), handleAbholung(customer), handleAuslieferung(customer), handleKw(customer), handleRueckgaengig(customer), getViewDateMillis(): Long.
-4. Activity: ErledigungSheetCallbacks implementieren und an Coordinator delegieren; alle Klicks und Observer auf ViewModel/Coordinator umstellen; viewDate und alle Helper-Referenzen entfernen.
+– Erledigt (Februar 2026).
 
 ---
 
@@ -69,10 +66,10 @@
 - **Coordinator:** CustomerDetailCoordinator – UISetup, Callbacks, EditManager, PhotoManager; setupUi(), updateCustomer(), onTakePictureResult, onPickImageResult, onCameraPermissionResult.
 - **Activity:** CustomerDetailActivity – Binding, Launcher, ViewModel-Observer, Coordinator; kein Listener, kein loadCustomer() in Activity.
 
-### TourPlanner (geplant)
-- **ViewModel:** TourPlannerViewModel – selectedTimestamp, tourItems, toggleSection, prevDay, nextDay, goToToday, loadTourData; bereits vorhanden.
-- **Coordinator:** TourPlannerCoordinator (noch zu erstellen) – alle Helper, setupUi(), onDateChanged, onTourItems, reloadCurrentView, Sheet/Dialog-Weiterleitung.
-- **Activity:** TourPlannerActivity – schlank: Binding, Observer, Coordinator-API, ErledigungSheetCallbacks-Delegation.
+### TourPlanner (umgesetzt)
+- **ViewModel:** TourPlannerViewModel – selectedTimestamp, tourItems, toggleSection, prevDay, nextDay, goToToday, loadTourData; expandedSections nur noch als Flow.
+- **Coordinator:** TourPlannerCoordinator – dateUtils, dialogHelper, callbackHandler, sheetDialogHelper; reloadCurrentView(), deleteTermin(), resetTourCycle(), getViewDateMillis().
+- **Activity:** TourPlannerActivity – schlank: Coordinator, setContent, Observer, Compose-State; keine Helper-Referenzen mehr.
 
 ---
 

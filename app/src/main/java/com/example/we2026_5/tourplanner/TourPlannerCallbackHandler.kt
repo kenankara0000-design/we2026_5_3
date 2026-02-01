@@ -3,8 +3,6 @@ package com.example.we2026_5.tourplanner
 import android.content.Context
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
-import com.example.we2026_5.CustomerAdapter
-import com.example.we2026_5.adapter.CustomerAdapterCallbacksConfig
 import com.example.we2026_5.FirebaseRetryHelper
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.data.repository.CustomerRepository
@@ -19,7 +17,7 @@ import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 /**
- * Handler für alle Callbacks des CustomerAdapters im TourPlanner.
+ * Handler für Erledigungs-Callbacks im TourPlanner (Compose-UI).
  * getListen liefert Listen aus dem ViewModel (ohne runBlocking).
  */
 class TourPlannerCallbackHandler(
@@ -29,42 +27,19 @@ class TourPlannerCallbackHandler(
     private val getListen: () -> List<KundenListe>,
     private val dateUtils: TourPlannerDateUtils,
     private val viewDate: Calendar,
-    private val adapter: CustomerAdapter?,
     private val reloadCurrentView: () -> Unit,
     private val resetTourCycle: (String) -> Unit,
     private val onError: ((String) -> Unit)? = null
 ) {
-    
+
     private fun getAbholungDatum(customer: Customer): Long {
         val viewDateStart = dateUtils.getStartOfDay(viewDate.timeInMillis)
         return dateUtils.calculateAbholungDatum(customer, viewDateStart, dateUtils.getStartOfDay(System.currentTimeMillis()))
     }
-    
+
     private fun getAuslieferungDatum(customer: Customer): Long {
         val viewDateStart = dateUtils.getStartOfDay(viewDate.timeInMillis)
         return dateUtils.calculateAuslieferungDatum(customer, viewDateStart, dateUtils.getStartOfDay(System.currentTimeMillis()))
-    }
-    
-    fun setupCallbacks() {
-        val a = adapter ?: return
-        a.callbacks = a.callbacks.copy(
-            onAbholung = { customer -> handleAbholung(customer) },
-            onAuslieferung = { customer -> handleAuslieferung(customer) },
-            onKw = { customer -> handleKw(customer) },
-            onResetTourCycle = { customerId -> resetTourCycle(customerId) },
-            onVerschieben = { customer, newDate, alleVerschieben ->
-                handleVerschieben(customer, newDate, alleVerschieben)
-            },
-            onUrlaub = { customer, von, bis -> handleUrlaub(customer, von, bis) },
-            onRueckgaengig = { customer -> handleRueckgaengig(customer) },
-            getAbholungDatum = { customer -> getAbholungDatum(customer) },
-            getAuslieferungDatum = { customer -> getAuslieferungDatum(customer) },
-            getNaechstesTourDatum = { customer -> dateUtils.getNaechstesTourDatum(customer) },
-            getTermineFuerKunde = { customer, startDatum, tageVoraus ->
-                val liste = if (customer.listeId.isNotBlank()) getListen().find { it.id == customer.listeId } else null
-                TerminBerechnungUtils.berechneAlleTermineFuerKunde(customer, liste, startDatum, tageVoraus)
-            }
-        )
     }
 
     /** Für Erledigungs-Bottom-Sheet: ruft handleAbholung auf. */
@@ -91,7 +66,6 @@ class TourPlannerCallbackHandler(
                 
                 if (!istAbholungHeute) {
                     Toast.makeText(context, context.getString(R.string.toast_abholung_nur_heute), Toast.LENGTH_LONG).show()
-                    adapter?.clearPressedButtons()
                     return@launch
                 }
                 val faelligAmDatum = dateUtils.getFaelligAmDatumFuerAbholung(customer, heuteStart)
@@ -118,7 +92,6 @@ class TourPlannerCallbackHandler(
             val hatAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart, liste)
             if (!hatAbholungHeute && !hatAuslieferungHeute) {
                 Toast.makeText(context, context.getString(R.string.toast_kw_nur_abholung_auslieferung), Toast.LENGTH_LONG).show()
-                adapter?.clearPressedButtons()
                 return@launch
             }
             val erledigtAm = heuteStart
@@ -150,7 +123,6 @@ class TourPlannerCallbackHandler(
             // WICHTIG: Geschäftslogik - L darf nicht erledigt werden, solange A nicht erledigt ist
             if (!customer.abholungErfolgt) {
                 Toast.makeText(context, context.getString(R.string.toast_auslieferung_nur_nach_abholung), Toast.LENGTH_LONG).show()
-                adapter?.clearPressedButtons()
             } else {
                 CoroutineScope(Dispatchers.Main).launch {
                     val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
@@ -160,7 +132,6 @@ class TourPlannerCallbackHandler(
                     val istAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart, liste)
                     if (!istAuslieferungHeute) {
                         Toast.makeText(context, context.getString(R.string.toast_auslieferung_nur_heute), Toast.LENGTH_LONG).show()
-                        adapter?.clearPressedButtons()
                         return@launch
                     }
                     val faelligAmDatum = dateUtils.getFaelligAmDatumFuerAuslieferung(customer, heuteStart)
@@ -209,7 +180,6 @@ class TourPlannerCallbackHandler(
                     if (alleVerschieben) context.getString(R.string.toast_termine_verschoben) else context.getString(R.string.toast_termin_verschoben),
                     Toast.LENGTH_SHORT).show()
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    adapter?.clearPressedButtons()
                     reloadCurrentView()
                 }, 2000)
             } else {
@@ -231,7 +201,6 @@ class TourPlannerCallbackHandler(
             if (success == true) {
                 Toast.makeText(context, context.getString(R.string.toast_urlaub_eingetragen), Toast.LENGTH_SHORT).show()
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    adapter?.clearPressedButtons()
                     reloadCurrentView()
                 }, 2000)
             } else {
@@ -336,7 +305,6 @@ class TourPlannerCallbackHandler(
                 )
                 if (success == true) {
                     Toast.makeText(context, context.getString(R.string.toast_rueckgaengig_gemacht), Toast.LENGTH_SHORT).show()
-                    adapter?.clearPressedButtons()
                     reloadCurrentView()
                 } else {
                     onError?.invoke(context.getString(R.string.error_rueckgaengig))
@@ -364,7 +332,6 @@ class TourPlannerCallbackHandler(
         if (success == true) {
             Toast.makeText(context, context.getString(successMessageResId), Toast.LENGTH_SHORT).show()
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                adapter?.clearPressedButtons()
                 reloadCurrentView()
             }, 2000)
         } else {

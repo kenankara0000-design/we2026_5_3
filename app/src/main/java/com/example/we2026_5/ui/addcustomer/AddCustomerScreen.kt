@@ -1,6 +1,8 @@
 package com.example.we2026_5.ui.addcustomer
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -15,10 +18,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -29,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -122,37 +129,54 @@ fun AddCustomerScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = state.kundenArt == "Gewerblich",
-                        onClick = { onKundenArtChange("Gewerblich") }
-                    )
-                    Text(stringResource(R.string.label_type_gewerblich), color = textPrimary)
-                }
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = state.kundenArt == "Privat",
-                        onClick = { onKundenArtChange("Privat") }
-                    )
-                    Text(stringResource(R.string.label_type_privat), color = textPrimary)
-                }
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = state.kundenArt == "Liste",
-                        onClick = { onKundenArtChange("Liste") }
-                    )
-                    Text(stringResource(R.string.label_type_liste), color = textPrimary)
+                val chipData = listOf(
+                    "Gewerblich" to (stringResource(R.string.label_type_gewerblich) to Color(ContextCompat.getColor(context, R.color.button_gewerblich_glossy))),
+                    "Privat" to (stringResource(R.string.label_type_privat) to Color(ContextCompat.getColor(context, R.color.button_privat_glossy))),
+                    "Liste" to (stringResource(R.string.label_type_liste) to Color(ContextCompat.getColor(context, R.color.button_liste_glossy)))
+                )
+                chipData.forEach { (value, labelAndColor) ->
+                    val (labelText, chipColor) = labelAndColor
+                    val selected = state.kundenArt == value
+                    Box(modifier = Modifier.weight(1f)) {
+                        FilterChip(
+                            selected = selected,
+                            onClick = { onKundenArtChange(value) },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(
+                                        selected = selected,
+                                        onClick = { onKundenArtChange(value) },
+                                        colors = RadioButtonDefaults.colors(
+                                            selectedColor = Color.White,
+                                            unselectedColor = Color.White
+                                        ),
+                                        modifier = Modifier.padding(end = 4.dp)
+                                    )
+                                    Text(
+                                        text = labelText,
+                                        textAlign = TextAlign.Center,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = Color.White
+                                    )
+                                }
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = chipColor,
+                                selectedLabelColor = Color.White,
+                                containerColor = chipColor,
+                                labelColor = Color.White
+                            )
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
@@ -186,7 +210,10 @@ fun AddCustomerScreen(
             )
             Spacer(modifier = Modifier.height(12.dp))
             androidx.compose.material3.Button(
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = primaryBlue),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = Color(ContextCompat.getColor(context, R.color.termin_regel_button_save)),
+                    contentColor = Color.White
+                ),
                 onClick = onSave,
                 modifier = Modifier
                     .fillMaxWidth()

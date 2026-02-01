@@ -124,4 +124,18 @@ class CustomerDetailViewModel(
     fun updateEditIntervalle(intervalle: List<CustomerIntervall>) {
         _editIntervalle.value = intervalle
     }
+
+    /** Entfernt ein Intervall aus der Bearbeitungsliste (Index 0-basiert). */
+    fun removeIntervallAt(index: Int) {
+        val list = _editIntervalle.value.toMutableList()
+        if (index in list.indices) {
+            list.removeAt(index)
+            _editIntervalle.value = list
+        }
+    }
+
+    /** Entfernt alle Intervalle mit der angegebenen Regel-ID aus der Bearbeitungsliste (z. B. ganze Regel „täglich“). */
+    fun removeRegelFromEdit(regelId: String) {
+        _editIntervalle.value = _editIntervalle.value.filter { it.terminRegelId != regelId }
+    }
 }

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">TourPlaner 2026</string>
     <string name="error_login_failed">Anmeldung fehlgeschlagen. Bitte Internetverbindung prüfen.</string>
+    <string name="login_retry">Erneut versuchen</string>
     <string name="label_wochentag">Wochentag:</string>
     <string name="label_foto_uploading">Foto wird hochgeladen…</string>
     <string name="label_fotos">Fotos</string>
@@ -16,6 +17,7 @@
     <!-- TourPlanner / Erledigung -->
     <string name="toast_termine_nur_heute">Termine können nur am Tag Heute erledigt werden.</string>
     <string name="toast_abholung_nur_heute">Abholung kann nur erledigt werden, wenn das Datum heute ist.</string>
+    <string name="toast_ueberfaellig_nur_heute">Überfällige Termine können nur am heutigen Tag erledigt werden.</string>
     <string name="toast_auslieferung_nur_nach_abholung">Auslieferung kann nicht erledigt werden, solange die Abholung nicht erledigt ist.</string>
     <string name="toast_auslieferung_nur_heute">Auslieferung kann nur erledigt werden, wenn das Datum heute ist.</string>
     <string name="toast_kw_nur_abholung_auslieferung">KW (Keine Wäsche) nur an Abholungs- oder Auslieferungstag.</string>
@@ -63,8 +65,34 @@
     <string name="dialog_regel_loeschen_message">Diese Regel wird noch von einem oder mehreren Kunden verwendet. Bitte entfernen Sie die Regel zuerst von allen Kunden, bevor Sie sie löschen können.</string>
     <string name="dialog_regel_loeschen_confirm_titel">Regel löschen?</string>
     <string name="dialog_regel_loeschen_confirm_message">Möchten Sie diese Regel wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.</string>
+    <string name="dialog_regel_vom_kunden_entfernen_titel">Termin-Regel entfernen?</string>
+    <string name="dialog_regel_vom_kunden_entfernen_message">Möchten Sie diese Termin-Regel von diesem Kunden entfernen? Die zugehörigen Intervalle werden aus der Bearbeitung entfernt.</string>
+    <string name="dialog_regel_info_title">Regel-Informationen</string>
+    <string name="dialog_close">Schließen</string>
     <string name="dialog_loeschen">Löschen</string>
     <string name="dialog_ok">OK</string>
+    <!-- Dialoge: Kunde/Liste löschen, Mehrfach-Erledigung, Verschieben, Rückgängig, Termin löschen -->
+    <string name="dialog_delete_customer_title">Kunde löschen?</string>
+    <string name="dialog_delete_customer_message">Möchten Sie diesen Kunden wirklich löschen? Alle Termine dieses Kunden werden ebenfalls gelöscht.</string>
+    <string name="dialog_mark_multiple_done_title">Mehrere Kunden als erledigt markieren?</string>
+    <string name="dialog_mark_multiple_done_message">%1$d Kunden werden als erledigt markiert (Abholung + Auslieferung).</string>
+    <string name="dialog_yes">Ja</string>
+    <string name="dialog_delete_list_title">Liste löschen?</string>
+    <string name="dialog_delete_list_message">Möchten Sie die Liste \'%1$s\' wirklich löschen?</string>
+    <string name="dialog_list_has_customers_message">Es sind noch %1$d Kunde(n) in dieser Liste. Bitte entfernen Sie zuerst alle Kunden aus der Liste.</string>
+    <string name="dialog_verschieben_title">Termin verschieben</string>
+    <string name="dialog_verschieben_message">Wie möchten Sie vorgehen?</string>
+    <string name="dialog_verschieben_single">Nur diesen Termin</string>
+    <string name="dialog_verschieben_all">Alle zukünftigen Termine</string>
+    <string name="dialog_urlaub_von">Urlaub von</string>
+    <string name="dialog_urlaub_bis">Urlaub bis</string>
+    <string name="dialog_rueckgaengig_title">Rückgängig machen</string>
+    <string name="dialog_rueckgaengig_message">Möchten Sie die Erledigung wirklich rückgängig machen?</string>
+    <string name="dialog_termin_loeschen_title">Termin löschen</string>
+    <string name="dialog_termin_loeschen_message">Möchten Sie diesen Termin wirklich löschen?</string>
+    <string name="dialog_termin_anlegen_title">Termin Anlegen</string>
+    <string name="dialog_termin_anlegen_message">Möchten Sie Termine anlegen? Anschließend können Sie eine Termin-Regel auswählen.</string>
+    <string name="dialog_list_cannot_delete_title">Liste kann nicht gelöscht werden</string>
     <string name="toast_fehler_pruefen">Fehler beim Prüfen: %1$s</string>
     <string name="toast_regel_geloescht">Regel gelöscht</string>
     <string name="toast_fehler_loeschen">Fehler beim Löschen</string>
@@ -79,12 +107,15 @@
     <string name="sheet_keine_waesche">Keine Wäsche</string>
     <string name="sheet_rueckgaengig">Rückgängig</string>
     <string name="sheet_termin_verschieben">Termin verschieben</string>
+    <string name="sheet_termin_verschieben_hint">Verschieben nur möglich, wenn ein verschobener Termin vorliegt.</string>
     <string name="sheet_urlaub_eintragen">Urlaub eintragen</string>
+    <string name="sheet_urlaub_eintragen_hint">Urlaub nur möglich, wenn Urlaubszeitraum gesetzt ist und ein Termin darin fällt.</string>
     <string name="sheet_naechste_tour">Nächste Tour</string>
     <string name="sheet_telefon">Telefon</string>
     <string name="sheet_notizen">Notizen</string>
     <string name="sheet_kein_termin">Kein Termin</string>
     <string name="sheet_aktionen_desc">Aktionen für diesen Kunden anzeigen</string>
+    <string name="sheet_legend">A Abholung · L Auslieferung · Ü Überfällig · U Urlaub · V Verschieben · KW Keine Wäsche</string>
 
     <!-- App-Titel (einheitlich) -->
     <string name="app_title_tourplaner">TourPlaner 2026</string>
@@ -139,6 +170,7 @@
     <!-- Barrierefreiheit (contentDescription) -->
     <string name="content_desc_navigation">Mit Google Maps zur Adresse navigieren</string>
     <string name="content_desc_back">Zurück</string>
+    <string name="content_desc_more_options">Mehr Optionen</string>
     <string name="content_desc_prev_day">Vorheriger Tag</string>
     <string name="content_desc_next_day">Nächster Tag</string>
     <string name="content_desc_map">Kartenansicht</string>
@@ -191,6 +223,8 @@
     <string name="termin_regel_label_weekday_hint">Wochentag-basiert (z.B. Montag zu Montag)</string>
     <string name="termin_regel_label_startdate">Startdatum:</string>
     <string name="termin_regel_btn_choose_startdate">Startdatum wählen</string>
+    <string name="termin_regel_taeglich">Täglich</string>
+    <string name="termin_regel_taeglich_hint">Termine jeden Tag ab Startdatum (Abholung und Auslieferung am selben Tag)</string>
     <string name="termin_regel_label_abholung">Abholung:</string>
     <string name="termin_regel_label_auslieferung">Auslieferung:</string>
     <string name="termin_regel_label_repeat">Wiederholen:</string>
@@ -200,6 +234,7 @@
     <string name="termin_regel_btn_save">Speichern</string>
     <string name="termin_regel_btn_delete">Löschen</string>
     <string name="termin_regel_weekday_sample">Montag</string>
+    <string name="termin_regel_weekday_hint">Wochentage wählen</string>
 
     <!-- Item / Platzhalter -->
     <string name="label_customer_name">Kundenname</string>
@@ -212,6 +247,7 @@
     <string name="label_phone_label">Telefon:</string>
     <string name="label_notes">Notizen</string>
     <string name="label_notes_label">Notizen:</string>
+    <string name="label_no_notes">Keine Notizen</string>
     <string name="label_customer_type">Kunden-Art:</string>
     <string name="label_type_gewerblich">Gewerblich</string>
     <string name="label_type_privat">Privat</string>
@@ -236,6 +272,7 @@
     <string name="label_docs_photos">Dokumentation &amp; Fotos</string>
     <string name="label_add_photo">Foto hinzufügen</string>
     <string name="label_termine_regeln">Termin-Regeln</string>
+    <string name="label_termin_regel">Termin-Regel</string>
     <string name="label_details_open">Details öffnen</string>
     <string name="label_list_name">Liste Name</string>
     <string name="label_list_name_field">Liste-Name:</string>
@@ -316,6 +353,16 @@
     <string name="status_badge_a_plus_l">A+L heute</string>
     <string name="status_badge_a">A heute</string>
     <string name="status_badge_l">L heute</string>
+    <!-- Kurzform für Karten-Info: nur 2 Buchstaben -->
+    <string name="status_badge_overdue_short">Ü</string>
+    <string name="info_overdue_a">A überfällig</string>
+    <string name="info_overdue_l">L überfällig</string>
+    <string name="info_overdue_a_l">A, L überfällig</string>
+    <string name="info_erledigt_a">A: %1$s</string>
+    <string name="info_erledigt_l">L: %1$s</string>
+    <string name="status_badge_a_plus_l_short">AL</string>
+    <string name="status_badge_a_short">A</string>
+    <string name="status_badge_l_short">L</string>
     <string name="label_section_count_format">%1$d/%2$d</string>
     <string name="overdue_date_format">Überfällig: %1$s</string>
     <string name="list_art_format">Liste-Art: %1$s</string>

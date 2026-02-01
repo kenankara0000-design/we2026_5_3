@@ -92,9 +92,9 @@ class CustomerManagerActivity : AppCompatActivity() {
                 onToggleSelection = { viewModel.toggleSelection(it) },
                 onBulkDone = { selectedCustomers ->
                     AlertDialog.Builder(this@CustomerManagerActivity)
-                        .setTitle("Mehrere Kunden als erledigt markieren?")
-                        .setMessage("${selectedCustomers.size} Kunden werden als erledigt markiert (Abholung + Auslieferung).")
-                        .setPositiveButton("Ja") { _, _ ->
+                        .setTitle(getString(R.string.dialog_mark_multiple_done_title))
+                        .setMessage(getString(R.string.dialog_mark_multiple_done_message, selectedCustomers.size))
+                        .setPositiveButton(getString(R.string.dialog_yes)) { _, _ ->
                             CoroutineScope(Dispatchers.Main).launch {
                                 selectedCustomers.forEach { customer ->
                                     repository.updateCustomer(customer.id, mapOf(
@@ -107,7 +107,7 @@ class CustomerManagerActivity : AppCompatActivity() {
                                 Toast.makeText(this@CustomerManagerActivity, getString(R.string.toast_kunden_erledigt_markiert, selectedCustomers.size), Toast.LENGTH_SHORT).show()
                             }
                         }
-                        .setNegativeButton("Abbrechen", null)
+                        .setNegativeButton(getString(R.string.btn_cancel), null)
                         .show()
                 },
                 onBulkCancel = { pressedHeaderButton = null; viewModel.setBulkMode(false) },

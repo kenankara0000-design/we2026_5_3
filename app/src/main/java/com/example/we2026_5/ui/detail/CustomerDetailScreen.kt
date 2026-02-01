@@ -11,11 +11,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -39,6 +45,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,12 +55,17 @@ import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
 
-// Einheitliche UI-Werte (Teil 2: Abstände, Schriftgrößen)
+// Einheitliche UI-Werte (Abstände, Schriftgrößen)
 private val SectionSpacing = 20.dp
 private val FieldSpacing = 12.dp
 private val SectionTitleSp = 16.sp
 private val FieldLabelSp = 14.sp
 private val BodySp = 14.sp
+private val IntervalCardPaddingH = 12.dp
+private val IntervalCardPaddingTop = 6.dp
+private val IntervalCardPaddingBottom = 12.dp
+private val IntervalRowPaddingVertical = 4.dp
+private val IntervalRowSpacing = 4.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,7 +84,11 @@ fun CustomerDetailScreen(
     onAdresseClick: () -> Unit,
     onTelefonClick: () -> Unit,
     onPhotoClick: (String) -> Unit,
-    onDatumSelected: (Int, Boolean) -> Unit
+    onDatumSelected: (Int, Boolean) -> Unit,
+    onDeleteIntervall: ((Int) -> Unit)? = null,
+    onRemoveRegel: ((String) -> Unit)? = null,
+    regelNameByRegelId: Map<String, String> = emptyMap(),
+    onRegelClick: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val primaryBlue = colorResource(R.color.primary_blue)
@@ -87,6 +103,8 @@ fun CustomerDetailScreen(
     var editNotizen by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.notizen ?: "") }
     var editKundenArt by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.kundenArt ?: "Gewerblich") }
     var editWochentag by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.wochentag ?: "") }
+    var wochentagDropdownExpanded by remember { mutableStateOf(false) }
+    var overflowMenuExpanded by remember { mutableStateOf(false) }
     var nameError by remember { mutableStateOf<String?>(null) }
     val validationNameMissing = stringResource(R.string.validation_name_missing)
 
@@ -110,6 +128,11 @@ fun CustomerDetailScreen(
         "Liste" -> stringResource(R.string.label_type_l_letter)
         else -> stringResource(R.string.label_type_g)
     }
+    val typeColor = when (customer?.kundenArt) {
+        "Privat" -> colorResource(R.color.button_privat_glossy)
+        "Liste" -> colorResource(R.color.button_liste_glossy)
+        else -> colorResource(R.color.button_gewerblich_glossy)
+    }
 
     Scaffold(
         topBar = {
@@ -125,7 +148,7 @@ fun CustomerDetailScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
                             modifier = Modifier
-                                .background(Color.White.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                .background(typeColor, RoundedCornerShape(8.dp))
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                         Spacer(Modifier.size(12.dp))
@@ -147,6 +170,31 @@ fun CustomerDetailScreen(
                             contentDescription = stringResource(R.string.content_desc_back),
                             tint = Color.White
                         )
+                    }
+                },
+                actions = {
+                    if (isInEditMode) {
+                        Box {
+                            IconButton(onClick = { overflowMenuExpanded = true }) {
+                                Icon(
+                                    Icons.Filled.MoreVert,
+                                    contentDescription = stringResource(R.string.content_desc_more_options),
+                                    tint = Color.White
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = overflowMenuExpanded,
+                                onDismissRequest = { overflowMenuExpanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.label_delete), color = statusOverdue) },
+                                    onClick = {
+                                        overflowMenuExpanded = false
+                                        onDelete()
+                                    }
+                                )
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue)
@@ -191,15 +239,21 @@ fun CustomerDetailScreen(
                         Text(stringResource(R.string.label_foto_uploading), fontSize = 12.sp, color = primaryBlue)
                     }
                     Spacer(Modifier.height(SectionSpacing))
-                    Text(stringResource(R.string.label_customer_type), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    Text(text = typeLabel, modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = BodySp)
-                    
-                    if (customer.wochentag.isNotEmpty()) {
-                        Spacer(Modifier.height(FieldSpacing))
-                        Text(stringResource(R.string.label_wochentag), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                        Text(text = customer.wochentag, modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = BodySp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(FieldSpacing)
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.label_customer_type), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                            Text(text = typeLabel, modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = BodySp)
+                        }
+                        if (customer.wochentag.isNotEmpty()) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(stringResource(R.string.label_wochentag), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                                Text(text = customer.wochentag.take(2).uppercase(), modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = BodySp)
+                            }
+                        }
                     }
-                    
                     Spacer(Modifier.height(FieldSpacing))
                     Text(stringResource(R.string.label_address_label), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     Text(
@@ -236,12 +290,31 @@ fun CustomerDetailScreen(
                     )
                     Spacer(Modifier.height(FieldSpacing))
                     Text(stringResource(R.string.label_customer_type), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        listOf("Gewerblich" to stringResource(R.string.label_type_gewerblich), "Privat" to stringResource(R.string.label_type_privat), "Liste" to stringResource(R.string.label_type_liste)).forEach { (value, label) ->
-                            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                                RadioButton(selected = editKundenArt == value, onClick = { editKundenArt = value })
-                                Text(label, color = textPrimary, fontSize = BodySp)
-                            }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { editKundenArt = "Gewerblich" }
+                        ) {
+                            RadioButton(selected = editKundenArt == "Gewerblich", onClick = { editKundenArt = "Gewerblich" })
+                            Text(stringResource(R.string.label_type_gewerblich), color = textPrimary, fontSize = BodySp, maxLines = 1)
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { editKundenArt = "Privat" }
+                        ) {
+                            RadioButton(selected = editKundenArt == "Privat", onClick = { editKundenArt = "Privat" })
+                            Text(stringResource(R.string.label_type_privat), color = textPrimary, fontSize = BodySp, maxLines = 1)
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { editKundenArt = "Liste" }
+                        ) {
+                            RadioButton(selected = editKundenArt == "Liste", onClick = { editKundenArt = "Liste" })
+                            Text(stringResource(R.string.label_type_liste), color = textPrimary, fontSize = BodySp, maxLines = 1)
                         }
                     }
                     Spacer(Modifier.height(FieldSpacing))
@@ -256,28 +329,40 @@ fun CustomerDetailScreen(
                     
                     Spacer(Modifier.height(FieldSpacing))
                     Text(stringResource(R.string.label_wochentag), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ExposedDropdownMenuBox(
+                        expanded = wochentagDropdownExpanded,
+                        onExpandedChange = { wochentagDropdownExpanded = it }
                     ) {
-                        weekdays.forEach { (dayKey, labelResId) ->
-                            val isSelected = editWochentag == dayKey
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .background(
-                                        if (isSelected) primaryBlue else Color(0xFFE0E0E0),
-                                        RoundedCornerShape(4.dp)
-                                    )
-                                    .clickable { editWochentag = if (isSelected) "" else dayKey }
-                                    .padding(vertical = 8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = stringResource(labelResId),
-                                    color = if (isSelected) Color.White else textPrimary,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
+                        OutlinedTextField(
+                            value = editWochentag.ifEmpty { "" }.let { key ->
+                                if (key.isEmpty()) "" else weekdays.find { it.first == key }?.let { stringResource(it.second) } ?: key
+                            },
+                            onValueChange = {},
+                            readOnly = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = wochentagDropdownExpanded) },
+                            placeholder = { Text(stringResource(R.string.termin_regel_wochentag_waehlen), color = textSecondary) }
+                        )
+                        DropdownMenu(
+                            expanded = wochentagDropdownExpanded,
+                            onDismissRequest = { wochentagDropdownExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("—", color = textSecondary) },
+                                onClick = {
+                                    editWochentag = ""
+                                    wochentagDropdownExpanded = false
+                                }
+                            )
+                            weekdays.forEach { (dayKey, labelResId) ->
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(labelResId), color = textPrimary) },
+                                    onClick = {
+                                        editWochentag = dayKey
+                                        wochentagDropdownExpanded = false
+                                    }
                                 )
                             }
                         }
@@ -291,12 +376,6 @@ fun CustomerDetailScreen(
                     }
                     
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        androidx.compose.material3.Button(
-                            onClick = onDelete,
-                            modifier = Modifier.weight(1f),
-                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = statusOverdue)
-                        ) { Text(stringResource(R.string.label_delete)) }
-                        
                         androidx.compose.material3.Button(
                             onClick = {
                                 val name = editName.trim()
@@ -324,33 +403,51 @@ fun CustomerDetailScreen(
                                     ))
                                 }
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                containerColor = colorResource(R.color.termin_regel_button_save),
+                                contentColor = Color.White
+                            )
                         ) { Text(stringResource(R.string.btn_save)) }
                     }
                 }
 
                 Spacer(Modifier.height(SectionSpacing))
-                Text(stringResource(R.string.label_intervals), fontSize = SectionTitleSp, fontWeight = FontWeight.Bold, color = primaryBlue)
-                Spacer(Modifier.height(8.dp))
+                Text(stringResource(R.string.label_termin_regel), fontSize = SectionTitleSp, fontWeight = FontWeight.Bold, color = primaryBlue)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = surfaceWhite),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Column(Modifier.padding(12.dp)) {
+                    Column(
+                        modifier = Modifier.padding(
+                            start = IntervalCardPaddingH,
+                            top = IntervalCardPaddingTop,
+                            end = IntervalCardPaddingH,
+                            bottom = IntervalCardPaddingBottom
+                        )
+                    ) {
                         val intervalleToShow = if (isInEditMode) editIntervalle else customer.intervalle
-                        intervalleToShow.forEachIndexed { index, intervall ->
-                            CustomerIntervallRow(
-                                intervall = intervall,
-                                isEditMode = isInEditMode,
-                                onAbholungClick = { onDatumSelected(index, true) },
-                                onAuslieferungClick = { onDatumSelected(index, false) }
+                        // In beiden Modi nur Termin-Regel-Namen anzeigen (keine 365 Intervall-Zeilen bei täglich)
+                        val distinctRegelIds = intervalleToShow.map { it.terminRegelId }.distinct()
+                        distinctRegelIds.forEach { regelId ->
+                            RegelNameRow(
+                                regelName = if (regelId.isBlank()) stringResource(R.string.label_not_set)
+                                    else regelNameByRegelId[regelId] ?: stringResource(R.string.label_not_set),
+                                isClickable = regelId.isNotBlank(),
+                                primaryBlue = primaryBlue,
+                                textSecondary = textSecondary,
+                                onClick = { if (regelId.isNotBlank()) onRegelClick(regelId) },
+                                showDeleteButton = isInEditMode && regelId.isNotBlank(),
+                                onDeleteClick = if (isInEditMode && regelId.isNotBlank()) { { onRemoveRegel?.invoke(regelId) } } else null
                             )
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(IntervalRowSpacing))
                         }
-                        Spacer(Modifier.height(8.dp))
-                        androidx.compose.material3.Button(onClick = onTerminAnlegen, modifier = Modifier.fillMaxWidth()) {
-                            Text(stringResource(R.string.label_termine_anlegen))
+                        Spacer(Modifier.height(FieldSpacing))
+                        if (!isInEditMode) {
+                            androidx.compose.material3.Button(onClick = onTerminAnlegen, modifier = Modifier.fillMaxWidth()) {
+                                Text(stringResource(R.string.label_termine_anlegen))
+                            }
                         }
                     }
                 }
@@ -394,11 +491,53 @@ fun CustomerDetailScreen(
 }
 
 @Composable
+private fun RegelNameRow(
+    regelName: String,
+    isClickable: Boolean,
+    primaryBlue: Color,
+    textSecondary: Color,
+    onClick: () -> Unit,
+    showDeleteButton: Boolean = false,
+    onDeleteClick: (() -> Unit)? = null
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = isClickable, onClick = onClick)
+            .padding(vertical = IntervalRowPaddingVertical),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = regelName,
+            fontSize = BodySp,
+            fontWeight = FontWeight.Medium,
+            color = if (isClickable) primaryBlue else textSecondary,
+            modifier = Modifier.weight(1f)
+        )
+        if (showDeleteButton && onDeleteClick != null) {
+            IconButton(
+                onClick = onDeleteClick,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = stringResource(R.string.label_delete),
+                    tint = colorResource(R.color.status_overdue),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun CustomerIntervallRow(
     intervall: CustomerIntervall,
     isEditMode: Boolean,
     onAbholungClick: () -> Unit,
-    onAuslieferungClick: () -> Unit
+    onAuslieferungClick: () -> Unit,
+    onDeleteClick: (() -> Unit)? = null
 ) {
     val textPrimary = colorResource(R.color.text_primary)
     val textSecondary = colorResource(R.color.text_secondary)
@@ -408,15 +547,29 @@ private fun CustomerIntervallRow(
     val auslieferungIsPlaceholder = intervall.auslieferungDatum <= 0
     Row(
         modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Column(modifier = if (isEditMode) Modifier.clickable(onClick = onAbholungClick) else Modifier) {
-            Text(stringResource(R.string.label_abholung_date), fontSize = 12.sp, color = textSecondary)
-            Text(abholungText, fontSize = BodySp, color = if (abholungIsPlaceholder) textSecondary else textPrimary)
+        Row(modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.SpaceBetween) {
+            Column(modifier = if (isEditMode) Modifier.clickable(onClick = onAbholungClick) else Modifier) {
+                Text(stringResource(R.string.label_abholung_date), fontSize = 12.sp, color = textSecondary)
+                Text(abholungText, fontSize = BodySp, color = if (abholungIsPlaceholder) textSecondary else textPrimary)
+            }
+            Column(modifier = if (isEditMode) Modifier.clickable(onClick = onAuslieferungClick) else Modifier) {
+                Text(stringResource(R.string.label_auslieferung_date), fontSize = 12.sp, color = textSecondary)
+                Text(auslieferungText, fontSize = BodySp, color = if (auslieferungIsPlaceholder) textSecondary else textPrimary)
+            }
         }
-        Column(modifier = if (isEditMode) Modifier.clickable(onClick = onAuslieferungClick) else Modifier) {
-            Text(stringResource(R.string.label_auslieferung_date), fontSize = 12.sp, color = textSecondary)
-            Text(auslieferungText, fontSize = BodySp, color = if (auslieferungIsPlaceholder) textSecondary else textPrimary)
+        if (isEditMode && onDeleteClick != null) {
+            Spacer(Modifier.size(8.dp))
+            IconButton(onClick = onDeleteClick) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = stringResource(R.string.label_delete),
+                    tint = colorResource(R.color.status_overdue),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }

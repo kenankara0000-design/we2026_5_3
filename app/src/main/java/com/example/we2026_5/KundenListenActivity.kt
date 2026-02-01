@@ -62,17 +62,17 @@ class KundenListenActivity : AppCompatActivity() {
 
                 if (kundenInListe.isNotEmpty()) {
                     AlertDialog.Builder(this@KundenListenActivity)
-                        .setTitle("Liste kann nicht gelöscht werden")
-                        .setMessage("Es sind noch ${kundenInListe.size} Kunde(n) in dieser Liste. Bitte entfernen Sie zuerst alle Kunden aus der Liste.")
-                        .setPositiveButton("OK", null)
+                        .setTitle(getString(R.string.dialog_list_cannot_delete_title))
+                        .setMessage(getString(R.string.dialog_list_has_customers_message, kundenInListe.size))
+                        .setPositiveButton(getString(R.string.dialog_ok), null)
                         .show()
                     return@launch
                 }
 
                 AlertDialog.Builder(this@KundenListenActivity)
-                    .setTitle("Liste löschen?")
-                    .setMessage("Möchten Sie die Liste '${liste.name}' wirklich löschen?")
-                    .setPositiveButton("Löschen") { _, _ ->
+                    .setTitle(getString(R.string.dialog_delete_list_title))
+                    .setMessage(getString(R.string.dialog_delete_list_message, liste.name))
+                    .setPositiveButton(getString(R.string.dialog_loeschen)) { _, _ ->
                         CoroutineScope(Dispatchers.Main).launch {
                             val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
                                 operation = { listeRepository.deleteListe(liste.id) },
@@ -86,8 +86,8 @@ class KundenListenActivity : AppCompatActivity() {
                             }
                         }
                     }
-                    .setNegativeButton("Abbrechen", null)
-                    .show()
+.setNegativeButton(getString(R.string.btn_cancel), null)
+                        .show()
             } catch (e: Exception) {
                 Toast.makeText(this@KundenListenActivity, getString(R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }

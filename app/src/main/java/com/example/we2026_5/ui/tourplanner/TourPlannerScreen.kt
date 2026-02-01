@@ -46,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.BackHandler
 import coil.compose.AsyncImage
 import com.example.we2026_5.Customer
 import com.example.we2026_5.ListItem
@@ -134,6 +135,9 @@ fun TourPlannerScreen(
         )
     }
 
+    BackHandler(enabled = erledigungSheet != null) {
+        onDismissErledigungSheet()
+    }
     if (erledigungSheet != null) {
         ModalBottomSheet(
             onDismissRequest = onDismissErledigungSheet,

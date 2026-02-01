@@ -225,8 +225,8 @@ class ListeBearbeitenCallbacks(
     ) {
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val neuesIntervall = TerminRegelManager.wendeRegelAufListeAn(regel, liste)
-                val neueIntervalle = liste.intervalle.toMutableList().apply { add(neuesIntervall) }
+                val hinzugefuegteIntervalle = TerminRegelManager.wendeRegelAufListeAn(regel, liste)
+                val neueIntervalle = liste.intervalle.toMutableList().apply { addAll(hinzugefuegteIntervalle) }
                 val intervalleMap = neueIntervalle.map {
                     mapOf(
                         "abholungDatum" to it.abholungDatum,

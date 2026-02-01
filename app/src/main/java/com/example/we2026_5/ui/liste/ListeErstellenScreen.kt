@@ -182,7 +182,10 @@ fun ListeErstellenScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = primaryBlue)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(ContextCompat.getColor(context, R.color.termin_regel_button_save)),
+                    contentColor = Color.White
+                )
             ) {
                 Text(
                     text = when {

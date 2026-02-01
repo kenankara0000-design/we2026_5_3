@@ -17,10 +17,14 @@ data class TerminRegel(
     val geaendertAm: Long = System.currentTimeMillis(),
     val verwendungsanzahl: Int = 0, // Wie oft wurde diese Regel bereits verwendet
     
-    // Wochentag-basierte Termine (NEU)
-    val wochentagBasiert: Boolean = false, // true = Wochentag-basiert, false = Datum-basiert
-    val startDatum: Long = 0, // Startdatum für Wochentag-Berechnung (0 = heute)
-    val abholungWochentag: Int = -1, // 0=Montag, 1=Dienstag, ..., 6=Sonntag, -1=nicht gesetzt
-    val auslieferungWochentag: Int = -1, // 0=Montag, 1=Dienstag, ..., 6=Sonntag, -1=nicht gesetzt
-    val startWocheOption: String = "diese" // "diese" = diese Woche, "naechste" = nächste Woche
+    // Wochentag-basierte Termine: mehrere Abhol- und Auslieferungstage
+    val wochentagBasiert: Boolean = false,
+    val startDatum: Long = 0, // Startdatum für Berechnung (0 = heute)
+    val abholungWochentag: Int = -1, // Legacy: einzelner Tag (0=Mo..6=So), -1=nicht gesetzt
+    val auslieferungWochentag: Int = -1,
+    val abholungWochentage: List<Int>? = null, // 0=Montag..6=Sonntag, mehrere erlaubt
+    val auslieferungWochentage: List<Int>? = null,
+    val startWocheOption: String = "diese",
+    /** Täglich: Termine jeden Tag ab Startdatum (Abholung + Auslieferung am selben Tag). */
+    val taeglich: Boolean = false
 )

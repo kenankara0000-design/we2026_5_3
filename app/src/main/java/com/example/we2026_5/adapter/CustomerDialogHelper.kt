@@ -3,6 +3,7 @@ package com.example.we2026_5.adapter
 import android.content.Context
 import android.widget.Toast
 import com.example.we2026_5.Customer
+import com.example.we2026_5.R
 import com.example.we2026_5.util.DialogBaseHelper
 import java.util.Calendar
 
@@ -24,17 +25,17 @@ class CustomerDialogHelper(
                 // Dialog: Nur diesen Termin oder alle restlichen Termine verschieben?
                 // Verwende AlertDialog direkt, da wir einen Neutral-Button benötigen
                 androidx.appcompat.app.AlertDialog.Builder(context)
-                    .setTitle("Termin verschieben")
-                    .setMessage("Wie möchten Sie vorgehen?")
-                    .setPositiveButton("Nur diesen Termin") { _, _ ->
+                    .setTitle(context.getString(R.string.dialog_verschieben_title))
+                    .setMessage(context.getString(R.string.dialog_verschieben_message))
+                    .setPositiveButton(context.getString(R.string.dialog_verschieben_single)) { _, _ ->
                         onVerschieben?.invoke(customer, newDate, false)
                         onButtonStateReset?.invoke(customer.id)
                     }
-                    .setNeutralButton("Alle zukünftigen Termine") { _, _ ->
+                    .setNeutralButton(context.getString(R.string.dialog_verschieben_all)) { _, _ ->
                         onVerschieben?.invoke(customer, newDate, true)
                         onButtonStateReset?.invoke(customer.id)
                     }
-                    .setNegativeButton("Abbrechen") { _, _ ->
+                    .setNegativeButton(context.getString(R.string.btn_cancel)) { _, _ ->
                         onButtonStateReset?.invoke(customer.id)
                     }
                     .show()
@@ -48,11 +49,11 @@ class CustomerDialogHelper(
     fun showUrlaubDialog(customer: Customer) {
         DialogBaseHelper.showDatePickerDialog(
             context = context,
-            title = "Urlaub von",
+            title = context.getString(R.string.dialog_urlaub_von),
             onDateSelected = { urlaubVon ->
                 DialogBaseHelper.showDatePickerDialog(
                     context = context,
-                    title = "Urlaub bis",
+                    title = context.getString(R.string.dialog_urlaub_bis),
                     onDateSelected = { urlaubBis ->
                         val pickedBis = Calendar.getInstance().apply {
                             timeInMillis = urlaubBis
@@ -84,9 +85,9 @@ class CustomerDialogHelper(
         
         DialogBaseHelper.showConfirmationDialog(
             context = context,
-            title = "Rückgängig machen",
-            message = "Möchten Sie die Erledigung wirklich rückgängig machen?",
-            positiveButtonText = "Ja",
+            title = context.getString(R.string.dialog_rueckgaengig_title),
+            message = context.getString(R.string.dialog_rueckgaengig_message),
+            positiveButtonText = context.getString(R.string.dialog_yes),
             onPositive = {
                 onRueckgaengig?.invoke(customer)
             }

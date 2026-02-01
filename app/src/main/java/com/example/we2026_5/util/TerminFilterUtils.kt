@@ -41,7 +41,7 @@ object TerminFilterUtils {
     }
     
     /**
-     * Prüft ob ein Termin überfällig ist
+     * Prüft ob ein Termin überfällig ist (Fälligkeitstag liegt vor dem heutigen Tag).
      */
     fun istUeberfaellig(
         terminDatum: Long,
@@ -52,6 +52,20 @@ object TerminFilterUtils {
         val terminStart = TerminBerechnungUtils.getStartOfDay(terminDatum)
         val aktuellesStart = TerminBerechnungUtils.getStartOfDay(aktuellesDatum)
         return terminStart < aktuellesStart
+    }
+
+    /**
+     * „Heute überfällig“: Termin ist am oder vor dem heutigen Tag fällig und noch nicht erledigt.
+     * Überfällige Termine dürfen nur am Tag „Heute“ erledigt werden.
+     */
+    fun istHeuteUeberfaellig(
+        terminDatum: Long,
+        heuteStart: Long,
+        erledigt: Boolean
+    ): Boolean {
+        if (erledigt) return false
+        val terminStart = TerminBerechnungUtils.getStartOfDay(terminDatum)
+        return terminStart <= heuteStart
     }
     
     /**
@@ -66,6 +80,9 @@ object TerminFilterUtils {
         val terminStart = TerminBerechnungUtils.getStartOfDay(terminDatum)
         val anzeigeStart = TerminBerechnungUtils.getStartOfDay(anzeigeDatum)
         val aktuellesStart = TerminBerechnungUtils.getStartOfDay(aktuellesDatum)
+        
+        // Nie als überfällig anzeigen, wenn Anzeige-Datum in der Zukunft liegt (z. B. „morgen“)
+        if (anzeigeStart > aktuellesStart) return false
         
         // Überfällig nur anzeigen:
         // 1. Am tatsächlichen Fälligkeitstag (terminStart == anzeigeStart)
