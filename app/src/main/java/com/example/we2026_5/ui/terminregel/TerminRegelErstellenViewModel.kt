@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.TerminRegel
+import com.example.we2026_5.R
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.util.TerminRegelManager
@@ -32,7 +33,7 @@ data class TerminRegelState(
     val auslieferungWochentag: Int = -1,
     val auslieferungWochentagText: String = "",
     val isSaving: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessageResId: Int? = null,
     val success: Boolean = false
 )
 
@@ -48,7 +49,7 @@ class TerminRegelErstellenViewModel(
     private val _state = MutableLiveData(TerminRegelState())
     val state: LiveData<TerminRegelState> = _state
 
-    fun setName(name: String) { updateState { copy(name = name, errorMessage = null) } }
+    fun setName(name: String) { updateState { copy(name = name, errorMessageResId = null) } }
     fun setBeschreibung(beschreibung: String) { updateState { copy(beschreibung = beschreibung) } }
     fun setWiederholen(wiederholen: Boolean) { updateState { copy(wiederholen = wiederholen) } }
     fun setIntervallTage(s: String) { updateState { copy(intervallTage = s) } }
@@ -95,23 +96,23 @@ class TerminRegelErstellenViewModel(
         val s = _state.value ?: return
         val name = s.name.trim()
         if (name.isEmpty()) {
-            updateState { copy(errorMessage = "Regel-Name fehlt") }
+            updateState { copy(errorMessageResId = R.string.error_regel_name_fehlt) }
             return
         }
         val intervallTage = s.intervallTage.toIntOrNull() ?: 7
         val intervallAnzahl = s.intervallAnzahl.toIntOrNull() ?: 0
         if (s.wiederholen && intervallTage < 1) {
-            updateState { copy(errorMessage = "Intervall mindestens 1 Tag") }
+            updateState { copy(errorMessageResId = R.string.validierung_intervall_min) }
             return
         }
         if (s.wochentagBasiert) {
-            if (s.startDatum == 0L) { updateState { copy(errorMessage = "Startdatum fehlt") }; return }
-            if (s.abholungWochentag < 0) { updateState { copy(errorMessage = "Abholung-Wochentag fehlt") }; return }
-            if (s.auslieferungWochentag < 0) { updateState { copy(errorMessage = "Auslieferung-Wochentag fehlt") }; return }
+            if (s.startDatum == 0L) { updateState { copy(errorMessageResId = R.string.error_startdatum_fehlt) }; return }
+            if (s.abholungWochentag < 0) { updateState { copy(errorMessageResId = R.string.error_abholung_wochentag_fehlt) }; return }
+            if (s.auslieferungWochentag < 0) { updateState { copy(errorMessageResId = R.string.error_auslieferung_wochentag_fehlt) }; return }
         }
 
         viewModelScope.launch {
-            updateState { copy(isSaving = true, errorMessage = null) }
+            updateState { copy(isSaving = true, errorMessageResId = null) }
             val regel = TerminRegel(
                 id = s.currentRegelId ?: java.util.UUID.randomUUID().toString(),
                 name = name,
@@ -134,19 +135,19 @@ class TerminRegelErstellenViewModel(
                 }
                 _state.value = (_state.value ?: s).copy(isSaving = false, success = true)
             } else {
-                _state.value = (_state.value ?: s).copy(isSaving = false, errorMessage = "Speichern fehlgeschlagen")
+                _state.value = (_state.value ?: s).copy(isSaving = false, errorMessageResId = R.string.error_save_failed)
             }
         }
     }
 
-    fun deleteRegel(regelId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun deleteRegel(regelId: String, onSuccess: () -> Unit, onError: (Int) -> Unit) {
         viewModelScope.launch {
             val success = withContext(Dispatchers.IO) { regelRepository.deleteRegel(regelId) }
             if (success) {
                 _state.value = (_state.value ?: TerminRegelState()).copy(success = true)
                 onSuccess()
             } else {
-                onError("Löschen fehlgeschlagen")
+                onError(R.string.error_delete_failed)
             }
         }
     }

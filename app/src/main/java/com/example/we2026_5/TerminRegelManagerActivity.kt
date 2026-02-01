@@ -138,7 +138,7 @@ class TerminRegelManagerActivity : AppCompatActivity() {
             try {
                 val customer = customerRepository.getCustomerById(id)
                 if (customer == null) {
-                    Toast.makeText(this@TerminRegelManagerActivity, "Kunde nicht gefunden", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@TerminRegelManagerActivity, getString(R.string.toast_customer_not_found), Toast.LENGTH_SHORT).show()
                     return@launch
                 }
 
@@ -170,7 +170,7 @@ class TerminRegelManagerActivity : AppCompatActivity() {
                     regelHinzufuegenMitBestaetigung(customer, regel)
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@TerminRegelManagerActivity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@TerminRegelManagerActivity, getString(R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -206,7 +206,7 @@ class TerminRegelManagerActivity : AppCompatActivity() {
                     .setNegativeButton("Abbrechen", null)
                     .show()
             } catch (e: Exception) {
-                Toast.makeText(this@TerminRegelManagerActivity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@TerminRegelManagerActivity, getString(R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -238,7 +238,7 @@ class TerminRegelManagerActivity : AppCompatActivity() {
                     .setNegativeButton("Abbrechen", null)
                     .show()
             } catch (e: Exception) {
-                Toast.makeText(this@TerminRegelManagerActivity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@TerminRegelManagerActivity, getString(R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -254,13 +254,13 @@ class TerminRegelManagerActivity : AppCompatActivity() {
 
                 if (success) {
                     regelRepository.incrementVerwendungsanzahl(regel.id)
-                    Toast.makeText(this@TerminRegelManagerActivity, "Regel '${regel.name}' hinzugefügt", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@TerminRegelManagerActivity, getString(R.string.toast_regel_hinzugefuegt, regel.name), Toast.LENGTH_SHORT).show()
                     finish()
                 } else {
-                    Toast.makeText(this@TerminRegelManagerActivity, "Fehler beim Hinzufügen", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@TerminRegelManagerActivity, getString(R.string.toast_fehler_hinzufuegen), Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@TerminRegelManagerActivity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@TerminRegelManagerActivity, getString(R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -275,13 +275,13 @@ class TerminRegelManagerActivity : AppCompatActivity() {
 
                 if (success) {
                     regelRepository.incrementVerwendungsanzahl(regel.id)
-                    Toast.makeText(this@TerminRegelManagerActivity, "Regel '${regel.name}' ersetzt alle bestehenden Regeln", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@TerminRegelManagerActivity, getString(R.string.toast_regel_ersetzt, regel.name), Toast.LENGTH_SHORT).show()
                     finish()
                 } else {
-                    Toast.makeText(this@TerminRegelManagerActivity, "Fehler beim Ersetzen", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@TerminRegelManagerActivity, getString(R.string.toast_fehler_ersetzen), Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@TerminRegelManagerActivity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@TerminRegelManagerActivity, getString(R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }

@@ -30,7 +30,7 @@ class ListeBearbeitenActivity : AppCompatActivity() {
 
         val listeId = intent.getStringExtra("LISTE_ID")
         if (listeId == null) {
-            Toast.makeText(this, "Fehler: Keine Liste-ID übergeben", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.error_list_id_missing), Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -51,11 +51,12 @@ class ListeBearbeitenActivity : AppCompatActivity() {
                 viewModel.loadDaten(listeId)
             }
 
-            LaunchedEffect(state.errorMessage) {
-                state.errorMessage?.let { msg ->
+            LaunchedEffect(state.errorMessageResId) {
+                state.errorMessageResId?.let { resId ->
+                    val msg = state.errorMessageArg?.let { getString(resId, it) } ?: getString(resId)
                     Toast.makeText(this@ListeBearbeitenActivity, msg, Toast.LENGTH_SHORT).show()
                     viewModel.clearErrorMessage()
-                    if (msg == "Liste nicht gefunden") finish()
+                    if (resId == R.string.error_list_not_found) finish()
                 }
             }
 

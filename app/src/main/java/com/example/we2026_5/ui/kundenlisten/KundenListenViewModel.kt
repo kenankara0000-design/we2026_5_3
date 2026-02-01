@@ -3,6 +3,7 @@ package com.example.we2026_5.ui.kundenlisten
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.KundenListe
+import com.example.we2026_5.R
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +16,7 @@ import kotlinx.coroutines.withContext
 sealed class KundenListenState {
     object Loading : KundenListenState()
     object Empty : KundenListenState()
-    data class Error(val message: String) : KundenListenState()
+    data class Error(val messageResId: Int, val messageArg: String? = null) : KundenListenState()
     data class Success(
         val listen: List<KundenListe>,
         val kundenProListe: Map<String, Int>
@@ -46,7 +47,7 @@ class KundenListenViewModel(
                     _state.value = KundenListenState.Success(listen, kundenProListe)
                 }
             } catch (e: Exception) {
-                _state.value = KundenListenState.Error(e.message ?: "Fehler beim Laden der Listen")
+                _state.value = KundenListenState.Error(R.string.error_load_lists, e.message)
             }
         }
     }

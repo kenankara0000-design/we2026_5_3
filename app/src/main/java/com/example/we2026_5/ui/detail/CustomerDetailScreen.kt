@@ -39,6 +39,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -46,6 +47,13 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
+
+// Einheitliche UI-Werte (Teil 2: Abstände, Schriftgrößen)
+private val SectionSpacing = 20.dp
+private val FieldSpacing = 12.dp
+private val SectionTitleSp = 16.sp
+private val FieldLabelSp = 14.sp
+private val BodySp = 14.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,7 +90,15 @@ fun CustomerDetailScreen(
     var nameError by remember { mutableStateOf<String?>(null) }
     val validationNameMissing = stringResource(R.string.validation_name_missing)
 
-    val weekdays = listOf("MO", "DI", "MI", "DO", "FR", "SA", "SO")
+    val weekdays = listOf(
+        "MO" to R.string.label_weekday_short_mo,
+        "DI" to R.string.label_weekday_short_tu,
+        "MI" to R.string.label_weekday_short_mi,
+        "DO" to R.string.label_weekday_short_do,
+        "FR" to R.string.label_weekday_short_fr,
+        "SA" to R.string.label_weekday_short_sa,
+        "SO" to R.string.label_weekday_short_su
+    )
 
     val typeLabel = when (customer?.kundenArt) {
         "Privat" -> stringResource(R.string.label_type_privat)
@@ -90,16 +106,19 @@ fun CustomerDetailScreen(
         else -> stringResource(R.string.label_type_gewerblich)
     }
     val typeLetter = when (customer?.kundenArt) {
-        "Privat" -> "P"
-        "Liste" -> "L"
-        else -> "G"
+        "Privat" -> stringResource(R.string.label_type_p_letter)
+        "Liste" -> stringResource(R.string.label_type_l_letter)
+        else -> stringResource(R.string.label_type_g)
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(1f)
+                    ) {
                         Text(
                             text = typeLetter,
                             fontSize = 14.sp,
@@ -114,7 +133,10 @@ fun CustomerDetailScreen(
                             text = customer?.name ?: stringResource(R.string.label_customer_name),
                             color = Color.White,
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
                     }
                 },
@@ -168,35 +190,42 @@ fun CustomerDetailScreen(
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         Text(stringResource(R.string.label_foto_uploading), fontSize = 12.sp, color = primaryBlue)
                     }
-                    Spacer(Modifier.height(16.dp))
-                    Text(stringResource(R.string.label_customer_type), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    Text(text = typeLabel, modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary)
+                    Spacer(Modifier.height(SectionSpacing))
+                    Text(stringResource(R.string.label_customer_type), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Text(text = typeLabel, modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = BodySp)
                     
                     if (customer.wochentag.isNotEmpty()) {
-                        Spacer(Modifier.height(12.dp))
-                        Text(stringResource(R.string.label_wochentag), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
-                        Text(text = customer.wochentag, modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary)
+                        Spacer(Modifier.height(FieldSpacing))
+                        Text(stringResource(R.string.label_wochentag), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                        Text(text = customer.wochentag, modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = BodySp)
                     }
                     
-                    Spacer(Modifier.height(12.dp))
-                    Text(stringResource(R.string.label_address_label), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(FieldSpacing))
+                    Text(stringResource(R.string.label_address_label), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     Text(
-                        text = customer.adresse,
+                        text = customer.adresse.ifEmpty { stringResource(R.string.label_not_set) },
                         modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp).clickable(onClick = onAdresseClick),
-                        color = textPrimary
+                        color = if (customer.adresse.isNotEmpty()) textPrimary else textSecondary,
+                        fontSize = BodySp
                     )
-                    Spacer(Modifier.height(12.dp))
-                    Text(stringResource(R.string.label_phone_label), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(FieldSpacing))
+                    Text(stringResource(R.string.label_phone_label), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     Text(
-                        text = customer.telefon,
+                        text = customer.telefon.ifEmpty { stringResource(R.string.label_not_set) },
                         modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp).clickable(onClick = onTelefonClick),
-                        color = textPrimary
+                        color = if (customer.telefon.isNotEmpty()) textPrimary else textSecondary,
+                        fontSize = BodySp
                     )
-                    Spacer(Modifier.height(12.dp))
-                    Text(stringResource(R.string.label_notes_label), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    Text(text = customer.notizen, modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary)
+                    Spacer(Modifier.height(FieldSpacing))
+                    Text(stringResource(R.string.label_notes_label), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Text(
+                        text = customer.notizen.ifEmpty { stringResource(R.string.label_not_set) },
+                        modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp),
+                        color = if (customer.notizen.isNotEmpty()) textPrimary else textSecondary,
+                        fontSize = BodySp
+                    )
                 } else {
-                    Text(stringResource(R.string.label_name), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Text(stringResource(R.string.label_name), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     OutlinedTextField(
                         value = editName,
                         onValueChange = { editName = it; nameError = null },
@@ -205,34 +234,34 @@ fun CustomerDetailScreen(
                         isError = nameError != null,
                         supportingText = nameError?.let { err -> { Text(err, color = statusOverdue) } }
                     )
-                    Spacer(Modifier.height(12.dp))
-                    Text(stringResource(R.string.label_customer_type), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(FieldSpacing))
+                    Text(stringResource(R.string.label_customer_type), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         listOf("Gewerblich" to stringResource(R.string.label_type_gewerblich), "Privat" to stringResource(R.string.label_type_privat), "Liste" to stringResource(R.string.label_type_liste)).forEach { (value, label) ->
                             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                                 RadioButton(selected = editKundenArt == value, onClick = { editKundenArt = value })
-                                Text(label, color = textPrimary, fontSize = 14.sp)
+                                Text(label, color = textPrimary, fontSize = BodySp)
                             }
                         }
                     }
-                    Spacer(Modifier.height(12.dp))
-                    Text(stringResource(R.string.label_address_label), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(FieldSpacing))
+                    Text(stringResource(R.string.label_address_label), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     OutlinedTextField(value = editAdresse, onValueChange = { editAdresse = it }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                    Spacer(Modifier.height(12.dp))
-                    Text(stringResource(R.string.label_phone_label), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(FieldSpacing))
+                    Text(stringResource(R.string.label_phone_label), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     OutlinedTextField(value = editTelefon, onValueChange = { editTelefon = it }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                    Spacer(Modifier.height(12.dp))
-                    Text(stringResource(R.string.label_notes_label), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(FieldSpacing))
+                    Text(stringResource(R.string.label_notes_label), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     OutlinedTextField(value = editNotizen, onValueChange = { editNotizen = it }, modifier = Modifier.fillMaxWidth(), minLines = 3)
                     
-                    Spacer(Modifier.height(12.dp))
-                    Text(stringResource(R.string.label_wochentag), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(FieldSpacing))
+                    Text(stringResource(R.string.label_wochentag), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        weekdays.forEach { day ->
-                            val isSelected = editWochentag == day
+                        weekdays.forEach { (dayKey, labelResId) ->
+                            val isSelected = editWochentag == dayKey
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -240,12 +269,12 @@ fun CustomerDetailScreen(
                                         if (isSelected) primaryBlue else Color(0xFFE0E0E0),
                                         RoundedCornerShape(4.dp)
                                     )
-                                    .clickable { editWochentag = if (isSelected) "" else day }
+                                    .clickable { editWochentag = if (isSelected) "" else dayKey }
                                     .padding(vertical = 8.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = day,
+                                    text = stringResource(labelResId),
                                     color = if (isSelected) Color.White else textPrimary,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold
@@ -254,7 +283,7 @@ fun CustomerDetailScreen(
                         }
                     }
                     
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(SectionSpacing))
                     if (isUploading) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         Text(stringResource(R.string.label_foto_uploading), fontSize = 12.sp, color = primaryBlue)
@@ -300,8 +329,8 @@ fun CustomerDetailScreen(
                     }
                 }
 
-                Spacer(Modifier.height(16.dp))
-                Text(stringResource(R.string.label_intervals), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = primaryBlue)
+                Spacer(Modifier.height(SectionSpacing))
+                Text(stringResource(R.string.label_intervals), fontSize = SectionTitleSp, fontWeight = FontWeight.Bold, color = primaryBlue)
                 Spacer(Modifier.height(8.dp))
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -327,8 +356,8 @@ fun CustomerDetailScreen(
                 }
 
                 if (!isInEditMode && customer.fotoUrls.isNotEmpty()) {
-                    Spacer(Modifier.height(16.dp))
-                    Text(stringResource(R.string.label_fotos), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(SectionSpacing))
+                    Text(stringResource(R.string.label_fotos), fontSize = SectionTitleSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     Spacer(Modifier.height(8.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(customer.fotoUrls, key = { it }) { url ->
@@ -352,7 +381,7 @@ fun CustomerDetailScreen(
                     }
                 }
                 if (isInEditMode) {
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(SectionSpacing))
                     androidx.compose.material3.OutlinedButton(onClick = onTakePhoto, modifier = Modifier.fillMaxWidth()) {
                         Icon(painter = painterResource(R.drawable.ic_camera), contentDescription = null, Modifier.size(20.dp))
                         Spacer(Modifier.size(8.dp))
@@ -371,20 +400,23 @@ private fun CustomerIntervallRow(
     onAbholungClick: () -> Unit,
     onAuslieferungClick: () -> Unit
 ) {
+    val textPrimary = colorResource(R.color.text_primary)
+    val textSecondary = colorResource(R.color.text_secondary)
     val abholungText = if (intervall.abholungDatum > 0) DateFormatter.formatDateWithLeadingZeros(intervall.abholungDatum) else stringResource(R.string.label_not_set)
     val auslieferungText = if (intervall.auslieferungDatum > 0) DateFormatter.formatDateWithLeadingZeros(intervall.auslieferungDatum) else stringResource(R.string.label_not_set)
-    val textSecondary = colorResource(R.color.text_secondary)
+    val abholungIsPlaceholder = intervall.abholungDatum <= 0
+    val auslieferungIsPlaceholder = intervall.auslieferungDatum <= 0
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(modifier = if (isEditMode) Modifier.clickable(onClick = onAbholungClick) else Modifier) {
             Text(stringResource(R.string.label_abholung_date), fontSize = 12.sp, color = textSecondary)
-            Text(abholungText, fontSize = 14.sp, color = colorResource(R.color.text_primary))
+            Text(abholungText, fontSize = BodySp, color = if (abholungIsPlaceholder) textSecondary else textPrimary)
         }
         Column(modifier = if (isEditMode) Modifier.clickable(onClick = onAuslieferungClick) else Modifier) {
             Text(stringResource(R.string.label_auslieferung_date), fontSize = 12.sp, color = textSecondary)
-            Text(auslieferungText, fontSize = 14.sp, color = colorResource(R.color.text_primary))
+            Text(auslieferungText, fontSize = BodySp, color = if (auslieferungIsPlaceholder) textSecondary else textPrimary)
         }
     }
 }

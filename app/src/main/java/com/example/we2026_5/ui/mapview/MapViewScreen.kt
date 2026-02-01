@@ -82,7 +82,10 @@ fun MapViewScreen(
                     )
                 is MapViewState.Error ->
                     Text(
-                        text = state.message,
+                        text = if (state.messageArg != null)
+                            stringResource(state.messageResId, state.messageArg)
+                        else
+                            stringResource(state.messageResId),
                         color = textSecondary,
                         fontSize = 16.sp,
                         textAlign = TextAlign.Center,

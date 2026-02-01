@@ -64,7 +64,7 @@ class CustomerDialogHelper(
                             onUrlaub?.invoke(customer, urlaubVon, pickedBis.timeInMillis)
                             onButtonStateReset?.invoke(customer.id)
                         } else {
-                            Toast.makeText(context, "Enddatum muss nach Startdatum sein!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(com.example.we2026_5.R.string.toast_enddatum_nach_startdatum), Toast.LENGTH_SHORT).show()
                             onButtonStateReset?.invoke(customer.id)
                         }
                     },

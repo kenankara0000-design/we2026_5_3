@@ -43,7 +43,7 @@ class ListeBearbeitenCallbacks(
             )
 
             if (success != null) {
-                Toast.makeText(activity, "Kunde aus Liste entfernt", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, activity.getString(R.string.toast_kunde_aus_liste_entfernt), Toast.LENGTH_SHORT).show()
                 onDataReload()
             }
         }
@@ -64,7 +64,7 @@ class ListeBearbeitenCallbacks(
             )
 
             if (success != null) {
-                Toast.makeText(activity, "Kunde zur Liste hinzugefügt", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, activity.getString(R.string.toast_kunde_zur_liste_hinzugefuegt), Toast.LENGTH_SHORT).show()
                 onDataReload()
             }
         }
@@ -116,11 +116,11 @@ class ListeBearbeitenCallbacks(
                         intervalle = intervalle
                     )
                     
-                    Toast.makeText(activity, "Liste gespeichert", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, activity.getString(R.string.toast_liste_gespeichert), Toast.LENGTH_SHORT).show()
                     onSuccess(updatedListe)
                 }
             } catch (e: Exception) {
-                Toast.makeText(activity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, activity.getString(R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -152,7 +152,7 @@ class ListeBearbeitenCallbacks(
             )
             
             if (success != null) {
-                Toast.makeText(activity, "Liste gelöscht", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, activity.getString(R.string.toast_liste_geloescht), Toast.LENGTH_SHORT).show()
                 onSuccess()
             }
         }
@@ -169,7 +169,7 @@ class ListeBearbeitenCallbacks(
                 val regeln = regelRepository.getAllRegeln()
                 
                 if (regeln.isEmpty()) {
-                    Toast.makeText(activity, "Keine Regeln vorhanden. Bitte erstellen Sie zuerst eine Regel.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(activity, activity.getString(R.string.toast_keine_regeln_vorhanden), Toast.LENGTH_LONG).show()
                     return@launch
                 }
                 
@@ -184,7 +184,7 @@ class ListeBearbeitenCallbacks(
                     .setNegativeButton("Abbrechen", null)
                     .show()
             } catch (e: Exception) {
-                Toast.makeText(activity, "Fehler beim Laden der Regeln: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, activity.getString(R.string.error_fehler_laden_regeln, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -238,10 +238,10 @@ class ListeBearbeitenCallbacks(
                 }
                 listeRepository.updateListe(liste.id, mapOf("intervalle" to intervalleMap))
                 regelRepository.incrementVerwendungsanzahl(regel.id)
-                Toast.makeText(activity, "Regel '${regel.name}' angewendet", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, activity.getString(R.string.toast_regel_angewendet, regel.name), Toast.LENGTH_SHORT).show()
                 onComplete(liste.copy(intervalle = neueIntervalle))
             } catch (e: Exception) {
-                Toast.makeText(activity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, activity.getString(R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }

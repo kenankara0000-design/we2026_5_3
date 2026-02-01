@@ -104,7 +104,7 @@ class CustomerManagerActivity : AppCompatActivity() {
                                 }
                                 pressedHeaderButton = null
                                 viewModel.setBulkMode(false)
-                                Toast.makeText(this@CustomerManagerActivity, "${selectedCustomers.size} Kunden als erledigt markiert", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@CustomerManagerActivity, getString(R.string.toast_kunden_erledigt_markiert, selectedCustomers.size), Toast.LENGTH_SHORT).show()
                             }
                         }
                         .setNegativeButton("Abbrechen", null)

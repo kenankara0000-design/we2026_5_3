@@ -63,9 +63,9 @@ fun TerminRegelErstellenScreen(
         if (state.success) onFinish()
     }
 
-    LaunchedEffect(state.errorMessage) {
-        state.errorMessage?.let { msg ->
-            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+    LaunchedEffect(state.errorMessageResId) {
+        state.errorMessageResId?.let { resId ->
+            android.widget.Toast.makeText(context, context.getString(resId), android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 

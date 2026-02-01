@@ -119,7 +119,7 @@ class TerminRegelErstellenActivity : AppCompatActivity() {
                                 Toast.makeText(this@TerminRegelErstellenActivity, getString(R.string.toast_regel_geloescht), Toast.LENGTH_SHORT).show()
                                 finish()
                             },
-                            onError = { msg -> Toast.makeText(this@TerminRegelErstellenActivity, msg, Toast.LENGTH_SHORT).show() }
+                            onError = { resId -> Toast.makeText(this@TerminRegelErstellenActivity, getString(resId), Toast.LENGTH_SHORT).show() }
                         )
                     }
                     .setNegativeButton(R.string.termin_regel_abbrechen, null)

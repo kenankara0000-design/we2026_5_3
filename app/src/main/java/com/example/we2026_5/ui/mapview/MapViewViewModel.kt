@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.we2026_5.R
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
@@ -18,7 +19,7 @@ private const val MAX_WAYPOINTS = 25
 sealed class MapViewState {
     object Loading : MapViewState()
     object Empty : MapViewState()
-    data class Error(val message: String) : MapViewState()
+    data class Error(val messageResId: Int, val messageArg: String? = null) : MapViewState()
     data class Success(val addresses: List<String>, val filteredToToday: Boolean) : MapViewState()
 }
 
@@ -56,7 +57,7 @@ class MapViewViewModel(
                 val addresses = customersWithAddress.map { it.adresse }
                 _state.value = MapViewState.Success(addresses, filteredToToday)
             } catch (e: Exception) {
-                _state.value = MapViewState.Error(e.message ?: "Unbekannter Fehler")
+                _state.value = MapViewState.Error(R.string.error_unknown, e.message)
             }
         }
     }

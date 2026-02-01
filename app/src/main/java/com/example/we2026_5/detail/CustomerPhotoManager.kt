@@ -66,7 +66,7 @@ class CustomerPhotoManager(
     private fun startCamera() {
         val picturesDir = activity.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         if (picturesDir == null) {
-            Toast.makeText(activity, "Speicherort nicht verfügbar", Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.toast_speicherort_nicht_verfuegbar), Toast.LENGTH_SHORT).show()
             return
         }
         
@@ -93,7 +93,7 @@ class CustomerPhotoManager(
         if (isGranted) {
             startCamera()
         } else {
-            Toast.makeText(activity, "Kamera-Berechtigung verweigert", Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.toast_kamera_verweigert), Toast.LENGTH_SHORT).show()
         }
     }
     
@@ -105,7 +105,7 @@ class CustomerPhotoManager(
             
             if (compressedFile == null) {
                 onProgressVisibilityChanged(false)
-                Toast.makeText(activity, "Fehler beim Komprimieren des Bildes", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.toast_fehler_komprimieren), Toast.LENGTH_SHORT).show()
                 return@launch
             }
             
@@ -116,15 +116,15 @@ class CustomerPhotoManager(
                 onSuccess = { downloadUrl ->
                     addPhotoUrlToCustomer(downloadUrl)
                     onProgressVisibilityChanged(false)
-                    Toast.makeText(activity, "Bild erfolgreich hochgeladen", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.toast_bild_hochgeladen), Toast.LENGTH_SHORT).show()
                 },
                 onError = { exception ->
                     onProgressVisibilityChanged(false)
                     val isOffline = !isNetworkAvailable()
                     if (isOffline) {
-                        Toast.makeText(activity, "Bild wird hochgeladen, sobald Internet verfügbar ist", Toast.LENGTH_LONG).show()
+                        Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.toast_bild_offline), Toast.LENGTH_LONG).show()
                     } else {
-                        Toast.makeText(activity, "Upload fehlgeschlagen: ${exception.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.toast_upload_fehler, exception.message ?: ""), Toast.LENGTH_SHORT).show()
                     }
                 }
             )
@@ -156,7 +156,7 @@ class CustomerPhotoManager(
                     )
                     
                     if (success == true) {
-                        Toast.makeText(activity, "Foto hinzugefügt", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.toast_foto_hinzugefuegt), Toast.LENGTH_SHORT).show()
                     }
                 }
             }

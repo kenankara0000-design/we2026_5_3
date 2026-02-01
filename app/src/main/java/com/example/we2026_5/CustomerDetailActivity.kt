@@ -112,15 +112,15 @@ class CustomerDetailActivity : AppCompatActivity() {
                             val gmmUri = Uri.parse("google.navigation:q=${Uri.encode(c.adresse)}")
                             val mapIntent = Intent(Intent.ACTION_VIEW, gmmUri).setPackage("com.google.android.apps.maps")
                             if (mapIntent.resolveActivity(packageManager) != null) startActivity(mapIntent)
-                            else Toast.makeText(this@CustomerDetailActivity, "Google Maps ist nicht installiert.", Toast.LENGTH_SHORT).show()
-                        } else Toast.makeText(this@CustomerDetailActivity, "Keine Adresse vorhanden.", Toast.LENGTH_SHORT).show()
+                            else Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_maps_not_installed), Toast.LENGTH_SHORT).show()
+                        } else Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_keine_adresse), Toast.LENGTH_SHORT).show()
                     }
                 },
                 onTelefonClick = {
                     customer?.let { c ->
                         if (c.telefon.isNotBlank()) {
                             startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:${c.telefon}")))
-                        } else Toast.makeText(this@CustomerDetailActivity, "Keine Telefonnummer vorhanden.", Toast.LENGTH_SHORT).show()
+                        } else Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_keine_telefonnummer), Toast.LENGTH_SHORT).show()
                     }
                 },
                 onPhotoClick = { url -> photoManager?.showImageInDialog(url) },

@@ -3,6 +3,7 @@ package com.example.we2026_5.ui.listebearbeiten
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
+import com.example.we2026_5.R
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.data.repository.CustomerRepository
@@ -21,7 +22,8 @@ data class ListeBearbeitenState(
     val intervalle: List<ListeIntervall> = emptyList(),
     val isInEditMode: Boolean = false,
     val isLoading: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessageResId: Int? = null,
+    val errorMessageArg: String? = null,
     val isEmpty: Boolean = false
 )
 
@@ -36,11 +38,11 @@ class ListeBearbeitenViewModel(
     fun loadDaten(listeId: String?) {
         val targetId = listeId ?: _state.value.liste?.id ?: return
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true, errorMessage = null)
+            _state.value = _state.value.copy(isLoading = true, errorMessageResId = null, errorMessageArg = null)
             try {
                 val geladeneListe = withContext(Dispatchers.IO) { listeRepository.getListeById(targetId) }
                 if (geladeneListe == null) {
-                    _state.value = _state.value.copy(isLoading = false, errorMessage = "Liste nicht gefunden")
+                    _state.value = _state.value.copy(isLoading = false, errorMessageResId = R.string.error_list_not_found)
                     return@launch
                 }
                 val alleKunden = withContext(Dispatchers.IO) { customerRepository.getAllCustomers() }
@@ -58,7 +60,8 @@ class ListeBearbeitenViewModel(
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    errorMessage = e.message ?: "Fehler beim Laden"
+                    errorMessageResId = R.string.error_load_generic,
+                    errorMessageArg = e.message
                 )
             }
         }
@@ -84,6 +87,6 @@ class ListeBearbeitenViewModel(
     }
 
     fun clearErrorMessage() {
-        _state.value = _state.value.copy(errorMessage = null)
+        _state.value = _state.value.copy(errorMessageResId = null, errorMessageArg = null)
     }
 }

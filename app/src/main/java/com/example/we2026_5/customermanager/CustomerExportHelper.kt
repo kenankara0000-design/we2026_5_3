@@ -49,12 +49,12 @@ class CustomerExportHelper(
                 
                 if (file != null) {
                     shareFile(file, "text/csv")
-                    Toast.makeText(activity, "CSV exportiert: ${file.name}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.toast_csv_exported, file.name), Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(activity, "Fehler beim Exportieren", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.error_export), Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(activity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -67,12 +67,12 @@ class CustomerExportHelper(
                 
                 if (file != null) {
                     shareFile(file, "text/plain")
-                    Toast.makeText(activity, "Text exportiert: ${file.name}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.toast_text_exported, file.name), Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(activity, "Fehler beim Exportieren", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.error_export), Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(activity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }

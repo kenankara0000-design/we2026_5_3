@@ -82,14 +82,14 @@ class KundenListenActivity : AppCompatActivity() {
                             )
                             if (success != null) {
                                 viewModel.loadListen()
-                                Toast.makeText(this@KundenListenActivity, "Liste gelöscht", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@KundenListenActivity, getString(R.string.toast_liste_geloescht), Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
                     .setNegativeButton("Abbrechen", null)
                     .show()
             } catch (e: Exception) {
-                Toast.makeText(this@KundenListenActivity, "Fehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@KundenListenActivity, getString(R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }

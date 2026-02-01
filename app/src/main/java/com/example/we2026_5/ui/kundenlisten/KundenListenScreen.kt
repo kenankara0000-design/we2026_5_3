@@ -186,7 +186,10 @@ fun KundenListenScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = state.message,
+                                text = if (state.messageArg != null)
+                                    stringResource(state.messageResId, state.messageArg)
+                                else
+                                    stringResource(state.messageResId),
                                 fontSize = 14.sp,
                                 color = textSecondary,
                                 textAlign = TextAlign.Center,

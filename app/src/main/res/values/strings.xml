@@ -1,11 +1,9 @@
 <resources>
     <string name="app_name">TourPlaner 2026</string>
-    <string name="main_title">TourPlaner 2026</string>
     <string name="error_login_failed">Anmeldung fehlgeschlagen. Bitte Internetverbindung prüfen.</string>
     <string name="label_wochentag">Wochentag:</string>
     <string name="label_foto_uploading">Foto wird hochgeladen…</string>
     <string name="label_fotos">Fotos</string>
-    <string name="label_add_photo">Foto hinzufügen</string>
     <string name="menu_kunden">Kunden Liste</string>
     <string name="menu_touren">Touren Planer</string>
     <string name="menu_neu">Neuer Kunde</string>
@@ -262,6 +260,21 @@
     <string name="label_created">Erstellt: %1$s</string>
     <string name="label_created_placeholder">Erstellt: --</string>
     <string name="label_weekday_monday">Montag</string>
+    <string name="label_weekday_tuesday">Dienstag</string>
+    <string name="label_weekday_wednesday">Mittwoch</string>
+    <string name="label_weekday_thursday">Donnerstag</string>
+    <string name="label_weekday_friday">Freitag</string>
+    <string name="label_weekday_saturday">Samstag</string>
+    <string name="label_weekday_sunday">Sonntag</string>
+    <!-- Wochentag-Kürzel (CustomerDetailScreen) -->
+    <string name="label_weekday_short_mo">MO</string>
+    <string name="label_weekday_short_tu">DI</string>
+    <string name="label_weekday_short_mi">MI</string>
+    <string name="label_weekday_short_do">DO</string>
+    <string name="label_weekday_short_fr">FR</string>
+    <string name="label_weekday_short_sa">SA</string>
+    <string name="label_weekday_short_su">SO</string>
+    <string name="hint_heute">Heute</string>
     <string name="map_title">Kartenansicht</string>
     <string name="map_empty">Keine Kunden mit Adressen gefunden</string>
     <string name="map_filtered_today_toast">Zu viele Adressen. Es werden nur heute fällige Kunden angezeigt.</string>
@@ -325,4 +338,56 @@
     <string name="error_delete_termin">Fehler beim Löschen des Termins. Bitte erneut versuchen.</string>
     <string name="error_reset_tour">Fehler beim Zurücksetzen. Bitte erneut versuchen.</string>
     <string name="error_load_generic">Fehler beim Laden. Bitte erneut versuchen.</string>
+    <string name="error_list_id_missing">Fehler: Keine Liste-ID übergeben</string>
+    <string name="error_list_not_found">Liste nicht gefunden</string>
+    <string name="error_export">Fehler beim Exportieren</string>
+    <string name="error_fehler_laden_regeln">Fehler beim Laden der Regeln: %1$s</string>
+    <string name="error_load_lists">Fehler beim Laden der Listen</string>
+    <string name="error_unknown">Unbekannter Fehler</string>
+    <!-- Validierung TerminRegel (kurz für ViewModel) -->
+    <string name="error_regel_name_fehlt">Regel-Name fehlt</string>
+    <string name="error_startdatum_fehlt">Startdatum fehlt</string>
+    <string name="error_abholung_wochentag_fehlt">Abholung-Wochentag fehlt</string>
+    <string name="error_auslieferung_wochentag_fehlt">Auslieferung-Wochentag fehlt</string>
+    <string name="error_save_failed">Speichern fehlgeschlagen</string>
+    <string name="error_delete_failed">Löschen fehlgeschlagen</string>
+
+    <!-- Toast / Meldungen (ausgelagert) -->
+    <string name="toast_customer_not_found">Kunde nicht gefunden</string>
+    <string name="toast_regel_hinzugefuegt">Regel \'%1$s\' hinzugefügt</string>
+    <string name="toast_fehler_hinzufuegen">Fehler beim Hinzufügen</string>
+    <string name="toast_regel_ersetzt">Regel \'%1$s\' ersetzt alle bestehenden Regeln</string>
+    <string name="toast_fehler_ersetzen">Fehler beim Ersetzen</string>
+    <string name="toast_csv_exported">CSV exportiert: %1$s</string>
+    <string name="toast_text_exported">Text exportiert: %1$s</string>
+    <string name="toast_enddatum_nach_startdatum">Enddatum muss nach Startdatum sein!</string>
+    <string name="toast_kunde_aus_liste_entfernt">Kunde aus Liste entfernt</string>
+    <string name="toast_kunde_zur_liste_hinzugefuegt">Kunde zur Liste hinzugefügt</string>
+    <string name="toast_liste_gespeichert">Liste gespeichert</string>
+    <string name="toast_liste_geloescht">Liste gelöscht</string>
+    <string name="toast_keine_regeln_vorhanden">Keine Regeln vorhanden. Bitte erstellen Sie zuerst eine Regel.</string>
+    <string name="toast_regel_angewendet">Regel \'%1$s\' angewendet</string>
+    <string name="toast_kunden_erledigt_markiert">%1$d Kunden als erledigt markiert</string>
+    <string name="toast_keine_adresse">Keine Adresse vorhanden.</string>
+    <string name="toast_keine_telefonnummer">Keine Telefonnummer vorhanden.</string>
+    <string name="toast_speicherort_nicht_verfuegbar">Speicherort nicht verfügbar</string>
+    <string name="toast_kamera_verweigert">Kamera-Berechtigung verweigert</string>
+    <string name="toast_fehler_komprimieren">Fehler beim Komprimieren des Bildes</string>
+    <string name="toast_bild_hochgeladen">Bild erfolgreich hochgeladen</string>
+    <string name="toast_bild_offline">Bild wird hochgeladen, sobald Internet verfügbar ist</string>
+    <string name="toast_upload_fehler">Upload fehlgeschlagen: %1$s</string>
+    <string name="toast_foto_hinzugefuegt">Foto hinzugefügt</string>
+
+    <!-- Item-Badges / Platzhalter (Layout) -->
+    <string name="item_badge_ue">Ü</string>
+    <string name="item_badge_kw">KW</string>
+    <string name="item_badge_a">A</string>
+    <string name="item_badge_l">L</string>
+    <string name="item_badge_v">V</string>
+    <string name="item_badge_u">U</string>
+    <string name="item_placeholder_address">Musterstraße 1, 12345 Stadt</string>
+    <string name="item_placeholder_next_tour">Nächste Tour: 01.02.2026</string>
+    <string name="item_section_count_sample">(5)</string>
+    <string name="item_expand_plus">+</string>
+    <string name="item_date_placeholder">25.01.2026</string>
 </resources>

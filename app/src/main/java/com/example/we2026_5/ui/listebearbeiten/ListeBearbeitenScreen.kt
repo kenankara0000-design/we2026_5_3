@@ -303,9 +303,9 @@ private fun KundeInListeItem(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = when (kunde.kundenArt) {
-                            "Privat" -> "P"
-                            "Liste" -> "L"
-                            else -> "G"
+                            "Privat" -> stringResource(R.string.label_type_p_letter)
+                            "Liste" -> stringResource(R.string.label_type_l_letter)
+                            else -> stringResource(R.string.label_type_g)
                         },
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,

@@ -176,7 +176,7 @@ class CustomerItemHelper(
             if (erledigteKundenInListe.isNotEmpty()) {
                 // Trennstrich oder Label für Erledigt-Bereich innerhalb der Liste
                 val erledigtLabel = TextView(context).apply {
-                    setText("ERLEDIGT")
+                    setText(context.getString(com.example.we2026_5.R.string.status_erledigt))
                     textSize = 14f
                     setTypeface(null, Typeface.BOLD)
                     setTextColor(ContextCompat.getColor(context, com.example.we2026_5.R.color.section_done_text))
