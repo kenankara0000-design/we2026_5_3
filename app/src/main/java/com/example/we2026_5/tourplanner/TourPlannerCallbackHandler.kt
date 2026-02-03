@@ -3,6 +3,8 @@ package com.example.we2026_5.tourplanner
 import android.content.Context
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
+import com.example.we2026_5.TerminTyp
+import com.example.we2026_5.VerschobenerTermin
 import com.example.we2026_5.FirebaseRetryHelper
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.data.repository.CustomerRepository
@@ -51,7 +53,17 @@ class TourPlannerCallbackHandler(
     /** Für Erledigungs-Bottom-Sheet: ruft handleRueckgaengig auf. */
     fun handleRueckgaengigPublic(customer: Customer) = handleRueckgaengig(customer)
     /** Für Erledigungs-Bottom-Sheet / Dialog: ruft handleVerschieben auf. */
-    fun handleVerschiebenPublic(customer: Customer, newDate: Long, alleVerschieben: Boolean) = handleVerschieben(customer, newDate, alleVerschieben)
+    fun handleVerschiebenPublic(customer: Customer, newDate: Long, alleVerschieben: Boolean, typ: TerminTyp? = null) = handleVerschieben(customer, newDate, alleVerschieben, typ)
+
+    /** True, wenn am angezeigten Tag sowohl Abholung als auch Auslieferung fällig sind (A und L am gleichen Tag). */
+    fun hatSowohlAAlsAuchLAmViewTag(customer: Customer): Boolean {
+        val viewDateStart = TerminBerechnungUtils.getStartOfDay(viewDate.timeInMillis)
+        val abholungDatum = getAbholungDatum(customer)
+        val auslieferungDatum = getAuslieferungDatum(customer)
+        if (abholungDatum <= 0L || auslieferungDatum <= 0L) return false
+        return TerminBerechnungUtils.getStartOfDay(abholungDatum) == viewDateStart &&
+            TerminBerechnungUtils.getStartOfDay(auslieferungDatum) == viewDateStart
+    }
     /** Für Erledigungs-Bottom-Sheet / Dialog: ruft handleUrlaub auf. */
     fun handleUrlaubPublic(customer: Customer, von: Long, bis: Long) = handleUrlaub(customer, von, bis)
     
@@ -149,18 +161,20 @@ class TourPlannerCallbackHandler(
         }
     }
     
-    private fun handleVerschieben(customer: Customer, newDate: Long, alleVerschieben: Boolean) {
+    private fun handleVerschieben(customer: Customer, newDate: Long, alleVerschieben: Boolean, typ: TerminTyp? = null) {
         CoroutineScope(Dispatchers.Main).launch {
+            val newDateNorm = TerminBerechnungUtils.getStartOfDay(newDate)
             val success = if (alleVerschieben) {
-                val aktuellerFaelligAm = if (customer.verschobenAufDatum > 0) customer.verschobenAufDatum
-                                         else customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())
-                val diff = newDate - aktuellerFaelligAm
+                val aktuellerFaelligAm = customer.getFaelligAm().takeIf { it > 0 }
+                    ?: (customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())).takeIf { customer.letzterTermin > 0 } ?: 0L
+                val diff = newDateNorm - aktuellerFaelligAm
                 val neuerLetzterTermin = customer.letzterTermin + diff
+                val serializedLeer = serializeVerschobeneTermine(emptyList())
                 FirebaseRetryHelper.executeSuspendWithRetryAndToast(
                     operation = {
                         repository.updateCustomer(customer.id, mapOf(
                             "letzterTermin" to neuerLetzterTermin,
-                            "verschobenAufDatum" to 0
+                            "verschobeneTermine" to serializedLeer
                         ))
                     },
                     context = context,
@@ -168,8 +182,28 @@ class TourPlannerCallbackHandler(
                     maxRetries = 3
                 )
             } else {
+                val viewDateStart = TerminBerechnungUtils.getStartOfDay(viewDate.timeInMillis)
+                // Welcher Termin wird verschoben? Der, der am angezeigten Tag (viewDate) sichtbar ist.
+                // Falls an viewDate bereits ein verschobener Termin liegt: dessen Originaldatum verwenden (Nachverschiebung).
+                val existingForViewDate = customer.verschobeneTermine.firstOrNull {
+                    TerminBerechnungUtils.getStartOfDay(it.verschobenAufDatum) == viewDateStart
+                }
+                val originalDatumRaw = if (existingForViewDate != null) existingForViewDate.originalDatum else viewDate.timeInMillis
+                val originalDatumNorm = TerminBerechnungUtils.getStartOfDay(originalDatumRaw)
+                val newEntry = VerschobenerTermin(
+                    originalDatum = originalDatumNorm,
+                    verschobenAufDatum = newDateNorm,
+                    intervallId = null,
+                    typ = typ ?: TerminTyp.ABHOLUNG
+                )
+                // Alle Einträge entfernen, die viewDate als Original oder als Ziel haben; dann neuen Eintrag anhängen.
+                val newList = customer.verschobeneTermine.filterNot {
+                    TerminBerechnungUtils.getStartOfDay(it.originalDatum) == viewDateStart ||
+                    TerminBerechnungUtils.getStartOfDay(it.verschobenAufDatum) == viewDateStart
+                } + newEntry
+                val serialized = serializeVerschobeneTermine(newList)
                 FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                    operation = { repository.updateCustomer(customer.id, mapOf("verschobenAufDatum" to newDate)) },
+                    operation = { repository.updateCustomer(customer.id, mapOf("verschobeneTermine" to serialized)) },
                     context = context,
                     errorMessage = context.getString(R.string.error_verschieben),
                     maxRetries = 3
@@ -187,6 +221,15 @@ class TourPlannerCallbackHandler(
             }
         }
     }
+
+    /** Serialisiert verschobeneTermine für Firebase (Map mit originalDatum, verschobenAufDatum, typ). */
+    private fun serializeVerschobeneTermine(list: List<VerschobenerTermin>): Map<String, Map<String, Any>> = list.mapIndexed { index, it ->
+        index.toString() to mapOf(
+            "originalDatum" to it.originalDatum,
+            "verschobenAufDatum" to it.verschobenAufDatum,
+            "typ" to it.typ.name
+        )
+    }.toMap()
 
     private fun handleUrlaub(customer: Customer, von: Long, bis: Long) {
         CoroutineScope(Dispatchers.Main).launch {

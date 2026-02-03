@@ -15,6 +15,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
+import com.example.we2026_5.util.DateFormatter
+import com.example.we2026_5.util.DialogBaseHelper
 import com.example.we2026_5.util.TerminRegelInfoText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -25,6 +27,7 @@ import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.detail.CustomerPhotoManager
 import com.example.we2026_5.ui.detail.CustomerDetailScreen
 import com.example.we2026_5.ui.detail.CustomerDetailViewModel
+import com.example.we2026_5.ui.urlaub.UrlaubActivity
 import com.example.we2026_5.util.IntervallManager
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collectLatest
@@ -99,8 +102,8 @@ class CustomerDetailActivity : AppCompatActivity() {
                 isUploading = isUploading,
                 onBack = { finish() },
                 onEdit = { viewModel.setEditMode(true, customer) },
-                onSave = { updates ->
-                    viewModel.saveCustomer(updates) { success ->
+                onSave = { updates, newIntervalle ->
+                    viewModel.saveCustomer(updates, newIntervalle) { success ->
                         if (success) {
                             viewModel.setEditMode(false, null)
                             Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
@@ -175,6 +178,11 @@ class CustomerDetailActivity : AppCompatActivity() {
                         val regel = withContext(Dispatchers.IO) { regelRepository.getRegelById(regelId) }
                         regel?.let { showRegelDetailDialog(it) }
                     }
+                },
+                onUrlaubStartActivity = { customerId ->
+                    startActivity(Intent(this@CustomerDetailActivity, UrlaubActivity::class.java).apply {
+                        putExtra("CUSTOMER_ID", customerId)
+                    })
                 }
             )
         }

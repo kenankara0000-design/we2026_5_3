@@ -35,13 +35,14 @@ class TourDataFilter(
         
         // Für Kunden in Listen: Daten der Liste verwenden
         if (c.listeId.isNotEmpty() && liste != null) {
-            if (c.verschobenAufDatum > 0) {
-                val verschobenStart = categorizer.getStartOfDay(c.verschobenAufDatum)
+            val verschobenEntry = TerminFilterUtils.istTerminVerschoben(c.abholungDatum, c.verschobeneTermine)
+            if (verschobenEntry != null) {
+                val verschobenStart = TerminBerechnungUtils.getStartOfDay(verschobenEntry.verschobenAufDatum)
                 if (c.geloeschteTermine.contains(verschobenStart)) {
                     val naechstesDatum = categorizer.getNaechstesListeDatum(liste, verschobenStart + TimeUnit.DAYS.toMillis(1))
                     return naechstesDatum ?: abDatum
                 }
-                return c.verschobenAufDatum
+                return verschobenEntry.verschobenAufDatum
             }
             
             val naechstesDatum = categorizer.getNaechstesListeDatum(liste, abDatum, c.geloeschteTermine)
@@ -54,13 +55,14 @@ class TourDataFilter(
             val auslieferungStart = categorizer.getStartOfDay(c.auslieferungDatum)
             val abDatumStart = categorizer.getStartOfDay(abDatum)
             
-            if (c.verschobenAufDatum > 0) {
-                val verschobenStart = categorizer.getStartOfDay(c.verschobenAufDatum)
+            val verschobenEntry = TerminFilterUtils.istTerminVerschoben(c.abholungDatum, c.verschobeneTermine)
+            if (verschobenEntry != null) {
+                val verschobenStart = TerminBerechnungUtils.getStartOfDay(verschobenEntry.verschobenAufDatum)
                 if (c.geloeschteTermine.contains(verschobenStart)) {
                     return 0L
                 }
-                if (abDatumStart == verschobenStart) return c.verschobenAufDatum
-                if (abDatumStart < verschobenStart) return c.verschobenAufDatum
+                if (abDatumStart == verschobenStart) return verschobenEntry.verschobenAufDatum
+                if (abDatumStart < verschobenStart) return verschobenEntry.verschobenAufDatum
                 return 0L
             }
             

@@ -80,6 +80,11 @@
             android:name=".TerminRegelErstellenActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.urlaub.UrlaubActivity"
+            android:exported="false"
+            android:theme="@style/Theme.We2026_5.LightBackground" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.example.we2026_5.fileprovider"

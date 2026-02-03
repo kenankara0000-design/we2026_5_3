@@ -15,31 +15,40 @@ object FirebaseSyncManager {
     /**
      * Prüft, ob noch ausstehende Schreibvorgänge vorhanden sind
      * Realtime Database synchronisiert automatisch im Hintergrund
+     * 
+     * HINWEIS: Realtime Database hat keine direkte Methode zum Prüfen ausstehender Writes.
+     * Die Synchronisierung erfolgt automatisch im Hintergrund.
+     * Diese Funktion gibt immer false zurück, da keine zuverlässige Prüfung möglich ist.
      */
     suspend fun hasPendingWrites(): Boolean {
         // Realtime Database synchronisiert automatisch
-        // Keine direkte Methode zum Prüfen, aber Offline-Operationen werden automatisch synchronisiert
-        return false // Annahme: Keine ausstehenden Schreibvorgänge (werden automatisch synchronisiert)
+        // Keine direkte Methode zum Prüfen, daher immer false zurückgeben
+        return false
     }
     
     /**
-     * Realtime Database hat keine enableNetwork/disableNetwork
-     * Offline-Persistence ist bereits in FirebaseConfig aktiviert
+     * Setzt Netzwerk-Status (No-Op für Realtime Database)
+     * 
+     * HINWEIS: Realtime Database verwaltet das Netzwerk automatisch.
+     * Diese Funktion macht nichts, da die Persistence bereits in FirebaseConfig aktiviert ist.
      */
     suspend fun setNetworkEnabled(enabled: Boolean) {
         // Realtime Database verwaltet Netzwerk automatisch
-        // Persistence ist bereits aktiviert
-        Log.d("FirebaseSyncManager", "Realtime Database network management is automatic (Persistence enabled)")
+        // Persistence ist bereits aktiviert in FirebaseConfig
+        // Keine Aktion erforderlich
     }
     
     /**
-     * Wartet auf Synchronisierung
-     * Realtime Database synchronisiert automatisch im Hintergrund
+     * Wartet auf Synchronisierung (No-Op für Realtime Database)
+     * 
+     * HINWEIS: Realtime Database synchronisiert automatisch im Hintergrund.
+     * Es gibt keine explizite Warte-Funktion. Diese Funktion kehrt sofort zurück,
+     * da die Synchronisierung asynchron im Hintergrund erfolgt.
      */
     suspend fun waitForSync(): Boolean {
-        // Realtime Database synchronisiert automatisch
-        // Keine explizite Warte-Funktion, aber Offline-Operationen werden automatisch synchronisiert
-        Log.d("FirebaseSyncManager", "Realtime Database syncs automatically in background")
-        return true
+        // Realtime Database synchronisiert automatisch im Hintergrund
+        // Keine explizite Warte-Funktion möglich
+        // Funktion kehrt sofort zurück, da Synchronisierung asynchron erfolgt
+        return true // Erfolg, da Synchronisierung automatisch läuft
     }
 }

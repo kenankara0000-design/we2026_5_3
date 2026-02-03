@@ -1,0 +1,14 @@
+---
+description: Im Chat wenig Code zeigen – nur Dateinamen und kurze Änderungsbeschreibung
+alwaysApply: true
+---
+
+# Chat-Antworten: kurz halten
+
+Bei Antworten im Chat:
+
+- **Nur angeben, welche Datei(en)** bearbeitet werden (z.B. `MainActivity.kt`, `strings.xml`).
+- **Kurz beschreiben, was geändert wird** (z.B. „Button hinzugefügt“, „String angepasst“).
+- **Keine langen Code-Blöcke** im Chat einfügen. Code-Änderungen nur in den Dateien vornehmen, nicht im Antworttext wiederholen.
+
+Ausnahme: Auf ausdrückliche Bitte des Nutzers (z.B. „zeig mir den Code“) darf Code gezeigt werden.

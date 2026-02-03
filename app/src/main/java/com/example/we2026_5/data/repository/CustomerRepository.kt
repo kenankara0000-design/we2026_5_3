@@ -1,6 +1,8 @@
 package com.example.we2026_5.data.repository
 
 import com.example.we2026_5.Customer
+import com.example.we2026_5.TerminTyp
+import com.example.we2026_5.VerschobenerTermin
 import com.example.we2026_5.util.AppErrorMapper
 import com.example.we2026_5.util.Result
 import com.google.firebase.database.DataSnapshot
@@ -28,7 +30,7 @@ class CustomerRepository(
                 val customers = mutableListOf<Customer>()
                 snapshot.children.forEach { child ->
                     val key = child.key ?: return@forEach
-                    val customer = child.getValue(Customer::class.java)?.copy(id = key)
+                    val customer = parseCustomerSnapshot(child, key)
                     customer?.let { customers.add(it) }
                 }
                 // Sortieren nach Name
@@ -53,7 +55,7 @@ class CustomerRepository(
         val ref = customersRef.child(customerId)
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val customer = snapshot.getValue(Customer::class.java)?.copy(id = customerId)
+                val customer = parseCustomerSnapshot(snapshot, customerId)
                 trySend(customer)
             }
             override fun onCancelled(error: DatabaseError) {
@@ -72,19 +74,61 @@ class CustomerRepository(
         val customers = mutableListOf<Customer>()
         snapshot.children.forEach { child ->
             val key = child.key ?: return@forEach
-            val customer = child.getValue(Customer::class.java)?.copy(id = key)
+            val customer = parseCustomerSnapshot(child, key)
             customer?.let { customers.add(it) }
         }
         // Sortieren nach Name
         return customers.sortedBy { it.name }
     }
+
+    /**
+     * Parst einen Kunden aus dem Snapshot und liest verschobeneTermine manuell,
+     * damit Long-Felder auch bei Firebase-Double-Werten korrekt gesetzt werden.
+     */
+    private fun parseCustomerSnapshot(child: DataSnapshot, id: String): Customer? {
+        val customer = child.getValue(Customer::class.java) ?: return null
+        val verschobeneTermine = parseVerschobeneTermine(child.child("verschobeneTermine"))
+        return customer.copy(id = id, verschobeneTermine = verschobeneTermine)
+    }
+
+    private fun parseVerschobeneTermine(snapshot: DataSnapshot): List<VerschobenerTermin> {
+        if (!snapshot.exists()) return emptyList()
+        val list = mutableListOf<VerschobenerTermin>()
+        snapshot.children.forEach { entry ->
+            val od = snapshotValueToLong(entry.child("originalDatum").getValue())
+            val vd = snapshotValueToLong(entry.child("verschobenAufDatum").getValue())
+            val typStr = entry.child("typ").getValue(String::class.java)
+            val typ = when (typStr) {
+                "AUSLIEFERUNG" -> TerminTyp.AUSLIEFERUNG
+                else -> TerminTyp.ABHOLUNG // auch bei null (alte Einträge ohne typ)
+            }
+            if (od != 0L || vd != 0L) list.add(VerschobenerTermin(originalDatum = od, verschobenAufDatum = vd, typ = typ))
+        }
+        return list
+    }
+
+    /** Firebase liefert Zahlen oft als Double; Number::class.java wird nicht unterstützt. Rohwert zu Long. */
+    private fun snapshotValueToLong(value: Any?): Long = when (value) {
+        is Number -> value.toLong()
+        else -> 0L
+    }
+
+    /** Serialisiert verschobeneTermine für Firebase (Map mit Keys "0","1",…; originalDatum, verschobenAufDatum, typ). */
+    private fun serializeVerschobeneTermine(list: List<VerschobenerTermin>): Map<String, Map<String, Any>> =
+        list.mapIndexed { index, it ->
+            index.toString() to mapOf(
+                "originalDatum" to it.originalDatum,
+                "verschobenAufDatum" to it.verschobenAufDatum,
+                "typ" to it.typ.name
+            )
+        }.toMap()
     
     /**
      * Lädt einen einzelnen Kunden
      */
     override suspend fun getCustomerById(customerId: String): Customer? {
         val snapshot = customersRef.child(customerId).get().await()
-        return snapshot.getValue(Customer::class.java)?.copy(id = customerId)
+        return parseCustomerSnapshot(snapshot, customerId)
     }
     
     /**
@@ -102,13 +146,15 @@ class CustomerRepository(
                     task.await()
                 }
                 android.util.Log.d("CustomerRepository", "Save completed successfully")
-                true
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                 // Timeout: Realtime Database hat bereits lokal gespeichert (im Offline-Modus)
-                // Die Daten sind sicher lokal gespeichert, auch wenn Server-Verbindung fehlt
                 android.util.Log.d("CustomerRepository", "Save completed (timeout, but saved locally)")
-                true
             }
+            // verschobeneTermine ist @Exclude und wird bei setValue nicht geschrieben – separat schreiben
+            if (customer.verschobeneTermine.isNotEmpty()) {
+                updateCustomer(customer.id, mapOf("verschobeneTermine" to serializeVerschobeneTermine(customer.verschobeneTermine)))
+            }
+            true
         } catch (e: Exception) {
             // Nur echte Fehler werden als Fehler behandelt
             android.util.Log.e("CustomerRepository", "Error saving customer", e)

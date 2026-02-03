@@ -19,8 +19,8 @@
     <!-- Button-Farben - Modernisiert -->
     <color name="button_abholung">#1976D2</color> <!-- Blau für Abholung -->
     <color name="button_auslieferung">#388E3C</color> <!-- Grün für Auslieferung -->
-    <color name="button_verschieben">#F57C00</color> <!-- Orange für Verschieben -->
-    <color name="button_urlaub">#616161</color> <!-- Grau für Urlaub -->
+    <color name="button_verschieben">#D32F2F</color> <!-- Rot für Verschieben (Material Red 700) -->
+    <color name="button_urlaub">#E65100</color> <!-- Orange für Urlaub (Option 1: warm/Ferien) -->
     <color name="button_rueckgaengig">#D32F2F</color> <!-- Rot für Rückgängig -->
     
     <!-- Akzent-Farben für wichtige Buttons -->
@@ -65,11 +65,12 @@
     <color name="weekend_orange">#F57C00</color>
     <color name="weekend_orange_dark">#E65100</color>
     
-    <!-- Kunden-Status Hintergrundfarben - Verbesserte Kontraste -->
+    <!-- Kunden-Status Hintergrundfarben - Verbesserte Kontraste (Touren-Planner: Normal, Überfällig, Urlaub) -->
     <color name="customer_overdue_bg">#FFEBEE</color> <!-- Rötlicher Hintergrund für überfällige Kunden -->
     <color name="customer_done_bg">#F5F5F5</color> <!-- Hellgrauer Hintergrund für erledigte Kunden -->
+    <color name="customer_urlaub_bg">#FFF3E0</color> <!-- Hellorange für Urlaub (Option 1: warm/Ferien) -->
     <color name="customer_gewerblich_bg">#E3F2FD</color> <!-- Helles Blau für Gewerblich-Kunden die noch abzuholen sind -->
-    
+
     <!-- Termin-Farben - Neue Kategorien -->
     <color name="termin_today">#1976D2</color> <!-- Blau für heute -->
     <color name="termin_tomorrow">#42A5F5</color> <!-- Hellblau für morgen -->

@@ -34,8 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.R
 import com.example.we2026_5.TerminRegel
-import com.example.we2026_5.util.DateFormatter
 import androidx.core.content.ContextCompat
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -139,6 +139,27 @@ fun TerminRegelManagerScreen(
     }
 }
 
+/** Wochentag-Kürzel Mo–So (Index 0=Mo … 6=So, wie in TerminRegel). */
+private val WOCHENTAG_KURZ_REGEL = listOf(
+    R.string.label_weekday_short_mo,
+    R.string.label_weekday_short_tu,
+    R.string.label_weekday_short_mi,
+    R.string.label_weekday_short_do,
+    R.string.label_weekday_short_fr,
+    R.string.label_weekday_short_sa,
+    R.string.label_weekday_short_su
+)
+/** Wochentag-Kürzel für Calendar.DAY_OF_WEEK (1=So … 7=Sa). */
+private val WOCHENTAG_KURZ_CAL = listOf(
+    R.string.label_weekday_short_su,
+    R.string.label_weekday_short_mo,
+    R.string.label_weekday_short_tu,
+    R.string.label_weekday_short_mi,
+    R.string.label_weekday_short_do,
+    R.string.label_weekday_short_fr,
+    R.string.label_weekday_short_sa
+)
+
 @Composable
 private fun TerminRegelItem(
     regel: TerminRegel,
@@ -148,12 +169,10 @@ private fun TerminRegelItem(
     textSecondary: Color,
     onClick: () -> Unit
 ) {
-    val abholungText = if (regel.abholungDatum > 0) {
-        DateFormatter.formatDateWithLeadingZeros(regel.abholungDatum)
-    } else "Heute"
-    val auslieferungText = if (regel.auslieferungDatum > 0) {
-        DateFormatter.formatDateWithLeadingZeros(regel.auslieferungDatum)
-    } else "Heute"
+    val abholungWochentag = regelAbholungWochentagText(regel)
+    val auslieferungWochentag = regelAuslieferungWochentagText(regel)
+    val intervallText = if (regel.wiederholen) stringResource(R.string.termin_regel_intervall_tage, regel.intervallTage.coerceAtLeast(1)) else "–"
+    val wiederholenText = if (regel.wiederholen) stringResource(R.string.termin_regel_ja) else stringResource(R.string.termin_regel_nein)
     val usedCountText = stringResource(R.string.label_used_count_format, regel.verwendungsanzahl)
 
     Card(
@@ -164,50 +183,72 @@ private fun TerminRegelItem(
         colors = CardDefaults.cardColors(containerColor = cardBg),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier
-                    .background(buttonBlue, RoundedCornerShape(8.dp))
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = regel.name,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-            if (regel.beschreibung.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = regel.beschreibung,
-                    fontSize = 14.sp,
-                    color = textSecondary
-                )
-            }
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = regel.name,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = textPrimary
+            )
             Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = stringResource(R.string.label_abholung), fontSize = 12.sp, color = textSecondary)
-                Text(text = abholungText, fontSize = 12.sp, color = textPrimary)
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = stringResource(R.string.label_auslieferung), fontSize = 12.sp, color = textSecondary)
-                Text(text = auslieferungText, fontSize = 12.sp, color = textPrimary)
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = stringResource(R.string.label_verwendungen), fontSize = 12.sp, color = textSecondary)
-                Text(text = usedCountText, fontSize = 12.sp, color = textPrimary, fontWeight = FontWeight.Bold)
-            }
+            InfoRow(stringResource(R.string.label_abholung), abholungWochentag, textPrimary, textSecondary)
+            InfoRow(stringResource(R.string.label_auslieferung), auslieferungWochentag, textPrimary, textSecondary)
+            InfoRow(stringResource(R.string.label_intervall), intervallText, textPrimary, textSecondary)
+            InfoRow(stringResource(R.string.label_wiederholen), wiederholenText, textPrimary, textSecondary)
+            InfoRow(stringResource(R.string.label_verwendungen), usedCountText, textPrimary, textSecondary)
         }
+    }
+}
+
+@Composable
+private fun InfoRow(label: String, value: String, textPrimary: Color, textSecondary: Color) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label, fontSize = 12.sp, color = textSecondary)
+        Text(text = value, fontSize = 12.sp, color = textPrimary)
+    }
+}
+
+@Composable
+private fun regelAbholungWochentagText(regel: TerminRegel): String {
+    val wochentagRegel = WOCHENTAG_KURZ_REGEL.map { stringResource(it) }
+    val wochentagCal = WOCHENTAG_KURZ_CAL.map { stringResource(it) }
+    val heute = stringResource(R.string.hint_heute)
+    return if (regel.wochentagBasiert) {
+        val list = regel.abholungWochentage
+        if (!list.isNullOrEmpty()) {
+            list.sorted().joinToString(", ") { wochentagRegel[it.coerceIn(0, 6)] }
+        } else if (regel.abholungWochentag in 0..6) {
+            wochentagRegel[regel.abholungWochentag]
+        } else heute
+    } else {
+        if (regel.abholungDatum > 0) {
+            val cal = Calendar.getInstance().apply { timeInMillis = regel.abholungDatum }
+            val idx = (cal.get(Calendar.DAY_OF_WEEK) - 1).coerceIn(0, 6)
+            wochentagCal[idx]
+        } else heute
+    }
+}
+
+@Composable
+private fun regelAuslieferungWochentagText(regel: TerminRegel): String {
+    val wochentagRegel = WOCHENTAG_KURZ_REGEL.map { stringResource(it) }
+    val wochentagCal = WOCHENTAG_KURZ_CAL.map { stringResource(it) }
+    val heute = stringResource(R.string.hint_heute)
+    return if (regel.wochentagBasiert) {
+        val list = regel.auslieferungWochentage
+        if (!list.isNullOrEmpty()) {
+            list.sorted().joinToString(", ") { wochentagRegel[it.coerceIn(0, 6)] }
+        } else if (regel.auslieferungWochentag in 0..6) {
+            wochentagRegel[regel.auslieferungWochentag]
+        } else heute
+    } else {
+        if (regel.auslieferungDatum > 0) {
+            val cal = Calendar.getInstance().apply { timeInMillis = regel.auslieferungDatum }
+            val idx = (cal.get(Calendar.DAY_OF_WEEK) - 1).coerceIn(0, 6)
+            wochentagCal[idx]
+        } else heute
     }
 }

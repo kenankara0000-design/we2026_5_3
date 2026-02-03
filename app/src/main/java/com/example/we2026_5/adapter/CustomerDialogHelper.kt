@@ -4,6 +4,7 @@ import android.content.Context
 import android.widget.Toast
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
+import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.util.DialogBaseHelper
 import java.util.Calendar
 
@@ -12,27 +13,28 @@ import java.util.Calendar
  */
 class CustomerDialogHelper(
     private val context: Context,
-    private val onVerschieben: ((Customer, Long, Boolean) -> Unit)?,
+    private val onVerschieben: ((Customer, Long, Boolean, TerminTyp?) -> Unit)?,
     private val onUrlaub: ((Customer, Long, Long) -> Unit)?,
     private val onRueckgaengig: ((Customer) -> Unit)?,
     private val onButtonStateReset: ((String) -> Unit)? // customerId -> Unit
 ) {
     
-    fun showVerschiebenDialog(customer: Customer) {
+    /**
+     * @param terminTypForSingle Wenn A und L am gleichen Tag: vorher gewählter Typ (A oder L). Sonst null.
+     */
+    fun showVerschiebenDialog(customer: Customer, terminTypForSingle: TerminTyp? = null) {
         DialogBaseHelper.showDatePickerDialog(
             context = context,
             onDateSelected = { newDate ->
-                // Dialog: Nur diesen Termin oder alle restlichen Termine verschieben?
-                // Verwende AlertDialog direkt, da wir einen Neutral-Button benötigen
                 androidx.appcompat.app.AlertDialog.Builder(context)
                     .setTitle(context.getString(R.string.dialog_verschieben_title))
                     .setMessage(context.getString(R.string.dialog_verschieben_message))
                     .setPositiveButton(context.getString(R.string.dialog_verschieben_single)) { _, _ ->
-                        onVerschieben?.invoke(customer, newDate, false)
+                        onVerschieben?.invoke(customer, newDate, false, terminTypForSingle)
                         onButtonStateReset?.invoke(customer.id)
                     }
                     .setNeutralButton(context.getString(R.string.dialog_verschieben_all)) { _, _ ->
-                        onVerschieben?.invoke(customer, newDate, true)
+                        onVerschieben?.invoke(customer, newDate, true, null)
                         onButtonStateReset?.invoke(customer.id)
                     }
                     .setNegativeButton(context.getString(R.string.btn_cancel)) { _, _ ->

@@ -129,9 +129,10 @@ object TerminBerechnungUtils {
             val maxWiederholungen = if (intervallAnzahl > 0) intervallAnzahl else Int.MAX_VALUE
             
             while (aktuellesDatum <= endDatum && versuche < maxVersuche && durchgefuehrteAnzahl < maxWiederholungen) {
+                val originalAktuellesDatum = aktuellesDatum // Speichern für finalDatum
                 // Prüfe ob verschoben
-                val verschoben = TerminFilterUtils.istTerminVerschoben(aktuellesDatum, verschobeneTermine, intervallId)
-                val finalDatum = verschoben?.verschobenAufDatum ?: aktuellesDatum
+                val verschoben = TerminFilterUtils.istTerminVerschoben(originalAktuellesDatum, verschobeneTermine, intervallId)
+                val finalDatum = verschoben?.verschobenAufDatum ?: originalAktuellesDatum
                 
                 // Prüfe ob gelöscht
                 if (!TerminFilterUtils.istTerminGeloescht(finalDatum, geloeschteTermine)) {
@@ -141,7 +142,7 @@ object TerminBerechnungUtils {
                             typ = typ,
                             intervallId = intervallId,
                             verschoben = verschoben != null,
-                            originalDatum = if (verschoben != null) aktuellesDatum else null
+                            originalDatum = if (verschoben != null) originalAktuellesDatum else null
                         ))
                         durchgefuehrteAnzahl++ // Zähle nur nicht-gelöschte Termine
                     }
@@ -208,35 +209,27 @@ object TerminBerechnungUtils {
                 alleTermine.addAll(termine)
             }
         } else {
-            // ALTE STRUKTUR: Einzelne Felder (Rückwärtskompatibilität)
-            if (customer.abholungDatum > 0 || customer.auslieferungDatum > 0) {
-                val altesIntervall = CustomerIntervall(
-                    id = "legacy",
-                    abholungDatum = customer.abholungDatum,
-                    auslieferungDatum = customer.auslieferungDatum,
-                    wiederholen = customer.wiederholen,
-                    intervallTage = customer.intervallTage,
-                    intervallAnzahl = 0 // Alte Struktur hat keine Anzahl
-                )
-                val termine = berechneTermineFuerIntervall(
-                    intervall = altesIntervall,
-                    startDatum = startDatum,
-                    tageVoraus = tageVoraus,
-                    geloeschteTermine = customer.geloeschteTermine,
-                    verschobeneTermine = if (customer.verschobenAufDatum > 0) {
-                        // Alte verschobenAufDatum Logik konvertieren
-                        listOf(VerschobenerTermin(
-                            originalDatum = customer.abholungDatum,
-                            verschobenAufDatum = customer.verschobenAufDatum,
-                            intervallId = null, // Alle Intervalle
-                            typ = TerminTyp.ABHOLUNG
-                        ))
-                    } else {
-                        customer.verschobeneTermine
-                    }
-                )
-                alleTermine.addAll(termine)
-            }
+                // ALTE STRUKTUR: Einzelne Felder (Rückwärtskompatibilität)
+                // Diese Logik sollte idealerweise migriert und dann entfernt werden.
+                if (customer.abholungDatum > 0 || customer.auslieferungDatum > 0) {
+                    val altesIntervall = CustomerIntervall(
+                        id = "legacy",
+                        abholungDatum = customer.abholungDatum,
+                        auslieferungDatum = customer.auslieferungDatum,
+                        wiederholen = customer.wiederholen,
+                        intervallTage = customer.intervallTage,
+                        intervallAnzahl = 0 // Alte Struktur hat keine Anzahl
+                    )
+                    val termine = berechneTermineFuerIntervall(
+                        intervall = altesIntervall,
+                        startDatum = startDatum,
+                        tageVoraus = tageVoraus,
+                        geloeschteTermine = customer.geloeschteTermine,
+                        // verschobenAufDatum wird hier nicht mehr direkt genutzt
+                        verschobeneTermine = customer.verschobeneTermine
+                    )
+                    alleTermine.addAll(termine)
+                }
         }
         
         return alleTermine.sortedBy { it.datum }

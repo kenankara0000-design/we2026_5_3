@@ -52,7 +52,6 @@ fun ErledigungSheetContent(
     onKw: (Customer) -> Unit,
     onRueckgaengig: (Customer) -> Unit,
     onVerschieben: (Customer) -> Unit,
-    onUrlaub: (Customer) -> Unit,
     getNaechstesTourDatum: (Customer) -> Long?,
     showToast: (String) -> Unit,
     onTelefonClick: (String) -> Unit
@@ -68,7 +67,6 @@ fun ErledigungSheetContent(
     val buttonAuslieferung = colorResource(R.color.button_auslieferung)
     val buttonRueckgaengig = colorResource(R.color.button_rueckgaengig)
     val buttonVerschieben = colorResource(R.color.button_verschieben)
-    val buttonUrlaub = colorResource(R.color.button_urlaub)
     val toastAbholungNurHeute = stringResource(R.string.toast_abholung_nur_heute)
     val toastUeberfaelligNurHeute = stringResource(R.string.toast_ueberfaellig_nur_heute)
     val toastAuslieferungNachAbholung = stringResource(R.string.toast_auslieferung_nur_nach_abholung)
@@ -77,7 +75,6 @@ fun ErledigungSheetContent(
     val legendText = stringResource(R.string.sheet_legend)
     val sheetFixedHeightDp = 520.dp
     val hintVerschieben = stringResource(R.string.sheet_termin_verschieben_hint)
-    val hintUrlaub = stringResource(R.string.sheet_urlaub_eintragen_hint)
 
     Column(
         modifier = Modifier
@@ -262,23 +259,6 @@ fun ErledigungSheetContent(
                     Icon(painter = painterResource(R.drawable.ic_reschedule), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
                     Spacer(Modifier.size(10.dp))
                     Text(stringResource(R.string.sheet_termin_verschieben), color = Color.White)
-                }
-                Button(
-                    onClick = {
-                        if (state.showUrlaub) {
-                            onUrlaub(customer)
-                            onDismiss()
-                        } else {
-                            showToast(hintUrlaub)
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = buttonUrlaub),
-                    enabled = state.showUrlaub
-                ) {
-                    Icon(painter = painterResource(R.drawable.ic_vacation), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
-                    Spacer(Modifier.size(10.dp))
-                    Text(stringResource(R.string.sheet_urlaub_eintragen), color = Color.White)
                 }
             }
             2 -> Column(

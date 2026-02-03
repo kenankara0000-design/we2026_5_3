@@ -44,13 +44,7 @@ class TourDataProcessor {
             if (istFaellig) {
                 val fälligeKunden = kunden.filter { customer ->
                     val faelligAm = filter.customerFaelligAm(customer, liste, viewDateStart)
-                    val customerImUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && 
-                                           faelligAm in customer.urlaubVon..customer.urlaubBis
-                    val listeImUrlaub = liste?.let { 
-                        it.urlaubVon > 0 && it.urlaubBis > 0 && faelligAm in it.urlaubVon..it.urlaubBis 
-                    } ?: false
-                    if (customerImUrlaub || listeImUrlaub) return@filter false
-                    
+                    // Kunden mit Urlaub weiterhin anzeigen (mit U-Badge im Tourenplaner)
                     val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
                         categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
                     val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
@@ -159,12 +153,8 @@ class TourDataProcessor {
                 }
             }
             
-            // Nicht erledigte Kunden: Prüfe ob überfällig oder normal fällig
+            // Nicht erledigte Kunden: Prüfe ob überfällig oder normal fällig (Kunden mit Urlaub weiterhin anzeigen mit U-Badge)
             val faelligAm = filter.customerFaelligAm(customer, null, viewDateStart)
-            val faelligAmImUrlaub = customer.urlaubVon > 0 && customer.urlaubBis > 0 && 
-                                   faelligAm in customer.urlaubVon..customer.urlaubBis
-            if (faelligAmImUrlaub) return@filter false
-            
             val isOverdue = filter.istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)
             if (isOverdue) {
                 return@filter true

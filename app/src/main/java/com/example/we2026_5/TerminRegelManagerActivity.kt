@@ -142,6 +142,11 @@ class TerminRegelManagerActivity : AppCompatActivity() {
                     return@launch
                 }
 
+                if (customer.intervalle.any { it.terminRegelId == regel.id }) {
+                    Toast.makeText(this@TerminRegelManagerActivity, getString(R.string.toast_regel_bereits_zugewiesen), Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
                 val hatBereitsIntervalle = customer.intervalle.isNotEmpty()
 
                 if (hatBereitsIntervalle) {

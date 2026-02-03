@@ -84,8 +84,22 @@
     <string name="dialog_verschieben_message">Wie möchten Sie vorgehen?</string>
     <string name="dialog_verschieben_single">Nur diesen Termin</string>
     <string name="dialog_verschieben_all">Alle zukünftigen Termine</string>
+    <string name="dialog_verschieben_choose_a_or_l">A oder L verschieben?</string>
+    <string name="dialog_verschieben_abholung">Abholung (A) verschieben</string>
+    <string name="dialog_verschieben_auslieferung">Auslieferung (L) verschieben</string>
     <string name="dialog_urlaub_von">Urlaub von</string>
     <string name="dialog_urlaub_bis">Urlaub bis</string>
+    <string name="label_urlaub">Urlaub</string>
+    <string name="label_reports">Berichte</string>
+    <string name="dialog_urlaub_title">Urlaub</string>
+    <string name="dialog_urlaub_current">Aktueller Urlaub: %1$s – %2$s</string>
+    <string name="dialog_urlaub_new">Urlaub eintragen</string>
+    <string name="dialog_urlaub_aendern">Urlaub ändern</string>
+    <string name="dialog_urlaub_delete">Urlaub löschen</string>
+    <string name="dialog_urlaub_delete_entry">Eintrag löschen</string>
+    <string name="dialog_urlaub_no_urlaub">Kein Urlaub eingetragen</string>
+    <string name="dialog_urlaub_add_new">+ Neuer Urlaub</string>
+    <string name="dialog_urlaub_new_hint">Tippen Sie auf den Button, um einen neuen Urlaubseintrag anzulegen.</string>
     <string name="dialog_rueckgaengig_title">Rückgängig machen</string>
     <string name="dialog_rueckgaengig_message">Möchten Sie die Erledigung wirklich rückgängig machen?</string>
     <string name="dialog_termin_loeschen_title">Termin löschen</string>
@@ -138,6 +152,8 @@
     <string name="main_btn_listen_desc">Kunden Listen</string>
     <string name="main_btn_statistiken_desc">Statistiken anzeigen</string>
     <string name="main_btn_termin_regeln_desc">Termin-Regeln verwalten</string>
+    <string name="main_btn_berichte">📄 Berichte</string>
+    <string name="main_btn_berichte_desc">Berichte anzeigen</string>
 
     <!-- Offline / Sync -->
     <string name="offline_sync_hinweis">Änderungen werden beim nächsten Online-Zustand synchronisiert.</string>
@@ -260,6 +276,12 @@
     <string name="label_auslieferung">Auslieferung:</string>
     <string name="label_verwendungen">Verwendungen:</string>
     <string name="label_used_count_format">%1$dx verwendet</string>
+    <string name="toast_regel_bereits_zugewiesen">Diese Regel ist dem Kunden bereits zugewiesen.</string>
+    <string name="termin_regel_card_info_format">A: %1$s · L: %2$s · %3$s</string>
+    <string name="label_wiederholen">Wiederholen:</string>
+    <string name="termin_regel_ja">Ja</string>
+    <string name="termin_regel_nein">Nein</string>
+    <string name="termin_regel_intervall_tage">%1$d Tage</string>
     <string name="label_phone_with_number">📞 %1$s</string>
     <string name="label_notes_with_prefix">📝 %1$s</string>
     <string name="sheet_title_format">%1$s – %2$s</string>
@@ -349,6 +371,7 @@
     <string name="next_tour_none">Nächste Tour: Kein Termin</string>
     <string name="status_erledigt">ERLEDIGT</string>
     <string name="status_verschoben">VERSCHOBEN</string>
+    <string name="badge_verschoben">Verschoben</string>
     <string name="status_badge_overdue">Überfällig</string>
     <string name="status_badge_a_plus_l">A+L heute</string>
     <string name="status_badge_a">A heute</string>
@@ -363,6 +386,7 @@
     <string name="status_badge_a_plus_l_short">AL</string>
     <string name="status_badge_a_short">A</string>
     <string name="status_badge_l_short">L</string>
+    <string name="status_badge_u_short">U</string>
     <string name="label_section_count_format">%1$d/%2$d</string>
     <string name="overdue_date_format">Überfällig: %1$s</string>
     <string name="list_art_format">Liste-Art: %1$s</string>
@@ -437,4 +461,5 @@
     <string name="item_section_count_sample">(5)</string>
     <string name="item_expand_plus">+</string>
     <string name="item_date_placeholder">25.01.2026</string>
+    <string name="content_desc_edit_urlaub">Beschreibung für den Urlaubs-Bearbeitungs-Button</string>
 </resources>

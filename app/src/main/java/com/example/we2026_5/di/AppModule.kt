@@ -15,6 +15,7 @@ import com.example.we2026_5.ui.listebearbeiten.ListeBearbeitenViewModel
 import com.example.we2026_5.ui.mapview.MapViewViewModel
 import com.example.we2026_5.ui.detail.CustomerDetailViewModel
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
+import com.example.we2026_5.ui.urlaub.UrlaubViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
@@ -48,5 +49,6 @@ val appModule = module {
     viewModel { KundenListenViewModel(get(), get<CustomerRepository>()) }
     viewModel { ListeBearbeitenViewModel(get(), get<CustomerRepository>()) }
     viewModel { MapViewViewModel(get<CustomerRepository>(), get<KundenListeRepository>()) }
-    viewModel { CustomerDetailViewModel(get()) }
+    viewModel { CustomerDetailViewModel(get(), get()) }
+    viewModel { (customerId: String) -> UrlaubViewModel(get(), customerId) }
 }

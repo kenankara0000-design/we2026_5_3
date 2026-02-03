@@ -14,6 +14,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import com.example.we2026_5.adapter.CustomerButtonVisibilityHelper
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.TerminRegelRepository
+import com.example.we2026_5.ui.tourplanner.CustomerOverviewPayload
 import com.example.we2026_5.ui.tourplanner.ErledigungSheetArgs
 import com.example.we2026_5.ui.tourplanner.TourPlannerScreen
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
@@ -39,9 +40,7 @@ class TourPlannerActivity : AppCompatActivity() {
 
     private var pressedHeaderButton by mutableStateOf<String?>(null)
     private var erledigungSheet by mutableStateOf<ErledigungSheetArgs?>(null)
-    private var overviewCustomer by mutableStateOf<Customer?>(null)
-    /** ID des Kunden für „Details öffnen“ – beim Tippen gesetzt, damit die richtige ID übergeben wird. */
-    private var overviewCustomerId by mutableStateOf<String?>(null)
+    private var overviewPayload by mutableStateOf<CustomerOverviewPayload?>(null)
     private var overviewRegelNamen by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,7 +61,7 @@ class TourPlannerActivity : AppCompatActivity() {
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis)
 
-        networkMonitor = NetworkMonitor(this)
+        networkMonitor = NetworkMonitor(this, lifecycleScope)
         networkMonitor.startMonitoring()
 
         setContent {
@@ -96,6 +95,7 @@ class TourPlannerActivity : AppCompatActivity() {
                 coordinator.dateUtils.getStartOfDay(ts) == coordinator.dateUtils.getStartOfDay(System.currentTimeMillis())
             TourPlannerScreen(
                 tourItems = tourItems,
+                viewDateMillis = ts,
                 dateText = dateText,
                 isToday = isToday,
                 isLoading = isLoading,
@@ -120,10 +120,10 @@ class TourPlannerActivity : AppCompatActivity() {
                 isSectionExpanded = { viewModel.isSectionExpanded(it) },
                 getStatusBadgeText = { getStatusBadgeText(it) },
                 onToggleSection = { viewModel.toggleSection(it) },
-                onCustomerClick = { customer ->
-                    overviewCustomer = customer
-                    overviewCustomerId = customer.id
+                onCustomerClick = { payload ->
+                    overviewPayload = payload
                     overviewRegelNamen = null
+                    val customer = payload.customer
                     lifecycleScope.launch {
                         val namen = withContext(Dispatchers.IO) {
                             customer.intervalle
@@ -155,23 +155,20 @@ class TourPlannerActivity : AppCompatActivity() {
                 onAuslieferung = { coordinator.callbackHandler.handleAuslieferungPublic(it) },
                 onKw = { coordinator.callbackHandler.handleKwPublic(it) },
                 onRueckgaengig = { coordinator.callbackHandler.handleRueckgaengigPublic(it) },
-                onVerschieben = { coordinator.sheetDialogHelper.showVerschiebenDialog(it) },
-                onUrlaub = { coordinator.sheetDialogHelper.showUrlaubDialog(it) },
+                onVerschieben = { coordinator.showVerschiebenDialog(it) },
                 getNaechstesTourDatum = { coordinator.dateUtils.getNaechstesTourDatum(it) },
                 showToast = { msg -> Toast.makeText(this@TourPlannerActivity, msg, Toast.LENGTH_LONG).show() },
                 onTelefonClick = { tel -> startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$tel"))) },
-                overviewCustomer = overviewCustomer,
+                overviewPayload = overviewPayload,
                 overviewRegelNamen = overviewRegelNamen,
-                onDismissOverview = { overviewCustomer = null; overviewCustomerId = null; overviewRegelNamen = null },
+                onDismissOverview = { overviewPayload = null; overviewRegelNamen = null },
                 onOpenDetails = { customerId ->
-                    overviewCustomer = null
-                    overviewCustomerId = null
+                    overviewPayload = null
                     overviewRegelNamen = null
                     if (customerId.isNotBlank()) {
                         startActivity(Intent(this@TourPlannerActivity, CustomerDetailActivity::class.java).apply { putExtra("CUSTOMER_ID", customerId) })
                     }
-                },
-                overviewCustomerIdForDetails = overviewCustomerId
+                }
             )
         }
 

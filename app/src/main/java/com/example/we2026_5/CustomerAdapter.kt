@@ -51,8 +51,8 @@ class CustomerAdapter(
     private val dialogHelper: CustomerDialogHelper by lazy {
         CustomerDialogHelper(
             context = context,
-            onVerschieben = { customer, newDate, alleVerschieben ->
-                this@CustomerAdapter.callbacks.onVerschieben?.invoke(customer, newDate, alleVerschieben)
+            onVerschieben = { customer, newDate, alleVerschieben, typ ->
+                this@CustomerAdapter.callbacks.onVerschieben?.invoke(customer, newDate, alleVerschieben, typ)
             },
             onUrlaub = { customer, von, bis ->
                 this@CustomerAdapter.callbacks.onUrlaub?.invoke(customer, von, bis)

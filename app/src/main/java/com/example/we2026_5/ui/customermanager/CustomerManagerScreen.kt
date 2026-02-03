@@ -27,12 +27,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import com.example.we2026_5.util.ShowErrorSnackbar
+import com.example.we2026_5.util.rememberSnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -79,10 +83,18 @@ fun CustomerManagerScreen(
     onRetry: () -> Unit
 ) {
     var localSearch by remember { mutableStateOf(searchQuery) }
+    val snackbarHostState = rememberSnackbarHostState()
+    
     LaunchedEffect(localSearch) {
         kotlinx.coroutines.delay(SEARCH_DEBOUNCE_MS.toLong())
         onSearchQueryChange(localSearch)
     }
+    
+    // Zeige Fehler als Snackbar statt Toast
+    ShowErrorSnackbar(
+        errorMessage = errorMessage,
+        snackbarHostState = snackbarHostState
+    )
 
     val primaryBlue = colorResource(R.color.primary_blue)
     val primaryBlueDark = colorResource(R.color.primary_blue_dark)
@@ -200,6 +212,9 @@ fun CustomerManagerScreen(
                     }
                 }
             }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         }
     ) { paddingValues ->
         Column(
@@ -229,24 +244,7 @@ fun CustomerManagerScreen(
                             Text(stringResource(R.string.stat_loading), color = textSecondary)
                         }
                     }
-                    errorMessage != null -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("⚠️", fontSize = 48.sp)
-                                Spacer(Modifier.height(16.dp))
-                                Text(stringResource(R.string.tour_error_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = statusWarning)
-                                Spacer(Modifier.height(8.dp))
-                                Text(errorMessage, fontSize = 14.sp, color = textSecondary)
-                                Spacer(Modifier.height(16.dp))
-                                androidx.compose.material3.Button(onClick = onRetry) {
-                                    Text(stringResource(R.string.tour_retry))
-                                }
-                            }
-                        }
-                    }
+                    // Fehler werden jetzt als Snackbar angezeigt (siehe ShowErrorSnackbar oben)
                     customers.isEmpty() -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),

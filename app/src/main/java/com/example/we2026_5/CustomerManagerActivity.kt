@@ -13,13 +13,12 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.lifecycleScope
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.ui.customermanager.CustomerManagerScreen
 import com.example.we2026_5.ui.customermanager.CustomerManagerViewModel
 import com.example.we2026_5.Customer
 import com.example.we2026_5.customermanager.CustomerExportHelper
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -50,7 +49,7 @@ class CustomerManagerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        networkMonitor = NetworkMonitor(this)
+        networkMonitor = NetworkMonitor(this, lifecycleScope)
         networkMonitor.startMonitoring()
         exportHelper = CustomerExportHelper(this, repository)
 
@@ -95,7 +94,7 @@ class CustomerManagerActivity : AppCompatActivity() {
                         .setTitle(getString(R.string.dialog_mark_multiple_done_title))
                         .setMessage(getString(R.string.dialog_mark_multiple_done_message, selectedCustomers.size))
                         .setPositiveButton(getString(R.string.dialog_yes)) { _, _ ->
-                            CoroutineScope(Dispatchers.Main).launch {
+                            lifecycleScope.launch {
                                 selectedCustomers.forEach { customer ->
                                     repository.updateCustomer(customer.id, mapOf(
                                         "abholungErfolgt" to true,

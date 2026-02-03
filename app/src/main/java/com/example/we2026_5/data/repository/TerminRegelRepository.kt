@@ -150,4 +150,24 @@ class TerminRegelRepository(
             false
         }
     }
+
+    /**
+     * Verringert die Verwendungsanzahl einer Regel (z. B. wenn Kunde die Regel entfernt).
+     * Geht nicht unter 0.
+     */
+    suspend fun decrementVerwendungsanzahl(regelId: String): Boolean {
+        if (regelId.isBlank()) return true
+        return try {
+            val regel = getRegelById(regelId)
+            if (regel != null) {
+                val neu = (regel.verwendungsanzahl - 1).coerceAtLeast(0)
+                updateRegel(regelId, mapOf("verwendungsanzahl" to neu))
+            } else {
+                true
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("TerminRegelRepository", "Error decrementing verwendungsanzahl", e)
+            false
+        }
+    }
 }

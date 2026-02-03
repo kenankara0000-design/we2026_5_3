@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.lifecycleScope
 import com.example.we2026_5.ui.main.MainScreen
 import com.example.we2026_5.ui.main.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -27,7 +28,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        networkMonitor = NetworkMonitor(this)
+        networkMonitor = NetworkMonitor(this, lifecycleScope)
         networkMonitor.startMonitoring()
 
         window.decorView.setBackgroundColor(ContextCompat.getColor(this, R.color.background_light))

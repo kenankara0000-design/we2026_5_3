@@ -94,8 +94,8 @@ class CustomerExportHelper(
                 customers.forEach { customer ->
                     val status = when {
                         customer.abholungErfolgt && customer.auslieferungErfolgt -> "Erledigt"
-                        customer.verschobenAufDatum > 0 -> "Verschoben"
-                        customer.urlaubVon > 0 && customer.urlaubBis > 0 -> "Urlaub"
+                        customer.verschobeneTermine.isNotEmpty() -> "Verschoben"
+                        com.example.we2026_5.util.TerminFilterUtils.getEffectiveUrlaubEintraege(customer).isNotEmpty() -> "Urlaub"
                         else -> "Offen"
                     }
                     

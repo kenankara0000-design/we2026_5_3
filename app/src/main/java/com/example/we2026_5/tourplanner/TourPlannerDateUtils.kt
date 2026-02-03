@@ -71,10 +71,8 @@ class TourPlannerDateUtils(
             }
             
             // ALTE STRUKTUR: Rückwärtskompatibilität für Kunden ohne Intervalle
-            if (customer.verschobenAufDatum > 0) {
-                val verschobenStart = getStartOfDay(customer.verschobenAufDatum)
-                if (verschobenStart == viewDateStart) return customer.verschobenAufDatum
-            }
+            val verschobenAmViewDate = customer.verschobeneTermine.firstOrNull { getStartOfDay(it.verschobenAufDatum) == viewDateStart }
+            if (verschobenAmViewDate != null) return verschobenAmViewDate.verschobenAufDatum
             val abholungStart = getStartOfDay(customer.abholungDatum)
             if (abholungStart == viewDateStart) return customer.abholungDatum
             // Für wiederholende Termine
@@ -151,10 +149,8 @@ class TourPlannerDateUtils(
             }
             
             // ALTE STRUKTUR: Rückwärtskompatibilität für Kunden ohne Intervalle
-            if (customer.verschobenAufDatum > 0) {
-                val verschobenStart = getStartOfDay(customer.verschobenAufDatum)
-                if (verschobenStart == viewDateStart) return customer.verschobenAufDatum
-            }
+            val verschobenAmViewDateAusl = customer.verschobeneTermine.firstOrNull { getStartOfDay(it.verschobenAufDatum) == viewDateStart }
+            if (verschobenAmViewDateAusl != null) return verschobenAmViewDateAusl.verschobenAufDatum
             val auslieferungStart = getStartOfDay(customer.auslieferungDatum)
             if (auslieferungStart == viewDateStart) return customer.auslieferungDatum
             // Für wiederholende Termine
@@ -238,25 +234,23 @@ class TourPlannerDateUtils(
     /**
      * Nächstes Tour-Datum für einen Kunden (für "Nächste Tour" auf der Karte).
      * Berücksichtigt Listen-Kunden: Termin-Regel der Liste wird verwendet.
+     * Überspringt Termine während des Urlaubs – zeigt erst das Datum nach dem Urlaub.
      */
     fun getNaechstesTourDatum(customer: Customer): Long {
         val heuteStart = getStartOfDay(System.currentTimeMillis())
-        if (customer.listeId.isNotBlank()) {
-            val liste = getListen().find { it.id == customer.listeId }
-            if (liste != null) {
-                val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                    customer = customer,
-                    liste = liste,
-                    startDatum = heuteStart,
-                    tageVoraus = 365
-                )
-                val naechstes = termine.firstOrNull {
-                    it.datum >= heuteStart &&
-                    !TerminFilterUtils.istTerminGeloescht(it.datum, customer.geloeschteTermine + liste.geloeschteTermine)
-                }
-                return naechstes?.datum ?: 0L
-            }
+        val liste = if (customer.listeId.isNotBlank()) getListen().find { it.id == customer.listeId } else null
+        val geloeschte = if (liste != null) customer.geloeschteTermine + liste.geloeschteTermine else customer.geloeschteTermine
+        val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+            customer = customer,
+            liste = liste,
+            startDatum = heuteStart,
+            tageVoraus = 365
+        )
+        val naechstes = termine.firstOrNull {
+            it.datum >= heuteStart &&
+            !TerminFilterUtils.istTerminGeloescht(it.datum, geloeschte) &&
+            !TerminFilterUtils.istTerminInUrlaubEintraege(it.datum, customer)
         }
-        return customer.getFaelligAm()
+        return naechstes?.datum ?: 0L
     }
 }

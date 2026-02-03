@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
@@ -77,7 +78,7 @@ fun CustomerDetailScreen(
     isUploading: Boolean = false,
     onBack: () -> Unit,
     onEdit: () -> Unit,
-    onSave: (Map<String, Any>) -> Unit,
+    onSave: (Map<String, Any>, List<CustomerIntervall>) -> Unit,
     onDelete: () -> Unit,
     onTerminAnlegen: () -> Unit,
     onTakePhoto: () -> Unit,
@@ -88,7 +89,8 @@ fun CustomerDetailScreen(
     onDeleteIntervall: ((Int) -> Unit)? = null,
     onRemoveRegel: ((String) -> Unit)? = null,
     regelNameByRegelId: Map<String, String> = emptyMap(),
-    onRegelClick: (String) -> Unit = {}
+    onRegelClick: (String) -> Unit = {},
+    onUrlaubStartActivity: (String) -> Unit = {} // Callback to start UrlaubActivity
 ) {
     val context = LocalContext.current
     val primaryBlue = colorResource(R.color.primary_blue)
@@ -230,8 +232,23 @@ fun CustomerDetailScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 if (!isInEditMode) {
-                    androidx.compose.material3.Button(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.label_edit))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(FieldSpacing)
+                    ) {
+                        androidx.compose.material3.Button(
+                            onClick = { customer.id?.let { onUrlaubStartActivity(it) } },
+                            modifier = Modifier.weight(1f),
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = colorResource(R.color.button_urlaub))
+                        ) {
+                            Text(stringResource(R.string.label_urlaub))
+                        }
+                        androidx.compose.material3.Button(
+                            onClick = onEdit,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(stringResource(R.string.label_edit))
+                        }
                     }
                     if (isUploading) {
                         Spacer(Modifier.height(8.dp))
@@ -367,7 +384,15 @@ fun CustomerDetailScreen(
                             }
                         }
                     }
-                    
+                    Spacer(Modifier.height(FieldSpacing))
+                    Text(stringResource(R.string.label_urlaub), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    androidx.compose.material3.Button(
+                        onClick = { customer?.id?.let { onUrlaubStartActivity(it) } },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = colorResource(R.color.button_urlaub))
+                    ) {
+                        Text(stringResource(R.string.label_urlaub))
+                    }
                     Spacer(Modifier.height(SectionSpacing))
                     if (isUploading) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
@@ -382,25 +407,29 @@ fun CustomerDetailScreen(
                                 if (name.isEmpty()) nameError = validationNameMissing
                                 else {
                                     nameError = null
-                                    onSave(mapOf(
-                                        "name" to name,
-                                        "adresse" to editAdresse.trim(),
-                                        "telefon" to editTelefon.trim(),
-                                        "notizen" to editNotizen.trim(),
-                                        "kundenArt" to editKundenArt,
-                                        "wochentag" to editWochentag,
-                                        "intervalle" to editIntervalle.map {
-                                            mapOf(
-                                                "id" to it.id,
-                                                "abholungDatum" to it.abholungDatum,
-                                                "auslieferungDatum" to it.auslieferungDatum,
-                                                "wiederholen" to it.wiederholen,
-                                                "intervallTage" to it.intervallTage,
-                                                "intervallAnzahl" to it.intervallAnzahl,
-                                                "erstelltAm" to it.erstelltAm
-                                            )
-                                        }
-                                    ))
+                                    onSave(
+                                        mapOf(
+                                            "name" to name,
+                                            "adresse" to editAdresse.trim(),
+                                            "telefon" to editTelefon.trim(),
+                                            "notizen" to editNotizen.trim(),
+                                            "kundenArt" to editKundenArt,
+                                            "wochentag" to editWochentag,
+                                            "intervalle" to editIntervalle.map {
+                                                mapOf(
+                                                    "id" to it.id,
+                                                    "abholungDatum" to it.abholungDatum,
+                                                    "auslieferungDatum" to it.auslieferungDatum,
+                                                    "wiederholen" to it.wiederholen,
+                                                    "intervallTage" to it.intervallTage,
+                                                    "intervallAnzahl" to it.intervallAnzahl,
+                                                    "erstelltAm" to it.erstelltAm,
+                                                    "terminRegelId" to it.terminRegelId
+                                                )
+                                            }
+                                        ),
+                                        editIntervalle
+                                    )
                                 }
                             },
                             modifier = Modifier.weight(1f),
@@ -491,7 +520,7 @@ fun CustomerDetailScreen(
 }
 
 @Composable
-private fun RegelNameRow(
+fun RegelNameRow(
     regelName: String,
     isClickable: Boolean,
     primaryBlue: Color,
@@ -532,7 +561,7 @@ private fun RegelNameRow(
 }
 
 @Composable
-private fun CustomerIntervallRow(
+fun CustomerIntervallRow(
     intervall: CustomerIntervall,
     isEditMode: Boolean,
     onAbholungClick: () -> Unit,

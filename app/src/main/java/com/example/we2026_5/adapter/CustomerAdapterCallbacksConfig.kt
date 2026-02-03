@@ -2,6 +2,7 @@ package com.example.we2026_5.adapter
 
 import com.example.we2026_5.Customer
 import com.example.we2026_5.SectionType
+import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.tourplanner.ErledigungSheetState
 import com.example.we2026_5.util.TerminInfo
 
@@ -15,7 +16,7 @@ data class CustomerAdapterCallbacksConfig(
     val onAuslieferung: ((Customer) -> Unit)? = null,
     val onKw: ((Customer) -> Unit)? = null,
     val onResetTourCycle: ((String) -> Unit)? = null,
-    val onVerschieben: ((Customer, Long, Boolean) -> Unit)? = null,
+    val onVerschieben: ((Customer, Long, Boolean, TerminTyp?) -> Unit)? = null,
     val onUrlaub: ((Customer, Long, Long) -> Unit)? = null,
     val onRueckgaengig: ((Customer) -> Unit)? = null,
     val onBulkMarkDone: ((List<Customer>) -> Unit)? = null,

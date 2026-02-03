@@ -1,8 +1,16 @@
 package com.example.we2026_5
 
+import com.example.we2026_5.util.TerminFilterUtils
+import com.example.we2026_5.util.TerminBerechnungUtils
 import com.google.firebase.database.Exclude
 import com.google.firebase.firestore.IgnoreExtraProperties
 import java.util.concurrent.TimeUnit
+
+/** Ein Urlaubseintrag (Von–Bis). Mehrere pro Kunde möglich. */
+data class UrlaubEintrag(
+    val von: Long = 0L,
+    val bis: Long = 0L
+)
 
 @IgnoreExtraProperties
 data class Customer(
@@ -40,6 +48,8 @@ data class Customer(
     val keinerWäscheErledigtAm: Long = 0,
     val urlaubVon: Long = 0,
     val urlaubBis: Long = 0,
+    /** Mehrere Urlaubseinträge pro Kunde. Falls leer, zählt weiterhin urlaubVon/urlaubBis. */
+    val urlaubEintraege: List<UrlaubEintrag> = emptyList(),
     
     // Erledigungsdaten und Zeitstempel
     val abholungErledigtAm: Long = 0, // Datum wann Abholung erledigt wurde (nur Datum, ohne Uhrzeit)
@@ -48,9 +58,8 @@ data class Customer(
     val auslieferungZeitstempel: Long = 0, // Zeitstempel mit Uhrzeit wann Auslieferung erledigt wurde
     val faelligAmDatum: Long = 0, // Fälligkeitsdatum (für überfällige Kunden: speichert das Datum, an dem der Termin fällig war)
     
-    // Verschieben-Logik - ERWEITERT für einzelne Termine
-    @Deprecated("Verwende verschobeneTermine für einzelne Termine. Wird für Migration beibehalten.")
-    val verschobenAufDatum: Long = 0, // Alte Logik: Verschiebt alle Termine
+    // Verschieben-Logik - ERWEITERT für einzelne Termine (@Exclude: wird manuell in Repository gelesen/geschrieben, vermeidet Enum-Crash bei alter DB)
+    @Exclude
     val verschobeneTermine: List<VerschobenerTermin> = emptyList(), // NEUE Logik: Einzelne Termine verschieben
     
     val fotoUrls: List<String> = listOf(),
@@ -87,12 +96,31 @@ data class Customer(
         }
         
         // ALTE STRUKTUR: Rückwärtskompatibilität
-        if (!wiederholen) {
-            // Einmaliger Termin: Abholungsdatum verwenden
-            return if (verschobenAufDatum > 0) verschobenAufDatum else abholungDatum
+        // Diese Logik sollte idealerweise migriert und dann entfernt werden.
+        // If there are no new intervals, we fall back to the old single abholungDatum/wiederholen logic if present.
+        if (abholungDatum > 0 || auslieferungDatum > 0) {
+            val heuteForLegacy = System.currentTimeMillis() // 'heute' für Legacy-Code
+            val altesIntervall = CustomerIntervall(
+                id = "legacy",
+                abholungDatum = abholungDatum,
+                auslieferungDatum = auslieferungDatum,
+                wiederholen = wiederholen,
+                intervallTage = intervallTage,
+                intervallAnzahl = 0 // Alte Struktur hat keine Anzahl
+            )
+            val termine = TerminBerechnungUtils.berechneTermineFuerIntervall(
+                intervall = altesIntervall,
+                startDatum = heuteForLegacy,
+                tageVoraus = 365,
+                geloeschteTermine = geloeschteTermine,
+                verschobeneTermine = verschobeneTermine
+            )
+            val naechstesTermin = termine.firstOrNull { 
+                it.datum >= TerminBerechnungUtils.getStartOfDay(heuteForLegacy) &&
+                !TerminFilterUtils.istTerminGeloescht(it.datum, geloeschteTermine)
+            }
+            return naechstesTermin?.datum ?: 0L
         }
-        // Wiederholender Termin: Alte Logik
-        if (verschobenAufDatum > 0) return verschobenAufDatum
-        return letzterTermin + TimeUnit.DAYS.toMillis(intervallTage.toLong())
-    }
+
+        return 0L    }
 }

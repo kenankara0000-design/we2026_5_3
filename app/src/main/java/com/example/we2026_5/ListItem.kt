@@ -5,7 +5,14 @@ package com.example.we2026_5
  * Ausgelagert aus CustomerAdapter.kt für klare Trennung von UI-Modellen und Adapter-Logik.
  */
 sealed class ListItem {
-    data class CustomerItem(val customer: Customer, val isOverdue: Boolean = false) : ListItem()
+    data class CustomerItem(
+        val customer: Customer,
+        val isOverdue: Boolean = false,
+        val isVerschobenAmFaelligkeitstag: Boolean = false,
+        val verschobenInfo: String? = null,
+        /** Am neuen Tag: "Verschoben von [Datum]" */
+        val verschobenVonInfo: String? = null
+    ) : ListItem()
     data class SectionHeader(
         val title: String,
         val count: Int,

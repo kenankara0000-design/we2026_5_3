@@ -80,13 +80,27 @@ class CustomerViewHolderBinder(
             holder.binding.buttonContainer.visibility = View.GONE
             holder.binding.btnAktionen.visibility = View.VISIBLE
             val state = buttonVisibilityHelper.getSheetState(customer)
+            val istImUrlaubAmTag = TerminFilterUtils.istTerminInUrlaubEintraege(displayedDateMillis!!, customer)
+            val cardView = holder.itemView as? CardView
+            if (istImUrlaubAmTag) {
+                cardView?.setCardBackgroundColor(ContextCompat.getColor(context, R.color.customer_urlaub_bg))
+            }
             if (state != null) {
-                holder.binding.tvStatusBadge.text = state.statusBadgeText
-                holder.binding.tvStatusBadge.visibility = if (state.statusBadgeText.isNotEmpty()) View.VISIBLE else View.GONE
+                holder.binding.tvStatusBadge.text = if (istImUrlaubAmTag) context.getString(R.string.label_urlaub) else state.statusBadgeText
+                holder.binding.tvStatusBadge.visibility = View.VISIBLE
                 holder.binding.tvStatusBadge.setBackgroundResource(
-                    if (state.isOverdueBadge) R.drawable.status_badge_overdue else R.drawable.status_badge_today
+                    when {
+                        istImUrlaubAmTag -> R.drawable.status_badge_urlaub
+                        state.isOverdueBadge -> R.drawable.status_badge_overdue
+                        else -> R.drawable.status_badge_today
+                    }
                 )
                 holder.binding.btnAktionen.setOnClickListener { callbacksConfig.onAktionenClick?.invoke(customer, state) }
+            } else if (istImUrlaubAmTag) {
+                holder.binding.tvStatusBadge.text = context.getString(R.string.label_urlaub)
+                holder.binding.tvStatusBadge.visibility = View.VISIBLE
+                holder.binding.tvStatusBadge.setBackgroundResource(R.drawable.status_badge_urlaub)
+                holder.binding.btnAktionen.setOnClickListener(null)
             } else {
                 holder.binding.tvStatusBadge.visibility = View.GONE
                 holder.binding.btnAktionen.setOnClickListener(null)
@@ -219,11 +233,7 @@ class CustomerViewHolderBinder(
                 if (isMultiSelectMode) {
                     toggleCustomerSelection(customer.id, holder)
                 } else {
-                    val terminDatum = if (customer.verschobenAufDatum > 0) {
-                        customer.verschobenAufDatum
-                    } else {
-                        customer.getFaelligAm()
-                    }
+                    val terminDatum = customer.verschobeneTermine.firstOrNull { it.originalDatum == customer.getFaelligAm() }?.verschobenAufDatum ?: customer.getFaelligAm()
                     callbacksConfig.onTerminClick?.invoke(customer, terminDatum)
                 }
             }
@@ -384,6 +394,7 @@ class CustomerViewHolderBinder(
         }
         
         val showAsOverdue = istUeberfaellig && !sollAlsErledigtAnzeigen
+        val istImUrlaubAmTag = displayedDateMillis != null && TerminFilterUtils.istTerminInUrlaubEintraege(displayedDateMillis, customer)
         val cardView = holder.itemView as? androidx.cardview.widget.CardView
         
         when {
@@ -395,13 +406,20 @@ class CustomerViewHolderBinder(
                 holder.binding.itemContainer.alpha = 0.8f
                 cardView?.setCardBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.customer_done_bg))
             }
+            istImUrlaubAmTag -> {
+                holder.binding.tvStatusLabel.text = context.getString(R.string.label_urlaub)
+                holder.binding.tvStatusLabel.setBackgroundResource(R.drawable.status_badge_urlaub)
+                holder.binding.tvStatusLabel.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white))
+                holder.binding.tvStatusLabel.visibility = View.VISIBLE
+                cardView?.setCardBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.customer_urlaub_bg))
+            }
             showAsOverdue -> {
                 holder.binding.tvStatusLabel.visibility = View.GONE
                 holder.binding.tvItemName.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.status_overdue))
                 holder.binding.tvItemName.setTypeface(null, Typeface.BOLD)
                 cardView?.setCardBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.customer_overdue_bg))
             }
-            customer.verschobenAufDatum > 0 -> {
+            customer.verschobeneTermine.isNotEmpty() -> {
                 holder.binding.tvStatusLabel.text = context.getString(R.string.status_verschoben)
                 holder.binding.tvStatusLabel.setBackgroundResource(R.drawable.status_badge_verschoben)
                 holder.binding.tvStatusLabel.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white))

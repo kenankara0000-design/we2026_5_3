@@ -1,5 +1,7 @@
 package com.example.we2026_5.util
 
+import com.example.we2026_5.Customer
+import com.example.we2026_5.UrlaubEintrag
 import com.example.we2026_5.VerschobenerTermin
 
 /**
@@ -33,11 +35,33 @@ object TerminFilterUtils {
     }
     
     /**
-     * Prüft ob ein Termin im Urlaub liegt
+     * Prüft ob ein Termin im Urlaub liegt (ein Zeitraum)
      */
     fun istTerminImUrlaub(terminDatum: Long, urlaubVon: Long, urlaubBis: Long): Boolean {
         if (urlaubVon == 0L || urlaubBis == 0L) return false
         return terminDatum in urlaubVon..urlaubBis
+    }
+
+    /**
+     * Effektive Urlaubseinträge: Liste oder ein Eintrag aus urlaubVon/urlaubBis.
+     */
+    fun getEffectiveUrlaubEintraege(customer: Customer): List<UrlaubEintrag> {
+        return if (customer.urlaubEintraege.isNotEmpty()) customer.urlaubEintraege
+        else if (customer.urlaubVon > 0L && customer.urlaubBis > 0L) listOf(UrlaubEintrag(customer.urlaubVon, customer.urlaubBis))
+        else emptyList()
+    }
+
+    /**
+     * Prüft ob ein Termin in einem der Urlaubseinträge des Kunden liegt.
+     */
+    fun istTerminInUrlaubEintraege(terminDatum: Long, customer: Customer): Boolean {
+        val terminStart = TerminBerechnungUtils.getStartOfDay(terminDatum)
+        for (e in getEffectiveUrlaubEintraege(customer)) {
+            val vonStart = TerminBerechnungUtils.getStartOfDay(e.von)
+            val bisStart = TerminBerechnungUtils.getStartOfDay(e.bis)
+            if (terminStart in vonStart..bisStart) return true
+        }
+        return false
     }
     
     /**

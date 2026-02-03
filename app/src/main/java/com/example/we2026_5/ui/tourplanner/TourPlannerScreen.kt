@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,7 +35,10 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import com.example.we2026_5.tourplanner.ErledigungSheetState
@@ -50,6 +55,9 @@ import androidx.activity.compose.BackHandler
 import coil.compose.AsyncImage
 import com.example.we2026_5.Customer
 import com.example.we2026_5.ListItem
+import com.example.we2026_5.util.DateFormatter
+import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.TerminFilterUtils
 import com.example.we2026_5.R
 import com.example.we2026_5.SectionType
 
@@ -60,10 +68,20 @@ data class ErledigungSheetArgs(
     val state: ErledigungSheetState
 )
 
+/** Payload für den Overview-Dialog beim Klick auf eine Kundenkarte. */
+data class CustomerOverviewPayload(
+    val customer: Customer,
+    val urlaubInfo: String?,
+    val verschobenInfo: String?,
+    val verschobenVonInfo: String?,
+    val ueberfaelligInfo: String?
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TourPlannerScreen(
     tourItems: List<ListItem>,
+    viewDateMillis: Long?,
     dateText: String,
     isToday: Boolean, // true wenn angezeigtes Datum heute ist → Heute-Button orange
     isLoading: Boolean,
@@ -81,7 +99,7 @@ fun TourPlannerScreen(
     isSectionExpanded: (SectionType) -> Boolean,
     getStatusBadgeText: (Customer) -> String,
     onToggleSection: (SectionType) -> Unit,
-    onCustomerClick: (Customer) -> Unit,
+    onCustomerClick: (CustomerOverviewPayload) -> Unit,
     onAktionenClick: (Customer) -> Unit,
     onDismissErledigungSheet: () -> Unit,
     onAbholung: (Customer) -> Unit,
@@ -89,23 +107,22 @@ fun TourPlannerScreen(
     onKw: (Customer) -> Unit,
     onRueckgaengig: (Customer) -> Unit,
     onVerschieben: (Customer) -> Unit,
-    onUrlaub: (Customer) -> Unit,
     getNaechstesTourDatum: (Customer) -> Long?,
     showToast: (String) -> Unit,
     onTelefonClick: (String) -> Unit,
-    overviewCustomer: Customer?,
+    overviewPayload: CustomerOverviewPayload?,
     overviewRegelNamen: String?,
-    overviewCustomerIdForDetails: String?,
     onDismissOverview: () -> Unit,
     onOpenDetails: (customerId: String) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
-    if (overviewCustomer != null) {
+    if (overviewPayload != null) {
+        val customer = overviewPayload.customer
         AlertDialog(
             onDismissRequest = onDismissOverview,
-            title = { Text(overviewCustomer.name, fontWeight = FontWeight.Bold) },
+            title = { Text(customer.name, fontWeight = FontWeight.Bold) },
             text = {
                 Column {
                     Text(
@@ -119,11 +136,67 @@ fun TourPlannerScreen(
                         fontSize = 16.sp,
                         color = colorResource(R.color.text_primary)
                     )
+                    if (overviewPayload.urlaubInfo != null && overviewPayload.urlaubInfo.isNotEmpty()) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            stringResource(R.string.label_urlaub),
+                            fontSize = 13.sp,
+                            color = colorResource(R.color.text_secondary)
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = overviewPayload.urlaubInfo,
+                            fontSize = 16.sp,
+                            color = colorResource(R.color.text_primary)
+                        )
+                    }
+                    if (overviewPayload.verschobenInfo != null && overviewPayload.verschobenInfo.isNotEmpty()) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            stringResource(R.string.badge_verschoben),
+                            fontSize = 13.sp,
+                            color = colorResource(R.color.text_secondary)
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = overviewPayload.verschobenInfo,
+                            fontSize = 16.sp,
+                            color = colorResource(R.color.text_primary)
+                        )
+                    }
+                    if (overviewPayload.verschobenVonInfo != null && overviewPayload.verschobenVonInfo.isNotEmpty()) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            stringResource(R.string.badge_verschoben),
+                            fontSize = 13.sp,
+                            color = colorResource(R.color.text_secondary)
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = overviewPayload.verschobenVonInfo,
+                            fontSize = 16.sp,
+                            color = colorResource(R.color.text_primary)
+                        )
+                    }
+                    if (overviewPayload.ueberfaelligInfo != null && overviewPayload.ueberfaelligInfo.isNotEmpty()) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            stringResource(R.string.status_badge_overdue),
+                            fontSize = 13.sp,
+                            color = colorResource(R.color.text_secondary)
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = overviewPayload.ueberfaelligInfo,
+                            fontSize = 16.sp,
+                            color = colorResource(R.color.text_primary)
+                        )
+                    }
                 }
             },
             confirmButton = {
                 Button(onClick = {
-                    val id = overviewCustomerIdForDetails ?: overviewCustomer?.id ?: ""
+                    val id = customer.id
                     if (id.isNotBlank()) {
                         onOpenDetails(id)
                     }
@@ -155,7 +228,6 @@ fun TourPlannerScreen(
                 onKw = onKw,
                 onRueckgaengig = onRueckgaengig,
                 onVerschieben = onVerschieben,
-                onUrlaub = onUrlaub,
                 getNaechstesTourDatum = getNaechstesTourDatum,
                 showToast = showToast,
                 onTelefonClick = onTelefonClick
@@ -346,8 +418,9 @@ fun TourPlannerScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
+                            .background(colorResource(R.color.background_light))
                             .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(tourItems, key = { item ->
                             when (item) {
@@ -379,13 +452,53 @@ fun TourPlannerScreen(
                                     sectionDoneText = sectionDoneText,
                                     onToggle = { }
                                 )
-                                is ListItem.CustomerItem -> TourCustomerRow(
-                                    customer = item.customer,
-                                    isOverdue = item.isOverdue,
-                                    statusBadgeText = getStatusBadgeText(item.customer),
-                                    onCustomerClick = { onCustomerClick(item.customer) },
-                                    onAktionenClick = { onAktionenClick(item.customer) }
-                                )
+                                is ListItem.CustomerItem -> {
+                                    val isInUrlaub = viewDateMillis != null &&
+                                        TerminFilterUtils.istTerminInUrlaubEintraege(viewDateMillis!!, item.customer)
+                                    val viewDate = viewDateMillis ?: 0L
+                                    val urlaubInfo = if (isInUrlaub) {
+                                        val viewStart = TerminBerechnungUtils.getStartOfDay(viewDate)
+                                        val urlaubEntry = TerminFilterUtils.getEffectiveUrlaubEintraege(item.customer)
+                                            .firstOrNull { e ->
+                                                val vonStart = TerminBerechnungUtils.getStartOfDay(e.von)
+                                                val bisStart = TerminBerechnungUtils.getStartOfDay(e.bis)
+                                                viewStart in vonStart..bisStart
+                                            }
+                                        urlaubEntry?.let { "${DateFormatter.formatDate(it.von)} – ${DateFormatter.formatDate(it.bis)}" }
+                                            ?: if (item.customer.urlaubVon > 0 && item.customer.urlaubBis > 0)
+                                                "${DateFormatter.formatDate(item.customer.urlaubVon)} – ${DateFormatter.formatDate(item.customer.urlaubBis)}"
+                                            else ""
+                                    } else null
+                                    val ueberfaelligInfo = if (item.isOverdue && item.customer.faelligAmDatum > 0) {
+                                        val faelligStr = DateFormatter.formatDate(item.customer.faelligAmDatum)
+                                        val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+                                        val faelligStart = TerminBerechnungUtils.getStartOfDay(item.customer.faelligAmDatum)
+                                        val tageUeberfaellig = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(heuteStart - faelligStart).toInt()
+                                        buildString {
+                                            append("Fällig: $faelligStr")
+                                            if (tageUeberfaellig > 0) append(", seit $tageUeberfaellig Tagen überfällig")
+                                        }
+                                    } else null
+                                    val payload = CustomerOverviewPayload(
+                                        customer = item.customer,
+                                        urlaubInfo = urlaubInfo?.takeIf { it.isNotEmpty() },
+                                        verschobenInfo = item.verschobenInfo?.takeIf { it.isNotEmpty() },
+                                        verschobenVonInfo = item.verschobenVonInfo?.takeIf { it.isNotEmpty() },
+                                        ueberfaelligInfo = ueberfaelligInfo
+                                    )
+                                    TourCustomerRow(
+                                        customer = item.customer,
+                                        isOverdue = item.isOverdue,
+                                        isInUrlaub = isInUrlaub,
+                                        isVerschobenAmFaelligkeitstag = item.isVerschobenAmFaelligkeitstag,
+                                        verschobenInfo = item.verschobenInfo,
+                                        verschobenVonInfo = item.verschobenVonInfo,
+                                        statusBadgeText = getStatusBadgeText(item.customer),
+                                        viewDateMillis = viewDate,
+                                        onCustomerClick = { onCustomerClick(payload) },
+                                        onAktionenClick = { onAktionenClick(item.customer) }
+                                    )
+                                }
                             }
                         }
                     }
@@ -472,35 +585,95 @@ private fun ListeHeaderRow(
     }
 }
 
+private val CustomerCardPadding = 16.dp
+private val CustomerNameSp = 19.sp
+private val CustomerBadgeSp = 16.sp
+private val CustomerBadgePaddingH = 8.dp
+private val CustomerBadgePaddingV = 4.dp
+private val CustomerBadgeFixedWidth = 100.dp
+private val CustomerButtonTextSp = 17.sp
+private val CustomerButtonMinHeight = 44.dp
+
+private fun getKundenArtLabel(customer: Customer): String = when {
+    customer.kundenArt == "Gewerblich" -> "G"
+    customer.listeId.isNotEmpty() -> "L"
+    else -> "P"
+}
+
+
 @Composable
 private fun TourCustomerRow(
     customer: Customer,
     isOverdue: Boolean,
+    isInUrlaub: Boolean,
+    isVerschobenAmFaelligkeitstag: Boolean = false,
+    verschobenInfo: String? = null,
+    verschobenVonInfo: String? = null,
     statusBadgeText: String,
+    viewDateMillis: Long = 0L,
     onCustomerClick: () -> Unit,
     onAktionenClick: () -> Unit
 ) {
-    val cardBg = if (isOverdue) colorResource(R.color.customer_overdue_bg) else colorResource(R.color.surface_white)
-    val nameColor = if (isOverdue) colorResource(R.color.status_overdue) else colorResource(R.color.text_primary)
+    val isDeaktiviert = isVerschobenAmFaelligkeitstag
+    val cardBg = when {
+        isOverdue -> colorResource(R.color.section_overdue_bg)
+        isInUrlaub -> colorResource(R.color.customer_urlaub_bg)
+        isVerschobenAmFaelligkeitstag -> colorResource(R.color.surface_light)
+        else -> colorResource(R.color.termin_regel_card_bg)
+    }
+    val nameColor = if (isOverdue) colorResource(R.color.section_overdue_text) else colorResource(R.color.text_primary)
+    val gplColor = when {
+        customer.kundenArt == "Gewerblich" -> colorResource(R.color.button_gewerblich_glossy)
+        customer.listeId.isNotEmpty() -> colorResource(R.color.button_liste_glossy)
+        else -> colorResource(R.color.button_privat_glossy)
+    }
+    // Badge-Text: Überfällig/Urlaub/Verschoben/A/L/AL mit vollem Text
+    val badgeText = when {
+        isOverdue -> stringResource(R.string.status_badge_overdue)
+        isInUrlaub -> stringResource(R.string.label_urlaub)
+        isVerschobenAmFaelligkeitstag -> stringResource(R.string.badge_verschoben)
+        else -> statusBadgeText
+    }
+    val showBadge = isOverdue || isInUrlaub || isVerschobenAmFaelligkeitstag || statusBadgeText.isNotEmpty()
+    val badgeColor = when {
+        isOverdue -> colorResource(R.color.status_overdue)
+        isInUrlaub -> colorResource(R.color.button_urlaub)
+        isVerschobenAmFaelligkeitstag -> colorResource(R.color.status_info)
+        statusBadgeText == "L" -> colorResource(R.color.termin_regel_auslieferung)
+        else -> colorResource(R.color.termin_regel_abholung)
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onCustomerClick),
+            .then(
+                if (isDeaktiviert) Modifier else Modifier.clickable(onClick = onCustomerClick)
+            ),
         colors = CardDefaults.cardColors(containerColor = cardBg),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(CustomerCardPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = getKundenArtLabel(customer),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier
+                            .background(gplColor, RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                    Spacer(Modifier.size(8.dp))
                     if (customer.fotoUrls.isNotEmpty()) {
                         Card(
-                            modifier = Modifier.size(32.dp),
-                            shape = RoundedCornerShape(4.dp)
+                            modifier = Modifier.size(40.dp),
+                            shape = RoundedCornerShape(6.dp)
                         ) {
                             AsyncImage(
                                 model = customer.fotoUrls.first(),
@@ -509,34 +682,85 @@ private fun TourCustomerRow(
                                 contentScale = androidx.compose.ui.layout.ContentScale.Crop
                             )
                         }
-                        Spacer(Modifier.size(8.dp))
+                        Spacer(Modifier.size(10.dp))
                     }
                     Text(
                         text = customer.name,
+                        fontSize = CustomerNameSp,
                         color = nameColor,
-                        fontWeight = if (isOverdue) FontWeight.Bold else FontWeight.Normal
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
-                if (statusBadgeText.isNotEmpty()) {
+                val infoToShow = verschobenInfo ?: verschobenVonInfo
+                if (infoToShow != null && infoToShow.isNotEmpty()) {
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = statusBadgeText,
-                        fontSize = 12.sp,
-                        color = Color.White,
-                        modifier = Modifier
-                            .background(
-                                color = if (isOverdue) colorResource(R.color.status_overdue) else colorResource(R.color.primary_blue),
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                        text = infoToShow,
+                        fontSize = 13.sp,
+                        color = colorResource(R.color.text_secondary)
                     )
                 }
+                if (showBadge) {
+                    Spacer(Modifier.height(8.dp))
+                    val isAlBadge = statusBadgeText == "AL" && !isOverdue && !isInUrlaub && !isVerschobenAmFaelligkeitstag
+                    if (isAlBadge) {
+                        Row(
+                            modifier = Modifier.width(CustomerBadgeFixedWidth),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(colorResource(R.color.termin_regel_abholung), RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp))
+                                    .padding(horizontal = 4.dp, vertical = CustomerBadgePaddingV),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("A", fontSize = CustomerBadgeSp, color = Color.White, fontWeight = FontWeight.SemiBold)
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(colorResource(R.color.termin_regel_auslieferung), RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp))
+                                    .padding(horizontal = 4.dp, vertical = CustomerBadgePaddingV),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("L", fontSize = CustomerBadgeSp, color = Color.White, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    } else {
+                    val baseBadge = Modifier
+                        .width(CustomerBadgeFixedWidth)
+                        .background(color = badgeColor, shape = RoundedCornerShape(6.dp))
+                        .padding(horizontal = CustomerBadgePaddingH, vertical = CustomerBadgePaddingV)
+                    val badgeTextComposable = @Composable {
+                        Text(
+                            text = badgeText,
+                            fontSize = CustomerBadgeSp,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Box(modifier = baseBadge, contentAlignment = Alignment.Center) { badgeTextComposable() }
+                    }
+                }
             }
+            Spacer(Modifier.size(12.dp))
             Button(
-                onClick = onAktionenClick,
-                colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.button_blue))
+                onClick = if (isDeaktiviert) {{}} else onAktionenClick,
+                modifier = Modifier.heightIn(min = CustomerButtonMinHeight),
+                enabled = !isDeaktiviert,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorResource(R.color.primary_blue_dark),
+                    contentColor = Color.White,
+                    disabledContainerColor = colorResource(R.color.button_inactive),
+                    disabledContentColor = Color.White
+                )
             ) {
-                Text(stringResource(R.string.sheet_aktionen))
+                Text(
+                    stringResource(R.string.sheet_aktionen),
+                    fontSize = CustomerButtonTextSp,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }

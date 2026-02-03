@@ -66,13 +66,17 @@ class CustomerButtonVisibilityHelper(
 
         applyAuslieferungButton(binding, customer, sollLButtonAnzeigen, istHeute, istAmTatsaechlichenAuslieferungTag, hatUeberfaelligeAuslieferung, pressedButton)
 
-        // V (Verschieben)
+        // V (Verschieben): aktiv wenn an diesem Tag ein Termin (A/L) ODER bereits verschobene Termine
         val hatVerschobenenTerminHeute = customer.verschobeneTermine.any { verschoben ->
             val originalStart = TerminBerechnungUtils.getStartOfDay(verschoben.originalDatum)
             val verschobenStart = TerminBerechnungUtils.getStartOfDay(verschoben.verschobenAufDatum)
             originalStart == viewDateStart || verschobenStart == viewDateStart
         }
-        val vButtonAktiv = customer.verschobenAufDatum > 0 || hatVerschobenenTerminHeute
+        val hatTerminAmTagApply = sollAButtonAnzeigen || sollLButtonAnzeigen
+        val vButtonAktiv = hatTerminAmTagApply || hatVerschobenenTerminHeute
+        val istImUrlaubAmTag = TerminFilterUtils.istTerminInUrlaubEintraege(viewDateStart, customer)
+        val istAmFaelligkeitstag = viewDateStart < heuteStart
+        val nurInfoAmFaelligkeitstag = istAmFaelligkeitstag && (hatUeberfaelligeAbholung || hatUeberfaelligeAuslieferung)
         val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
 
         // KW
@@ -80,7 +84,7 @@ class CustomerButtonVisibilityHelper(
         val wurdeKwHeuteErledigt = kwErledigtAmTag || (istHeute && pressedButton == "KW")
         applyKwButton(binding, sollKwButtonAnzeigen, istHeute, wurdeKwHeuteErledigt)
 
-        binding.btnVerschieben.visibility = if (!isDone && vButtonAktiv) View.VISIBLE else View.GONE
+        binding.btnVerschieben.visibility = if (!isDone && vButtonAktiv && !istImUrlaubAmTag && !nurInfoAmFaelligkeitstag) View.VISIBLE else View.GONE
         binding.btnVerschieben.background = ContextCompat.getDrawable(context, R.drawable.button_v_glossy)
         binding.btnVerschieben.setTextColor(
             if (vButtonAktiv) ContextCompat.getColor(context, R.color.white)
@@ -89,15 +93,8 @@ class CustomerButtonVisibilityHelper(
             }
         )
 
-        // U (Urlaub)
-        val hatTerminImUrlaub = if (customer.urlaubVon > 0 && customer.urlaubBis > 0) {
-            val termine = getAlleTermine(customer, viewDateStart - TimeUnit.DAYS.toMillis(1), 2)
-            termine.any { termin ->
-                TerminBerechnungUtils.getStartOfDay(termin.datum) == viewDateStart &&
-                    TerminFilterUtils.istTerminImUrlaub(termin.datum, customer.urlaubVon, customer.urlaubBis)
-            }
-        } else false
-        val uButtonAktiv = customer.urlaubVon > 0 && customer.urlaubBis > 0 && hatTerminImUrlaub
+        // U (Urlaub): immer aktiv (Urlaub jederzeit eintragen möglich)
+        val uButtonAktiv = true
 
         binding.btnUrlaub.visibility = if (!isDone && uButtonAktiv) View.VISIBLE else View.GONE
         binding.btnUrlaub.background = ContextCompat.getDrawable(context, R.drawable.button_u_glossy)
@@ -175,17 +172,13 @@ class CustomerButtonVisibilityHelper(
             val verschobenStart = TerminBerechnungUtils.getStartOfDay(verschoben.verschobenAufDatum)
             originalStart == viewDateStart || verschobenStart == viewDateStart
         }
-        val vButtonAktiv = customer.verschobenAufDatum > 0 || hatVerschobenenTerminHeute
+        // Verschieben: aktiv wenn Kunde an diesem Tag einen Termin (A/L) hat ODER bereits verschobene Termine
+        val hatTerminAmTag = sollAButtonAnzeigen || sollLButtonAnzeigen
+        val vButtonAktiv = (hatTerminAmTag || hatVerschobenenTerminHeute)
         val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
 
-        val hatTerminImUrlaub = if (customer.urlaubVon > 0 && customer.urlaubBis > 0) {
-            val termine = getAlleTermine(customer, viewDateStart - TimeUnit.DAYS.toMillis(1), 2)
-            termine.any { t ->
-                TerminBerechnungUtils.getStartOfDay(t.datum) == viewDateStart &&
-                    TerminFilterUtils.istTerminImUrlaub(t.datum, customer.urlaubVon, customer.urlaubBis)
-            }
-        } else false
-        val uButtonAktiv = customer.urlaubVon > 0 && customer.urlaubBis > 0 && hatTerminImUrlaub
+        // Urlaub: immer aktiv (Urlaub jederzeit eintragen möglich)
+        val uButtonAktiv = true
 
         val hatErledigtenATerminAmDatum = if (customer.abholungErfolgt) {
             val abholungErledigtAmStart = if (customer.abholungErledigtAm > 0) TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) else 0L
@@ -207,12 +200,18 @@ class CustomerButtonVisibilityHelper(
             else hatErledigtenATerminAmDatum || hatErledigtenLTerminAmDatum || hatKwErledigtAmDatum
         } else false
 
-        val enableA = sollAButtonAnzeigen && istHeute && !customer.abholungErfolgt && (istAmTatsaechlichenAbholungTag || hatUeberfaelligeAbholung)
-        val enableL = sollLButtonAnzeigen && istHeute && customer.abholungErfolgt && !customer.auslieferungErfolgt && (istAmTatsaechlichenAuslieferungTag || hatUeberfaelligeAuslieferung)
-        val enableKw = sollKwButtonAnzeigen && istHeute && !wurdeKwHeuteErledigt
-
         val istAmFaelligkeitstag = viewDateStart < heuteStart
         val nurInfoAmFaelligkeitstag = istAmFaelligkeitstag && (hatUeberfaelligeAbholung || hatUeberfaelligeAuslieferung)
+        val istImUrlaubAmTag = TerminFilterUtils.istTerminInUrlaubEintraege(viewDateStart, customer)
+
+        var enableA = sollAButtonAnzeigen && istHeute && !customer.abholungErfolgt && (istAmTatsaechlichenAbholungTag || hatUeberfaelligeAbholung)
+        var enableL = sollLButtonAnzeigen && istHeute && customer.abholungErfolgt && !customer.auslieferungErfolgt && (istAmTatsaechlichenAuslieferungTag || hatUeberfaelligeAuslieferung)
+        var enableKw = sollKwButtonAnzeigen && istHeute && !wurdeKwHeuteErledigt
+        if (istImUrlaubAmTag) {
+            enableA = false
+            enableL = false
+            enableKw = false
+        }
 
         /** Echt überfällig = Fälligkeit vor heute (nicht „heute fällig“). Für Badge „Ü“ nur bei echt überfällig. */
         val hatKlassischUeberfaelligeAbholung = hasKlassischUeberfaelligeAbholung(customer, viewDateStart, heuteStart)
@@ -230,14 +229,16 @@ class CustomerButtonVisibilityHelper(
         val showAuslieferungFinal = if (nurInfoAmFaelligkeitstag) false else sollLButtonAnzeigen
         val showKwFinal = if (nurInfoAmFaelligkeitstag) false else sollKwButtonAnzeigen
 
+        // Nur A und L als Badge; Ü (Überfällig), KW, U (Urlaub) nur über Karten-Hintergrund/Status
         val statusBadgeText = when {
+            istImUrlaubAmTag -> ""
+            (hatKlassischUeberfaelligeAbholung || hatKlassischUeberfaelligeAuslieferung) && viewDateStart <= heuteStart -> ""
             nurInfoAmFaelligkeitstag -> when {
                 hatUeberfaelligeAbholung && hatUeberfaelligeAuslieferung -> context.getString(com.example.we2026_5.R.string.status_badge_a_plus_l_short)
                 hatUeberfaelligeAbholung -> context.getString(com.example.we2026_5.R.string.status_badge_a_short)
                 hatUeberfaelligeAuslieferung -> context.getString(com.example.we2026_5.R.string.status_badge_l_short)
-                else -> context.getString(com.example.we2026_5.R.string.status_badge_overdue_short)
+                else -> ""
             }
-            (hatKlassischUeberfaelligeAbholung || hatKlassischUeberfaelligeAuslieferung) && viewDateStart <= heuteStart -> context.getString(com.example.we2026_5.R.string.status_badge_overdue_short)
             sollAButtonAnzeigen && sollLButtonAnzeigen -> context.getString(com.example.we2026_5.R.string.status_badge_a_plus_l_short)
             sollAButtonAnzeigen -> context.getString(com.example.we2026_5.R.string.status_badge_a_short)
             sollLButtonAnzeigen -> context.getString(com.example.we2026_5.R.string.status_badge_l_short)
@@ -272,7 +273,7 @@ class CustomerButtonVisibilityHelper(
             enableAuslieferung = enableL,
             showKw = showKwFinal,
             enableKw = enableKw,
-            showVerschieben = !isDone && vButtonAktiv,
+            showVerschieben = !isDone && vButtonAktiv && !istImUrlaubAmTag && !nurInfoAmFaelligkeitstag,
             showUrlaub = !isDone && uButtonAktiv,
             showRueckgaengig = sollRueckgaengigAnzeigen,
             statusBadgeText = statusBadgeText,

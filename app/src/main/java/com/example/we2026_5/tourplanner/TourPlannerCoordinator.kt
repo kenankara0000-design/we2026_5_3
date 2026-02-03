@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerDetailActivity
 import com.example.we2026_5.MapViewActivity
+import com.example.we2026_5.R
+import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.adapter.CustomerDialogHelper
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
@@ -51,11 +53,29 @@ class TourPlannerCoordinator(
     )
     val sheetDialogHelper: CustomerDialogHelper = CustomerDialogHelper(
         context = activity,
-        onVerschieben = { c, newDate, alle -> callbackHandler.handleVerschiebenPublic(c, newDate, alle) },
+        onVerschieben = { c, newDate, alle, typ -> callbackHandler.handleVerschiebenPublic(c, newDate, alle, typ) },
         onUrlaub = { c, von, bis -> callbackHandler.handleUrlaubPublic(c, von, bis) },
         onRueckgaengig = { c -> callbackHandler.handleRueckgaengigPublic(c) },
         onButtonStateReset = { reloadCurrentView() }
     )
+
+    /** Zeigt Verschieben-Dialog. Wenn A und L am gleichen Tag: zuerst „A oder L verschieben?“ abfragen. */
+    fun showVerschiebenDialog(customer: Customer) {
+        if (callbackHandler.hatSowohlAAlsAuchLAmViewTag(customer)) {
+            androidx.appcompat.app.AlertDialog.Builder(activity)
+                .setTitle(activity.getString(R.string.dialog_verschieben_choose_a_or_l))
+                .setPositiveButton(activity.getString(R.string.dialog_verschieben_abholung)) { _, _ ->
+                    sheetDialogHelper.showVerschiebenDialog(customer, TerminTyp.ABHOLUNG)
+                }
+                .setNegativeButton(activity.getString(R.string.dialog_verschieben_auslieferung)) { _, _ ->
+                    sheetDialogHelper.showVerschiebenDialog(customer, TerminTyp.AUSLIEFERUNG)
+                }
+                .setNeutralButton(activity.getString(R.string.btn_cancel)) { _, _ -> }
+                .show()
+        } else {
+            sheetDialogHelper.showVerschiebenDialog(customer, null)
+        }
+    }
 
     init {
         viewModel.selectedTimestamp.observe(activity) { ts ->

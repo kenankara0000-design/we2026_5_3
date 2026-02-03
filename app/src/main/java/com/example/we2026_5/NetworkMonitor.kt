@@ -12,7 +12,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class NetworkMonitor(private val context: Context) {
+class NetworkMonitor(
+    private val context: Context,
+    private val scope: CoroutineScope // Lifecycle-aware CoroutineScope
+) {
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val _isOnline = MutableLiveData<Boolean>()
     val isOnline: LiveData<Boolean> = _isOnline
@@ -24,7 +27,7 @@ class NetworkMonitor(private val context: Context) {
         override fun onAvailable(network: Network) {
             _isOnline.postValue(true)
             // Realtime Database synchronisiert automatisch
-            CoroutineScope(Dispatchers.IO).launch {
+            scope.launch(Dispatchers.IO) {
                 FirebaseSyncManager.setNetworkEnabled(true)
                 // Prüfe auf ausstehende Schreibvorgänge
                 checkPendingWrites()
@@ -34,7 +37,7 @@ class NetworkMonitor(private val context: Context) {
         override fun onLost(network: Network) {
             _isOnline.postValue(false)
             // Realtime Database arbeitet automatisch offline
-            CoroutineScope(Dispatchers.IO).launch {
+            scope.launch(Dispatchers.IO) {
                 FirebaseSyncManager.setNetworkEnabled(false)
             }
         }
@@ -48,12 +51,12 @@ class NetworkMonitor(private val context: Context) {
             _isOnline.postValue(hasInternet)
             
             if (hasInternet) {
-                CoroutineScope(Dispatchers.IO).launch {
+                scope.launch(Dispatchers.IO) {
                     FirebaseSyncManager.setNetworkEnabled(true)
                     checkPendingWrites()
                 }
             } else {
-                CoroutineScope(Dispatchers.IO).launch {
+                scope.launch(Dispatchers.IO) {
                     FirebaseSyncManager.setNetworkEnabled(false)
                 }
             }
@@ -91,7 +94,7 @@ class NetworkMonitor(private val context: Context) {
         _isOnline.postValue(isConnected)
         
         // Realtime Database synchronisiert automatisch
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch(Dispatchers.IO) {
             FirebaseSyncManager.setNetworkEnabled(isConnected)
             if (isConnected) {
                 checkPendingWrites()
