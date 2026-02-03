@@ -7,9 +7,19 @@ import androidx.lifecycle.ViewModel
 data class AddCustomerState(
     val name: String = "",
     val adresse: String = "",
+    val stadt: String = "",
+    val plz: String = "",
     val telefon: String = "",
     val notizen: String = "",
     val kundenArt: String = "Gewerblich",
+    val abholungWochentag: Int = -1,
+    val auslieferungWochentag: Int = -1,
+    val defaultUhrzeit: String = "",
+    val tagsInput: String = "",
+    val tourWochentag: Int = -1,
+    val tourStadt: String = "",
+    val tourZeitStart: String = "",
+    val tourZeitEnde: String = "",
     val isSaving: Boolean = false,
     val errorMessage: String? = null,
     val success: Boolean = false
@@ -34,6 +44,14 @@ class AddCustomerViewModel : ViewModel() {
         _state.value = (_state.value ?: AddCustomerState()).copy(adresse = adresse)
     }
 
+    fun setStadt(stadt: String) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(stadt = stadt)
+    }
+
+    fun setPlz(plz: String) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(plz = plz)
+    }
+
     fun setTelefon(telefon: String) {
         _state.value = (_state.value ?: AddCustomerState()).copy(telefon = telefon)
     }
@@ -44,6 +62,38 @@ class AddCustomerViewModel : ViewModel() {
 
     fun setKundenArt(kundenArt: String) {
         _state.value = (_state.value ?: AddCustomerState()).copy(kundenArt = kundenArt)
+    }
+
+    fun setAbholungWochentag(tag: Int) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(abholungWochentag = tag)
+    }
+
+    fun setAuslieferungWochentag(tag: Int) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(auslieferungWochentag = tag)
+    }
+
+    fun setDefaultUhrzeit(uhrzeit: String) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(defaultUhrzeit = uhrzeit)
+    }
+
+    fun setTagsInput(tags: String) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(tagsInput = tags)
+    }
+
+    fun setTourWochentag(tag: Int) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(tourWochentag = tag)
+    }
+
+    fun setTourStadt(stadt: String) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(tourStadt = stadt)
+    }
+
+    fun setTourZeitStart(start: String) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(tourZeitStart = start)
+    }
+
+    fun setTourZeitEnde(ende: String) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(tourZeitEnde = ende)
     }
 
     fun setSaving(isSaving: Boolean) {

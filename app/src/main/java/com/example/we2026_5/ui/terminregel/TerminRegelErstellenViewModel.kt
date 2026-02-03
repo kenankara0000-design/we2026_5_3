@@ -9,6 +9,7 @@ import com.example.we2026_5.R
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.util.TerminRegelManager
+import com.example.we2026_5.TerminRegelTyp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -21,11 +22,14 @@ data class TerminRegelState(
     val wiederholen: Boolean = false,
     val intervallTage: String = "7",
     val intervallAnzahl: String = "0",
+    val regelTyp: TerminRegelTyp = TerminRegelTyp.WEEKLY,
+    val zyklusTage: String = "7",
     val startDatum: Long = 0,
     val startDatumText: String = "",
     val abholungWochentage: List<Int> = emptyList(), // 0=Mo..6=So, mehrere erlaubt
     val auslieferungWochentage: List<Int> = emptyList(),
     val taeglich: Boolean = false, // Täglich: Termine jeden Tag ab Startdatum
+    val aktiv: Boolean = true,
     val isSaving: Boolean = false,
     val errorMessageResId: Int? = null,
     val success: Boolean = false
@@ -48,8 +52,11 @@ class TerminRegelErstellenViewModel(
     fun setWiederholen(wiederholen: Boolean) { updateState { copy(wiederholen = wiederholen) } }
     fun setIntervallTage(s: String) { updateState { copy(intervallTage = s) } }
     fun setIntervallAnzahl(s: String) { updateState { copy(intervallAnzahl = s) } }
+    fun setZyklusTage(s: String) { updateState { copy(zyklusTage = s) } }
     fun setStartDatum(timestamp: Long, text: String) { updateState { copy(startDatum = timestamp, startDatumText = text) } }
     fun setTaeglich(taeglich: Boolean) { updateState { copy(taeglich = taeglich) } }
+    fun setRegelTyp(typ: TerminRegelTyp) { updateState { copy(regelTyp = typ) } }
+    fun setAktiv(aktiv: Boolean) { updateState { copy(aktiv = aktiv) } }
     fun toggleAbholungWochentag(weekday: Int) {
         updateState {
             val list = if (weekday in abholungWochentage) abholungWochentage - weekday else abholungWochentage + weekday
@@ -82,11 +89,14 @@ class TerminRegelErstellenViewModel(
                     wiederholen = regel.wiederholen,
                     intervallTage = regel.intervallTage.toString(),
                     intervallAnzahl = regel.intervallAnzahl.toString(),
+                    regelTyp = regel.regelTyp,
+                    zyklusTage = regel.zyklusTage.toString(),
                     startDatum = regel.startDatum,
                     startDatumText = if (regel.startDatum > 0) com.example.we2026_5.util.TerminRegelDatePickerHelper.formatDateFromMillis(regel.startDatum) else "",
                     abholungWochentage = abholList,
                     auslieferungWochentage = auslList,
-                    taeglich = regel.taeglich
+                    taeglich = regel.taeglich,
+                    aktiv = regel.aktiv
                 )
             }
         }
@@ -101,6 +111,7 @@ class TerminRegelErstellenViewModel(
         }
         val intervallTage = s.intervallTage.toIntOrNull() ?: 7
         val intervallAnzahl = s.intervallAnzahl.toIntOrNull() ?: 0
+        val zyklusTage = s.zyklusTage.toIntOrNull() ?: intervallTage
         if (s.wiederholen && intervallTage < 1) {
             updateState { copy(errorMessageResId = R.string.validierung_intervall_min) }
             return
@@ -129,6 +140,8 @@ class TerminRegelErstellenViewModel(
                 wiederholen = s.wiederholen,
                 intervallTage = intervallTage,
                 intervallAnzahl = intervallAnzahl,
+                regelTyp = s.regelTyp,
+                zyklusTage = zyklusTage,
                 wochentagBasiert = !s.taeglich,
                 startDatum = s.startDatum,
                 abholungWochentag = s.abholungWochentage.firstOrNull() ?: -1,
@@ -136,7 +149,8 @@ class TerminRegelErstellenViewModel(
                 abholungWochentage = s.abholungWochentage,
                 auslieferungWochentage = s.auslieferungWochentage,
                 taeglich = s.taeglich,
-                geaendertAm = System.currentTimeMillis()
+                geaendertAm = System.currentTimeMillis(),
+                aktiv = s.aktiv
             )
             val success = withContext(Dispatchers.IO) { regelRepository.saveRegel(regel) }
             if (success) {

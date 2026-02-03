@@ -59,10 +59,13 @@ fun TerminRegelErstellenScreen(
     onWiederholenChange: (Boolean) -> Unit,
     onIntervallTageChange: (String) -> Unit,
     onIntervallAnzahlChange: (String) -> Unit,
+    onRegelTypChange: (TerminRegelTyp) -> Unit,
+    onZyklusTageChange: (String) -> Unit,
     onStartDateClick: () -> Unit,
     onTaeglichChange: (Boolean) -> Unit,
     onAbholungWochentagToggle: (Int) -> Unit,
     onAuslieferungWochentagToggle: (Int) -> Unit,
+    onAktivChange: (Boolean) -> Unit,
     onSave: () -> Unit,
     onDelete: () -> Unit,
     onBack: () -> Unit,
@@ -156,6 +159,24 @@ fun TerminRegelErstellenScreen(
             )
             Spacer(Modifier.height(16.dp))
 
+            Text(stringResource(R.string.termin_regel_label_typ), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = textPrimary)
+            Spacer(Modifier.height(4.dp))
+            RegelTypDropdown(current = state.regelTyp, onSelect = onRegelTypChange)
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = state.zyklusTage,
+                onValueChange = onZyklusTageChange,
+                label = { Text(stringResource(R.string.termin_regel_label_zyklus_tage)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            Spacer(Modifier.height(12.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = state.aktiv, onCheckedChange = onAktivChange)
+                Text(stringResource(R.string.termin_regel_label_active), color = textPrimary, fontSize = 14.sp)
+            }
+            Spacer(Modifier.height(16.dp))
+
             Text(stringResource(R.string.termin_regel_label_startdate), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = textPrimary)
             Spacer(Modifier.height(4.dp))
             Button(onClick = onStartDateClick, colors = ButtonDefaults.buttonColors(containerColor = primaryBlue)) {
@@ -230,6 +251,50 @@ fun TerminRegelErstellenScreen(
                 }
             }
             Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun RegelTypDropdown(
+    current: TerminRegelTyp,
+    onSelect: (TerminRegelTyp) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val label = when (current) {
+        TerminRegelTyp.WEEKLY -> stringResource(R.string.termin_regel_typ_weekly)
+        TerminRegelTyp.FLEXIBLE_CYCLE -> stringResource(R.string.termin_regel_typ_flexible)
+        TerminRegelTyp.ADHOC -> stringResource(R.string.termin_regel_typ_adhoc)
+    }
+    Box {
+        OutlinedTextField(
+            value = label,
+            onValueChange = {},
+            label = { Text(stringResource(R.string.termin_regel_label_typ)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = true },
+            readOnly = true,
+            trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) }
+        )
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            TerminRegelTyp.values().forEach { typ ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            when (typ) {
+                                TerminRegelTyp.WEEKLY -> stringResource(R.string.termin_regel_typ_weekly)
+                                TerminRegelTyp.FLEXIBLE_CYCLE -> stringResource(R.string.termin_regel_typ_flexible)
+                                TerminRegelTyp.ADHOC -> stringResource(R.string.termin_regel_typ_adhoc)
+                            }
+                        )
+                    },
+                    onClick = {
+                        expanded = false
+                        onSelect(typ)
+                    }
+                )
+            }
         }
     }
 }

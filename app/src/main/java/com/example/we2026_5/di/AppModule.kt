@@ -3,6 +3,7 @@ package com.example.we2026_5.di
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.data.repository.TerminRegelRepository
+import com.example.we2026_5.data.repository.TourPlanRepository
 import com.example.we2026_5.ui.main.MainViewModel
 import com.example.we2026_5.ui.statistics.StatisticsViewModel
 import com.example.we2026_5.ui.liste.ListeErstellenViewModel
@@ -36,6 +37,7 @@ val appModule = module {
     single { CustomerRepository(get()) }
     single { KundenListeRepository(get()) }
     single { TerminRegelRepository(get()) }
+    single { TourPlanRepository(get()) }
     
     // ViewModels
     viewModel { MainViewModel(get(), get()) }

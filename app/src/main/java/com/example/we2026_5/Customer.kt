@@ -19,6 +19,9 @@ data class Customer(
     val adresse: String = "",
     val telefon: String = "",
     val notizen: String = "",
+    val stadt: String = "",
+    val plz: String = "",
+    val tags: List<String> = emptyList(),
     // Kunden-Art und Liste
     val kundenArt: String = "Gewerblich", // "Privat" oder "Gewerblich"
     val listeId: String = "", // ID der Liste (nur für Privat-Kunden)
@@ -39,6 +42,22 @@ data class Customer(
     @Deprecated("Wird nicht mehr verwendet")
     val wochentagOld: Int = 0, // 0=Montag, 1=Dienstag, ..., 6=Sonntag (wird von Liste übernommen für Privat-Kunden)
     val wochentag: String = "", // MO, DI, MI, DO, FR, SA, SO
+    val defaultAbholungWochentag: Int = -1,
+    val defaultAuslieferungWochentag: Int = -1,
+    val defaultUhrzeit: String = "",
+    val defaultZeitfenster: Zeitfenster? = null,
+    val adHocTemplate: AdHocTemplate? = null,
+    val aktiveTerminRegelId: String = "",
+    val status: CustomerStatus = CustomerStatus.AKTIV,
+    val pauseStart: Long = 0,
+    val pauseEnde: Long = 0,
+    val pauseGrund: String = "",
+    val reaktivierungsDatum: Long = 0,
+    val letzteErinnerung: Long = 0,
+    val tourSlotId: String = "",
+    val tourSlot: TourSlot? = null,
+    val tourNotizen: String = "",
+    val regelHistorie: List<RegelHistorieEintrag> = emptyList(),
     
     // Status
     val abholungErfolgt: Boolean = false,
@@ -50,6 +69,7 @@ data class Customer(
     val urlaubBis: Long = 0,
     /** Mehrere Urlaubseinträge pro Kunde. Falls leer, zählt weiterhin urlaubVon/urlaubBis. */
     val urlaubEintraege: List<UrlaubEintrag> = emptyList(),
+    val urlaubAutoPause: Boolean = true,
     
     // Erledigungsdaten und Zeitstempel
     val abholungErledigtAm: Long = 0, // Datum wann Abholung erledigt wurde (nur Datum, ohne Uhrzeit)

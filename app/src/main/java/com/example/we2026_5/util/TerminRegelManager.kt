@@ -2,128 +2,224 @@ package com.example.we2026_5.util
 
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
+import com.example.we2026_5.CustomerStatus
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.TerminRegel
+import com.example.we2026_5.TerminRegelTyp
+import com.example.we2026_5.TerminSlotVorschlag
+import com.example.we2026_5.TerminTyp
+import com.example.we2026_5.TourSlot
 import java.util.Calendar
-import com.example.we2026_5.util.TerminBerechnungUtils
+import java.util.concurrent.TimeUnit
 
 /**
  * Manager für die Anwendung von Termin-Regeln auf Kunden und Listen.
- * Unterstützt mehrere Abhol- und Auslieferungswochentage (paarweise).
+ * Unterstützt mehrere Abhol- und Auslieferungswochentage (paarweise) sowie flexible Zyklen.
  */
 object TerminRegelManager {
 
-    private fun getAbholungWochentage(regel: TerminRegel): List<Int> {
-        val list = regel.abholungWochentage?.filter { it in 0..6 }?.distinct()?.sorted()
-        if (!list.isNullOrEmpty()) return list
-        if (regel.abholungWochentag in 0..6) return listOf(regel.abholungWochentag)
-        return emptyList()
-    }
-
-    private fun getAuslieferungWochentage(regel: TerminRegel): List<Int> {
-        val list = regel.auslieferungWochentage?.filter { it in 0..6 }?.distinct()?.sorted()
-        if (!list.isNullOrEmpty()) return list
-        if (regel.auslieferungWochentag in 0..6) return listOf(regel.auslieferungWochentag)
-        return emptyList()
-    }
-    
     private const val TAEGLICH_ANZAHL_TAGE = 365
+    private const val MAX_VORSCHLAEGE = 50
 
-    /**
-     * Täglich: Erstellt pro Tag ab Startdatum ein Intervall.
-     * - Termine beginnen mit dem Startdatum (erster Termin = erster Tag).
-     * - Abholung und Auslieferung sind am selben Tag (abholungDatum = auslieferungDatum = Tag-Start).
-     * - Die Erledigung erlaubt Auslieferung nur, wenn Abholung gemacht wurde (siehe CustomerButtonVisibilityHelper / ErledigungSheet).
-     */
-    private fun wendeTaeglichAufKundeAn(regel: TerminRegel): List<CustomerIntervall> {
-        val heute = System.currentTimeMillis()
-        val startDatum = if (regel.startDatum > 0) regel.startDatum else TerminBerechnungUtils.getStartOfDay(heute)
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = startDatum
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
+    fun wendeRegelAufKundeAn(regel: TerminRegel, customer: Customer): List<CustomerIntervall> {
+        if (!regel.aktiv && regel.regelTyp != TerminRegelTyp.ADHOC) return emptyList()
+        if (customer.status == CustomerStatus.PAUSIERT && customer.pauseEnde == 0L) return emptyList()
+        if (regel.regelTyp == TerminRegelTyp.ADHOC) return emptyList()
+        if (regel.taeglich) return wendeTaeglichAufKundeAn(regel, customer)
+
+        val abholTage = resolveAbholtage(regel, customer)
+        val auslieferTage = resolveAuslieferungstage(regel, customer)
+        val startDatum = resolveStartDatum(regel, customer)
+        val zyklusTage = resolveZyklus(regel)
+        val wiederholen = regel.wiederholen || regel.regelTyp == TerminRegelTyp.WEEKLY || regel.regelTyp == TerminRegelTyp.FLEXIBLE_CYCLE
+
+        if (abholTage.isEmpty() || auslieferTage.isEmpty()) {
+            val fallbackAbholung = if (regel.abholungDatum > 0) regel.abholungDatum else startDatum
+            val fallbackAuslieferung = if (regel.auslieferungDatum > 0) regel.auslieferungDatum else startDatum
+            return listOf(
+                baseCustomerIntervall(
+                    abholungDatum = fallbackAbholung,
+                    auslieferungDatum = fallbackAuslieferung,
+                    wiederholen = wiederholen,
+                    intervallTage = zyklusTage,
+                    regel = regel,
+                    customer = customer
+                )
+            )
+        }
+
+        val count = minOf(abholTage.size, auslieferTage.size)
+        return (0 until count).map { index ->
+            val abholungDatum = berechneNaechstenWochentag(startDatum, abholTage[index])
+            val auslieferungDatum = if (abholTage[index] == auslieferTage[index]) {
+                abholungDatum + TimeUnit.DAYS.toMillis(zyklusTage.toLong())
+            } else {
+                berechneNaechstenWochentag(startDatum, auslieferTage[index])
+            }
+            baseCustomerIntervall(
+                abholungDatum = abholungDatum,
+                auslieferungDatum = auslieferungDatum,
+                wiederholen = wiederholen,
+                intervallTage = zyklusTage,
+                regel = regel,
+                customer = customer
+            )
+        }
+    }
+
+    fun generiereSerienVorschau(
+        regel: TerminRegel,
+        customer: Customer,
+        tageVoraus: Int = 60
+    ): List<TerminSlotVorschlag> {
+        val intervalle = wendeRegelAufKundeAn(regel, customer)
+        val termine = intervalle.flatMap {
+            TerminBerechnungUtils.berechneTermineFuerIntervall(
+                intervall = it,
+                startDatum = System.currentTimeMillis(),
+                tageVoraus = tageVoraus,
+                geloeschteTermine = customer.geloeschteTermine,
+                verschobeneTermine = customer.verschobeneTermine
+            )
+        }.sortedBy { it.datum }
+        return termine.take(MAX_VORSCHLAEGE).map {
+            TerminSlotVorschlag(
+                datum = it.datum,
+                typ = it.typ,
+                beschreibung = "${customer.name} (${regel.name})",
+                tourSlotId = intervalle.firstOrNull { intervall -> intervall.id == it.intervallId }?.tourSlotId
+            )
+        }
+    }
+
+    fun schlageSlotsVor(
+        kunde: Customer,
+        regel: TerminRegel?,
+        tourSlots: List<TourSlot>,
+        startDatum: Long = System.currentTimeMillis(),
+        tageVoraus: Int = 30
+    ): List<TerminSlotVorschlag> {
+        val startOfDay = TerminBerechnungUtils.getStartOfDay(startDatum)
+        val horizon = startOfDay + TimeUnit.DAYS.toMillis(tageVoraus.toLong())
+
+        val relevanteSlots = tourSlots.filter { slot ->
+            slot.wochentag in 0..6 && slot.stadt.equals(kunde.stadt, ignoreCase = true)
+        }
+        val defaultAbhol = kunde.defaultAbholungWochentag.takeIf { it.isValidWeekday() }
+
+        val vorschlaege = mutableListOf<TerminSlotVorschlag>()
+        relevanteSlots.forEach { slot ->
+            var datum = berechneNaechstenWochentag(startOfDay, slot.wochentag)
+            while (datum <= horizon) {
+                vorschlaege += TerminSlotVorschlag(
+                    datum = datum,
+                    typ = TerminTyp.ABHOLUNG,
+                    beschreibung = "${slot.stadt} (${slot.zeitfenster?.start}-${slot.zeitfenster?.ende})",
+                    tourSlotId = slot.id
+                )
+                datum += TimeUnit.DAYS.toMillis(7)
+            }
+        }
+
+        defaultAbhol?.let { weekday ->
+            var datum = berechneNaechstenWochentag(startOfDay, weekday)
+            while (datum <= horizon) {
+                vorschlaege += TerminSlotVorschlag(
+                    datum = datum,
+                    typ = TerminTyp.ABHOLUNG,
+                    beschreibung = "Standard A-Tag"
+                )
+                datum += TimeUnit.DAYS.toMillis(7)
+            }
+        }
+
+        val auslieferungTag = kunde.defaultAuslieferungWochentag.takeIf { it.isValidWeekday() }
+            ?: regel?.auslieferungWochentage?.firstOrNull()
+        auslieferungTag?.let { weekday ->
+            var datum = berechneNaechstenWochentag(startOfDay, weekday)
+            while (datum <= horizon) {
+                vorschlaege += TerminSlotVorschlag(
+                    datum = datum,
+                    typ = TerminTyp.AUSLIEFERUNG,
+                    beschreibung = "Standard L-Tag"
+                )
+                datum += TimeUnit.DAYS.toMillis(7)
+            }
+        }
+
+        return vorschlaege.sortedBy { it.datum }.take(MAX_VORSCHLAEGE)
+    }
+
+    fun wendeRegelAufListeAn(regel: TerminRegel, liste: KundenListe): List<ListeIntervall> {
+        if (regel.taeglich) return wendeTaeglichAufListeAn(regel)
+        val abholTage = resolveAbholtage(regel, null)
+        val auslieferTage = resolveAuslieferungstage(regel, null)
+        val startDatum = resolveStartDatum(regel, null)
+        val zyklusTage = resolveZyklus(regel)
+
+        if (abholTage.isEmpty() || auslieferTage.isEmpty()) {
+            return listOf(
+                ListeIntervall(
+                    abholungDatum = regel.abholungDatum.takeIf { it > 0 } ?: startDatum,
+                    auslieferungDatum = regel.auslieferungDatum.takeIf { it > 0 } ?: startDatum,
+                    wiederholen = regel.wiederholen,
+                    intervallTage = zyklusTage,
+                    intervallAnzahl = regel.intervallAnzahl
+                )
+            )
+        }
+
+        val count = minOf(abholTage.size, auslieferTage.size)
+        return (0 until count).map { index ->
+            val abholungDatum = berechneNaechstenWochentag(startDatum, abholTage[index])
+            val auslieferungDatum = if (abholTage[index] == auslieferTage[index]) {
+                abholungDatum + TimeUnit.DAYS.toMillis(zyklusTage.toLong())
+            } else {
+                berechneNaechstenWochentag(startDatum, auslieferTage[index])
+            }
+            ListeIntervall(
+                abholungDatum = abholungDatum,
+                auslieferungDatum = auslieferungDatum,
+                wiederholen = true,
+                intervallTage = zyklusTage,
+                intervallAnzahl = regel.intervallAnzahl
+            )
+        }
+    }
+
+    private fun wendeTaeglichAufKundeAn(regel: TerminRegel, customer: Customer): List<CustomerIntervall> {
+        val startDatum = resolveStartDatum(regel, customer)
+        val cal = Calendar.getInstance().apply {
+            timeInMillis = startDatum
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
         return (0 until TAEGLICH_ANZAHL_TAGE).map {
             val dayStart = cal.timeInMillis
             cal.add(Calendar.DAY_OF_YEAR, 1)
-            CustomerIntervall(
-                id = java.util.UUID.randomUUID().toString(),
+            baseCustomerIntervall(
                 abholungDatum = dayStart,
                 auslieferungDatum = dayStart,
                 wiederholen = false,
                 intervallTage = 0,
-                intervallAnzahl = 0,
-                erstelltAm = heute,
-                terminRegelId = regel.id
+                regel = regel,
+                customer = customer
             )
         }
     }
 
-    /**
-     * Wendet eine Regel auf einen Kunden an.
-     * Erstellt pro (Abhol-Wochentag, Auslieferungs-Wochentag)-Paar ein CustomerIntervall.
-     */
-    fun wendeRegelAufKundeAn(regel: TerminRegel, customer: Customer): List<CustomerIntervall> {
-        if (regel.taeglich) return wendeTaeglichAufKundeAn(regel)
-
-        val heute = System.currentTimeMillis()
-        val abholTage = getAbholungWochentage(regel)
-        val auslTage = getAuslieferungWochentage(regel)
-
-        if (abholTage.isEmpty() || auslTage.isEmpty()) {
-            // Fallback: Datum-basiert oder einzelne Legacy-Felder
-            val abholungDatum = if (regel.abholungDatum > 0) regel.abholungDatum else TerminBerechnungUtils.getStartOfDay(heute)
-            val auslieferungDatum = if (regel.auslieferungDatum > 0) regel.auslieferungDatum else TerminBerechnungUtils.getStartOfDay(heute)
-            return listOf(CustomerIntervall(
-                id = java.util.UUID.randomUUID().toString(),
-                abholungDatum = abholungDatum,
-                auslieferungDatum = auslieferungDatum,
-                wiederholen = regel.wiederholen,
-                intervallTage = regel.intervallTage,
-                intervallAnzahl = regel.intervallAnzahl,
-                erstelltAm = heute,
-                terminRegelId = regel.id
-            ))
-        }
-
-        val startDatum = if (regel.startDatum > 0) regel.startDatum else TerminBerechnungUtils.getStartOfDay(heute)
-        val count = minOf(abholTage.size, auslTage.size)
-        return (0 until count).map { i ->
-            val abholungDatum = berechneNaechstenWochentag(startDatum, abholTage[i])
-            val auslieferungDatum = if (abholTage[i] == auslTage[i]) {
-                // Gleicher Wochentag (z.B. MO+MO): erste Auslieferung 7 Tage nach Abholung
-                abholungDatum + 7 * 24 * 60 * 60 * 1000L
-            } else {
-                berechneNaechstenWochentag(startDatum, auslTage[i])
-            }
-            CustomerIntervall(
-                id = java.util.UUID.randomUUID().toString(),
-                abholungDatum = abholungDatum,
-                auslieferungDatum = auslieferungDatum,
-                wiederholen = regel.wiederholen,
-                intervallTage = regel.intervallTage,
-                intervallAnzahl = regel.intervallAnzahl,
-                erstelltAm = heute,
-                terminRegelId = regel.id
-            )
-        }
-    }
-    
-    /**
-     * Täglich: Pro Tag ab Startdatum ein ListeIntervall; Abholung und Auslieferung am selben Tag.
-     * Auslieferung nur nach Abholung (wird in der Erledigung berücksichtigt).
-     */
     private fun wendeTaeglichAufListeAn(regel: TerminRegel): List<ListeIntervall> {
-        val heute = System.currentTimeMillis()
-        val startDatum = if (regel.startDatum > 0) regel.startDatum else TerminBerechnungUtils.getStartOfDay(heute)
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = startDatum
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
+        val startDatum = resolveStartDatum(regel, null)
+        val cal = Calendar.getInstance().apply {
+            timeInMillis = startDatum
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
         return (0 until TAEGLICH_ANZAHL_TAGE).map {
             val dayStart = cal.timeInMillis
             cal.add(Calendar.DAY_OF_YEAR, 1)
@@ -137,88 +233,91 @@ object TerminRegelManager {
         }
     }
 
-    /**
-     * Wendet eine Regel auf eine Liste an.
-     * Erstellt pro (Abhol-, Auslieferungs-)Wochentag-Paar ein ListeIntervall.
-     */
-    fun wendeRegelAufListeAn(regel: TerminRegel, liste: KundenListe): List<ListeIntervall> {
-        if (regel.taeglich) return wendeTaeglichAufListeAn(regel)
+    private fun baseCustomerIntervall(
+        abholungDatum: Long,
+        auslieferungDatum: Long,
+        wiederholen: Boolean,
+        intervallTage: Int,
+        regel: TerminRegel,
+        customer: Customer
+    ) = CustomerIntervall(
+        id = java.util.UUID.randomUUID().toString(),
+        abholungDatum = abholungDatum,
+        auslieferungDatum = auslieferungDatum,
+        wiederholen = wiederholen,
+        intervallTage = intervallTage,
+        intervallAnzahl = regel.intervallAnzahl,
+        erstelltAm = System.currentTimeMillis(),
+        terminRegelId = regel.id,
+        regelTyp = regel.regelTyp,
+        tourSlotId = regel.tourSlotId.ifEmpty { customer.tourSlotId },
+        zyklusTage = intervallTage
+    )
 
-        val heute = System.currentTimeMillis()
-        val abholTage = getAbholungWochentage(regel)
-        val auslTage = getAuslieferungWochentage(regel)
-
-        if (abholTage.isEmpty() || auslTage.isEmpty()) {
-            val abholungDatum = if (regel.abholungDatum > 0) regel.abholungDatum else TerminBerechnungUtils.getStartOfDay(heute)
-            val auslieferungDatum = if (regel.auslieferungDatum > 0) regel.auslieferungDatum else TerminBerechnungUtils.getStartOfDay(heute)
-            return listOf(ListeIntervall(
-                abholungDatum = abholungDatum,
-                auslieferungDatum = auslieferungDatum,
-                wiederholen = regel.wiederholen,
-                intervallTage = regel.intervallTage,
-                intervallAnzahl = regel.intervallAnzahl
-            ))
-        }
-
-        val startDatum = if (regel.startDatum > 0) regel.startDatum else TerminBerechnungUtils.getStartOfDay(heute)
-        val count = minOf(abholTage.size, auslTage.size)
-        return (0 until count).map { i ->
-            val abholungDatum = berechneNaechstenWochentag(startDatum, abholTage[i])
-            val auslieferungDatum = if (abholTage[i] == auslTage[i]) {
-                // Gleicher Wochentag (z.B. MO+MO): erste Auslieferung 7 Tage nach Abholung
-                abholungDatum + 7 * 24 * 60 * 60 * 1000L
-            } else {
-                berechneNaechstenWochentag(startDatum, auslTage[i])
-            }
-            ListeIntervall(
-                abholungDatum = abholungDatum,
-                auslieferungDatum = auslieferungDatum,
-                wiederholen = regel.wiederholen,
-                intervallTage = regel.intervallTage,
-                intervallAnzahl = regel.intervallAnzahl
-            )
-        }
+    private fun resolveAbholtage(regel: TerminRegel, customer: Customer?): List<Int> {
+        val regelTage = regel.abholungWochentage?.filter { it.isValidWeekday() }?.distinct()?.sorted().orEmpty()
+        if (regelTage.isNotEmpty()) return regelTage
+        if (regel.abholungWochentag.isValidWeekday()) return listOf(regel.abholungWochentag)
+        val customerTag = customer?.defaultAbholungWochentag?.takeIf { it.isValidWeekday() }
+        return customerTag?.let { listOf(it) } ?: emptyList()
     }
-    
+
+    private fun resolveAuslieferungstage(regel: TerminRegel, customer: Customer?): List<Int> {
+        val regelTage = regel.auslieferungWochentage?.filter { it.isValidWeekday() }?.distinct()?.sorted().orEmpty()
+        if (regelTage.isNotEmpty()) return regelTage
+        if (regel.auslieferungWochentag.isValidWeekday()) return listOf(regel.auslieferungWochentag)
+        val customerTag = customer?.defaultAuslieferungWochentag?.takeIf { it.isValidWeekday() }
+        return customerTag?.let { listOf(it) } ?: emptyList()
+    }
+
+    private fun resolveStartDatum(regel: TerminRegel, customer: Customer?): Long {
+        val basis = if (regel.startDatum > 0) regel.startDatum else TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+        val pauseCandidate = sequenceOf(
+            regel.pauseEnde,
+            customer?.pauseEnde,
+            customer?.reaktivierungsDatum
+        ).filterNotNull().filter { it > 0 }.maxOrNull()
+        return maxOf(basis, pauseCandidate ?: basis)
+    }
+
+    private fun resolveZyklus(regel: TerminRegel): Int {
+        val candidate = when (regel.regelTyp) {
+            TerminRegelTyp.FLEXIBLE_CYCLE -> regel.zyklusTage
+            else -> regel.intervallTage
+        }
+        return candidate.coerceIn(1, 365)
+    }
+
     /**
      * Berechnet das nächste Vorkommen eines Wochentags ab einem Startdatum
      * Automatische Berechnung: Nächstes Vorkommen ab Startdatum (kann heute sein, wenn Startdatum heute ist)
-     * @param startDatum Startdatum für die Berechnung
-     * @param wochentag Wochentag (0=Montag, 1=Dienstag, ..., 6=Sonntag)
-     * @return Timestamp des nächsten Wochentags ab Startdatum
      */
     private fun berechneNaechstenWochentag(
         startDatum: Long,
         wochentag: Int
     ): Long {
-        if (wochentag < 0 || wochentag > 6) {
+        if (!wochentag.isValidWeekday()) {
             return TerminBerechnungUtils.getStartOfDay(startDatum)
         }
-        
+
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = startDatum
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
-        
-        // Calendar.DAY_OF_WEEK: 1=Sonntag, 2=Montag, ..., 7=Samstag
-        // Unser System: 0=Montag, 1=Dienstag, ..., 6=Sonntag
+
         val aktuellerWochentagCalendar = calendar.get(Calendar.DAY_OF_WEEK)
-        
-        // Ziel-Wochentag zu Calendar-Format: 0(Montag)->2, 1(Dienstag)->3, ..., 6(Sonntag)->1
         val zielWochentagCalendar = if (wochentag == 6) 1 else (wochentag + 2)
-        
-        // Berechne Tage bis zum Ziel-Wochentag (nächstes Vorkommen ab Startdatum)
         val tageBisZiel = if (zielWochentagCalendar >= aktuellerWochentagCalendar) {
-            // Ziel-Wochentag ist noch diese Woche
             zielWochentagCalendar - aktuellerWochentagCalendar
         } else {
-            // Ziel-Wochentag ist nächste Woche
             (zielWochentagCalendar - aktuellerWochentagCalendar) + 7
         }
-        
+
         calendar.add(Calendar.DAY_OF_YEAR, tageBisZiel)
         return calendar.timeInMillis
     }
+
+    private fun Int?.isValidWeekday(): Boolean = this != null && this in 0..6
 }

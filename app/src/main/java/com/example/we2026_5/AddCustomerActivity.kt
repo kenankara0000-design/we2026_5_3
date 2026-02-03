@@ -15,6 +15,8 @@ import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.ui.addcustomer.AddCustomerScreen
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
 import com.example.we2026_5.ui.addcustomer.AddCustomerViewModel
+import com.example.we2026_5.TourSlot
+import com.example.we2026_5.Zeitfenster
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -59,9 +61,19 @@ class AddCustomerActivity : AppCompatActivity() {
                     onBack = { finish() },
                     onNameChange = { viewModel.setName(it) },
                     onAdresseChange = { viewModel.setAdresse(it) },
+                    onStadtChange = { viewModel.setStadt(it) },
+                    onPlzChange = { viewModel.setPlz(it) },
                     onTelefonChange = { viewModel.setTelefon(it) },
                     onNotizenChange = { viewModel.setNotizen(it) },
                     onKundenArtChange = { viewModel.setKundenArt(it) },
+                    onAbholungTagChange = { viewModel.setAbholungWochentag(it) },
+                    onAuslieferungTagChange = { viewModel.setAuslieferungWochentag(it) },
+                    onDefaultUhrzeitChange = { viewModel.setDefaultUhrzeit(it) },
+                    onTagsChange = { viewModel.setTagsInput(it) },
+                    onTourWochentagChange = { viewModel.setTourWochentag(it) },
+                    onTourStadtChange = { viewModel.setTourStadt(it) },
+                    onTourZeitStartChange = { viewModel.setTourZeitStart(it) },
+                    onTourZeitEndeChange = { viewModel.setTourZeitEnde(it) },
                     onSave = { performSave(state) }
                 )
             }
@@ -76,10 +88,25 @@ class AddCustomerActivity : AppCompatActivity() {
         }
         viewModel.setSaving(true)
         viewModel.setError(null)
+        val customerId = UUID.randomUUID().toString()
+        val tags = state.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } }
+        val tourSlot = if (state.tourWochentag >= 0 || state.tourStadt.isNotBlank()) {
+            TourSlot(
+                id = "customer-$customerId",
+                wochentag = state.tourWochentag,
+                stadt = state.tourStadt.trim(),
+                zeitfenster = Zeitfenster(state.tourZeitStart.trim(), state.tourZeitEnde.trim())
+            )
+        } else null
+        val defaultZeitfenster = if (state.defaultUhrzeit.isNotBlank()) {
+            Zeitfenster(state.defaultUhrzeit.trim(), state.defaultUhrzeit.trim())
+        } else null
         val customer = Customer(
-            id = UUID.randomUUID().toString(),
+            id = customerId,
             name = name,
             adresse = state.adresse.trim(),
+            stadt = state.stadt.trim(),
+            plz = state.plz.trim(),
             telefon = state.telefon.trim(),
             notizen = state.notizen.trim(),
             kundenArt = state.kundenArt,
@@ -91,6 +118,13 @@ class AddCustomerActivity : AppCompatActivity() {
             intervallTage = 0,
             letzterTermin = 0,
             wochentag = "",
+            defaultAbholungWochentag = state.abholungWochentag,
+            defaultAuslieferungWochentag = state.auslieferungWochentag,
+            defaultUhrzeit = state.defaultUhrzeit.trim(),
+            defaultZeitfenster = defaultZeitfenster,
+            tags = tags,
+            tourSlotId = tourSlot?.id ?: "",
+            tourSlot = tourSlot,
             istImUrlaub = false
         )
         lifecycleScope.launch {
