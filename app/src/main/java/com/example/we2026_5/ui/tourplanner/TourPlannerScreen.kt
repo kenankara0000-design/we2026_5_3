@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -438,13 +439,7 @@ fun TourPlannerScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(tourItems, key = { item ->
-                            when (item) {
-                                is ListItem.CustomerItem -> "c-${item.customer.id}"
-                                is ListItem.SectionHeader -> "s-${item.sectionType}"
-                                is ListItem.ListeHeader -> "l-${item.listeId}"
-                            }
-                        }) { item ->
+                        itemsIndexed(tourItems, key = { index, _ -> index }) { _, item ->
                             when (item) {
                                 is ListItem.SectionHeader -> SectionHeaderRow(
                                     title = item.title,

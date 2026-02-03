@@ -21,7 +21,6 @@ import com.example.we2026_5.util.TerminAusKundeUtils
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.DialogBaseHelper
 import com.example.we2026_5.util.TerminRegelInfoText
-import com.example.we2026_5.util.TerminRegelDatePickerHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.lifecycle.lifecycleScope
@@ -36,7 +35,6 @@ import com.example.we2026_5.util.IntervallManager
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.util.Calendar
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -249,28 +247,15 @@ class CustomerDetailActivity : AppCompatActivity() {
     }
 
     private fun pauseCustomer(customer: Customer) {
-        val calendar = Calendar.getInstance()
-        TerminRegelDatePickerHelper.showDatePicker(
-            context = this,
-            initialYear = calendar.get(Calendar.YEAR),
-            initialMonth = calendar.get(Calendar.MONTH),
-            initialDay = calendar.get(Calendar.DAY_OF_MONTH)
-        ) { timestamp ->
-            if (timestamp <= 0) return@showDatePicker
-            val updates = mapOf(
-                "status" to CustomerStatus.PAUSIERT.name,
-                "pauseStart" to System.currentTimeMillis(),
-                "pauseEnde" to timestamp,
-                "reaktivierungsDatum" to timestamp
-            )
-            viewModel.saveCustomer(updates) { success ->
-                if (success) {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.toast_customer_paused, DateFormatter.formatDateWithWeekday(timestamp)),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+        val updates = mapOf(
+            "status" to CustomerStatus.PAUSIERT.name,
+            "pauseStart" to System.currentTimeMillis(),
+            "pauseEnde" to 0L,
+            "reaktivierungsDatum" to 0L
+        )
+        viewModel.saveCustomer(updates) { success ->
+            if (success) {
+                Toast.makeText(this, getString(R.string.toast_customer_paused_simple), Toast.LENGTH_SHORT).show()
             }
         }
     }

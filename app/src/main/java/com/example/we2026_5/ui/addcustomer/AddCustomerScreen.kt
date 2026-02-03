@@ -281,12 +281,6 @@ fun AddCustomerScreen(
                 fontWeight = FontWeight.Bold,
                 color = textPrimary
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            WeekdaySelector(
-                label = stringResource(R.string.label_tour_weekday),
-                selected = state.tourWochentag,
-                onSelect = onTourWochentagChange
-            )
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
                 value = state.tourStadt,
@@ -414,12 +408,16 @@ private fun WeekdaySelector(
     Column {
         Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
         Spacer(modifier = Modifier.height(4.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
             weekdays.forEachIndexed { index, title ->
                 FilterChip(
                     selected = selected == index,
                     onClick = { onSelect(index) },
-                    label = { Text(title) }
+                    modifier = Modifier.weight(1f),
+                    label = { Text(title, maxLines = 1) }
                 )
             }
         }

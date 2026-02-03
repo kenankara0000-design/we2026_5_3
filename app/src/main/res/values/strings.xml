@@ -407,14 +407,17 @@
     <string name="customer_status_adhoc">Ad-hoc</string>
     <string name="customer_status_paused_until">Pausiert bis %1$s</string>
     <string name="customer_btn_pause">Pause aktivieren</string>
-    <string name="customer_btn_resume">Fortsetzen</string>
+    <string name="customer_btn_resume">Pause deaktivieren</string>
     <string name="customer_tags_label">Tags: %1$s</string>
     <string name="toast_customer_paused">Pause bis %1$s gespeichert</string>
+    <string name="toast_customer_paused_simple">Kunde pausiert</string>
     <string name="toast_customer_resumed">Kunde fortgesetzt</string>
     <string name="label_city_optional">Stadt (Optional)</string>
     <string name="label_zip_optional">PLZ (Optional)</string>
     <string name="label_default_pickup_day">Standard-Abholungstag (A)</string>
     <string name="label_default_delivery_day">Standard-Auslieferungstag (L)</string>
+    <string name="label_a_plus_tage_l">A + Zahl (Tage) = L-Termin</string>
+    <string name="hint_a_plus_tage">Tage zwischen A und L (z. B. 7)</string>
     <string name="label_default_time_optional">Bevorzugte Uhrzeit (Optional)</string>
     <string name="label_customer_tags">Tags (durch Komma getrennt)</string>
     <string name="hint_tags_example">z. B. VIP, Nur Vormittags</string>

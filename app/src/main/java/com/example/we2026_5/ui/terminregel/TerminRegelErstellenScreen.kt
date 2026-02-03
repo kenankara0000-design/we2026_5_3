@@ -164,14 +164,6 @@ fun TerminRegelErstellenScreen(
             Spacer(Modifier.height(4.dp))
             RegelTypDropdown(current = state.regelTyp, onSelect = onRegelTypChange)
             Spacer(Modifier.height(12.dp))
-            OutlinedTextField(
-                value = state.zyklusTage,
-                onValueChange = onZyklusTageChange,
-                label = { Text(stringResource(R.string.termin_regel_label_zyklus_tage)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = state.aktiv, onCheckedChange = onAktivChange)
                 Text(stringResource(R.string.termin_regel_label_active), color = textPrimary, fontSize = 14.sp)
@@ -227,10 +219,12 @@ fun TerminRegelErstellenScreen(
             }
             Spacer(Modifier.height(16.dp))
 
-            if (state.wiederholen) {
+            if (state.wiederholen || state.regelTyp == TerminRegelTyp.WEEKLY || state.regelTyp == TerminRegelTyp.FLEXIBLE_CYCLE) {
                 Text(stringResource(R.string.termin_regel_label_interval_days), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = textPrimary)
                 Spacer(Modifier.height(4.dp))
                 OutlinedTextField(value = state.intervallTage, onValueChange = onIntervallTageChange, label = { Text(stringResource(R.string.hint_interval_days)) }, modifier = Modifier.fillMaxWidth())
+            }
+            if (state.wiederholen) {
                 Spacer(Modifier.height(12.dp))
                 Text(stringResource(R.string.termin_regel_label_repeat_count), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = textPrimary)
                 Spacer(Modifier.height(4.dp))

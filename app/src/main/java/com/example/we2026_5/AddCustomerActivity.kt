@@ -129,10 +129,10 @@ class AddCustomerActivity : AppCompatActivity() {
         val name = state.name.trim()
         val customerId = UUID.randomUUID().toString()
         val tags = state.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } }
-        val tourSlot = if (state.tourWochentag >= 0 || state.tourStadt.isNotBlank()) {
+        val tourSlot = if (state.abholungWochentag >= 0 || state.tourStadt.isNotBlank()) {
             TourSlot(
                 id = "customer-$customerId",
-                wochentag = state.tourWochentag,
+                wochentag = state.abholungWochentag,
                 stadt = state.tourStadt.trim(),
                 zeitfenster = Zeitfenster(state.tourZeitStart.trim(), state.tourZeitEnde.trim())
             )

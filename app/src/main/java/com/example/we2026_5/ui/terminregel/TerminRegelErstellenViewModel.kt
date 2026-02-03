@@ -82,12 +82,13 @@ class TerminRegelErstellenViewModel(
                     ?: (if (regel.abholungWochentag in 0..6) listOf(regel.abholungWochentag) else emptyList())
                 val auslList = regel.auslieferungWochentage?.filter { it in 0..6 }?.distinct()?.sorted()
                     ?: (if (regel.auslieferungWochentag in 0..6) listOf(regel.auslieferungWochentag) else emptyList())
+                val displayIntervall = if (regel.regelTyp == TerminRegelTyp.FLEXIBLE_CYCLE) regel.zyklusTage else regel.intervallTage
                 _state.value = (_state.value ?: TerminRegelState()).copy(
                     currentRegelId = regel.id,
                     name = regel.name,
                     beschreibung = regel.beschreibung,
                     wiederholen = regel.wiederholen,
-                    intervallTage = regel.intervallTage.toString(),
+                    intervallTage = displayIntervall.toString(),
                     intervallAnzahl = regel.intervallAnzahl.toString(),
                     regelTyp = regel.regelTyp,
                     zyklusTage = regel.zyklusTage.toString(),
@@ -111,7 +112,7 @@ class TerminRegelErstellenViewModel(
         }
         val intervallTage = s.intervallTage.toIntOrNull() ?: 7
         val intervallAnzahl = s.intervallAnzahl.toIntOrNull() ?: 0
-        val zyklusTage = s.zyklusTage.toIntOrNull() ?: intervallTage
+        val zyklusTage = intervallTage
         if (s.wiederholen && intervallTage < 1) {
             updateState { copy(errorMessageResId = R.string.validierung_intervall_min) }
             return

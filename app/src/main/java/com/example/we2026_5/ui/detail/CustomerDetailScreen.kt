@@ -114,6 +114,9 @@ fun CustomerDetailScreen(
     var editKundenTyp by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.kundenTyp ?: KundenTyp.REGELMAESSIG) }
     var editAbholungWochentag by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.defaultAbholungWochentag ?: -1) }
     var editAuslieferungWochentag by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.defaultAuslieferungWochentag ?: -1) }
+    var editIntervallTageUnregel by remember(customer?.id, isInEditMode) {
+        mutableStateOf((customer?.intervallTage?.takeIf { it in 1..365 } ?: 7))
+    }
     var overflowMenuExpanded by remember { mutableStateOf(false) }
     var nameError by remember { mutableStateOf<String?>(null) }
     val validationNameMissing = stringResource(R.string.validation_name_missing)
@@ -404,25 +407,41 @@ fun CustomerDetailScreen(
                     
                     Spacer(Modifier.height(FieldSpacing))
                     Text(stringResource(R.string.label_default_pickup_day), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         weekdays.forEachIndexed { index, (_, labelResId) ->
                             FilterChip(
                                 selected = editAbholungWochentag == index,
                                 onClick = { editAbholungWochentag = if (editAbholungWochentag == index) -1 else index },
-                                label = { Text(stringResource(labelResId)) }
+                                modifier = Modifier.weight(1f),
+                                label = { Text(stringResource(labelResId), maxLines = 1) }
                             )
                         }
                     }
                     Spacer(Modifier.height(8.dp))
                     Text(stringResource(R.string.label_default_delivery_day), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         weekdays.forEachIndexed { index, (_, labelResId) ->
                             FilterChip(
                                 selected = editAuslieferungWochentag == index,
                                 onClick = { editAuslieferungWochentag = if (editAuslieferungWochentag == index) -1 else index },
-                                label = { Text(stringResource(labelResId)) }
+                                modifier = Modifier.weight(1f),
+                                label = { Text(stringResource(labelResId), maxLines = 1) }
                             )
                         }
+                    }
+                    if (editKundenTyp == KundenTyp.UNREGELMAESSIG) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(stringResource(R.string.label_a_plus_tage_l), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                        OutlinedTextField(
+                            value = editIntervallTageUnregel.toString(),
+                            onValueChange = { s ->
+                                val v = s.filter { it.isDigit() }.toIntOrNull()?.coerceIn(1, 365) ?: 7
+                                editIntervallTageUnregel = v
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            supportingText = { Text(stringResource(R.string.hint_a_plus_tage), color = textSecondary, fontSize = 12.sp) }
+                        )
                     }
                     Spacer(Modifier.height(FieldSpacing))
                     Text(stringResource(R.string.label_urlaub), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
@@ -457,6 +476,7 @@ fun CustomerDetailScreen(
                                             "kundenTyp" to editKundenTyp.name,
                                             "defaultAbholungWochentag" to editAbholungWochentag,
                                             "defaultAuslieferungWochentag" to editAuslieferungWochentag,
+                                            "intervallTage" to editIntervallTageUnregel,
                                             "intervalle" to editIntervalle.map {
                                                 mapOf(
                                                     "id" to it.id,

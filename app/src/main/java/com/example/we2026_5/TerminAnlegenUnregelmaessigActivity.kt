@@ -28,6 +28,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.android.ext.android.inject
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
@@ -71,7 +72,7 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                             tourSlots = tourSlots.orEmpty(),
                             startDatum = System.currentTimeMillis(),
                             tageVoraus = 56
-                        )
+                        ).filter { it.typ == TerminTyp.ABHOLUNG }
                     }
                 } catch (e: Exception) {
                     android.util.Log.e("TerminAnlegenUnregel", "Fehler beim Laden", e)
@@ -178,13 +179,14 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                         Toast.makeText(context, "Bitte mindestens einen Termin wählen", Toast.LENGTH_SHORT).show()
                                         return@launch
                                     }
+                                    val zahl = (c.intervallTage.coerceIn(1, 365)).takeIf { it > 0 } ?: 7
                                     val newIntervalle = toAdd.map { slot ->
                                         CustomerIntervall(
                                             id = UUID.randomUUID().toString(),
-                                            abholungDatum = if (slot.typ == TerminTyp.ABHOLUNG) slot.datum else 0,
-                                            auslieferungDatum = if (slot.typ == TerminTyp.AUSLIEFERUNG) slot.datum else 0,
+                                            abholungDatum = slot.datum,
+                                            auslieferungDatum = slot.datum + TimeUnit.DAYS.toMillis(zahl.toLong()),
                                             wiederholen = false,
-                                            intervallTage = 0,
+                                            intervallTage = zahl,
                                             intervallAnzahl = 0
                                         )
                                     }
