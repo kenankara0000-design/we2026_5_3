@@ -155,6 +155,15 @@ class TourPlannerViewModel(
         return repository.updateCustomerResult(customer.id, mapOf("geloeschteTermine" to aktuelleGeloeschteTermine))
     }
 
+    /** Stellt einen einzelnen Termin wieder her (entfernt Datum aus geloeschteTermine). */
+    suspend fun restoreTerminForCustomer(customer: Customer, terminDatum: Long): Result<Boolean> {
+        val terminDatumStart = TerminBerechnungUtils.getStartOfDay(terminDatum)
+        val aktuelleGeloeschteTermine = customer.geloeschteTermine.toMutableList().apply {
+            remove(terminDatumStart)
+        }
+        return repository.updateCustomerResult(customer.id, mapOf("geloeschteTermine" to aktuelleGeloeschteTermine))
+    }
+
     /**
      * Setzt Tour-Zyklus zurück (letzterTermin = jetzt, A/L = false, verschobenAufDatum = 0).
      * Activity ruft auf und zeigt Ergebnis.

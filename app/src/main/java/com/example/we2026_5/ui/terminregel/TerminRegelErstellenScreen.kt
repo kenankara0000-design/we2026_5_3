@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.we2026_5.R
+import com.example.we2026_5.TerminRegelTyp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

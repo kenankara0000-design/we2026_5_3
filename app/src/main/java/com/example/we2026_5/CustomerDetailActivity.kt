@@ -15,9 +15,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
+import com.example.we2026_5.CustomerStatus
+import com.example.we2026_5.KundenTyp
+import com.example.we2026_5.util.TerminAusKundeUtils
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.DialogBaseHelper
 import com.example.we2026_5.util.TerminRegelInfoText
+import com.example.we2026_5.util.TerminRegelDatePickerHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.lifecycle.lifecycleScope
@@ -32,6 +36,7 @@ import com.example.we2026_5.util.IntervallManager
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -123,16 +128,14 @@ class CustomerDetailActivity : AppCompatActivity() {
                         .show()
                 },
                 onTerminAnlegen = {
-                    AlertDialog.Builder(this@CustomerDetailActivity)
-                        .setTitle(getString(R.string.dialog_termin_anlegen_title))
-                        .setMessage(getString(R.string.dialog_termin_anlegen_message))
-                        .setPositiveButton(getString(R.string.dialog_yes)) { _, _ ->
-                            startActivity(Intent(this@CustomerDetailActivity, TerminRegelManagerActivity::class.java).apply {
-                                putExtra("CUSTOMER_ID", id)
-                            })
-                        }
-                        .setNegativeButton(getString(R.string.btn_cancel), null)
-                        .show()
+                    val c = customer ?: return@CustomerDetailScreen
+                    handleTerminAnlegen(c, id)
+                },
+                onPauseCustomer = {
+                    customer?.let { pauseCustomer(it) } ?: showCustomerActionError()
+                },
+                onResumeCustomer = {
+                    customer?.let { resumeCustomer(it) } ?: showCustomerActionError()
                 },
                 onTakePhoto = { photoManager?.showPhotoOptionsDialog() },
                 onAdresseClick = {
@@ -243,6 +246,87 @@ class CustomerDetailActivity : AppCompatActivity() {
             }
             .setNegativeButton(getString(R.string.dialog_close), null)
             .show()
+    }
+
+    private fun pauseCustomer(customer: Customer) {
+        val calendar = Calendar.getInstance()
+        TerminRegelDatePickerHelper.showDatePicker(
+            context = this,
+            initialYear = calendar.get(Calendar.YEAR),
+            initialMonth = calendar.get(Calendar.MONTH),
+            initialDay = calendar.get(Calendar.DAY_OF_MONTH)
+        ) { timestamp ->
+            if (timestamp <= 0) return@showDatePicker
+            val updates = mapOf(
+                "status" to CustomerStatus.PAUSIERT.name,
+                "pauseStart" to System.currentTimeMillis(),
+                "pauseEnde" to timestamp,
+                "reaktivierungsDatum" to timestamp
+            )
+            viewModel.saveCustomer(updates) { success ->
+                if (success) {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.toast_customer_paused, DateFormatter.formatDateWithWeekday(timestamp)),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun resumeCustomer(customer: Customer) {
+        val updates = mapOf(
+            "status" to CustomerStatus.AKTIV.name,
+            "pauseStart" to 0L,
+            "pauseEnde" to 0L,
+            "reaktivierungsDatum" to System.currentTimeMillis()
+        )
+        viewModel.saveCustomer(updates) { success ->
+            if (success) {
+                Toast.makeText(this, getString(R.string.toast_customer_resumed), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showCustomerActionError() {
+        Toast.makeText(this, getString(R.string.error_customer_not_found), Toast.LENGTH_SHORT).show()
+    }
+
+    private fun handleTerminAnlegen(customer: Customer, id: String) {
+        when (customer.kundenTyp) {
+            KundenTyp.UNREGELMAESSIG -> {
+                if (customer.defaultAbholungWochentag < 0 && customer.defaultAuslieferungWochentag < 0) {
+                    Toast.makeText(this, getString(R.string.validation_unregelmaessig_al_required), Toast.LENGTH_LONG).show()
+                    return
+                }
+                startTerminAnlegenDialogUnregelmaessig(customer)
+            }
+            KundenTyp.REGELMAESSIG -> {
+                if (customer.intervalle.isEmpty()) {
+                    val intervall = TerminAusKundeUtils.erstelleIntervallAusKunde(customer)
+                    if (intervall != null) {
+                        viewModel.saveCustomer(emptyMap(), listOf(intervall)) { success ->
+                            if (success) {
+                                Toast.makeText(this, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    } else {
+                        Toast.makeText(this, getString(R.string.validation_regelmaessig_al_required), Toast.LENGTH_LONG).show()
+                    }
+                } else {
+                    startActivity(Intent(this, TerminRegelManagerActivity::class.java).apply {
+                        putExtra("CUSTOMER_ID", id)
+                    })
+                }
+            }
+        }
+    }
+
+    private fun startTerminAnlegenDialogUnregelmaessig(customer: Customer) {
+        startActivity(Intent(this, TerminAnlegenUnregelmaessigActivity::class.java).apply {
+            putExtra("CUSTOMER_ID", customer.id)
+        })
     }
 
     override fun onDestroy() {

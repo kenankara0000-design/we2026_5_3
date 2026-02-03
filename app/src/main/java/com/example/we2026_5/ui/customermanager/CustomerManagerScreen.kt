@@ -23,6 +23,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -63,6 +64,7 @@ private const val SEARCH_DEBOUNCE_MS = 300L
 fun CustomerManagerScreen(
     customers: List<Customer>,
     selectedTab: Int,
+    kundenTypFilter: Int,
     searchQuery: String,
     isBulkMode: Boolean,
     selectedIds: Set<String>,
@@ -71,6 +73,7 @@ fun CustomerManagerScreen(
     errorMessage: String?,
     onBack: () -> Unit,
     onTabSelected: (Int) -> Unit,
+    onKundenTypFilterChange: (Int) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     pressedHeaderButton: String?, // "Auswählen", "Exportieren", "NeuerKunde" für orangefarbenes Feedback
     onBulkSelectClick: () -> Unit,
@@ -236,6 +239,31 @@ fun CustomerManagerScreen(
                     placeholder = { Text(stringResource(R.string.hint_search_customer)) },
                     singleLine = true
                 )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.label_filter_kunden_typ),
+                    color = textPrimary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = kundenTypFilter == 0,
+                        onClick = { onKundenTypFilterChange(0) },
+                        label = { Text(stringResource(R.string.label_filter_all)) }
+                    )
+                    FilterChip(
+                        selected = kundenTypFilter == 1,
+                        onClick = { onKundenTypFilterChange(1) },
+                        label = { Text(stringResource(R.string.label_kunden_typ_regelmaessig)) }
+                    )
+                    FilterChip(
+                        selected = kundenTypFilter == 2,
+                        onClick = { onKundenTypFilterChange(2) },
+                        label = { Text(stringResource(R.string.label_kunden_typ_unregelmaessig)) }
+                    )
+                }
                 Spacer(Modifier.height(8.dp))
 
                 when {

@@ -18,6 +18,8 @@ import java.util.UUID
 data class ListeErstellenState(
     val listName: String = "",
     val selectedType: String = "Gewerbe",
+    val isWochentagListe: Boolean = false,
+    val wochentag: Int = -1,
     val isSaving: Boolean = false,
     val errorMessage: String? = null,
     val success: Boolean = false
@@ -41,11 +43,32 @@ class ListeErstellenViewModel(
         _state.value = _state.value?.copy(selectedType = type) ?: ListeErstellenState(selectedType = type)
     }
 
+    fun setWochentagListe(isWochentagListe: Boolean) {
+        val current = _state.value ?: ListeErstellenState()
+        _state.value = current.copy(
+            isWochentagListe = isWochentagListe,
+            wochentag = if (isWochentagListe && current.wochentag < 0) 0 else current.wochentag
+        )
+    }
+
+    fun setWochentag(tag: Int) {
+        _state.value = _state.value?.copy(wochentag = tag) ?: ListeErstellenState(wochentag = tag)
+    }
+
     fun save() {
         val current = _state.value ?: return
         val name = current.listName.trim()
-        if (name.isEmpty()) {
+        val wochentag = if (current.isWochentagListe) current.wochentag else -1
+        val weekdayNames = listOf("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
+        val finalName = if (current.isWochentagListe && name.isEmpty() && wochentag in 0..6) {
+            weekdayNames[wochentag]
+        } else name
+        if (finalName.isEmpty()) {
             _state.value = current.copy(errorMessage = appContext.getString(R.string.validation_list_name_missing))
+            return
+        }
+        if (current.isWochentagListe && wochentag !in 0..6) {
+            _state.value = current.copy(errorMessage = appContext.getString(R.string.validation_list_wochentag))
             return
         }
 
@@ -54,8 +77,9 @@ class ListeErstellenViewModel(
             val listeId = UUID.randomUUID().toString()
             val neueListe = KundenListe(
                 id = listeId,
-                name = name,
+                name = finalName,
                 listeArt = current.selectedType,
+                wochentag = wochentag,
                 intervalle = emptyList(),
                 erstelltAm = System.currentTimeMillis()
             )

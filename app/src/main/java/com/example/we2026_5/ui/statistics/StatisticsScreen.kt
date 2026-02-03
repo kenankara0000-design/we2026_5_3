@@ -169,6 +169,20 @@ fun StatisticsScreen(
                         valueColor = primaryBlue,
                         backgroundColor = surfaceWhite
                     )
+                    StatCard(
+                        label = stringResource(R.string.stat_regelmaessig_kunden),
+                        value = s.regelmaessigCount.toString(),
+                        labelColor = textPrimary,
+                        valueColor = primaryBlue,
+                        backgroundColor = surfaceWhite
+                    )
+                    StatCard(
+                        label = stringResource(R.string.stat_unregelmaessig_kunden),
+                        value = s.unregelmaessigCount.toString(),
+                        labelColor = textPrimary,
+                        valueColor = primaryBlue,
+                        backgroundColor = surfaceWhite
+                    )
 
                     Spacer(modifier = Modifier.height(24.dp))
                 }

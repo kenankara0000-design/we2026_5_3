@@ -40,7 +40,7 @@ val appModule = module {
     single { TourPlanRepository(get()) }
     
     // ViewModels
-    viewModel { MainViewModel(get(), get()) }
+    viewModel { MainViewModel(get(), get(), get()) }
     viewModel { StatisticsViewModel(get()) }
     viewModel { ListeErstellenViewModel(get(), get()) }
     viewModel { CustomerManagerViewModel(get()) }

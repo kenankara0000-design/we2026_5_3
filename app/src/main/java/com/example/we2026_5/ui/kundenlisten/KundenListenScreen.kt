@@ -26,11 +26,17 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -63,6 +69,8 @@ fun KundenListenScreen(
     val textSecondary = Color(ContextCompat.getColor(context, R.color.text_secondary))
     val statusOverdue = Color(ContextCompat.getColor(context, R.color.status_overdue))
     val fabColor = Color(ContextCompat.getColor(context, R.color.status_warning))
+    var searchQuery by remember { mutableStateOf("") }
+    var sortByCount by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -115,7 +123,7 @@ fun KundenListenScreen(
                     onClick = onNewListe,
                     colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = buttonBlue),
                     shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.weight(1f)
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Add,
@@ -130,6 +138,48 @@ fun KundenListenScreen(
                         fontSize = 14.sp
                     )
                 }
+                Spacer(modifier = Modifier.size(8.dp))
+                androidx.compose.material3.Button(
+                    onClick = onRefresh,
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = buttonBlue),
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.label_refresh),
+                        color = Color.White,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                placeholder = { Text(stringResource(R.string.label_list_search)) },
+                singleLine = true
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = !sortByCount,
+                    onClick = { sortByCount = false },
+                    label = { Text(stringResource(R.string.label_list_sort_name)) }
+                )
+                FilterChip(
+                    selected = sortByCount,
+                    onClick = { sortByCount = true },
+                    label = { Text(stringResource(R.string.label_list_sort_count)) }
+                )
             }
 
             Box(
@@ -205,11 +255,17 @@ fun KundenListenScreen(
                         }
                     }
                     is KundenListenState.Success -> {
+                        val filteredListen = state.listen.filter { it.name.contains(searchQuery, ignoreCase = true) }
+                        val sortedListen = if (sortByCount) {
+                            filteredListen.sortedByDescending { liste -> state.kundenProListe[liste.id] ?: 0 }
+                        } else {
+                            filteredListen
+                        }
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            items(state.listen, key = { it.id }) { liste ->
+                            items(sortedListen, key = { it.id }) { liste ->
                                 val kundenCount = state.kundenProListe[liste.id] ?: 0
                                 ListenItem(
                                     liste = liste,
@@ -283,6 +339,14 @@ internal fun ListenItem(
                 fontSize = 14.sp,
                 color = textSecondary
             )
+            if (kundenCount == 0 && liste.wochentag in 0..6) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = stringResource(R.string.label_list_empty_weekday),
+                    fontSize = 12.sp,
+                    color = textSecondary
+                )
+            }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.label_created, erstelltAm),

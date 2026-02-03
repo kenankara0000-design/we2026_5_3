@@ -97,6 +97,21 @@ class TourPlannerCoordinator(
                 is Result.Success -> {
                     viewModel.clearError()
                     android.widget.Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.toast_termin_deleted), android.widget.Toast.LENGTH_SHORT).show()
+                    com.example.we2026_5.util.DialogBaseHelper.showConfirmationDialog(
+                        context = activity,
+                        title = activity.getString(com.example.we2026_5.R.string.dialog_undo_termin_title),
+                        message = activity.getString(com.example.we2026_5.R.string.dialog_undo_termin_message),
+                        positiveButtonText = activity.getString(com.example.we2026_5.R.string.btn_undo),
+                        negativeButtonText = activity.getString(com.example.we2026_5.R.string.dialog_close),
+                        onPositive = {
+                            activity.lifecycleScope.launch {
+                                when (val undo = viewModel.restoreTerminForCustomer(customer, terminDatum)) {
+                                    is Result.Success -> reloadCurrentView()
+                                    is Result.Error -> viewModel.setError(undo.message)
+                                }
+                            }
+                        }
+                    )
                     reloadCurrentView()
                 }
                 is Result.Error -> {

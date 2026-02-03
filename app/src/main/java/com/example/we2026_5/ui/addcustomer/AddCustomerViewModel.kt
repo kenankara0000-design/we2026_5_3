@@ -3,6 +3,7 @@ package com.example.we2026_5.ui.addcustomer
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.we2026_5.KundenTyp
 
 data class AddCustomerState(
     val name: String = "",
@@ -12,6 +13,10 @@ data class AddCustomerState(
     val telefon: String = "",
     val notizen: String = "",
     val kundenArt: String = "Gewerblich",
+    val kundenTyp: KundenTyp = KundenTyp.REGELMAESSIG,
+    val listenWochentag: Int = -1,
+    val intervallTage: Int = 7,
+    val kundennummer: String = "",
     val abholungWochentag: Int = -1,
     val auslieferungWochentag: Int = -1,
     val defaultUhrzeit: String = "",
@@ -64,8 +69,32 @@ class AddCustomerViewModel : ViewModel() {
         _state.value = (_state.value ?: AddCustomerState()).copy(kundenArt = kundenArt)
     }
 
+    fun setKundenTyp(typ: KundenTyp) {
+        val s = _state.value ?: AddCustomerState()
+        _state.value = s.copy(
+            kundenTyp = typ,
+            listenWochentag = if (typ == KundenTyp.REGELMAESSIG && s.listenWochentag < 0 && s.abholungWochentag >= 0) s.abholungWochentag else s.listenWochentag
+        )
+    }
+
+    fun setListenWochentag(tag: Int) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(listenWochentag = tag)
+    }
+
+    fun setIntervallTage(tage: Int) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(intervallTage = tage.coerceIn(1, 365))
+    }
+
+    fun setKundennummer(nummer: String) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(kundennummer = nummer)
+    }
+
     fun setAbholungWochentag(tag: Int) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(abholungWochentag = tag)
+        val s = _state.value ?: AddCustomerState()
+        _state.value = s.copy(
+            abholungWochentag = tag,
+            listenWochentag = if (s.kundenTyp == KundenTyp.REGELMAESSIG && s.listenWochentag < 0 && tag >= 0) tag else s.listenWochentag
+        )
     }
 
     fun setAuslieferungWochentag(tag: Int) {

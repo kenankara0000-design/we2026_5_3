@@ -15,6 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,18 +31,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.R
+import com.example.we2026_5.TerminSlotVorschlag
+import com.example.we2026_5.util.DateFormatter
 
 @Composable
 fun MainScreen(
     isOffline: Boolean,
     isSyncing: Boolean,
     tourCount: Int,
+    slotVorschlaege: List<TerminSlotVorschlag>,
     onNeuKunde: () -> Unit,
     onKunden: () -> Unit,
     onTouren: () -> Unit,
     onKundenListen: () -> Unit,
     onStatistiken: () -> Unit,
-    onTerminRegeln: () -> Unit
+    onTerminRegeln: () -> Unit,
+    onSlotSelected: (TerminSlotVorschlag) -> Unit
 ) {
     val primaryBlueDark = colorResource(R.color.primary_blue_dark)
     val primaryBlue = colorResource(R.color.primary_blue)
@@ -234,6 +240,61 @@ fun MainScreen(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            text = stringResource(R.string.main_slot_section_title),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = primaryBlueDark,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+        )
+        if (slotVorschlaege.isEmpty()) {
+            Text(
+                text = stringResource(R.string.main_slot_section_empty),
+                color = textSecondary,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White, RoundedCornerShape(12.dp))
+                    .padding(16.dp)
+            )
+        } else {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                slotVorschlaege.take(5).forEach { slot ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(slot.customerName, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                DateFormatter.formatDateWithWeekday(slot.datum),
+                                fontSize = 14.sp,
+                                color = textSecondary
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(slot.beschreibung.ifBlank { slot.typ.name }, fontSize = 14.sp)
+                            Spacer(Modifier.height(12.dp))
+                            Button(
+                                onClick = { onSlotSelected(slot) },
+                                colors = ButtonDefaults.buttonColors(containerColor = primaryBlue)
+                            ) {
+                                Text(stringResource(R.string.main_slot_button_label))
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

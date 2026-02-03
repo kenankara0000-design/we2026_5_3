@@ -42,6 +42,9 @@ data class Customer(
     @Deprecated("Wird nicht mehr verwendet")
     val wochentagOld: Int = 0, // 0=Montag, 1=Dienstag, ..., 6=Sonntag (wird von Liste übernommen für Privat-Kunden)
     val wochentag: String = "", // MO, DI, MI, DO, FR, SA, SO
+    val kundenTyp: KundenTyp = KundenTyp.REGELMAESSIG,
+    val listenWochentag: Int = -1, // 0=Mo..6=So, für Wochentagslisten; -1=nicht gesetzt
+    val kundennummer: String = "", // Optionale externe Referenz
     val defaultAbholungWochentag: Int = -1,
     val defaultAuslieferungWochentag: Int = -1,
     val defaultUhrzeit: String = "",

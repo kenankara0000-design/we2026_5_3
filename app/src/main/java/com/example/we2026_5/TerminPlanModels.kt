@@ -8,7 +8,7 @@ package com.example.we2026_5
 enum class TerminRegelTyp {
     WEEKLY,
     FLEXIBLE_CYCLE,
-    AD_HOC
+    ADHOC
 }
 
 /** Einfaches Zeitfenster (z. B. 09:00–13:00). */
@@ -32,6 +32,12 @@ data class AdHocTemplate(
     val uhrzeit: String = ""
 )
 
+/** Kunden-Typ: Regelmäßig (Zyklus) oder Unregelmäßig. */
+enum class KundenTyp {
+    REGELMAESSIG,
+    UNREGELMAESSIG
+}
+
 /** Kundenstatus zur Steuerung von Pause/Fortsetzen. */
 enum class CustomerStatus {
     AKTIV,
@@ -52,5 +58,7 @@ data class TerminSlotVorschlag(
     val datum: Long,
     val typ: TerminTyp,
     val beschreibung: String = "",
-    val tourSlotId: String? = null
+    val tourSlotId: String? = null,
+    val customerId: String = "",
+    val customerName: String = ""
 )

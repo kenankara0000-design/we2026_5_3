@@ -32,6 +32,38 @@ class TourDataProcessor {
         
         // Kunden in Listen filtern
         val listenMitKunden = mutableMapOf<String, List<Customer>>()
+        // 1) Wochentagslisten (neue Logik)
+        allListen.filter { it.wochentag in 0..6 }.forEach { liste ->
+            val kunden = allCustomers.filter { it.kundenTyp == com.example.we2026_5.KundenTyp.REGELMAESSIG && it.listenWochentag == liste.wochentag }
+            val fälligeKunden = kunden.filter { customer ->
+                val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
+                    categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
+
+                if (isDone) {
+                    val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                        customer = customer,
+                        startDatum = viewDateStart - TimeUnit.DAYS.toMillis(365),
+                        tageVoraus = 730
+                    )
+                    val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
+                    val hatAbholungAmTag = termineAmTag.any { it.typ == com.example.we2026_5.TerminTyp.ABHOLUNG }
+                    val hatAuslieferungAmTag = termineAmTag.any { it.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG }
+                    val wurdeAmTagErledigt = wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTag, hatAuslieferungAmTag)
+                    if (wurdeAmTagErledigt) return@filter true
+                }
+
+                val isOverdue = filter.istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)
+                if (isOverdue) return@filter true
+
+                filter.hatKundeTerminAmDatum(customer, null, viewDateStart)
+            }
+            if (fälligeKunden.isNotEmpty()) {
+                listenMitKunden[liste.id] = fälligeKunden.sortedBy { it.name }
+            }
+        }
+
+        // 2) Alte Listen (listeId)
         kundenNachListen.forEach { (listeId, kunden) ->
             if (listeId.isEmpty()) return@forEach
             val liste = allListen.find { it.id == listeId } ?: return@forEach
@@ -104,7 +136,8 @@ class TourDataProcessor {
         
         // Sammle alle Kunden-IDs die in Listen sind (um Doppelungen zu vermeiden)
         // WICHTIG: Sammle ALLE Kunden aus Listen, nicht nur die fälligen
-        val alleKundenInListenIds = kundenNachListen.values.flatten().map { it.id }.toSet()
+        val kundenInWochentagListenIds = allCustomers.filter { it.kundenTyp == com.example.we2026_5.KundenTyp.REGELMAESSIG && it.listenWochentag in 0..6 }.map { it.id }.toSet()
+        val alleKundenInListenIds = (kundenNachListen.values.flatten().map { it.id } + kundenInWochentagListenIds).toSet()
         val kundenInListenIds = listenMitKunden.values.flatten().map { it.id }.toSet()
         
         // Gewerblich- und Privat-Kunden ohne Liste filtern (Fällig-/Überfällig-Logik für alle Kundentypen)

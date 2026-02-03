@@ -28,6 +28,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -83,6 +84,7 @@ fun TourPlannerScreen(
     tourItems: List<ListItem>,
     viewDateMillis: Long?,
     dateText: String,
+    tourCounts: Pair<Int, Int>,
     isToday: Boolean, // true wenn angezeigtes Datum heute ist → Heute-Button orange
     isLoading: Boolean,
     errorMessage: String?,
@@ -284,7 +286,21 @@ fun TourPlannerScreen(
                                     tint = Color.White
                                 )
                             }
+                            IconButton(onClick = onRefresh) {
+                                Icon(
+                                    imageVector = Icons.Filled.Refresh,
+                                    contentDescription = stringResource(R.string.label_refresh),
+                                    tint = Color.White
+                                )
+                            }
                         }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = stringResource(R.string.label_tour_counts, tourCounts.first, tourCounts.second),
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+                        )
                     }
                 )
                 if (isOffline) {

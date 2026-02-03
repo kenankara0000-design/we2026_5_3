@@ -88,7 +88,9 @@ object TerminRegelManager {
                 datum = it.datum,
                 typ = it.typ,
                 beschreibung = "${customer.name} (${regel.name})",
-                tourSlotId = intervalle.firstOrNull { intervall -> intervall.id == it.intervallId }?.tourSlotId
+                tourSlotId = intervalle.firstOrNull { intervall -> intervall.id == it.intervallId }?.tourSlotId,
+                customerId = customer.id,
+                customerName = customer.name
             )
         }
     }
@@ -103,9 +105,12 @@ object TerminRegelManager {
         val startOfDay = TerminBerechnungUtils.getStartOfDay(startDatum)
         val horizon = startOfDay + TimeUnit.DAYS.toMillis(tageVoraus.toLong())
 
-        val relevanteSlots = tourSlots.filter { slot ->
-            slot.wochentag in 0..6 && slot.stadt.equals(kunde.stadt, ignoreCase = true)
+        val relevanteSlotsBase = if (kunde.stadt.isNotBlank()) {
+            tourSlots.filter { slot -> slot.wochentag in 0..6 && slot.stadt.equals(kunde.stadt, ignoreCase = true) }
+        } else {
+            tourSlots.filter { slot -> slot.wochentag in 0..6 }
         }
+        val relevanteSlots = if (relevanteSlotsBase.isNotEmpty()) relevanteSlotsBase else tourSlots.filter { it.wochentag in 0..6 }
         val defaultAbhol = kunde.defaultAbholungWochentag.takeIf { it.isValidWeekday() }
 
         val vorschlaege = mutableListOf<TerminSlotVorschlag>()
@@ -115,8 +120,14 @@ object TerminRegelManager {
                 vorschlaege += TerminSlotVorschlag(
                     datum = datum,
                     typ = TerminTyp.ABHOLUNG,
-                    beschreibung = "${slot.stadt} (${slot.zeitfenster?.start}-${slot.zeitfenster?.ende})",
-                    tourSlotId = slot.id
+                    beschreibung = listOfNotNull(
+                        kunde.name,
+                        slot.stadt.takeIf { it.isNotBlank() },
+                        slot.zeitfenster?.let { "${it.start}-${it.ende}" }
+                    ).joinToString(" · "),
+                    tourSlotId = slot.id,
+                    customerId = kunde.id,
+                    customerName = kunde.name
                 )
                 datum += TimeUnit.DAYS.toMillis(7)
             }
@@ -128,7 +139,9 @@ object TerminRegelManager {
                 vorschlaege += TerminSlotVorschlag(
                     datum = datum,
                     typ = TerminTyp.ABHOLUNG,
-                    beschreibung = "Standard A-Tag"
+                    beschreibung = "${kunde.name} · ${TerminTyp.ABHOLUNG.name}",
+                    customerId = kunde.id,
+                    customerName = kunde.name
                 )
                 datum += TimeUnit.DAYS.toMillis(7)
             }
@@ -142,7 +155,9 @@ object TerminRegelManager {
                 vorschlaege += TerminSlotVorschlag(
                     datum = datum,
                     typ = TerminTyp.AUSLIEFERUNG,
-                    beschreibung = "Standard L-Tag"
+                    beschreibung = "${kunde.name} · ${TerminTyp.AUSLIEFERUNG.name}",
+                    customerId = kunde.id,
+                    customerName = kunde.name
                 )
                 datum += TimeUnit.DAYS.toMillis(7)
             }

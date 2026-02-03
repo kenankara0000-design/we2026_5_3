@@ -13,6 +13,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -53,6 +55,8 @@ import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
+import com.example.we2026_5.CustomerStatus
+import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
 
@@ -81,6 +85,8 @@ fun CustomerDetailScreen(
     onSave: (Map<String, Any>, List<CustomerIntervall>) -> Unit,
     onDelete: () -> Unit,
     onTerminAnlegen: () -> Unit,
+    onPauseCustomer: () -> Unit,
+    onResumeCustomer: () -> Unit,
     onTakePhoto: () -> Unit,
     onAdresseClick: () -> Unit,
     onTelefonClick: () -> Unit,
@@ -104,6 +110,7 @@ fun CustomerDetailScreen(
     var editTelefon by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.telefon ?: "") }
     var editNotizen by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.notizen ?: "") }
     var editKundenArt by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.kundenArt ?: "Gewerblich") }
+    var editKundenTyp by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.kundenTyp ?: KundenTyp.REGELMAESSIG) }
     var editWochentag by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.wochentag ?: "") }
     var wochentagDropdownExpanded by remember { mutableStateOf(false) }
     var overflowMenuExpanded by remember { mutableStateOf(false) }
@@ -256,6 +263,25 @@ fun CustomerDetailScreen(
                         Text(stringResource(R.string.label_foto_uploading), fontSize = 12.sp, color = primaryBlue)
                     }
                     Spacer(Modifier.height(SectionSpacing))
+            if (!isInEditMode && customer != null) {
+                CustomerStatusSection(
+                    customer = customer,
+                    onPauseCustomer = onPauseCustomer,
+                    onResumeCustomer = onResumeCustomer,
+                    textPrimary = textPrimary,
+                    surfaceWhite = surfaceWhite
+                )
+                Spacer(Modifier.height(SectionSpacing))
+                val nextTermin = customer.getFaelligAm()
+                Text(stringResource(R.string.label_next_termin), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                Text(
+                    text = if (nextTermin > 0) DateFormatter.formatDateWithWeekday(nextTermin) else stringResource(R.string.label_not_set),
+                    modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp),
+                    color = if (nextTermin > 0) textPrimary else textSecondary,
+                    fontSize = BodySp
+                )
+                Spacer(Modifier.height(FieldSpacing))
+            }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(FieldSpacing)
@@ -263,6 +289,18 @@ fun CustomerDetailScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(stringResource(R.string.label_customer_type), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                             Text(text = typeLabel, modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = BodySp)
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.label_kunden_typ), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                            Text(
+                                text = when (customer.kundenTyp) {
+                                    com.example.we2026_5.KundenTyp.REGELMAESSIG -> stringResource(R.string.label_kunden_typ_regelmaessig)
+                                    com.example.we2026_5.KundenTyp.UNREGELMAESSIG -> stringResource(R.string.label_kunden_typ_unregelmaessig)
+                                },
+                                modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp),
+                                color = textPrimary,
+                                fontSize = BodySp
+                            )
                         }
                         if (customer.wochentag.isNotEmpty()) {
                             Column(modifier = Modifier.weight(1f)) {
@@ -332,6 +370,22 @@ fun CustomerDetailScreen(
                         ) {
                             RadioButton(selected = editKundenArt == "Liste", onClick = { editKundenArt = "Liste" })
                             Text(stringResource(R.string.label_type_liste), color = textPrimary, fontSize = BodySp, maxLines = 1)
+                        }
+                    }
+                    Spacer(Modifier.height(FieldSpacing))
+                    Text(stringResource(R.string.label_kunden_typ), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { editKundenTyp = KundenTyp.REGELMAESSIG }) {
+                            RadioButton(selected = editKundenTyp == KundenTyp.REGELMAESSIG, onClick = { editKundenTyp = KundenTyp.REGELMAESSIG })
+                            Text(stringResource(R.string.label_kunden_typ_regelmaessig), color = textPrimary)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { editKundenTyp = KundenTyp.UNREGELMAESSIG }) {
+                            RadioButton(selected = editKundenTyp == KundenTyp.UNREGELMAESSIG, onClick = { editKundenTyp = KundenTyp.UNREGELMAESSIG })
+                            Text(stringResource(R.string.label_kunden_typ_unregelmaessig), color = textPrimary)
                         }
                     }
                     Spacer(Modifier.height(FieldSpacing))
@@ -414,6 +468,7 @@ fun CustomerDetailScreen(
                                             "telefon" to editTelefon.trim(),
                                             "notizen" to editNotizen.trim(),
                                             "kundenArt" to editKundenArt,
+                                            "kundenTyp" to editKundenTyp.name,
                                             "wochentag" to editWochentag,
                                             "intervalle" to editIntervalle.map {
                                                 mapOf(
@@ -514,6 +569,88 @@ fun CustomerDetailScreen(
                         Text(stringResource(R.string.label_add_photo))
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CustomerStatusSection(
+    customer: Customer,
+    onPauseCustomer: () -> Unit,
+    onResumeCustomer: () -> Unit,
+    textPrimary: Color,
+    surfaceWhite: Color
+) {
+    val statusText = when (customer.status) {
+        CustomerStatus.AKTIV -> stringResource(R.string.customer_status_active)
+        CustomerStatus.PAUSIERT -> stringResource(R.string.customer_status_paused)
+        CustomerStatus.ADHOC -> stringResource(R.string.customer_status_adhoc)
+    }
+    val statusColor = when (customer.status) {
+        CustomerStatus.AKTIV -> colorResource(R.color.status_done)
+        CustomerStatus.PAUSIERT -> colorResource(R.color.status_warning)
+        CustomerStatus.ADHOC -> colorResource(R.color.status_info)
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = surfaceWhite)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.customer_status_title),
+                fontSize = SectionTitleSp,
+                fontWeight = FontWeight.Bold,
+                color = textPrimary
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .background(statusColor.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(text = statusText, color = statusColor, fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.customer_status_current, statusText),
+                    color = textPrimary,
+                    fontSize = BodySp
+                )
+            }
+            if (customer.pauseEnde > 0) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = stringResource(
+                        R.string.customer_status_paused_until,
+                        DateFormatter.formatDateWithWeekday(customer.pauseEnde)
+                    ),
+                    color = textPrimary,
+                    fontSize = BodySp
+                )
+            }
+            if (customer.tags.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.customer_tags_label, customer.tags.joinToString(", ")),
+                    color = textPrimary,
+                    fontSize = BodySp
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+            Button(
+                onClick = if (customer.status == CustomerStatus.PAUSIERT) onResumeCustomer else onPauseCustomer,
+                colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.primary_blue))
+            ) {
+                Text(
+                    text = if (customer.status == CustomerStatus.PAUSIERT) {
+                        stringResource(R.string.customer_btn_resume)
+                    } else {
+                        stringResource(R.string.customer_btn_pause)
+                    }
+                )
             }
         }
     }

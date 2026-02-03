@@ -26,6 +26,8 @@ class ListeErstellenActivity : AppCompatActivity() {
                     state = state,
                     onListNameChange = { viewModel.setListName(it) },
                     onTypeChange = { viewModel.setSelectedType(it) },
+                    onWochentagListeChange = { viewModel.setWochentagListe(it) },
+                    onWochentagChange = { viewModel.setWochentag(it) },
                     onSave = { viewModel.save() },
                     onBack = { finish() },
                     onFinish = { finish() }

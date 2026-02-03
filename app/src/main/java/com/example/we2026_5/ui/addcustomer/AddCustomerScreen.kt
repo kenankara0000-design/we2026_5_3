@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,6 +53,10 @@ fun AddCustomerScreen(
     onTelefonChange: (String) -> Unit,
     onNotizenChange: (String) -> Unit,
     onKundenArtChange: (String) -> Unit,
+    onKundenTypChange: (KundenTyp) -> Unit,
+    onListenWochentagChange: (Int) -> Unit,
+    onIntervallTageChange: (Int) -> Unit,
+    onKundennummerChange: (String) -> Unit,
     onAbholungTagChange: (Int) -> Unit,
     onAuslieferungTagChange: (Int) -> Unit,
     onDefaultUhrzeitChange: (String) -> Unit,
@@ -145,6 +150,46 @@ fun AddCustomerScreen(
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
+                text = stringResource(R.string.label_kunden_typ),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = textPrimary
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioOption(
+                    text = stringResource(R.string.label_kunden_typ_regelmaessig),
+                    selected = state.kundenTyp == KundenTyp.REGELMAESSIG,
+                    onSelect = { onKundenTypChange(KundenTyp.REGELMAESSIG) },
+                    textPrimary = textPrimary
+                )
+                RadioOption(
+                    text = stringResource(R.string.label_kunden_typ_unregelmaessig),
+                    selected = state.kundenTyp == KundenTyp.UNREGELMAESSIG,
+                    onSelect = { onKundenTypChange(KundenTyp.UNREGELMAESSIG) },
+                    textPrimary = textPrimary
+                )
+            }
+            if (state.kundenTyp == KundenTyp.REGELMAESSIG) {
+                Spacer(modifier = Modifier.height(12.dp))
+                IntervallSchnellauswahl(
+                    selected = state.intervallTage,
+                    onSelect = onIntervallTageChange,
+                    textPrimary = textPrimary
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                WeekdaySelector(
+                    label = stringResource(R.string.label_listen_wochentag),
+                    selected = state.listenWochentag,
+                    onSelect = onListenWochentagChange
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
                 text = stringResource(R.string.label_customer_type),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
@@ -195,6 +240,14 @@ fun AddCustomerScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 placeholder = { Text("09:00") }
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = state.kundennummer,
+                onValueChange = onKundennummerChange,
+                label = { Text(stringResource(R.string.label_kundennummer)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
@@ -311,6 +364,35 @@ private fun RadioOption(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun IntervallSchnellauswahl(
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    textPrimary: Color
+) {
+    val preset = listOf(7, 14, 21, 28)
+    Column {
+        Text(
+            text = stringResource(R.string.label_intervall_tage),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = textPrimary
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            preset.forEach { tage ->
+                FilterChip(
+                    selected = selected == tage,
+                    onClick = { onSelect(tage) },
+                    label = { Text("$tage Tage") }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WeekdaySelector(
     label: String,

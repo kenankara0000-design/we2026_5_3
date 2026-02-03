@@ -2,6 +2,7 @@ package com.example.we2026_5.data.repository
 
 import com.example.we2026_5.Customer
 import com.example.we2026_5.TerminTyp
+import com.example.we2026_5.util.migrateKundenTyp
 import com.example.we2026_5.VerschobenerTermin
 import com.example.we2026_5.util.AppErrorMapper
 import com.example.we2026_5.util.Result
@@ -88,7 +89,7 @@ class CustomerRepository(
     private fun parseCustomerSnapshot(child: DataSnapshot, id: String): Customer? {
         val customer = child.getValue(Customer::class.java) ?: return null
         val verschobeneTermine = parseVerschobeneTermine(child.child("verschobeneTermine"))
-        return customer.copy(id = id, verschobeneTermine = verschobeneTermine)
+        return customer.copy(id = id, verschobeneTermine = verschobeneTermine).migrateKundenTyp()
     }
 
     private fun parseVerschobeneTermine(snapshot: DataSnapshot): List<VerschobenerTermin> {

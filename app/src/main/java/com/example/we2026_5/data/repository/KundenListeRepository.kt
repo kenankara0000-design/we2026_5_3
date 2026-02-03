@@ -1,6 +1,9 @@
 package com.example.we2026_5.data.repository
 
 import com.example.we2026_5.KundenListe
+import com.example.we2026_5.ListeIntervall
+import com.example.we2026_5.TerminTyp
+import com.example.we2026_5.VerschobenerTermin
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -16,6 +19,66 @@ class KundenListeRepository(
     private val database: FirebaseDatabase
 ) {
     private val listenRef: DatabaseReference = database.reference.child("kundenListen")
+
+    /** Firebase liefert Zahlen teils als String; sicher nach Long parsen. */
+    private fun safeLong(value: Any?): Long = when (value) {
+        is Number -> value.toLong()
+        is String -> value.toLongOrNull() ?: 0L
+        else -> 0L
+    }
+
+    /** Firebase liefert Zahlen teils als String; sicher nach Int parsen. */
+    private fun safeInt(value: Any?): Int = when (value) {
+        is Number -> value.toInt()
+        is String -> value.toIntOrNull() ?: 0
+        else -> 0
+    }
+
+    private fun safeBoolean(value: Any?): Boolean = when (value) {
+        is Boolean -> value
+        is String -> value.toBooleanStrictOrNull() ?: false
+        else -> false
+    }
+
+    private fun parseListeIntervall(s: DataSnapshot): ListeIntervall = ListeIntervall(
+        abholungDatum = safeLong(s.child("abholungDatum").getValue()),
+        auslieferungDatum = safeLong(s.child("auslieferungDatum").getValue()),
+        wiederholen = safeBoolean(s.child("wiederholen").getValue()),
+        intervallTage = safeInt(s.child("intervallTage").getValue()).coerceIn(1, 365).takeIf { it in 1..365 } ?: 7,
+        intervallAnzahl = safeInt(s.child("intervallAnzahl").getValue()).coerceAtLeast(0)
+    )
+
+    private fun parseVerschobenerTermin(s: DataSnapshot): VerschobenerTermin {
+        val typStr = s.child("typ").getValue(String::class.java)
+        val typ = if (typStr == "AUSLIEFERUNG") TerminTyp.AUSLIEFERUNG else TerminTyp.ABHOLUNG
+        return VerschobenerTermin(
+            originalDatum = safeLong(s.child("originalDatum").getValue()),
+            verschobenAufDatum = safeLong(s.child("verschobenAufDatum").getValue()),
+            intervallId = s.child("intervallId").getValue(String::class.java),
+            typ = typ
+        )
+    }
+
+    private fun parseKundenListe(snapshot: DataSnapshot): KundenListe? {
+        if (!snapshot.exists()) return null
+        val intervalle = snapshot.child("intervalle").children.map { parseListeIntervall(it) }
+        val verschobene = snapshot.child("verschobeneTermine").children.map { parseVerschobenerTermin(it) }
+        val geloeschte = snapshot.child("geloeschteTermine").children.map { safeLong(it.getValue()) }
+        return KundenListe(
+            id = snapshot.child("id").getValue(String::class.java) ?: snapshot.key ?: "",
+            name = snapshot.child("name").getValue(String::class.java) ?: "",
+            listeArt = snapshot.child("listeArt").getValue(String::class.java) ?: "Gewerbe",
+            wochentag = safeInt(snapshot.child("wochentag").getValue()).coerceIn(-1, 6),
+            intervalle = intervalle.ifEmpty { listOf(ListeIntervall()) },
+            erstelltAm = safeLong(snapshot.child("erstelltAm").getValue()).takeIf { it > 0 } ?: System.currentTimeMillis(),
+            abholungErfolgt = safeBoolean(snapshot.child("abholungErfolgt").getValue()),
+            auslieferungErfolgt = safeBoolean(snapshot.child("auslieferungErfolgt").getValue()),
+            urlaubVon = safeLong(snapshot.child("urlaubVon").getValue()),
+            urlaubBis = safeLong(snapshot.child("urlaubBis").getValue()),
+            verschobeneTermine = verschobene,
+            geloeschteTermine = geloeschte
+        )
+    }
     
     /**
      * Lädt alle Listen als Flow
@@ -25,10 +88,8 @@ class KundenListeRepository(
             override fun onDataChange(snapshot: DataSnapshot) {
                 val listen = mutableListOf<KundenListe>()
                 snapshot.children.forEach { child ->
-                    val liste = child.getValue(KundenListe::class.java)
-                    liste?.let { listen.add(it) }
+                    parseKundenListe(child)?.let { listen.add(it) }
                 }
-                // Sortieren nach Name
                 listen.sortBy { it.name }
                 trySend(listen)
             }
@@ -50,10 +111,8 @@ class KundenListeRepository(
         val snapshot = listenRef.get().await()
         val listen = mutableListOf<KundenListe>()
         snapshot.children.forEach { child ->
-            val liste = child.getValue(KundenListe::class.java)
-            liste?.let { listen.add(it) }
+            parseKundenListe(child)?.let { listen.add(it) }
         }
-        // Sortieren nach Name
         return listen.sortedBy { it.name }
     }
     
@@ -62,7 +121,7 @@ class KundenListeRepository(
      */
     suspend fun getListeById(listeId: String): KundenListe? {
         val snapshot = listenRef.child(listeId).get().await()
-        return snapshot.getValue(KundenListe::class.java)
+        return parseKundenListe(snapshot)
     }
     
     /**

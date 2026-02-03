@@ -36,6 +36,9 @@
     <string name="error_firebase_allgemein">Verbindungsfehler. Bitte prüfen Sie die Internetverbindung und versuchen Sie es erneut.</string>
     <string name="toast_rueckgaengig_gemacht">Rückgängig gemacht</string>
     <string name="toast_termin_deleted">Termin gelöscht</string>
+    <string name="dialog_undo_termin_title">Termin ausgesetzt</string>
+    <string name="dialog_undo_termin_message">Möchten Sie den Termin wiederherstellen?</string>
+    <string name="btn_undo">Rückgängig</string>
     <string name="toast_tour_completed">Tour abgeschlossen!</string>
 
     <!-- TerminRegelErstellen -->
@@ -110,6 +113,8 @@
     <string name="dialog_rueckgaengig_message">Möchten Sie die Erledigung wirklich rückgängig machen?</string>
     <string name="dialog_termin_loeschen_title">Termin löschen</string>
     <string name="dialog_termin_loeschen_message">Möchten Sie diesen Termin wirklich löschen?</string>
+    <string name="dialog_termin_aussetzen_title">Termin aussetzen</string>
+    <string name="dialog_termin_aussetzen_message">Möchten Sie diesen Termin aussetzen? Er wird für dieses Datum übersprungen.</string>
     <string name="dialog_termin_anlegen_title">Termin Anlegen</string>
     <string name="dialog_termin_anlegen_message">Möchten Sie Termine anlegen? Anschließend können Sie eine Termin-Regel auswählen.</string>
     <string name="dialog_list_cannot_delete_title">Liste kann nicht gelöscht werden</string>
@@ -149,7 +154,7 @@
     <string name="main_btn_touren">Touren Planer</string>
     <string name="main_btn_listen">📋 Kunden Listen</string>
     <string name="main_btn_statistiken">📊 Statistiken</string>
-    <string name="main_btn_termin_regeln">📋 Termin-Regeln</string>
+    <string name="main_btn_termin_regeln">📋 Regel-Vorlagen</string>
     <string name="main_tour_btn_with_count">Tour Planner (%1$d fällig)</string>
     <string name="main_weitere">Weitere</string>
     <string name="main_btn_neu_kunde_desc">Neuen Kunden anlegen</string>
@@ -157,9 +162,12 @@
     <string name="main_btn_touren_desc">Touren Planer öffnen</string>
     <string name="main_btn_listen_desc">Kunden Listen</string>
     <string name="main_btn_statistiken_desc">Statistiken anzeigen</string>
-    <string name="main_btn_termin_regeln_desc">Termin-Regeln verwalten</string>
+    <string name="main_btn_termin_regeln_desc">Regel-Vorlagen verwalten</string>
     <string name="main_btn_berichte">📄 Berichte</string>
     <string name="main_btn_berichte_desc">Berichte anzeigen</string>
+    <string name="main_slot_section_title">Ad-hoc Termin-Slots</string>
+    <string name="main_slot_section_empty">Keine Slot-Vorschläge verfügbar.</string>
+    <string name="main_slot_button_label">Slot auswählen</string>
 
     <!-- Offline / Sync -->
     <string name="offline_sync_hinweis">Änderungen werden beim nächsten Online-Zustand synchronisiert.</string>
@@ -175,12 +183,36 @@
     <string name="stat_ueberfaellig">⚠️ Überfällig</string>
     <string name="stat_erledigt_heute">✅ Erledigt heute</string>
     <string name="stat_gesamt_kunden">👥 Gesamt Kunden</string>
+    <string name="stat_regelmaessig_kunden">🟢 Regelmäßig</string>
+    <string name="stat_unregelmaessig_kunden">🟡 Unregelmäßig</string>
     <string name="stat_fehler_laden">Fehler beim Laden</string>
     <string name="stat_loading">Laden…</string>
     <string name="stat_erledigungsquote_heute">📊 Erledigungsquote heute</string>
 
     <!-- Validierung / Speichern -->
     <string name="validation_name_missing">Name fehlt</string>
+    <string name="validation_kunden_typ">Bitte wählen Sie einen Kunden-Typ</string>
+    <string name="validation_regelmaessig_al_required">Für regelmäßige Kunden sind Abhol- und Liefertag erforderlich</string>
+    <string name="validation_unregelmaessig_al_required">Mindestens Abhol- oder Liefertag erforderlich</string>
+    <string name="validation_intervall_required">Bitte Intervall eingeben (1–365 Tage)</string>
+    <string name="validation_listen_wochentag">Bitte Listen-Wochentag wählen</string>
+    <string name="validation_list_wochentag">Bitte Wochentag für die Liste wählen</string>
+    <string name="label_kunden_typ">Termin-Typ:</string>
+    <string name="label_kunden_typ_regelmaessig">Regelmäßig</string>
+    <string name="label_kunden_typ_unregelmaessig">Unregelmäßig</string>
+    <string name="label_filter_kunden_typ">Filter (Termin-Typ):</string>
+    <string name="label_filter_all">Alle</string>
+    <string name="label_list_search">Listen suchen…</string>
+    <string name="label_list_sort_name">Sortierung: Name</string>
+    <string name="label_list_sort_count">Sortierung: Kundenanzahl</string>
+    <string name="label_list_empty_weekday">Noch keine regelmäßigen Kunden mit diesem Wochentag</string>
+    <string name="label_refresh">Aktualisieren</string>
+    <string name="label_listen_wochentag">Listen-Wochentag (für Kundenlisten):</string>
+    <string name="label_intervall_tage">Intervall (Tage):</string>
+    <string name="label_kundennummer">Kundennummer (optional):</string>
+    <string name="label_next_termin">Nächster Termin:</string>
+    <string name="dialog_duplikat_title">Kunde mit ähnlichem Namen</string>
+    <string name="dialog_duplikat_message">Es existiert bereits ein Kunde mit ähnlichem Namen. Trotzdem anlegen?</string>
     <string name="validation_list_name_missing">Listen-Name fehlt</string>
     <string name="validation_adresse">Adresse sollte Straße und Hausnummer enthalten</string>
     <string name="validation_telefon">Ungültiges Telefonnummer-Format</string>
@@ -280,6 +312,7 @@
     <string name="label_type_gewerbe">Gewerbe</string>
     <string name="label_abholung">Abholung:</string>
     <string name="label_auslieferung">Auslieferung:</string>
+    <string name="label_tour_counts">A: %1$d · L: %2$d</string>
     <string name="label_verwendungen">Verwendungen:</string>
     <string name="label_used_count_format">%1$dx verwendet</string>
     <string name="toast_regel_bereits_zugewiesen">Diese Regel ist dem Kunden bereits zugewiesen.</string>
@@ -305,6 +338,7 @@
     <string name="label_list_name">Liste Name</string>
     <string name="label_list_name_field">Liste-Name:</string>
     <string name="label_list_type">Liste-Art:</string>
+    <string name="label_list_wochentag">Wochentagsliste:</string>
     <string name="label_list_edit">Liste bearbeiten</string>
     <string name="label_intervals">Intervalle</string>
     <string name="label_termine_anlegen">Termin Anlegen</string>
@@ -313,7 +347,7 @@
     <string name="label_termin_detail">Termin-Details</string>
     <string name="label_termin">Termin:</string>
     <string name="label_show_customer">Kunde anzeigen</string>
-    <string name="label_delete_termin">Termin löschen</string>
+    <string name="label_delete_termin">Termin aussetzen</string>
     <string name="label_intervall">Intervall</string>
     <string name="label_abholung_date">Abholungsdatum:</string>
     <string name="label_auslieferung_date">Auslieferungsdatum:</string>
@@ -364,6 +398,17 @@
     <string name="add_customer_title">Neuen Kunden anlegen</string>
     <string name="add_customer_hint">💡 Hinweis</string>
     <string name="add_customer_hint_text">Termine können nach dem Erstellen des Kunden über \'Termin Anlegen\' hinzugefügt werden.</string>
+    <string name="customer_status_title">Status &amp; Zyklus</string>
+    <string name="customer_status_current">Aktueller Status: %1$s</string>
+    <string name="customer_status_active">Aktiv</string>
+    <string name="customer_status_paused">Pausiert</string>
+    <string name="customer_status_adhoc">Ad-hoc</string>
+    <string name="customer_status_paused_until">Pausiert bis %1$s</string>
+    <string name="customer_btn_pause">Pause aktivieren</string>
+    <string name="customer_btn_resume">Fortsetzen</string>
+    <string name="customer_tags_label">Tags: %1$s</string>
+    <string name="toast_customer_paused">Pause bis %1$s gespeichert</string>
+    <string name="toast_customer_resumed">Kunde fortgesetzt</string>
     <string name="label_city_optional">Stadt (Optional)</string>
     <string name="label_zip_optional">PLZ (Optional)</string>
     <string name="label_default_pickup_day">Standard-Abholungstag (A)</string>

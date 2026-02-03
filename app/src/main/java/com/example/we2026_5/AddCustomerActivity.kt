@@ -15,8 +15,10 @@ import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.ui.addcustomer.AddCustomerScreen
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
 import com.example.we2026_5.ui.addcustomer.AddCustomerViewModel
+import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.TourSlot
 import com.example.we2026_5.Zeitfenster
+import com.example.we2026_5.util.TerminAusKundeUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -66,6 +68,10 @@ class AddCustomerActivity : AppCompatActivity() {
                     onTelefonChange = { viewModel.setTelefon(it) },
                     onNotizenChange = { viewModel.setNotizen(it) },
                     onKundenArtChange = { viewModel.setKundenArt(it) },
+                    onKundenTypChange = { viewModel.setKundenTyp(it) },
+                    onListenWochentagChange = { viewModel.setListenWochentag(it) },
+                    onIntervallTageChange = { viewModel.setIntervallTage(it) },
+                    onKundennummerChange = { viewModel.setKundennummer(it) },
                     onAbholungTagChange = { viewModel.setAbholungWochentag(it) },
                     onAuslieferungTagChange = { viewModel.setAuslieferungWochentag(it) },
                     onDefaultUhrzeitChange = { viewModel.setDefaultUhrzeit(it) },
@@ -86,8 +92,46 @@ class AddCustomerActivity : AppCompatActivity() {
             viewModel.setError(getString(R.string.validation_name_missing))
             return
         }
+        val errorMsg = validateAddCustomer(state)
+        if (errorMsg != null) {
+            viewModel.setError(errorMsg)
+            return
+        }
+        lifecycleScope.launch {
+            val similar = repository.getAllCustomers().any { c ->
+                c.name.trim().lowercase().let { n -> n == name.lowercase() || n.contains(name.lowercase()) || name.lowercase().contains(n) }
+            }
+            if (similar) {
+                androidx.appcompat.app.AlertDialog.Builder(this@AddCustomerActivity)
+                    .setTitle(getString(R.string.dialog_duplikat_title))
+                    .setMessage(getString(R.string.dialog_duplikat_message))
+                    .setPositiveButton(getString(R.string.dialog_yes)) { _, _ -> doSave(state) }
+                    .setNegativeButton(getString(R.string.btn_cancel), null)
+                    .show()
+            } else {
+                doSave(state)
+            }
+        }
+    }
+
+    private fun validateAddCustomer(state: AddCustomerState): String? {
+        return when {
+            state.kundenTyp == KundenTyp.REGELMAESSIG && (state.abholungWochentag < 0 || state.auslieferungWochentag < 0) ->
+                getString(R.string.validation_regelmaessig_al_required)
+            state.kundenTyp == KundenTyp.UNREGELMAESSIG && state.abholungWochentag < 0 && state.auslieferungWochentag < 0 ->
+                getString(R.string.validation_unregelmaessig_al_required)
+            state.kundenTyp == KundenTyp.REGELMAESSIG && (state.intervallTage !in 1..365) ->
+                getString(R.string.validation_intervall_required)
+            state.kundenTyp == KundenTyp.REGELMAESSIG && state.listenWochentag < 0 ->
+                getString(R.string.validation_listen_wochentag)
+            else -> null
+        }
+    }
+
+    private fun doSave(state: AddCustomerState) {
         viewModel.setSaving(true)
         viewModel.setError(null)
+        val name = state.name.trim()
         val customerId = UUID.randomUUID().toString()
         val tags = state.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } }
         val tourSlot = if (state.tourWochentag >= 0 || state.tourStadt.isNotBlank()) {
@@ -101,7 +145,7 @@ class AddCustomerActivity : AppCompatActivity() {
         val defaultZeitfenster = if (state.defaultUhrzeit.isNotBlank()) {
             Zeitfenster(state.defaultUhrzeit.trim(), state.defaultUhrzeit.trim())
         } else null
-        val customer = Customer(
+        val baseCustomer = Customer(
             id = customerId,
             name = name,
             adresse = state.adresse.trim(),
@@ -115,9 +159,12 @@ class AddCustomerActivity : AppCompatActivity() {
             abholungDatum = 0,
             auslieferungDatum = 0,
             wiederholen = false,
-            intervallTage = 0,
+            intervallTage = if (state.kundenTyp == KundenTyp.REGELMAESSIG) state.intervallTage else 0,
             letzterTermin = 0,
             wochentag = "",
+            kundenTyp = state.kundenTyp,
+            listenWochentag = if (state.kundenTyp == KundenTyp.REGELMAESSIG) state.listenWochentag else -1,
+            kundennummer = state.kundennummer.trim(),
             defaultAbholungWochentag = state.abholungWochentag,
             defaultAuslieferungWochentag = state.auslieferungWochentag,
             defaultUhrzeit = state.defaultUhrzeit.trim(),
@@ -127,6 +174,12 @@ class AddCustomerActivity : AppCompatActivity() {
             tourSlot = tourSlot,
             istImUrlaub = false
         )
+        val intervalle = if (state.kundenTyp == KundenTyp.REGELMAESSIG) {
+            TerminAusKundeUtils.erstelleIntervallAusKunde(baseCustomer)?.let { listOf(it) } ?: emptyList()
+        } else {
+            emptyList()
+        }
+        val customer = baseCustomer.copy(intervalle = intervalle)
         lifecycleScope.launch {
             val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
                 operation = { repository.saveCustomer(customer) },

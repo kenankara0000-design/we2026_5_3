@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
+import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.util.Result
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,12 +33,17 @@ class CustomerManagerViewModel(
     private val selectedTabFlow = MutableStateFlow(0)
     val selectedTab: StateFlow<Int> = selectedTabFlow.asStateFlow()
 
+    // StateFlow für KundenTyp-Filter (0=Alle, 1=Regelmäßig, 2=Unregelmäßig)
+    private val kundenTypFilterFlow = MutableStateFlow(0)
+    val kundenTypFilter: StateFlow<Int> = kundenTypFilterFlow.asStateFlow()
+
     // Kombiniere customers, searchQuery und selectedTab für gefilterte Liste
     val filteredCustomers: LiveData<List<Customer>> = combine(
         customersFlow,
         searchQueryFlow,
-        selectedTabFlow
-    ) { customers, query, selectedTab ->
+        selectedTabFlow,
+        kundenTypFilterFlow
+    ) { customers, query, selectedTab, typFilter ->
         // Zuerst nach Tab filtern
         val tabFiltered = when (selectedTab) {
             0 -> customers.filter { it.kundenArt == "Gewerblich" }
@@ -45,12 +51,18 @@ class CustomerManagerViewModel(
             2 -> customers.filter { it.kundenArt == "Liste" }
             else -> customers
         }
+
+        val typFiltered = when (typFilter) {
+            1 -> tabFiltered.filter { it.kundenTyp == KundenTyp.REGELMAESSIG }
+            2 -> tabFiltered.filter { it.kundenTyp == KundenTyp.UNREGELMAESSIG }
+            else -> tabFiltered
+        }
         
         // Dann nach Such-Query filtern
         if (query.isEmpty()) {
-            tabFiltered
+            typFiltered
         } else {
-            tabFiltered.filter {
+            typFiltered.filter {
                 it.name.contains(query, ignoreCase = true) ||
                 it.adresse.contains(query, ignoreCase = true)
             }
@@ -100,6 +112,10 @@ class CustomerManagerViewModel(
     
     fun setSelectedTab(tabIndex: Int) {
         selectedTabFlow.value = tabIndex
+    }
+
+    fun setKundenTypFilter(filterIndex: Int) {
+        kundenTypFilterFlow.value = filterIndex
     }
     
     fun deleteCustomer(customerId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {

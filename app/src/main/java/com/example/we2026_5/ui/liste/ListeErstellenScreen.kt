@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +47,8 @@ fun ListeErstellenScreen(
     state: ListeErstellenState,
     onListNameChange: (String) -> Unit,
     onTypeChange: (String) -> Unit,
+    onWochentagListeChange: (Boolean) -> Unit,
+    onWochentagChange: (Int) -> Unit,
     onSave: () -> Unit,
     onBack: () -> Unit,
     onFinish: () -> Unit
@@ -150,6 +153,29 @@ fun ListeErstellenScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = state.isWochentagListe,
+                    onCheckedChange = onWochentagListeChange
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(stringResource(R.string.label_list_wochentag), color = textPrimary)
+            }
+            if (state.isWochentagListe) {
+                Spacer(modifier = Modifier.height(8.dp))
+                WeekdaySelector(
+                    label = stringResource(R.string.label_wochentag),
+                    selected = state.wochentag,
+                    onSelect = onWochentagChange,
+                    textPrimary = textPrimary
+                )
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
 
             Card(
@@ -197,6 +223,30 @@ fun ListeErstellenScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WeekdaySelector(
+    label: String,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    textPrimary: Color
+) {
+    val weekdays = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+    Column {
+        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            weekdays.forEachIndexed { index, title ->
+                androidx.compose.material3.FilterChip(
+                    selected = selected == index,
+                    onClick = { onSelect(index) },
+                    label = { Text(title) }
+                )
+            }
         }
     }
 }

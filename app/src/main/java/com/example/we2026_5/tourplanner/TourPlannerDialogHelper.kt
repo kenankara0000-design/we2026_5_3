@@ -47,8 +47,8 @@ class TourPlannerDialogHelper(
         binding.btnTerminLoeschen.setOnClickListener {
             com.example.we2026_5.util.DialogBaseHelper.showConfirmationDialog(
                 context = activity,
-                title = activity.getString(com.example.we2026_5.R.string.dialog_termin_loeschen_title),
-                message = activity.getString(com.example.we2026_5.R.string.dialog_termin_loeschen_message),
+                title = activity.getString(com.example.we2026_5.R.string.dialog_termin_aussetzen_title),
+                message = activity.getString(com.example.we2026_5.R.string.dialog_termin_aussetzen_message),
                 positiveButtonText = activity.getString(com.example.we2026_5.R.string.dialog_loeschen),
                 onPositive = {
                     onTerminLoeschen?.invoke(customer, terminDatum)

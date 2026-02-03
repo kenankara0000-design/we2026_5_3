@@ -46,6 +46,19 @@ class TourPlannerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val prefs = getSharedPreferences("tourplanner_prefs", MODE_PRIVATE)
+        val savedDate = prefs.getLong("last_view_date", 0L)
+        val initialDate = if (savedDate > 0L) {
+            TerminBerechnungUtils.getStartOfDay(savedDate)
+        } else {
+            Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+        }
+
         coordinator = TourPlannerCoordinator(
             activity = this,
             viewModel = viewModel,
@@ -54,12 +67,7 @@ class TourPlannerActivity : AppCompatActivity() {
             regelRepository = regelRepository
         )
 
-        viewModel.setSelectedTimestamp(Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis)
+        viewModel.setSelectedTimestamp(initialDate)
 
         networkMonitor = NetworkMonitor(this, lifecycleScope)
         networkMonitor.startMonitoring()
@@ -71,6 +79,12 @@ class TourPlannerActivity : AppCompatActivity() {
             val errorMessage by viewModel.error.observeAsState(initial = null)
             val isOnline by networkMonitor.isOnline.observeAsState(initial = true)
             val isOffline = !isOnline
+
+            androidx.compose.runtime.LaunchedEffect(selectedTimestamp) {
+                selectedTimestamp?.let { ts ->
+                    prefs.edit().putLong("last_view_date", TerminBerechnungUtils.getStartOfDay(ts)).apply()
+                }
+            }
 
             val dateText = selectedTimestamp?.let { ts ->
                 val cal = Calendar.getInstance().apply { timeInMillis = ts }
@@ -91,12 +105,29 @@ class TourPlannerActivity : AppCompatActivity() {
             }
 
             val ts = selectedTimestamp
+            val counts = ts?.let { timestamp ->
+                val viewDateStart = coordinator.dateUtils.getStartOfDay(timestamp)
+                val listen = viewModel.getListen()
+                val customers = tourItems.filterIsInstance<ListItem.CustomerItem>().map { it.customer }
+                val termine = customers.flatMap { c ->
+                    TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                        customer = c,
+                        liste = listen.find { it.id == c.listeId },
+                        startDatum = viewDateStart,
+                        tageVoraus = 1
+                    ).filter { coordinator.dateUtils.getStartOfDay(it.datum) == viewDateStart }
+                }
+                val aCount = termine.count { it.typ == TerminTyp.ABHOLUNG }
+                val lCount = termine.count { it.typ == TerminTyp.AUSLIEFERUNG }
+                aCount to lCount
+            } ?: (0 to 0)
             val isToday = ts != null &&
                 coordinator.dateUtils.getStartOfDay(ts) == coordinator.dateUtils.getStartOfDay(System.currentTimeMillis())
             TourPlannerScreen(
                 tourItems = tourItems,
                 viewDateMillis = ts,
                 dateText = dateText,
+                tourCounts = counts,
                 isToday = isToday,
                 isLoading = isLoading,
                 errorMessage = errorMessage,

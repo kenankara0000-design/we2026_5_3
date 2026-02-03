@@ -7,8 +7,9 @@ package com.example.we2026_5
  */
 data class KundenListe(
     val id: String = "",
-    val name: String = "", // z.B. "Borna P", "Kitzscher P"
+    val name: String = "", // z.B. "Borna P", "Kitzscher P" oder "Dienstag" für Wochentagslisten
     val listeArt: String = "Gewerbe", // "Gewerbe", "Privat" oder "Liste"
+    val wochentag: Int = -1, // 0=Mo..6=So für Wochentagslisten; -1=alte Listen (Ort-basiert)
     val intervalle: List<ListeIntervall> = emptyList(), // Liste der Intervalle (bis zu 12)
     val erstelltAm: Long = System.currentTimeMillis(),
     

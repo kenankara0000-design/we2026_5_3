@@ -81,6 +81,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".TerminAnlegenUnregelmaessigActivity"
+            android:exported="false"
+            android:theme="@style/Theme.We2026_5.LightBackground" />
+
+        <activity
             android:name=".ui.urlaub.UrlaubActivity"
             android:exported="false"
             android:theme="@style/Theme.We2026_5.LightBackground" />

@@ -2,12 +2,14 @@ package com.example.we2026_5
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.lifecycleScope
+import com.example.we2026_5.TerminSlotVorschlag
 import com.example.we2026_5.ui.main.MainScreen
 import com.example.we2026_5.ui.main.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -36,17 +38,20 @@ class MainActivity : AppCompatActivity() {
             val tourCount by viewModel.tourFälligCount.observeAsState(0)
             val isOnline by networkMonitor.isOnline.observeAsState(true)
             val isSyncing by networkMonitor.isSyncing.observeAsState(false)
+            val slotVorschlaege by viewModel.slotVorschlaege.observeAsState(emptyList())
 
             MainScreen(
                 isOffline = !isOnline,
                 isSyncing = isSyncing,
                 tourCount = tourCount,
+                slotVorschlaege = slotVorschlaege,
                 onNeuKunde = { startActivity(Intent(this@MainActivity, AddCustomerActivity::class.java)) },
                 onKunden = { startActivity(Intent(this@MainActivity, CustomerManagerActivity::class.java)) },
                 onTouren = { startActivity(Intent(this@MainActivity, TourPlannerActivity::class.java)) },
                 onKundenListen = { startActivity(Intent(this@MainActivity, KundenListenActivity::class.java)) },
                 onStatistiken = { startActivity(Intent(this@MainActivity, StatisticsActivity::class.java)) },
-                onTerminRegeln = { startActivity(Intent(this@MainActivity, TerminRegelManagerActivity::class.java)) }
+                onTerminRegeln = { startActivity(Intent(this@MainActivity, TerminRegelManagerActivity::class.java)) },
+                onSlotSelected = { slot -> handleSlotSelection(slot) }
             )
         }
     }
@@ -56,5 +61,15 @@ class MainActivity : AppCompatActivity() {
         if (::networkMonitor.isInitialized) {
             networkMonitor.stopMonitoring()
         }
+    }
+
+    private fun handleSlotSelection(slot: TerminSlotVorschlag) {
+        if (slot.customerId.isBlank()) {
+            Toast.makeText(this, getString(R.string.error_customer_not_found), Toast.LENGTH_SHORT).show()
+            return
+        }
+        startActivity(Intent(this, CustomerDetailActivity::class.java).apply {
+            putExtra("CUSTOMER_ID", slot.customerId)
+        })
     }
 }
