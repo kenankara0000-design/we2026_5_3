@@ -3,8 +3,8 @@ package com.example.we2026_5.ui.listebearbeiten
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
-import com.example.we2026_5.R
 import com.example.we2026_5.KundenListe
+import com.example.we2026_5.R
 import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
@@ -46,8 +46,22 @@ class ListeBearbeitenViewModel(
                     return@launch
                 }
                 val alleKunden = withContext(Dispatchers.IO) { customerRepository.getAllCustomers() }
-                val inListe = alleKunden.filter { it.listeId == geladeneListe.id }.sortedBy { it.name }
-                val verfuegbar = alleKunden.filter { it.listeId.isEmpty() && it.kundenArt == "Liste" }.sortedBy { it.name }
+                val inListe = if (geladeneListe.wochentag in 0..6) {
+                    alleKunden.filter { k ->
+                        k.defaultAbholungWochentag == geladeneListe.wochentag ||
+                        k.defaultAuslieferungWochentag == geladeneListe.wochentag
+                    }.sortedBy { it.name }
+                } else {
+                    alleKunden.filter { it.listeId == geladeneListe.id }.sortedBy { it.name }
+                }
+                val verfuegbar = if (geladeneListe.wochentag in 0..6) {
+                    alleKunden.filter { k ->
+                        k.defaultAbholungWochentag != geladeneListe.wochentag &&
+                        k.defaultAuslieferungWochentag != geladeneListe.wochentag
+                    }.sortedBy { it.name }
+                } else {
+                    alleKunden.filter { it.listeId.isEmpty() && it.kundenArt == "Liste" }.sortedBy { it.name }
+                }
                 val intervalle = if (_state.value.isInEditMode) _state.value.intervalle else geladeneListe.intervalle
                 _state.value = _state.value.copy(
                     liste = geladeneListe,

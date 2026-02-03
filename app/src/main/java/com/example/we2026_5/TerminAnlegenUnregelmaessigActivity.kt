@@ -21,8 +21,11 @@ import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.TourPlanRepository
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.TerminRegelManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.android.ext.android.inject
 import java.util.UUID
 
@@ -46,22 +49,36 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
             var vorschlaege by remember { mutableStateOf<List<TerminSlotVorschlag>>(emptyList()) }
             var selectedIds by remember { mutableStateOf<Set<Int>>(emptySet()) }
             var isLoading by remember { mutableStateOf(true) }
+            var loadError by remember { mutableStateOf<String?>(null) }
 
             LaunchedEffect(customerId) {
                 isLoading = true
-                customer = repository.getCustomerById(customerId)
-                val c = customer
-                if (c != null) {
-                    val tourSlots = tourPlanRepository.getTourSlotsFlow().first()
-                    vorschlaege = TerminRegelManager.schlageSlotsVor(
-                        kunde = c,
-                        regel = null,
-                        tourSlots = tourSlots,
-                        startDatum = System.currentTimeMillis(),
-                        tageVoraus = 56
-                    )
+                loadError = null
+                try {
+                    val c = withContext(Dispatchers.IO) {
+                        repository.getCustomerById(customerId)
+                    }
+                    customer = c
+                    if (c != null) {
+                        val tourSlots = withTimeoutOrNull(5000) {
+                            withContext(Dispatchers.IO) {
+                                tourPlanRepository.getTourSlotsFlow().first()
+                            }
+                        } ?: emptyList()
+                        vorschlaege = TerminRegelManager.schlageSlotsVor(
+                            kunde = c,
+                            regel = null,
+                            tourSlots = tourSlots.orEmpty(),
+                            startDatum = System.currentTimeMillis(),
+                            tageVoraus = 56
+                        )
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("TerminAnlegenUnregel", "Fehler beim Laden", e)
+                    loadError = e.message ?: "Unbekannter Fehler"
+                } finally {
+                    isLoading = false
                 }
-                isLoading = false
             }
 
             val context = LocalContext.current
@@ -90,6 +107,10 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                         ) {
                             CircularProgressIndicator()
                         }
+                    } else if (loadError != null) {
+                        Text(loadError!!, color = MaterialTheme.colorScheme.error)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(getString(R.string.error_load_generic))
                     } else if (customer == null) {
                         Text("Kunde nicht gefunden")
                     } else if (vorschlaege.isEmpty()) {
@@ -149,7 +170,14 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                 }
                                 scope.launch {
                                     val c = customer ?: return@launch
-                                    val toAdd = selectedIds.map { vorschlaege[it] }
+                                    val list = vorschlaege
+                                    val toAdd = selectedIds.mapNotNull { idx ->
+                                        list.getOrNull(idx)
+                                    }
+                                    if (toAdd.isEmpty()) {
+                                        Toast.makeText(context, "Bitte mindestens einen Termin wählen", Toast.LENGTH_SHORT).show()
+                                        return@launch
+                                    }
                                     val newIntervalle = toAdd.map { slot ->
                                         CustomerIntervall(
                                             id = UUID.randomUUID().toString(),
@@ -160,12 +188,20 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                             intervallAnzahl = 0
                                         )
                                     }
-                                    val updated = c.copy(intervalle = c.intervalle + newIntervalle)
-                                    val success = repository.saveCustomer(updated)
-                                    if (success) {
-                                        Toast.makeText(context, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
-                                        finish()
-                                    } else {
+                                    val existing = c.intervalle ?: emptyList()
+                                    val updated = c.copy(intervalle = existing + newIntervalle)
+                                    try {
+                                        val success = withContext(Dispatchers.IO) {
+                                            repository.saveCustomer(updated)
+                                        }
+                                        if (success) {
+                                            Toast.makeText(context, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                                            finish()
+                                        } else {
+                                            Toast.makeText(context, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
+                                        }
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("TerminAnlegenUnregel", "Fehler beim Speichern", e)
                                         Toast.makeText(context, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
                                     }
                                 }

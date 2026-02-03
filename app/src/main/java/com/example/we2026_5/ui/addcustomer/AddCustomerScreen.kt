@@ -29,8 +29,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -54,7 +56,6 @@ fun AddCustomerScreen(
     onNotizenChange: (String) -> Unit,
     onKundenArtChange: (String) -> Unit,
     onKundenTypChange: (KundenTyp) -> Unit,
-    onListenWochentagChange: (Int) -> Unit,
     onIntervallTageChange: (Int) -> Unit,
     onKundennummerChange: (String) -> Unit,
     onAbholungTagChange: (Int) -> Unit,
@@ -180,12 +181,6 @@ fun AddCustomerScreen(
                     selected = state.intervallTage,
                     onSelect = onIntervallTageChange,
                     textPrimary = textPrimary
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                WeekdaySelector(
-                    label = stringResource(R.string.label_listen_wochentag),
-                    selected = state.listenWochentag,
-                    onSelect = onListenWochentagChange
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
@@ -380,6 +375,20 @@ private fun IntervallSchnellauswahl(
             color = textPrimary
         )
         Spacer(modifier = Modifier.height(4.dp))
+        OutlinedTextField(
+            value = if (selected in 1..365) selected.toString() else "",
+            onValueChange = { s ->
+                val digits = s.filter { it.isDigit() }
+                if (digits.isEmpty()) onSelect(7)
+                else digits.toIntOrNull()?.coerceIn(1, 365)?.let { onSelect(it) }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            placeholder = { Text("z.B. 7, 10, 14, 21 …") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            supportingText = { Text("1–365 Tage", color = textPrimary.copy(alpha = 0.7f)) }
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             preset.forEach { tage ->
                 FilterChip(

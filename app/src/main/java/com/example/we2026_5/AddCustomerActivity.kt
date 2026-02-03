@@ -43,9 +43,14 @@ class AddCustomerActivity : AppCompatActivity() {
                 }
                 LaunchedEffect(state.success) {
                     if (state.success) {
-                        delay(800)
+                        delay(400)
                         if (!isFinishing) {
-                            startActivity(Intent(this@AddCustomerActivity, MainActivity::class.java).apply {
+                            Toast.makeText(
+                                this@AddCustomerActivity,
+                                getString(R.string.toast_customer_created_hint),
+                                Toast.LENGTH_LONG
+                            ).show()
+                            startActivity(Intent(this@AddCustomerActivity, CustomerManagerActivity::class.java).apply {
                                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                             })
                             finish()
@@ -69,7 +74,6 @@ class AddCustomerActivity : AppCompatActivity() {
                     onNotizenChange = { viewModel.setNotizen(it) },
                     onKundenArtChange = { viewModel.setKundenArt(it) },
                     onKundenTypChange = { viewModel.setKundenTyp(it) },
-                    onListenWochentagChange = { viewModel.setListenWochentag(it) },
                     onIntervallTageChange = { viewModel.setIntervallTage(it) },
                     onKundennummerChange = { viewModel.setKundennummer(it) },
                     onAbholungTagChange = { viewModel.setAbholungWochentag(it) },
@@ -115,17 +119,8 @@ class AddCustomerActivity : AppCompatActivity() {
     }
 
     private fun validateAddCustomer(state: AddCustomerState): String? {
-        return when {
-            state.kundenTyp == KundenTyp.REGELMAESSIG && (state.abholungWochentag < 0 || state.auslieferungWochentag < 0) ->
-                getString(R.string.validation_regelmaessig_al_required)
-            state.kundenTyp == KundenTyp.UNREGELMAESSIG && state.abholungWochentag < 0 && state.auslieferungWochentag < 0 ->
-                getString(R.string.validation_unregelmaessig_al_required)
-            state.kundenTyp == KundenTyp.REGELMAESSIG && (state.intervallTage !in 1..365) ->
-                getString(R.string.validation_intervall_required)
-            state.kundenTyp == KundenTyp.REGELMAESSIG && state.listenWochentag < 0 ->
-                getString(R.string.validation_listen_wochentag)
-            else -> null
-        }
+        // Nur Name ist Pflicht – A/L-Tag, Intervall etc. können in der Bearbeitung ergänzt werden
+        return null
     }
 
     private fun doSave(state: AddCustomerState) {
@@ -163,7 +158,7 @@ class AddCustomerActivity : AppCompatActivity() {
             letzterTermin = 0,
             wochentag = "",
             kundenTyp = state.kundenTyp,
-            listenWochentag = if (state.kundenTyp == KundenTyp.REGELMAESSIG) state.listenWochentag else -1,
+            listenWochentag = -1,
             kundennummer = state.kundennummer.trim(),
             defaultAbholungWochentag = state.abholungWochentag,
             defaultAuslieferungWochentag = state.auslieferungWochentag,

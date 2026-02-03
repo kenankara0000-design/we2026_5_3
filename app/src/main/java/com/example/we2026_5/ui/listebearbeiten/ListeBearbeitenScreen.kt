@@ -47,6 +47,27 @@ import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
 import androidx.core.content.ContextCompat
 
+private val WOCHENTAG_RES = listOf(
+    R.string.label_weekday_short_mo, R.string.label_weekday_short_tu, R.string.label_weekday_short_mi,
+    R.string.label_weekday_short_do, R.string.label_weekday_short_fr, R.string.label_weekday_short_sa,
+    R.string.label_weekday_short_su
+)
+
+@Composable
+private fun AlWochentagText(kunde: Customer, textSecondary: Color) {
+    val a = kunde.defaultAbholungWochentag
+    val l = kunde.defaultAuslieferungWochentag
+    val aStr = if (a in 0..6) stringResource(WOCHENTAG_RES[a]) else null
+    val lStr = if (l in 0..6) stringResource(WOCHENTAG_RES[l]) else null
+    val txt = when {
+        aStr != null && lStr != null -> "$aStr A / $lStr L"
+        aStr != null -> "$aStr A"
+        lStr != null -> "$lStr L"
+        else -> return
+    }
+    Text(txt, fontSize = 12.sp, color = textSecondary, modifier = Modifier.padding(top = 2.dp))
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListeBearbeitenScreen(
@@ -252,6 +273,10 @@ fun ListeBearbeitenScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(stringResource(R.string.label_customers_in_list), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = textPrimary)
                 Spacer(modifier = Modifier.height(8.dp))
+                if (state.kundenInListe.isEmpty() && (state.liste?.wochentag ?: -1) in 0..6) {
+                    Text(stringResource(R.string.label_list_empty_weekday), color = textSecondary, fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
                 state.kundenInListe.forEach { kunde ->
                     KundeInListeItem(kunde, showRemove = true, onRemove = { onRemoveKunde(kunde) }, onAdd = {}, textPrimary = textPrimary, textSecondary = textSecondary, statusOverdue = statusOverdue, statusDone = statusDone)
                     Spacer(modifier = Modifier.height(8.dp))
@@ -345,6 +370,7 @@ private fun KundeInListeItem(
                     Text(kunde.name, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
                 }
                 Text(kunde.adresse, fontSize = 14.sp, color = textSecondary)
+                AlWochentagText(kunde = kunde, textSecondary = textSecondary)
             }
             if (showRemove) {
                 IconButton(onClick = onRemove) {

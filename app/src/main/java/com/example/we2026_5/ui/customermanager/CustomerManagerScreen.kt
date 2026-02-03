@@ -57,6 +57,29 @@ import coil.compose.AsyncImage
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
 
+private val WOCHENTAG_KURZ = listOf(
+    R.string.label_weekday_short_mo,
+    R.string.label_weekday_short_tu,
+    R.string.label_weekday_short_mi,
+    R.string.label_weekday_short_do,
+    R.string.label_weekday_short_fr,
+    R.string.label_weekday_short_sa,
+    R.string.label_weekday_short_su
+)
+
+private fun formatALWochentag(customer: Customer, getString: (Int) -> String): String {
+    val a = customer.defaultAbholungWochentag
+    val l = customer.defaultAuslieferungWochentag
+    val aStr = if (a in 0..6) getString(WOCHENTAG_KURZ[a]) else null
+    val lStr = if (l in 0..6) getString(WOCHENTAG_KURZ[l]) else null
+    return when {
+        aStr != null && lStr != null -> "$aStr A / $lStr L"
+        aStr != null -> "$aStr A"
+        lStr != null -> "$lStr L"
+        else -> ""
+    }
+}
+
 private const val SEARCH_DEBOUNCE_MS = 300L
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -354,6 +377,8 @@ private fun CustomerRow(
     textPrimary: Color,
     textSecondary: Color
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val alText = formatALWochentag(customer) { context.getString(it) }
     val surfaceWhite = colorResource(R.color.surface_white)
     val gplColor = when (customer.kundenArt) {
         "Privat" -> colorResource(R.color.button_privat_glossy)
@@ -426,6 +451,14 @@ private fun CustomerRow(
                     color = textSecondary,
                     modifier = Modifier.padding(top = 4.dp)
                 )
+                if (alText.isNotEmpty()) {
+                    Text(
+                        text = alText,
+                        fontSize = 12.sp,
+                        color = textSecondary,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
             }
         }
     }

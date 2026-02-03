@@ -42,7 +42,10 @@ class KundenListenViewModel(
                 val sortedListen = sortListen(listen)
                 val kundenProListe = sortedListen.associate { liste ->
                     val count = if (liste.wochentag in 0..6) {
-                        allCustomers.count { it.kundenTyp == KundenTyp.REGELMAESSIG && it.listenWochentag == liste.wochentag }
+                        allCustomers.count { k ->
+                            k.defaultAbholungWochentag == liste.wochentag ||
+                            k.defaultAuslieferungWochentag == liste.wochentag
+                        }
                     } else {
                         allCustomers.count { it.listeId == liste.id }
                     }

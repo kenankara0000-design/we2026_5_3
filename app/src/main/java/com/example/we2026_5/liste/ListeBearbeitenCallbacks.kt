@@ -29,40 +29,59 @@ class ListeBearbeitenCallbacks(
 ) {
     
     /**
-     * Entfernt einen Kunden aus der Liste
+     * Entfernt einen Kunden aus der Liste.
+     * Wochentagslisten: setzt A-/L-Tag auf -1. Manuelle Listen: setzt listeId auf "".
      */
-    fun entferneKundeAusListe(customer: Customer) {
+    fun entferneKundeAusListe(customer: Customer, liste: KundenListe) {
         CoroutineScope(Dispatchers.Main).launch {
+            val updates = if (liste.wochentag in 0..6) {
+                val map = mutableMapOf<String, Any>()
+                if (customer.defaultAbholungWochentag == liste.wochentag) map["defaultAbholungWochentag"] = -1
+                if (customer.defaultAuslieferungWochentag == liste.wochentag) map["defaultAuslieferungWochentag"] = -1
+                map
+            } else {
+                mapOf("listeId" to "")
+            }
+            if (updates.isEmpty()) {
+                onDataReload()
+                return@launch
+            }
             val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                operation = {
-                    customerRepository.updateCustomer(customer.id, mapOf("listeId" to ""))
-                },
+                operation = { customerRepository.updateCustomer(customer.id, updates) },
                 context = activity,
                 errorMessage = activity.getString(R.string.error_delete_generic),
                 maxRetries = 3
             )
-
             if (success != null) {
                 Toast.makeText(activity, activity.getString(R.string.toast_kunde_aus_liste_entfernt), Toast.LENGTH_SHORT).show()
                 onDataReload()
             }
         }
     }
-    
+
     /**
-     * Fügt einen Kunden zur Liste hinzu
+     * Fügt einen Kunden zur Liste hinzu.
+     * Wochentagslisten: setzt A- oder L-Tag auf den Listen-Wochentag. Manuelle Listen: setzt listeId.
      */
-    fun fuegeKundeZurListeHinzu(customer: Customer, listeId: String) {
+    fun fuegeKundeZurListeHinzu(customer: Customer, liste: KundenListe) {
         CoroutineScope(Dispatchers.Main).launch {
+            val updates = if (liste.wochentag in 0..6) {
+                val w = liste.wochentag
+                when {
+                    customer.defaultAbholungWochentag != w && customer.defaultAuslieferungWochentag != w ->
+                        mapOf("defaultAbholungWochentag" to w)
+                    customer.defaultAbholungWochentag != w -> mapOf("defaultAbholungWochentag" to w)
+                    else -> mapOf("defaultAuslieferungWochentag" to w)
+                }
+            } else {
+                mapOf("listeId" to liste.id)
+            }
             val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                operation = {
-                    customerRepository.updateCustomer(customer.id, mapOf("listeId" to listeId))
-                },
+                operation = { customerRepository.updateCustomer(customer.id, updates) },
                 context = activity,
                 errorMessage = activity.getString(R.string.error_save_generic),
                 maxRetries = 3
             )
-
             if (success != null) {
                 Toast.makeText(activity, activity.getString(R.string.toast_kunde_zur_liste_hinzugefuegt), Toast.LENGTH_SHORT).show()
                 onDataReload()

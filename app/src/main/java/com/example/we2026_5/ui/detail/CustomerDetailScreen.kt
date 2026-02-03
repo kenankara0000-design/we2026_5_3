@@ -21,6 +21,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
@@ -111,8 +112,8 @@ fun CustomerDetailScreen(
     var editNotizen by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.notizen ?: "") }
     var editKundenArt by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.kundenArt ?: "Gewerblich") }
     var editKundenTyp by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.kundenTyp ?: KundenTyp.REGELMAESSIG) }
-    var editWochentag by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.wochentag ?: "") }
-    var wochentagDropdownExpanded by remember { mutableStateOf(false) }
+    var editAbholungWochentag by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.defaultAbholungWochentag ?: -1) }
+    var editAuslieferungWochentag by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.defaultAuslieferungWochentag ?: -1) }
     var overflowMenuExpanded by remember { mutableStateOf(false) }
     var nameError by remember { mutableStateOf<String?>(null) }
     val validationNameMissing = stringResource(R.string.validation_name_missing)
@@ -302,10 +303,13 @@ fun CustomerDetailScreen(
                                 fontSize = BodySp
                             )
                         }
-                        if (customer.wochentag.isNotEmpty()) {
+                        if (customer.defaultAbholungWochentag in 0..6 || customer.defaultAuslieferungWochentag in 0..6) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(stringResource(R.string.label_wochentag), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                                Text(text = customer.wochentag.take(2).uppercase(), modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = BodySp)
+                                Text(stringResource(R.string.label_abholung_auslieferung_tag), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                                val wochen = listOf("Mo","Di","Mi","Do","Fr","Sa","So")
+                                val a = if (customer.defaultAbholungWochentag in 0..6) wochen[customer.defaultAbholungWochentag] + " A" else ""
+                                val l = if (customer.defaultAuslieferungWochentag in 0..6) wochen[customer.defaultAuslieferungWochentag] + " L" else ""
+                                Text(text = listOf(a, l).filter { it.isNotEmpty() }.joinToString(" / "), modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = BodySp)
                             }
                         }
                     }
@@ -399,43 +403,25 @@ fun CustomerDetailScreen(
                     OutlinedTextField(value = editNotizen, onValueChange = { editNotizen = it }, modifier = Modifier.fillMaxWidth(), minLines = 3)
                     
                     Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_wochentag), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    ExposedDropdownMenuBox(
-                        expanded = wochentagDropdownExpanded,
-                        onExpandedChange = { wochentagDropdownExpanded = it }
-                    ) {
-                        OutlinedTextField(
-                            value = editWochentag.ifEmpty { "" }.let { key ->
-                                if (key.isEmpty()) "" else weekdays.find { it.first == key }?.let { stringResource(it.second) } ?: key
-                            },
-                            onValueChange = {},
-                            readOnly = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(),
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = wochentagDropdownExpanded) },
-                            placeholder = { Text(stringResource(R.string.termin_regel_wochentag_waehlen), color = textSecondary) }
-                        )
-                        DropdownMenu(
-                            expanded = wochentagDropdownExpanded,
-                            onDismissRequest = { wochentagDropdownExpanded = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("—", color = textSecondary) },
-                                onClick = {
-                                    editWochentag = ""
-                                    wochentagDropdownExpanded = false
-                                }
+                    Text(stringResource(R.string.label_default_pickup_day), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        weekdays.forEachIndexed { index, (_, labelResId) ->
+                            FilterChip(
+                                selected = editAbholungWochentag == index,
+                                onClick = { editAbholungWochentag = if (editAbholungWochentag == index) -1 else index },
+                                label = { Text(stringResource(labelResId)) }
                             )
-                            weekdays.forEach { (dayKey, labelResId) ->
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(labelResId), color = textPrimary) },
-                                    onClick = {
-                                        editWochentag = dayKey
-                                        wochentagDropdownExpanded = false
-                                    }
-                                )
-                            }
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(stringResource(R.string.label_default_delivery_day), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        weekdays.forEachIndexed { index, (_, labelResId) ->
+                            FilterChip(
+                                selected = editAuslieferungWochentag == index,
+                                onClick = { editAuslieferungWochentag = if (editAuslieferungWochentag == index) -1 else index },
+                                label = { Text(stringResource(labelResId)) }
+                            )
                         }
                     }
                     Spacer(Modifier.height(FieldSpacing))
@@ -469,7 +455,8 @@ fun CustomerDetailScreen(
                                             "notizen" to editNotizen.trim(),
                                             "kundenArt" to editKundenArt,
                                             "kundenTyp" to editKundenTyp.name,
-                                            "wochentag" to editWochentag,
+                                            "defaultAbholungWochentag" to editAbholungWochentag,
+                                            "defaultAuslieferungWochentag" to editAuslieferungWochentag,
                                             "intervalle" to editIntervalle.map {
                                                 mapOf(
                                                     "id" to it.id,

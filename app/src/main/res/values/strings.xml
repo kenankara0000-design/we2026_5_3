@@ -205,7 +205,7 @@
     <string name="label_list_search">Listen suchen…</string>
     <string name="label_list_sort_name">Sortierung: Name</string>
     <string name="label_list_sort_count">Sortierung: Kundenanzahl</string>
-    <string name="label_list_empty_weekday">Noch keine regelmäßigen Kunden mit diesem Wochentag</string>
+    <string name="label_list_empty_weekday">Keine Kunden mit A oder L an diesem Wochentag</string>
     <string name="label_refresh">Aktualisieren</string>
     <string name="label_listen_wochentag">Listen-Wochentag (für Kundenlisten):</string>
     <string name="label_intervall_tage">Intervall (Tage):</string>
@@ -220,6 +220,7 @@
     <string name="btn_save">Speichern</string>
     <string name="toast_gespeichert">Änderungen gespeichert</string>
     <string name="toast_customer_deleted">Kunde und alle Termine gelöscht</string>
+    <string name="toast_customer_created_hint">Kunde angelegt. In der Übersicht kannst du A/L-Tag und Intervalle ergänzen.</string>
 
     <!-- Barrierefreiheit (contentDescription) -->
     <string name="content_desc_navigation">Mit Google Maps zur Adresse navigieren</string>
@@ -310,6 +311,7 @@
     <string name="label_type_p_letter">P</string>
     <string name="label_type_l_letter">L</string>
     <string name="label_type_gewerbe">Gewerbe</string>
+    <string name="label_abholung_auslieferung_tag">A-Tag / L-Tag:</string>
     <string name="label_abholung">Abholung:</string>
     <string name="label_auslieferung">Auslieferung:</string>
     <string name="label_tour_counts">A: %1$d · L: %2$d</string>

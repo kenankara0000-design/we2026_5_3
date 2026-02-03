@@ -34,7 +34,9 @@ class TourDataProcessor {
         val listenMitKunden = mutableMapOf<String, List<Customer>>()
         // 1) Wochentagslisten (neue Logik)
         allListen.filter { it.wochentag in 0..6 }.forEach { liste ->
-            val kunden = allCustomers.filter { it.kundenTyp == com.example.we2026_5.KundenTyp.REGELMAESSIG && it.listenWochentag == liste.wochentag }
+            val kunden = allCustomers.filter { k ->
+                k.defaultAbholungWochentag == liste.wochentag || k.defaultAuslieferungWochentag == liste.wochentag
+            }
             val fälligeKunden = kunden.filter { customer ->
                 val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
                     categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
@@ -136,7 +138,9 @@ class TourDataProcessor {
         
         // Sammle alle Kunden-IDs die in Listen sind (um Doppelungen zu vermeiden)
         // WICHTIG: Sammle ALLE Kunden aus Listen, nicht nur die fälligen
-        val kundenInWochentagListenIds = allCustomers.filter { it.kundenTyp == com.example.we2026_5.KundenTyp.REGELMAESSIG && it.listenWochentag in 0..6 }.map { it.id }.toSet()
+        val kundenInWochentagListenIds = allCustomers.filter { k ->
+            k.defaultAbholungWochentag in 0..6 || k.defaultAuslieferungWochentag in 0..6
+        }.map { it.id }.toSet()
         val alleKundenInListenIds = (kundenNachListen.values.flatten().map { it.id } + kundenInWochentagListenIds).toSet()
         val kundenInListenIds = listenMitKunden.values.flatten().map { it.id }.toSet()
         
@@ -419,16 +423,9 @@ class TourDataProcessor {
                     }
                 }
                 
-                val gesamtKunden = nichtErledigteKunden.size + erledigteKundenInListe.size
-                // Kunden direkt im Header speichern - keine separaten Items nötig!
-                items.add(ListItem.ListeHeader(
-                    liste.name, 
-                    gesamtKunden, 
-                    erledigteKundenInListe.size, 
-                    liste.id,
-                    nichtErledigteKunden.sortedBy { it.name },
-                    erledigteKundenInListe.sortedBy { it.name }
-                ))
+                // Kunden direkt als CustomerItem anzeigen (kein Listen-Header)
+                nichtErledigteKunden.sortedBy { it.name }.forEach { items.add(ListItem.CustomerItem(it)) }
+                erledigteKundenInListe.sortedBy { it.name }.forEach { items.add(ListItem.CustomerItem(it, isErledigtAmTag = true)) }
             }
         }
         
@@ -460,7 +457,7 @@ class TourDataProcessor {
         val items = processTourData(allCustomers, allListen, selectedTimestamp, emptySet())
         return items.sumOf { item ->
             when (item) {
-                is ListItem.CustomerItem -> 1
+                is ListItem.CustomerItem -> if (item.isErledigtAmTag) 0 else 1
                 is ListItem.SectionHeader -> if (item.sectionType == SectionType.OVERDUE) item.kunden.size else 0
                 is ListItem.ListeHeader -> item.nichtErledigteKunden.size
             }

@@ -616,6 +616,27 @@ private fun getKundenArtLabel(customer: Customer): String = when {
     else -> "P"
 }
 
+@Composable
+private fun AlWochentagText(customer: Customer, color: Color) {
+    val a = customer.defaultAbholungWochentag
+    val l = customer.defaultAuslieferungWochentag
+    val wochen = listOf(
+        stringResource(R.string.label_weekday_short_mo), stringResource(R.string.label_weekday_short_tu),
+        stringResource(R.string.label_weekday_short_mi), stringResource(R.string.label_weekday_short_do),
+        stringResource(R.string.label_weekday_short_fr), stringResource(R.string.label_weekday_short_sa),
+        stringResource(R.string.label_weekday_short_su)
+    )
+    val aStr = if (a in 0..6) wochen[a] else null
+    val lStr = if (l in 0..6) wochen[l] else null
+    val txt = when {
+        aStr != null && lStr != null -> "$aStr A / $lStr L"
+        aStr != null -> "$aStr A"
+        lStr != null -> "$lStr L"
+        else -> return
+    }
+    Text(txt, fontSize = 12.sp, color = color, modifier = Modifier.padding(top = 2.dp))
+}
+
 
 @Composable
 private fun TourCustomerRow(
@@ -707,6 +728,7 @@ private fun TourCustomerRow(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
+                AlWochentagText(customer = customer, color = colorResource(R.color.text_secondary))
                 val infoToShow = verschobenInfo ?: verschobenVonInfo
                 if (infoToShow != null && infoToShow.isNotEmpty()) {
                     Spacer(Modifier.height(4.dp))

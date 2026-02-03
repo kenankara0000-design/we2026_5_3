@@ -85,10 +85,13 @@ class ListeBearbeitenActivity : AppCompatActivity() {
                         }
                     }
                 },
-                onRemoveKunde = { customer -> callbacks.entferneKundeAusListe(customer) },
+                onRemoveKunde = { customer ->
+                    val liste = state.liste ?: return@ListeBearbeitenScreen
+                    callbacks.entferneKundeAusListe(customer, liste)
+                },
                 onAddKunde = { customer ->
                     val liste = state.liste ?: return@ListeBearbeitenScreen
-                    callbacks.fuegeKundeZurListeHinzu(customer, liste.id)
+                    callbacks.fuegeKundeZurListeHinzu(customer, liste)
                 },
                 onRefresh = { viewModel.loadDaten(null) },
                 onDatumSelected = { position, isAbholung ->

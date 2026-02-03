@@ -11,7 +11,9 @@ sealed class ListItem {
         val isVerschobenAmFaelligkeitstag: Boolean = false,
         val verschobenInfo: String? = null,
         /** Am neuen Tag: "Verschoben von [Datum]" */
-        val verschobenVonInfo: String? = null
+        val verschobenVonInfo: String? = null,
+        /** true = am Tag erledigt, zählt nicht in Fällig-Count */
+        val isErledigtAmTag: Boolean = false
     ) : ListItem()
     data class SectionHeader(
         val title: String,

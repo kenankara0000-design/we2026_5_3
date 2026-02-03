@@ -40,10 +40,12 @@ data class Customer(
     @Deprecated("Verwende intervalle statt einzelner Felder. Wird für Migration beibehalten.")
     val letzterTermin: Long = 0,
     @Deprecated("Wird nicht mehr verwendet")
-    val wochentagOld: Int = 0, // 0=Montag, 1=Dienstag, ..., 6=Sonntag (wird von Liste übernommen für Privat-Kunden)
-    val wochentag: String = "", // MO, DI, MI, DO, FR, SA, SO
+    val wochentagOld: Int = 0,
+    @Deprecated("Verwende defaultAbholungWochentag/defaultAuslieferungWochentag")
+    val wochentag: String = "",
     val kundenTyp: KundenTyp = KundenTyp.REGELMAESSIG,
-    val listenWochentag: Int = -1, // 0=Mo..6=So, für Wochentagslisten; -1=nicht gesetzt
+    @Deprecated("Verwende defaultAbholungWochentag/defaultAuslieferungWochentag")
+    val listenWochentag: Int = -1,
     val kundennummer: String = "", // Optionale externe Referenz
     val defaultAbholungWochentag: Int = -1,
     val defaultAuslieferungWochentag: Int = -1,
