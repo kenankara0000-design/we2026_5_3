@@ -118,6 +118,27 @@
     <string name="dialog_termin_anlegen_title">Termin Anlegen</string>
     <string name="dialog_termin_anlegen_message">Möchten Sie Termine anlegen? Anschließend können Sie eine Termin-Regel auswählen.</string>
     <string name="dialog_list_cannot_delete_title">Liste kann nicht gelöscht werden</string>
+    <string name="dialog_list_delete_confirm_message">Bist du sicher, dass du diese Liste endgültig löschen möchtest?</string>
+    <string name="dialog_termin_regel_auswaehlen">Termin-Regel auswählen</string>
+    <string name="dialog_export_title">Exportieren</string>
+    <string name="export_format_csv">Als CSV exportieren</string>
+    <string name="export_format_text">Als Text exportieren</string>
+    <string name="dialog_foto_add_title">Foto hinzufügen</string>
+    <string name="foto_source_camera">Kamera</string>
+    <string name="foto_source_gallery">Galerie</string>
+    <!-- TerminRegelManager Dialoge -->
+    <string name="dialog_regel_anwenden_title">Regel anwenden</string>
+    <string name="dialog_regel_anwenden_message">Der Kunde hat bereits %1$d Termin-Regel(n):\n\n%2$s\n\nNeue Regel: %3$s\n\nMöchten Sie diese Regel hinzufügen oder die bestehenden Regeln ersetzen?</string>
+    <string name="btn_hinzufuegen">Hinzufügen</string>
+    <string name="btn_ersetzen">Ersetzen</string>
+    <string name="dialog_regel_hinzufuegen_title">Regel hinzufügen - Bestätigung</string>
+    <string name="dialog_regel_hinzufuegen_message">%1$sRegel: %2$s%3$s\nAbholung: %4$s\nAuslieferung: %5$s\n%6$s\nMöchten Sie fortfahren?</string>
+    <string name="btn_ja_hinzufuegen">Ja, hinzufügen</string>
+    <string name="dialog_regel_ersetzen_title">Regeln ersetzen - Bestätigung</string>
+    <string name="dialog_regel_ersetzen_message">ACHTUNG: Alle bestehenden Regeln werden gelöscht!\n\nWird gelöscht (%1$d Regel(n)):\n%2$s\n\nWird hinzugefügt:\nRegel: %3$s%4$s\nAbholung: %5$s\nAuslieferung: %6$s\n%7$s\nMöchten Sie wirklich fortfahren?</string>
+    <string name="btn_ja_ersetzen">Ja, ersetzen</string>
+    <string name="dialog_regel_wiederholen_ja">Wiederholen: Alle %1$d Tage\n</string>
+    <string name="dialog_regel_wiederholen_nein">Wiederholen: Nein\n</string>
     <string name="toast_fehler_pruefen">Fehler beim Prüfen: %1$s</string>
     <string name="toast_regel_geloescht">Regel gelöscht</string>
     <string name="toast_fehler_loeschen">Fehler beim Löschen</string>

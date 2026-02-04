@@ -40,15 +40,19 @@ class CustomerPhotoManager(
     private var latestTmpUri: Uri? = null
     
     fun showPhotoOptionsDialog() {
+        val items = arrayOf(
+            activity.getString(com.example.we2026_5.R.string.foto_source_camera),
+            activity.getString(com.example.we2026_5.R.string.foto_source_gallery)
+        )
         AlertDialog.Builder(activity)
-            .setTitle("Foto hinzufügen")
-            .setItems(arrayOf("Kamera", "Galerie")) { _, which ->
+            .setTitle(activity.getString(com.example.we2026_5.R.string.dialog_foto_add_title))
+            .setItems(items) { _, which ->
                 when (which) {
                     0 -> checkCameraPermissionAndStart() // Kamera
                     1 -> pickImageFromGallery() // Galerie
                 }
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(activity.getString(com.example.we2026_5.R.string.btn_cancel), null)
             .show()
     }
     

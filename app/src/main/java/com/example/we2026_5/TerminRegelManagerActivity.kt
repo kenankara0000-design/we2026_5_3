@@ -119,15 +119,15 @@ class TerminRegelManagerActivity : AppCompatActivity() {
         }
 
         AlertDialog.Builder(this)
-            .setTitle("Regel-Informationen")
+            .setTitle(getString(R.string.dialog_regel_info_title))
             .setMessage(infoText)
-            .setPositiveButton("Bearbeiten") { _, _ ->
+            .setPositiveButton(getString(R.string.label_edit)) { _, _ ->
                 val intent = Intent(this, TerminRegelErstellenActivity::class.java).apply {
                     putExtra("REGEL_ID", regel.id)
                 }
                 startActivity(intent)
             }
-            .setNegativeButton("Schließen", null)
+            .setNegativeButton(getString(R.string.dialog_close), null)
             .show()
     }
 
@@ -161,15 +161,15 @@ class TerminRegelManagerActivity : AppCompatActivity() {
                     }
 
                     AlertDialog.Builder(this@TerminRegelManagerActivity)
-                        .setTitle("Regel anwenden")
-                        .setMessage("Der Kunde hat bereits ${customer.intervalle.size} Termin-Regel(n):\n\n$bestehendeRegelnText\n\nNeue Regel: ${regel.name}\n\nMöchten Sie diese Regel hinzufügen oder die bestehenden Regeln ersetzen?")
-                        .setPositiveButton("Hinzufügen") { _, _ ->
+                        .setTitle(getString(R.string.dialog_regel_anwenden_title))
+                        .setMessage(getString(R.string.dialog_regel_anwenden_message, customer.intervalle.size, bestehendeRegelnText, regel.name))
+                        .setPositiveButton(getString(R.string.btn_hinzufuegen)) { _, _ ->
                             regelHinzufuegenMitBestaetigung(customer, regel)
                         }
-                        .setNeutralButton("Ersetzen") { _, _ ->
+                        .setNeutralButton(getString(R.string.btn_ersetzen)) { _, _ ->
                             regelErsetzenMitBestaetigung(customer, regel, bestehendeRegelnText)
                         }
-                        .setNegativeButton("Abbrechen", null)
+                        .setNegativeButton(getString(R.string.btn_cancel), null)
                         .show()
                 } else {
                     regelHinzufuegenMitBestaetigung(customer, regel)
@@ -200,18 +200,14 @@ class TerminRegelManagerActivity : AppCompatActivity() {
                     "Diese Regel wird als erste Regel hinzugefügt:\n\n"
                 }
 
+                val wiederholenText = if (erstes.wiederholen) getString(R.string.dialog_regel_wiederholen_ja, erstes.intervallTage) else getString(R.string.dialog_regel_wiederholen_nein)
                 AlertDialog.Builder(this@TerminRegelManagerActivity)
-                    .setTitle("Regel hinzufügen - Bestätigung")
-                    .setMessage("$hinzufuegenText" +
-                            "Regel: ${regel.name}$paarInfo\n" +
-                            "Abholung: $abholungText\n" +
-                            "Auslieferung: $auslieferungText\n" +
-                            (if (erstes.wiederholen) "Wiederholen: Alle ${erstes.intervallTage} Tage\n" else "Wiederholen: Nein\n") +
-                            "\nMöchten Sie fortfahren?")
-                    .setPositiveButton("Ja, hinzufügen") { _, _ ->
+                    .setTitle(getString(R.string.dialog_regel_hinzufuegen_title))
+                    .setMessage(getString(R.string.dialog_regel_hinzufuegen_message, hinzufuegenText, regel.name, paarInfo, abholungText, auslieferungText, wiederholenText))
+                    .setPositiveButton(getString(R.string.btn_ja_hinzufuegen)) { _, _ ->
                         regelHinzufuegen(customer, regel, neueIntervalle)
                     }
-                    .setNegativeButton("Abbrechen", null)
+                    .setNegativeButton(getString(R.string.btn_cancel), null)
                     .show()
             } catch (e: Exception) {
                 Toast.makeText(this@TerminRegelManagerActivity, getString(R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()
@@ -233,20 +229,14 @@ class TerminRegelManagerActivity : AppCompatActivity() {
                 } else "Heute"
                 val paarInfo = if (neueIntervalle.size > 1) " (${neueIntervalle.size} Termin-Paare)" else ""
 
+                val wiederholenText = if (erstes.wiederholen) getString(R.string.dialog_regel_wiederholen_ja, erstes.intervallTage) else getString(R.string.dialog_regel_wiederholen_nein)
                 AlertDialog.Builder(this@TerminRegelManagerActivity)
-                    .setTitle("Regeln ersetzen - Bestätigung")
-                    .setMessage("ACHTUNG: Alle bestehenden Regeln werden gelöscht!\n\n" +
-                            "Wird gelöscht (${customer.intervalle.size} Regel(n)):\n$bestehendeRegelnText\n\n" +
-                            "Wird hinzugefügt:\n" +
-                            "Regel: ${regel.name}$paarInfo\n" +
-                            "Abholung: $abholungText\n" +
-                            "Auslieferung: $auslieferungText\n" +
-                            (if (erstes.wiederholen) "Wiederholen: Alle ${erstes.intervallTage} Tage\n" else "Wiederholen: Nein\n") +
-                            "\nMöchten Sie wirklich fortfahren?")
-                    .setPositiveButton("Ja, ersetzen") { _, _ ->
+                    .setTitle(getString(R.string.dialog_regel_ersetzen_title))
+                    .setMessage(getString(R.string.dialog_regel_ersetzen_message, customer.intervalle.size, bestehendeRegelnText, regel.name, paarInfo, abholungText, auslieferungText, wiederholenText))
+                    .setPositiveButton(getString(R.string.btn_ja_ersetzen)) { _, _ ->
                         regelErsetzen(customer, regel, neueIntervalle)
                     }
-                    .setNegativeButton("Abbrechen", null)
+                    .setNegativeButton(getString(R.string.btn_cancel), null)
                     .show()
             } catch (e: Exception) {
                 Toast.makeText(this@TerminRegelManagerActivity, getString(R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()

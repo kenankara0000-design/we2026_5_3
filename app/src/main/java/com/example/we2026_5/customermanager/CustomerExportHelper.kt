@@ -29,15 +29,19 @@ class CustomerExportHelper(
      * Zeigt einen Dialog zur Auswahl des Export-Formats.
      */
     fun showExportDialog() {
+        val items = arrayOf(
+            activity.getString(com.example.we2026_5.R.string.export_format_csv),
+            activity.getString(com.example.we2026_5.R.string.export_format_text)
+        )
         androidx.appcompat.app.AlertDialog.Builder(activity)
-            .setTitle("Exportieren")
-            .setItems(arrayOf("Als CSV exportieren", "Als Text exportieren")) { _, which ->
+            .setTitle(activity.getString(com.example.we2026_5.R.string.dialog_export_title))
+            .setItems(items) { _, which ->
                 when (which) {
                     0 -> exportAsCSV()
                     1 -> exportAsText()
                 }
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(activity.getString(com.example.we2026_5.R.string.btn_cancel), null)
             .show()
     }
     

@@ -65,7 +65,7 @@
 | # | Maßnahme | Dateien |
 |---|----------|---------|
 | 4.1 | ~~"Condition always true" (Zeile 299) beheben~~ ✅ erledigt | CustomerDetailScreen.kt |
-| 4.2 | Hardcodierte Dialog-Texte in strings.xml auslagern | CustomerDetailActivity, CustomerManagerActivity, CustomerDialogHelper, TourPlannerDialogHelper |
+| 4.2 | ~~Hardcodierte Dialog-Texte in strings.xml auslagern~~ ✅ erledigt | ListeBearbeitenCallbacks, CustomerExportHelper, CustomerPhotoManager, TerminRegelManagerActivity |
 
 ---
 

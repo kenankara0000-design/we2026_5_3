@@ -149,10 +149,10 @@ class ListeBearbeitenCallbacks(
      */
     fun showDeleteConfirmation(onConfirm: () -> Unit) {
         AlertDialog.Builder(activity)
-            .setTitle("Liste löschen")
-            .setMessage("Bist du sicher, dass du diese Liste endgültig löschen möchtest?")
-            .setPositiveButton("Löschen") { _, _ -> onConfirm() }
-            .setNegativeButton("Abbrechen", null)
+            .setTitle(activity.getString(com.example.we2026_5.R.string.dialog_delete_list_title))
+            .setMessage(activity.getString(com.example.we2026_5.R.string.dialog_list_delete_confirm_message))
+            .setPositiveButton(activity.getString(com.example.we2026_5.R.string.dialog_loeschen)) { _, _ -> onConfirm() }
+            .setNegativeButton(activity.getString(com.example.we2026_5.R.string.btn_cancel), null)
             .show()
     }
     
@@ -195,12 +195,12 @@ class ListeBearbeitenCallbacks(
                 val regelNamen = regeln.map { it.name }.toTypedArray()
                 
                 AlertDialog.Builder(activity)
-                    .setTitle("Termin-Regel auswählen")
+                    .setTitle(activity.getString(com.example.we2026_5.R.string.dialog_termin_regel_auswaehlen))
                     .setItems(regelNamen) { _, which ->
                         val ausgewaehlteRegel = regeln[which]
                         onRegelSelected(ausgewaehlteRegel)
                     }
-                    .setNegativeButton("Abbrechen", null)
+                    .setNegativeButton(activity.getString(com.example.we2026_5.R.string.btn_cancel), null)
                     .show()
             } catch (e: Exception) {
                 Toast.makeText(activity, activity.getString(R.string.error_fehler_laden_regeln, e.message ?: ""), Toast.LENGTH_SHORT).show()
