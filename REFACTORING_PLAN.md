@@ -54,7 +54,7 @@
 
 | # | Maßnahme | Dateien |
 |---|----------|---------|
-| 3.1 | `intervallTage` durch `intervalle` ersetzen | CustomerDetailScreen.kt |
+| 3.1 | ~~`intervallTage` durch `intervalle` ersetzen~~ ✅ erledigt | CustomerDetailScreen.kt |
 | 3.2 | Alle deprecated Felder prüfen und migrieren | Customer.kt, TerminBerechnungUtils, TerminFilterUtils |
 | 3.3 | `Customer.getFaelligAm()` auf neue Struktur umstellen oder als deprecated markieren | Customer.kt |
 

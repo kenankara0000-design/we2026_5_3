@@ -146,7 +146,10 @@ fun CustomerDetailScreen(
     var editAbholungWochentag by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.defaultAbholungWochentag ?: -1) }
     var editAuslieferungWochentag by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.defaultAuslieferungWochentag ?: -1) }
     var editIntervallTageUnregel by remember(customer?.id, isInEditMode) {
-        mutableStateOf((customer?.intervallTage?.takeIf { it in 1..365 } ?: 7))
+        val fromIntervalle = customer?.intervalle?.firstOrNull()?.intervallTage?.takeIf { it in 1..365 }
+        @Suppress("DEPRECATION")
+        val fromLegacy = customer?.intervallTage?.takeIf { it in 1..365 }
+        mutableStateOf(fromIntervalle ?: fromLegacy ?: 0)
     }
     var editKundennummer by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.kundennummer ?: "") }
     var editDefaultUhrzeit by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.defaultUhrzeit ?: "") }
@@ -454,9 +457,9 @@ fun CustomerDetailScreen(
                         Spacer(Modifier.height(8.dp))
                         Text(stringResource(R.string.label_a_plus_tage_l), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                         OutlinedTextField(
-                            value = editIntervallTageUnregel.toString(),
+                            value = if (editIntervallTageUnregel == 0) "" else editIntervallTageUnregel.toString(),
                             onValueChange = { s ->
-                                val v = s.filter { it.isDigit() }.toIntOrNull()?.coerceIn(1, 365) ?: 7
+                                val v = s.filter { it.isDigit() }.toIntOrNull()?.coerceIn(0, 365) ?: 0
                                 editIntervallTageUnregel = v
                             },
                             modifier = Modifier.fillMaxWidth(),
