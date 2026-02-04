@@ -122,6 +122,7 @@
     <string name="dialog_termin_regel_auswaehlen">Termin-Regel auswählen</string>
     <string name="dialog_export_title">Exportieren</string>
     <string name="export_format_csv">Als CSV exportieren</string>
+    <string name="share_file_title">Datei teilen</string>
     <string name="export_format_text">Als Text exportieren</string>
     <string name="dialog_foto_add_title">Foto hinzufügen</string>
     <string name="foto_source_camera">Kamera</string>

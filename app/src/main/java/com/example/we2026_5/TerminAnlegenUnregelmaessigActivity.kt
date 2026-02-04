@@ -179,7 +179,8 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                         Toast.makeText(context, "Bitte mindestens einen Termin wählen", Toast.LENGTH_SHORT).show()
                                         return@launch
                                     }
-                                    val zahl = (c.intervallTage.coerceIn(1, 365)).takeIf { it > 0 } ?: 7
+                                    val zahl = (c.intervalle.firstOrNull()?.intervallTage?.takeIf { it in 1..365 }
+                                        ?: @Suppress("DEPRECATION") c.intervallTage).coerceIn(1, 365).takeIf { it > 0 } ?: 7
                                     val newIntervalle = toAdd.map { slot ->
                                         CustomerIntervall(
                                             id = UUID.randomUUID().toString(),

@@ -45,7 +45,8 @@ object TerminAusKundeUtils {
     fun erstelleIntervallAusKunde(customer: Customer, startDatum: Long = System.currentTimeMillis()): CustomerIntervall? {
         val abholTag = customer.defaultAbholungWochentag.takeIf { it.isValidWeekday() } ?: return null
         val auslieferTag = customer.defaultAuslieferungWochentag.takeIf { it.isValidWeekday() } ?: return null
-        val zyklus = customer.intervallTage.coerceIn(1, 365)
+        val zyklus = (customer.intervalle.firstOrNull()?.intervallTage?.takeIf { it in 1..365 }
+            ?: @Suppress("DEPRECATION") customer.intervallTage).coerceIn(1, 365)
         val start = TerminBerechnungUtils.getStartOfDay(startDatum)
 
         val abholungDatum = berechneNaechstenWochentag(start, abholTag)

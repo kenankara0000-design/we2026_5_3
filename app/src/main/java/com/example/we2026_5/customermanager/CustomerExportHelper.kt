@@ -102,7 +102,12 @@ class CustomerExportHelper(
                         com.example.we2026_5.util.TerminFilterUtils.getEffectiveUrlaubEintraege(customer).isNotEmpty() -> "Urlaub"
                         else -> "Offen"
                     }
-                    
+
+                    val intervallTage = customer.intervalle.firstOrNull()?.intervallTage?.takeIf { it in 1..365 }
+                        ?: @Suppress("DEPRECATION") customer.intervallTage.takeIf { it in 1..365 }
+                        ?: 0
+
+                    @Suppress("DEPRECATION")
                     val letzterTermin = if (customer.letzterTermin > 0) {
                         SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date(customer.letzterTermin))
                     } else {
@@ -112,7 +117,7 @@ class CustomerExportHelper(
                     writer.append("\"${customer.name}\",")
                     writer.append("\"${customer.adresse}\",")
                     writer.append("\"${customer.telefon}\",")
-                    writer.append("${customer.intervallTage},")
+                    writer.append("$intervallTage,")
                     writer.append("$letzterTermin,")
                     writer.append("$status\n")
                 }
@@ -166,6 +171,6 @@ class CustomerExportHelper(
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         
-        activity.startActivity(Intent.createChooser(shareIntent, "Datei teilen"))
+        activity.startActivity(Intent.createChooser(shareIntent, activity.getString(com.example.we2026_5.R.string.share_file_title)))
     }
 }

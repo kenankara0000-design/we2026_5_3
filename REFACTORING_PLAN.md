@@ -44,7 +44,7 @@
 
 | # | Maßnahme | Dateien |
 |---|----------|---------|
-| 2.1 | DB-Migration: `kundenArt == "Liste"` → `"Tour"` | CustomerRepository oder Migrationsskript |
+| 2.1 | ~~DB-Migration: kundenArt "Liste" → "Tour"~~ ✅ erledigt | ListeToTourMigration.kt, MainActivity |
 | 2.2 | Alle `kundenArt == "Liste" \|\| kundenArt == "Tour"` durch `== "Tour"` ersetzen | AddCustomerActivity, AddCustomerScreen, CustomerDetailScreen, CustomerTypeButtonHelper, ListeBearbeitenScreen, ListeBearbeitenViewModel, CustomerManagerViewModel, TourDataProcessor, TourPlannerScreen |
 | 2.3 | Save-Logik: keine Umwandlung `"Liste" → "Tour"` mehr | AddCustomerActivity, CustomerDetailScreen |
 
@@ -55,7 +55,7 @@
 | # | Maßnahme | Dateien |
 |---|----------|---------|
 | 3.1 | ~~`intervallTage` durch `intervalle` ersetzen~~ ✅ erledigt | CustomerDetailScreen.kt |
-| 3.2 | Alle deprecated Felder prüfen und migrieren | Customer.kt, TerminBerechnungUtils, TerminFilterUtils |
+| 3.2 | ~~intervallTage aus intervalle bevorzugen~~ ✅ erledigt | CustomerExportHelper, TerminAusKundeUtils, TerminAnlegenUnregelmaessigActivity |
 | 3.3 | `Customer.getFaelligAm()` auf neue Struktur umstellen oder als deprecated markieren | Customer.kt |
 
 ---
@@ -73,8 +73,8 @@
 
 | # | Maßnahme | Dateien |
 |---|----------|---------|
-| 5.1 | Wochentagslisten vs. Tour-Listen in separate Module trennen | TourDataProcessor.kt |
-| 5.2 | Interfaces: `WochentagslistenProcessor`, `TourListenProcessor` | tourplanner/ |
+| 5.1 | ~~Wochentagslisten vs. Tour-Listen in separate Methoden trennen~~ ✅ erledigt | TourDataProcessor.kt: fillWochentagslisten(), fillTourListen() |
+| 5.2 | (optional) Interfaces: `WochentagslistenProcessor`, `TourListenProcessor` – bei Bedarf in eigene Klassen | tourplanner/ |
 
 ---
 

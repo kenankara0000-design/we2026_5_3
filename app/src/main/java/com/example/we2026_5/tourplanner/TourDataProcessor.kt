@@ -32,101 +32,8 @@ class TourDataProcessor {
         
         // Kunden in Listen filtern
         val listenMitKunden = mutableMapOf<String, List<Customer>>()
-        // 1) Wochentagslisten – nur Gruppierung nach Tag, nur G/P (keine Tour), nur NICHT-erledigte
-        allListen.filter { it.wochentag in 0..6 }.forEach { liste ->
-            val kunden = allCustomers.filter { k ->
-                (k.kundenArt == "Gewerblich" || k.kundenArt == "Privat") &&
-                k.listeId.isEmpty() &&
-                (k.defaultAbholungWochentag == liste.wochentag || k.defaultAuslieferungWochentag == liste.wochentag)
-            }
-            val fälligeKunden = kunden.filter { customer ->
-                val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
-                    categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
-                val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
-
-                // Erledigte G/P aus Wochentagslisten gehen in Erledigt-Bereich, nicht hier
-                if (isDone) return@filter false
-
-                val isOverdue = filter.istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)
-                if (isOverdue) return@filter true
-
-                filter.hatKundeTerminAmDatum(customer, null, viewDateStart)
-            }
-            if (fälligeKunden.isNotEmpty()) {
-                listenMitKunden[liste.id] = fälligeKunden.sortedBy { it.name }
-            }
-        }
-
-        // 2) Alte Listen (listeId)
-        kundenNachListen.forEach { (listeId, kunden) ->
-            if (listeId.isEmpty()) return@forEach
-            val liste = allListen.find { it.id == listeId } ?: return@forEach
-            
-            val istFaellig = liste.intervalle.any { intervall ->
-                filter.isIntervallFaelligAm(intervall, viewDateStart) || 
-                filter.isIntervallFaelligInZukunft(intervall, viewDateStart)
-            }
-            
-            if (istFaellig) {
-                val fälligeKunden = kunden.filter { customer ->
-                    val faelligAm = filter.customerFaelligAm(customer, liste, viewDateStart)
-                    // Kunden mit Urlaub weiterhin anzeigen (mit U-Badge im Tourenplaner)
-                    val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
-                        categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
-                    val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
-
-                    // WICHTIG: Erledigte Kunden aus Listen werden angezeigt wenn sie erledigt sind UND am Tag einen Termin haben
-                    if (isDone) {
-                        val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                            customer = customer,
-                            liste = liste,
-                            startDatum = viewDateStart - TimeUnit.DAYS.toMillis(365),
-                            tageVoraus = 730
-                        )
-                        val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
-                        
-                        // Prüfe ob überfällig war und am Datum erledigt wurde
-                        val warUeberfaelligUndErledigtAmDatum = if (customer.faelligAmDatum > 0) {
-                            val faelligAmStart = categorizer.getStartOfDay(customer.faelligAmDatum)
-                            val erledigtAmStart = if (customer.abholungErledigtAm > 0) {
-                                categorizer.getStartOfDay(customer.abholungErledigtAm)
-                            } else if (customer.auslieferungErledigtAm > 0) {
-                                categorizer.getStartOfDay(customer.auslieferungErledigtAm)
-                            } else {
-                                0L
-                            }
-                            viewDateStart == faelligAmStart || (erledigtAmStart > 0 && viewDateStart == erledigtAmStart)
-                        } else {
-                            false
-                        }
-                        
-                        // Prüfe ob am angezeigten Tag ein Termin erledigt wurde (wenn A und L am Tag: beide müssen erledigt sein)
-                        val hatAbholungAmTag = termineAmTag.any { it.typ == com.example.we2026_5.TerminTyp.ABHOLUNG }
-                        val hatAuslieferungAmTag = termineAmTag.any { it.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG }
-                        val wurdeAmTagErledigt = wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTag, hatAuslieferungAmTag, kwErledigtAmTag)
-                        
-                        // Erledigte Kunden anzeigen wenn:
-                        // 1. Überfällig war und am Datum erledigt wurde, ODER
-                        // 2. Am Tag vollständig erledigt (bei A+L: beide müssen erledigt sein)
-                        if (warUeberfaelligUndErledigtAmDatum || wurdeAmTagErledigt) {
-                            return@filter true
-                        }
-                    }
-                    
-                    // Nicht erledigte Kunden: Prüfe ob überfällig oder normal fällig
-                    val isOverdue = filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)
-                    if (isOverdue) {
-                        return@filter true
-                    }
-                    
-                    filter.hatKundeTerminAmDatum(customer, liste, viewDateStart)
-                }
-                
-                if (fälligeKunden.isNotEmpty()) {
-                    listenMitKunden[listeId] = fälligeKunden.sortedBy { it.name }
-                }
-            }
-        }
+        fillWochentagslisten(allCustomers, allListen, listenMitKunden, viewDateStart, heuteStart)
+        fillTourListen(kundenNachListen, allListen, listenMitKunden, viewDateStart, heuteStart)
         
         // Sammle Kunden-IDs: nur Tour-Listen (listeId), NICHT Wochentagslisten – G/P in Wochentagslisten gehen in Erledigt
         val alleKundenInListenIds = kundenNachListen.values.flatten().map { it.id }.toSet()
@@ -440,6 +347,88 @@ class TourDataProcessor {
         }
     }
     
+    /** Wochentagslisten (wochentag 0..6): nur G/P, nur nicht-erledigte, Gruppierung nach Tag. */
+    private fun fillWochentagslisten(
+        allCustomers: List<Customer>,
+        allListen: List<KundenListe>,
+        listenMitKunden: MutableMap<String, List<Customer>>,
+        viewDateStart: Long,
+        heuteStart: Long
+    ) {
+        allListen.filter { it.wochentag in 0..6 }.forEach { liste ->
+            val kunden = allCustomers.filter { k ->
+                (k.kundenArt == "Gewerblich" || k.kundenArt == "Privat") &&
+                k.listeId.isEmpty() &&
+                (k.defaultAbholungWochentag == liste.wochentag || k.defaultAuslieferungWochentag == liste.wochentag)
+            }
+            val fälligeKunden = kunden.filter { customer ->
+                val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
+                    categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
+                if (isDone) return@filter false
+                val isOverdue = filter.istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)
+                if (isOverdue) return@filter true
+                filter.hatKundeTerminAmDatum(customer, null, viewDateStart)
+            }
+            if (fälligeKunden.isNotEmpty()) {
+                listenMitKunden[liste.id] = fälligeKunden.sortedBy { it.name }
+            }
+        }
+    }
+
+    /** Tour-Listen (listeId): Kunden mit zugeordneter Liste, fällig oder erledigt am Tag. */
+    private fun fillTourListen(
+        kundenNachListen: Map<String, List<Customer>>,
+        allListen: List<KundenListe>,
+        listenMitKunden: MutableMap<String, List<Customer>>,
+        viewDateStart: Long,
+        heuteStart: Long
+    ) {
+        kundenNachListen.forEach { (listeId, kunden) ->
+            if (listeId.isEmpty()) return@forEach
+            val liste = allListen.find { it.id == listeId } ?: return@forEach
+            val istFaellig = liste.intervalle.any { intervall ->
+                filter.isIntervallFaelligAm(intervall, viewDateStart) ||
+                filter.isIntervallFaelligInZukunft(intervall, viewDateStart)
+            }
+            if (istFaellig) {
+                val fälligeKunden = kunden.filter { customer ->
+                    val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
+                        categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                    val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
+                    if (isDone) {
+                        val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                            customer = customer,
+                            liste = liste,
+                            startDatum = viewDateStart - TimeUnit.DAYS.toMillis(365),
+                            tageVoraus = 730
+                        )
+                        val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
+                        val warUeberfaelligUndErledigtAmDatum = if (customer.faelligAmDatum > 0) {
+                            val faelligAmStart = categorizer.getStartOfDay(customer.faelligAmDatum)
+                            val erledigtAmStart = if (customer.abholungErledigtAm > 0) {
+                                categorizer.getStartOfDay(customer.abholungErledigtAm)
+                            } else if (customer.auslieferungErledigtAm > 0) {
+                                categorizer.getStartOfDay(customer.auslieferungErledigtAm)
+                            } else 0L
+                            viewDateStart == faelligAmStart || (erledigtAmStart > 0 && viewDateStart == erledigtAmStart)
+                        } else false
+                        val hatAbholungAmTag = termineAmTag.any { it.typ == com.example.we2026_5.TerminTyp.ABHOLUNG }
+                        val hatAuslieferungAmTag = termineAmTag.any { it.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG }
+                        val wurdeAmTagErledigt = wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTag, hatAuslieferungAmTag, kwErledigtAmTag)
+                        if (warUeberfaelligUndErledigtAmDatum || wurdeAmTagErledigt) return@filter true
+                    }
+                    val isOverdue = filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)
+                    if (isOverdue) return@filter true
+                    filter.hatKundeTerminAmDatum(customer, liste, viewDateStart)
+                }
+                if (fälligeKunden.isNotEmpty()) {
+                    listenMitKunden[listeId] = fälligeKunden.sortedBy { it.name }
+                }
+            }
+        }
+    }
+
     /**
      * Prüft ob der Termin am angezeigten Tag vollständig erledigt wurde.
      * Regel: Wenn am Tag sowohl A (Abholung) als auch L (Auslieferung) fällig sind,
