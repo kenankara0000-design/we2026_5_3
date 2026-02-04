@@ -242,7 +242,22 @@ fun ListeBearbeitenScreen(
                     }
                 }
 
-                if (state.intervalle.isNotEmpty() || state.isInEditMode) {
+                val isWochentagsliste = (state.liste?.wochentag ?: -1) in 0..6
+                if (isWochentagsliste) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = surfaceWhite),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.label_list_wochentag_grouping_hint),
+                            modifier = Modifier.padding(12.dp),
+                            fontSize = 14.sp,
+                            color = textSecondary
+                        )
+                    }
+                } else if (state.intervalle.isNotEmpty() || state.isInEditMode) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -360,7 +375,7 @@ private fun KundeInListeItem(
                     Text(
                         text = when (kunde.kundenArt) {
                             "Privat" -> stringResource(R.string.label_type_p_letter)
-                            "Liste" -> stringResource(R.string.label_type_l_letter)
+                            "Liste", "Tour" -> stringResource(R.string.label_type_t_letter)
                             else -> stringResource(R.string.label_type_g)
                         },
                         fontSize = 14.sp,

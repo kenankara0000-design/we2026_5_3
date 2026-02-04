@@ -9,7 +9,7 @@ import com.example.we2026_5.util.DialogBaseHelper
 import java.util.Calendar
 
 /**
- * Helper-Klasse für Dialog-Funktionen des CustomerAdapter
+ * Helper-Klasse für Verschieben-, Urlaub- und Rückgängig-Dialoge im TourPlanner.
  */
 class CustomerDialogHelper(
     private val context: Context,

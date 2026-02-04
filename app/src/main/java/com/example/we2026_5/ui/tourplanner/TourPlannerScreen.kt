@@ -463,6 +463,16 @@ fun TourPlannerScreen(
                                     sectionDoneText = sectionDoneText,
                                     onToggle = { }
                                 )
+                                is ListItem.TourListeErledigt -> {
+                                    TourListeErledigtRow(
+                                        listeName = item.listeName,
+                                        erledigteKunden = item.erledigteKunden,
+                                        viewDateMillis = viewDateMillis,
+                                        getStatusBadgeText = getStatusBadgeText,
+                                        onCustomerClick = onCustomerClick,
+                                        onAktionenClick = onAktionenClick
+                                    )
+                                }
                                 is ListItem.CustomerItem -> {
                                     val isInUrlaub = viewDateMillis != null &&
                                         TerminFilterUtils.istTerminInUrlaubEintraege(viewDateMillis!!, item.customer)
@@ -563,6 +573,73 @@ private fun SectionHeaderRow(
 }
 
 @Composable
+private fun TourListeErledigtRow(
+    listeName: String,
+    erledigteKunden: List<Customer>,
+    viewDateMillis: Long?,
+    getStatusBadgeText: (Customer) -> String,
+    onCustomerClick: (CustomerOverviewPayload) -> Unit,
+    onAktionenClick: (Customer) -> Unit
+) {
+    val sectionDoneBg = colorResource(R.color.section_done_bg)
+    val sectionDoneText = colorResource(R.color.section_done_text)
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = sectionDoneBg),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(
+                text = "— $listeName —",
+                modifier = Modifier.padding(8.dp),
+                color = sectionDoneText,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+        }
+        Spacer(Modifier.height(4.dp))
+        erledigteKunden.forEach { customer ->
+            val viewDate = viewDateMillis ?: 0L
+            val isInUrlaub = viewDateMillis != null &&
+                TerminFilterUtils.istTerminInUrlaubEintraege(viewDateMillis!!, customer)
+            val urlaubInfo = if (isInUrlaub) {
+                val viewStart = TerminBerechnungUtils.getStartOfDay(viewDate)
+                val urlaubEntry = TerminFilterUtils.getEffectiveUrlaubEintraege(customer)
+                    .firstOrNull { e ->
+                        val vonStart = TerminBerechnungUtils.getStartOfDay(e.von)
+                        val bisStart = TerminBerechnungUtils.getStartOfDay(e.bis)
+                        viewStart in vonStart..bisStart
+                    }
+                urlaubEntry?.let { "${DateFormatter.formatDate(it.von)} – ${DateFormatter.formatDate(it.bis)}" }
+                    ?: if (customer.urlaubVon > 0 && customer.urlaubBis > 0)
+                        "${DateFormatter.formatDate(customer.urlaubVon)} – ${DateFormatter.formatDate(customer.urlaubBis)}"
+                    else ""
+            } else null
+            val payload = CustomerOverviewPayload(
+                customer = customer,
+                urlaubInfo = urlaubInfo?.takeIf { it.isNotEmpty() },
+                verschobenInfo = null,
+                verschobenVonInfo = null,
+                ueberfaelligInfo = null
+            )
+            TourCustomerRow(
+                customer = customer,
+                isOverdue = false,
+                isInUrlaub = isInUrlaub,
+                isVerschobenAmFaelligkeitstag = false,
+                verschobenInfo = null,
+                verschobenVonInfo = null,
+                statusBadgeText = getStatusBadgeText(customer),
+                viewDateMillis = viewDate,
+                onCustomerClick = { onCustomerClick(payload) },
+                onAktionenClick = { onAktionenClick(customer) }
+            )
+            Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
 private fun ListeHeaderRow(
     listeName: String,
     countText: String,
@@ -607,8 +684,9 @@ private val CustomerButtonMinHeight = 44.dp
 
 private fun getKundenArtLabel(customer: Customer): String = when {
     customer.kundenArt == "Gewerblich" -> "G"
-    customer.listeId.isNotEmpty() -> "L"
-    else -> "P"
+    customer.kundenArt == "Privat" -> "P"
+    customer.kundenArt == "Tour" || customer.kundenArt == "Liste" || customer.listeId.isNotEmpty() -> "T"
+    else -> "G"
 }
 
 @Composable

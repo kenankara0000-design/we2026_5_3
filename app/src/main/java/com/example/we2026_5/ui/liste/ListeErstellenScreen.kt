@@ -1,10 +1,15 @@
 package com.example.we2026_5.ui.liste
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -235,17 +240,39 @@ private fun WeekdaySelector(
     onSelect: (Int) -> Unit,
     textPrimary: Color
 ) {
+    val context = LocalContext.current
+    val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
     val weekdays = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+    val chipBg = Color(0xFFE0E0E0)
     Column {
         Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
         Spacer(modifier = Modifier.height(4.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
             weekdays.forEachIndexed { index, title ->
-                androidx.compose.material3.FilterChip(
-                    selected = selected == index,
-                    onClick = { onSelect(index) },
-                    label = { Text(title) }
-                )
+                val isSelected = selected == index
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .defaultMinSize(minWidth = 0.dp)
+                        .heightIn(min = 36.dp)
+                        .background(
+                            if (isSelected) primaryBlue else chipBg,
+                            RoundedCornerShape(6.dp)
+                        )
+                        .clickable { onSelect(index) }
+                        .padding(vertical = 6.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = title,
+                        color = if (isSelected) Color.White else textPrimary,
+                        fontSize = 13.sp,
+                        maxLines = 1
+                    )
+                }
             }
         }
     }

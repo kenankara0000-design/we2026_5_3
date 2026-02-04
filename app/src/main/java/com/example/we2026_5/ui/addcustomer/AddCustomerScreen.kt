@@ -2,12 +2,16 @@ package com.example.we2026_5.ui.addcustomer
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -57,15 +61,8 @@ fun AddCustomerScreen(
     onKundenArtChange: (String) -> Unit,
     onKundenTypChange: (KundenTyp) -> Unit,
     onIntervallTageChange: (Int) -> Unit,
-    onKundennummerChange: (String) -> Unit,
     onAbholungTagChange: (Int) -> Unit,
     onAuslieferungTagChange: (Int) -> Unit,
-    onDefaultUhrzeitChange: (String) -> Unit,
-    onTagsChange: (String) -> Unit,
-    onTourWochentagChange: (Int) -> Unit,
-    onTourStadtChange: (String) -> Unit,
-    onTourZeitStartChange: (String) -> Unit,
-    onTourZeitEndeChange: (String) -> Unit,
     onSave: () -> Unit
 ) {
     val context = LocalContext.current
@@ -209,9 +206,9 @@ fun AddCustomerScreen(
                     textPrimary = textPrimary
                 )
                 RadioOption(
-                    text = stringResource(R.string.label_type_liste),
-                    selected = state.kundenArt == "Liste",
-                    onSelect = { onKundenArtChange("Liste") },
+                    text = stringResource(R.string.label_type_tour),
+                    selected = state.kundenArt == "Tour",
+                    onSelect = { onKundenArtChange("Tour") },
                     textPrimary = textPrimary
                 )
             }
@@ -226,32 +223,6 @@ fun AddCustomerScreen(
                 label = stringResource(R.string.label_default_delivery_day),
                 selected = state.auslieferungWochentag,
                 onSelect = onAuslieferungTagChange
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            OutlinedTextField(
-                value = state.defaultUhrzeit,
-                onValueChange = onDefaultUhrzeitChange,
-                label = { Text(stringResource(R.string.label_default_time_optional)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                placeholder = { Text("09:00") }
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            OutlinedTextField(
-                value = state.kundennummer,
-                onValueChange = onKundennummerChange,
-                label = { Text(stringResource(R.string.label_kundennummer)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            OutlinedTextField(
-                value = state.tagsInput,
-                onValueChange = onTagsChange,
-                label = { Text(stringResource(R.string.label_customer_tags)) },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 2,
-                placeholder = { Text(stringResource(R.string.hint_tags_example)) }
             )
             Spacer(modifier = Modifier.height(12.dp))
             Card(
@@ -273,40 +244,6 @@ fun AddCustomerScreen(
                         color = textSecondary
                     )
                 }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = stringResource(R.string.label_tour_plan),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = textPrimary
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            OutlinedTextField(
-                value = state.tourStadt,
-                onValueChange = onTourStadtChange,
-                label = { Text(stringResource(R.string.label_tour_city)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = state.tourZeitStart,
-                    onValueChange = onTourZeitStartChange,
-                    label = { Text(stringResource(R.string.label_time_from)) },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    placeholder = { Text("09:00") }
-                )
-                OutlinedTextField(
-                    value = state.tourZeitEnde,
-                    onValueChange = onTourZeitEndeChange,
-                    label = { Text(stringResource(R.string.label_time_to)) },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    placeholder = { Text("13:00") }
-                )
             }
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
@@ -395,7 +332,6 @@ private fun IntervallSchnellauswahl(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WeekdaySelector(
     label: String,
@@ -404,21 +340,38 @@ private fun WeekdaySelector(
 ) {
     val context = LocalContext.current
     val textPrimary = Color(ContextCompat.getColor(context, R.color.text_primary))
+    val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
     val weekdays = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+    val chipBg = Color(0xFFE0E0E0)
     Column {
         Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
         Spacer(modifier = Modifier.height(4.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             weekdays.forEachIndexed { index, title ->
-                FilterChip(
-                    selected = selected == index,
-                    onClick = { onSelect(index) },
-                    modifier = Modifier.weight(1f),
-                    label = { Text(title, maxLines = 1) }
-                )
+                val isSelected = selected == index
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .defaultMinSize(minWidth = 0.dp)
+                        .heightIn(min = 36.dp)
+                        .background(
+                            if (isSelected) primaryBlue else chipBg,
+                            RoundedCornerShape(6.dp)
+                        )
+                        .clickable { onSelect(index) }
+                        .padding(vertical = 6.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = title,
+                        color = if (isSelected) Color.White else textPrimary,
+                        fontSize = 13.sp,
+                        maxLines = 1
+                    )
+                }
             }
         }
     }

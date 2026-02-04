@@ -206,6 +206,7 @@
     <string name="label_list_sort_name">Sortierung: Name</string>
     <string name="label_list_sort_count">Sortierung: Kundenanzahl</string>
     <string name="label_list_empty_weekday">Keine Kunden mit A oder L an diesem Wochentag</string>
+    <string name="label_list_wochentag_grouping_hint">Wochentagslisten dienen nur der Gruppierung im Tourenplaner. Termine werden über die Kunden gesteuert (A/L-Wochentag, Intervalle, Termin-Regeln am Kunden).</string>
     <string name="label_refresh">Aktualisieren</string>
     <string name="label_listen_wochentag">Listen-Wochentag (für Kundenlisten):</string>
     <string name="label_intervall_tage">Intervall (Tage):</string>
@@ -307,9 +308,11 @@
     <string name="label_type_gewerblich">Gewerblich</string>
     <string name="label_type_privat">Privat</string>
     <string name="label_type_liste">Liste</string>
+    <string name="label_type_tour">Tour</string>
     <string name="label_type_g">G</string>
     <string name="label_type_p_letter">P</string>
     <string name="label_type_l_letter">L</string>
+    <string name="label_type_t_letter">T</string>
     <string name="label_type_gewerbe">Gewerbe</string>
     <string name="label_abholung_auslieferung_tag">A-Tag / L-Tag:</string>
     <string name="label_abholung">Abholung:</string>
@@ -367,14 +370,14 @@
     <string name="label_weekday_friday">Freitag</string>
     <string name="label_weekday_saturday">Samstag</string>
     <string name="label_weekday_sunday">Sonntag</string>
-    <!-- Wochentag-Kürzel (CustomerDetailScreen) -->
-    <string name="label_weekday_short_mo">MO</string>
-    <string name="label_weekday_short_tu">DI</string>
-    <string name="label_weekday_short_mi">MI</string>
-    <string name="label_weekday_short_do">DO</string>
-    <string name="label_weekday_short_fr">FR</string>
-    <string name="label_weekday_short_sa">SA</string>
-    <string name="label_weekday_short_su">SO</string>
+    <!-- Wochentag-Kürzel (2 Buchstaben, kompakt: Mo Di Mi Do Fr Sa So) -->
+    <string name="label_weekday_short_mo">Mo</string>
+    <string name="label_weekday_short_tu">Di</string>
+    <string name="label_weekday_short_mi">Mi</string>
+    <string name="label_weekday_short_do">Do</string>
+    <string name="label_weekday_short_fr">Fr</string>
+    <string name="label_weekday_short_sa">Sa</string>
+    <string name="label_weekday_short_su">So</string>
     <string name="hint_heute">Heute</string>
     <string name="map_title">Kartenansicht</string>
     <string name="map_empty">Keine Kunden mit Adressen gefunden</string>

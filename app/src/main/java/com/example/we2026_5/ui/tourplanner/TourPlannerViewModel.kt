@@ -56,7 +56,7 @@ class TourPlannerViewModel(
     /** Ausgewähltes Datum für UI (z. B. Anzeige, Prev/Next). */
     val selectedTimestamp: LiveData<Long?> = selectedTimestampFlow.asLiveData()
 
-    // StateFlow für erweiterte Sections
+    // StateFlow für erweiterte Sections – ERLEDIGT standardmäßig eingeklappt, bleibt so bis Nutzer aufmacht
     private val expandedSectionsFlow = MutableStateFlow<Set<SectionType>>(emptySet())
     
     // Kombiniere alle Flows für Tour-Items

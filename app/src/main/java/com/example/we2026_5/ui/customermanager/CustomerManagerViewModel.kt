@@ -48,7 +48,7 @@ class CustomerManagerViewModel(
         val tabFiltered = when (selectedTab) {
             0 -> customers.filter { it.kundenArt == "Gewerblich" }
             1 -> customers.filter { it.kundenArt == "Privat" }
-            2 -> customers.filter { it.kundenArt == "Liste" }
+            2 -> customers.filter { it.kundenArt == "Tour" || it.kundenArt == "Liste" }
             else -> customers
         }
 

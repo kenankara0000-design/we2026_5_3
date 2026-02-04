@@ -1,8 +1,7 @@
 package com.example.we2026_5
 
 /**
- * Einträge für die Tourenplaner-Liste (Compose und Adapter).
- * Ausgelagert aus CustomerAdapter.kt für klare Trennung von UI-Modellen und Adapter-Logik.
+ * Einträge für die Tourenplaner-Liste (Compose).
  */
 sealed class ListItem {
     data class CustomerItem(
@@ -29,6 +28,11 @@ sealed class ListItem {
         val listeId: String,
         val nichtErledigteKunden: List<Customer> = emptyList(),
         val erledigteKunden: List<Customer> = emptyList()
+    ) : ListItem()
+    /** Tour-Liste mit erledigten Kunden im Erledigt-Bereich */
+    data class TourListeErledigt(
+        val listeName: String,
+        val erledigteKunden: List<Customer>
     ) : ListItem()
 }
 

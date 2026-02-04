@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -297,8 +298,8 @@ private fun RegelTypDropdown(
 private val WochentagChipPaddingVertical = 14.dp
 private val WochentagChipMinHeight = 48.dp
 private val WochentagChipCorner = 8.dp
-private val WochentagChipSpacing = 8.dp
-private val WochentagChipFontSize = 14.sp
+private val WochentagChipSpacing = 2.dp
+private val WochentagChipFontSize = 13.sp
 
 @Composable
 private fun WochentagListenMenue(
@@ -336,6 +337,7 @@ private fun WochentagListenMenue(
             Box(
                 modifier = Modifier
                     .weight(1f)
+                    .defaultMinSize(minWidth = 0.dp)
                     .heightIn(min = WochentagChipMinHeight)
                     .background(bgColor, RoundedCornerShape(WochentagChipCorner))
                     .clickable { onDayToggle(index) }

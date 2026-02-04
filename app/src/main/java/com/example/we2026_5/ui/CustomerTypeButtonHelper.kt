@@ -39,8 +39,8 @@ object CustomerTypeButtonHelper {
                 button.setBackgroundResource(R.drawable.button_privat_glossy)
                 button.visibility = View.VISIBLE
             }
-            "Liste" -> {
-                button.text = context.getString(R.string.label_type_l_letter)
+            "Liste", "Tour" -> {
+                button.text = context.getString(R.string.label_type_t_letter)
                 // Kräftigeres, glänzenderes Braun mit Gradient-Hintergrund
                 button.setBackgroundResource(R.drawable.button_liste_glossy)
                 button.visibility = View.VISIBLE

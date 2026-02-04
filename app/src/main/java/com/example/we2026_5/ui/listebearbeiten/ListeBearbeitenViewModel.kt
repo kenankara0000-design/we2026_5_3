@@ -60,7 +60,7 @@ class ListeBearbeitenViewModel(
                         k.defaultAuslieferungWochentag != geladeneListe.wochentag
                     }.sortedBy { it.name }
                 } else {
-                    alleKunden.filter { it.listeId.isEmpty() && it.kundenArt == "Liste" }.sortedBy { it.name }
+                    alleKunden.filter { it.listeId.isEmpty() && (it.kundenArt == "Tour" || it.kundenArt == "Liste") }.sortedBy { it.name }
                 }
                 val intervalle = if (_state.value.isInEditMode) _state.value.intervalle else geladeneListe.intervalle
                 _state.value = _state.value.copy(
