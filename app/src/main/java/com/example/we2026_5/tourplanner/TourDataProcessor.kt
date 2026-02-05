@@ -38,7 +38,6 @@ class TourDataProcessor {
         val listenMitKunden = mutableMapOf<String, List<Customer>>()
         wochentagslistenProcessor.fill(allCustomers, allListen, listenMitKunden, viewDateStart, heuteStart)
         tourListenProcessor.fill(kundenNachListen, allListen, listenMitKunden, viewDateStart, heuteStart)
-        
         // Sammle Kunden-IDs: nur Tour-Listen (listeId), NICHT Wochentagslisten – G/P in Wochentagslisten gehen in Erledigt
         val alleKundenInListenIds = kundenNachListen.values.flatten().map { it.id }.toSet()
         val kundenInListenIds = listenMitKunden.values.flatten().map { it.id }.toSet()
@@ -147,7 +146,6 @@ class TourDataProcessor {
                 normalGewerblich.add(customer)
             }
         }
-        
         // REIHENFOLGE: 1. Überfällig (unsichtbar), 2. Listen, 3. Normal, 4. Erledigt
         
         // 1. Überfällige Kunden (unsichtbarer Bereich, nur zur Trennung) - GANZ OBEN
@@ -226,10 +224,9 @@ class TourDataProcessor {
             }
         }
         
-        // 3. Normale Kunden
-        val normalOhneListen = normalGewerblich.sortedBy { it.name }
+        // 3. Normale Kunden (ohne solche, die bereits in einer Liste für diesen Tag stehen – z. B. Wochentagsliste)
+        val normalOhneListen = normalGewerblich.filter { it.id !in kundenInListenIds }.sortedBy { it.name }
         normalOhneListen.forEach { items.add(ListItem.CustomerItem(it)) }
-        
         // 4. Erledigt-Bereich – G/P einzeln + Tour-Listen mit ihren erledigten Kunden
         val doneOhneListen = doneGewerblich.sortedBy { it.name }
         val erledigtGesamtCount = doneOhneListen.size + tourListenErledigt.sumOf { it.second.size }
@@ -242,7 +239,6 @@ class TourDataProcessor {
                 }
             }
         }
-        
         return items
     }
 
