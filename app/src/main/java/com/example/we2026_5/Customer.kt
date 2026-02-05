@@ -4,6 +4,7 @@ import com.example.we2026_5.util.TerminFilterUtils
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.google.firebase.database.Exclude
 import com.google.firebase.firestore.IgnoreExtraProperties
+import kotlin.DeprecationLevel
 import java.util.concurrent.TimeUnit
 
 /** Ein Urlaubseintrag (Von–Bis). Mehrere pro Kunde möglich. */
@@ -97,12 +98,13 @@ data class Customer(
 ) {
     /**
      * Berechnet das nächste Fälligkeitsdatum basierend auf letzterTermin und Intervall.
-     * Berücksichtigt verschobenAufDatum.
-     * Wenn wiederholen = false, wird abholungDatum zurückgegeben.
-     * 
-     * @deprecated Verwende TerminBerechnungUtils.berechneAlleTermineFuerKunde() für neue Struktur
-     * Diese Funktion bleibt für Rückwärtskompatibilität erhalten.
+     * Berücksichtigt verschobenAufDatum und gelöschte Termine.
+     * Nutzt intern bereits [intervalle] bzw. Legacy-Felder; nur für Rückwärtskompatibilität.
      */
+    @Deprecated(
+        message = "Bevorzugt TerminBerechnungUtils.berechneAlleTermineFuerKunde() nutzen und nächstes fälliges Datum daraus ableiten.",
+        level = DeprecationLevel.WARNING
+    )
     fun getFaelligAm(): Long {
         // NEUE STRUKTUR: Verwende Intervalle-Liste wenn vorhanden
         if (intervalle.isNotEmpty()) {

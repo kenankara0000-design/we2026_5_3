@@ -136,7 +136,7 @@ class AddCustomerActivity : AppCompatActivity() {
             plz = state.plz.trim(),
             telefon = state.telefon.trim(),
             notizen = state.notizen.trim(),
-            kundenArt = if (state.kundenArt == "Liste") "Tour" else state.kundenArt,
+            kundenArt = state.kundenArt,
             listeId = "",
             intervalle = emptyList(),
             abholungDatum = 0,

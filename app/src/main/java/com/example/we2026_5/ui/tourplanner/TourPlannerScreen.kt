@@ -685,7 +685,7 @@ private val CustomerButtonMinHeight = 44.dp
 private fun getKundenArtLabel(customer: Customer): String = when {
     customer.kundenArt == "Gewerblich" -> "G"
     customer.kundenArt == "Privat" -> "P"
-    customer.kundenArt == "Tour" || customer.kundenArt == "Liste" || customer.listeId.isNotEmpty() -> "T"
+    customer.kundenArt == "Tour" || customer.listeId.isNotEmpty() -> "T"
     else -> "G"
 }
 

@@ -229,7 +229,7 @@ fun CustomerManagerScreen(
                     containerColor = primaryBlue,
                     contentColor = Color.White
                 ) {
-                    listOf("Gewerblich", "Privat", "Liste").forEachIndexed { index, title ->
+                    listOf("Gewerblich", "Privat", "Tour").forEachIndexed { index, title ->
                         Tab(
                             selected = selectedTab == index,
                             onClick = { onTabSelected(index) },
@@ -382,7 +382,7 @@ private fun CustomerRow(
     val surfaceWhite = colorResource(R.color.surface_white)
     val gplColor = when (customer.kundenArt) {
         "Privat" -> colorResource(R.color.button_privat_glossy)
-        "Liste" -> colorResource(R.color.button_liste_glossy)
+        "Tour" -> colorResource(R.color.button_liste_glossy)
         else -> colorResource(R.color.button_gewerblich_glossy)
     }
     Card(
@@ -427,7 +427,7 @@ private fun CustomerRow(
                     Text(
                         text = when (customer.kundenArt) {
                             "Privat" -> "P"
-                            "Liste" -> "L"
+                            "Tour" -> stringResource(R.string.label_type_t_letter)
                             else -> "G"
                         },
                         fontSize = 14.sp,

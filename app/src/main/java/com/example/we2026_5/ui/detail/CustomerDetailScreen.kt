@@ -165,17 +165,17 @@ fun CustomerDetailScreen(
 
     val typeLabel = when (customer?.kundenArt) {
         "Privat" -> stringResource(R.string.label_type_privat)
-        "Liste", "Tour" -> stringResource(R.string.label_type_tour)
+        "Tour" -> stringResource(R.string.label_type_tour)
         else -> stringResource(R.string.label_type_gewerblich)
     }
     val typeLetter = when (customer?.kundenArt) {
         "Privat" -> stringResource(R.string.label_type_p_letter)
-        "Liste", "Tour" -> stringResource(R.string.label_type_t_letter)
+        "Tour" -> stringResource(R.string.label_type_t_letter)
         else -> stringResource(R.string.label_type_g)
     }
     val typeColor = when (customer?.kundenArt) {
         "Privat" -> colorResource(R.color.button_privat_glossy)
-        "Liste", "Tour" -> colorResource(R.color.button_liste_glossy)
+        "Tour" -> colorResource(R.color.button_liste_glossy)
         else -> colorResource(R.color.button_gewerblich_glossy)
     }
 
@@ -405,7 +405,7 @@ fun CustomerDetailScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.clickable { editKundenArt = "Tour" }
                         ) {
-                            RadioButton(selected = editKundenArt == "Liste" || editKundenArt == "Tour", onClick = { editKundenArt = "Tour" })
+                            RadioButton(selected = editKundenArt == "Tour", onClick = { editKundenArt = "Tour" })
                             Text(stringResource(R.string.label_type_tour), color = textPrimary, fontSize = BodySp, maxLines = 1)
                         }
                     }
@@ -513,7 +513,7 @@ fun CustomerDetailScreen(
                                             put("adresse", editAdresse.trim())
                                             put("telefon", editTelefon.trim())
                                             put("notizen", editNotizen.trim())
-                                            put("kundenArt", if (editKundenArt == "Liste") "Tour" else editKundenArt)
+                                            put("kundenArt", editKundenArt)
                                             put("kundenTyp", editKundenTyp.name)
                                             put("defaultAbholungWochentag", editAbholungWochentag)
                                             put("defaultAuslieferungWochentag", editAuslieferungWochentag)

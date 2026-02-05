@@ -17,7 +17,7 @@ object CustomerTypeButtonHelper {
      * Setzt den Kunden-Typ-Button basierend auf der Kunden-Art.
      * 
      * @param button Der MaterialButton, der gesetzt werden soll
-     * @param kundenArt Die Kunden-Art ("Gewerblich", "Privat", "Liste" oder andere)
+     * @param kundenArt Die Kunden-Art ("Gewerblich", "Privat", "Tour" oder andere)
      * @param context Der Context für Farb-Ressourcen
      */
     fun setupButton(button: MaterialButton, kundenArt: String, context: Context) {
@@ -39,7 +39,7 @@ object CustomerTypeButtonHelper {
                 button.setBackgroundResource(R.drawable.button_privat_glossy)
                 button.visibility = View.VISIBLE
             }
-            "Liste", "Tour" -> {
+            "Tour" -> {
                 button.text = context.getString(R.string.label_type_t_letter)
                 // Kräftigeres, glänzenderes Braun mit Gradient-Hintergrund
                 button.setBackgroundResource(R.drawable.button_liste_glossy)
