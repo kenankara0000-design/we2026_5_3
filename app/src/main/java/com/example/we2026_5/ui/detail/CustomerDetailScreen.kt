@@ -60,6 +60,7 @@ import com.example.we2026_5.CustomerStatus
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
+import com.example.we2026_5.ui.common.WochentagChipRowFromResources
 
 // Einheitliche UI-Werte (Abstände, Schriftgrößen)
 private val SectionSpacing = 20.dp
@@ -72,37 +73,6 @@ private val IntervalCardPaddingTop = 6.dp
 private val IntervalCardPaddingBottom = 12.dp
 private val IntervalRowPaddingVertical = 4.dp
 private val IntervalRowSpacing = 4.dp
-
-@Composable
-private fun WochentagChipRow(
-    selected: Int,
-    weekdays: List<String>,
-    onSelect: (Int) -> Unit,
-    primaryBlue: Color,
-    textPrimary: Color
-) {
-    val chipBg = Color(0xFFE0E0E0)
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-        weekdays.forEachIndexed { index, title ->
-            val isSelected = selected == index
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .defaultMinSize(minWidth = 0.dp)
-                    .heightIn(min = 36.dp)
-                    .background(
-                        if (isSelected) primaryBlue else chipBg,
-                        RoundedCornerShape(6.dp)
-                    )
-                    .clickable { onSelect(index) }
-                    .padding(vertical = 6.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = title, color = if (isSelected) Color.White else textPrimary, fontSize = 13.sp, maxLines = 1)
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -160,8 +130,6 @@ fun CustomerDetailScreen(
     var overflowMenuExpanded by remember { mutableStateOf(false) }
     var nameError by remember { mutableStateOf<String?>(null) }
     val validationNameMissing = stringResource(R.string.validation_name_missing)
-
-    val weekdays = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
 
     val typeLabel = when (customer?.kundenArt) {
         "Privat" -> stringResource(R.string.label_type_privat)
@@ -437,18 +405,16 @@ fun CustomerDetailScreen(
                     
                     Spacer(Modifier.height(FieldSpacing))
                     Text(stringResource(R.string.label_default_pickup_day), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    WochentagChipRow(
-                        selected = editAbholungWochentag,
-                        weekdays = weekdays,
+                    WochentagChipRowFromResources(
+                        selected = editAbholungWochentag.coerceIn(-1, 6),
                         onSelect = { editAbholungWochentag = if (editAbholungWochentag == it) -1 else it },
                         primaryBlue = primaryBlue,
                         textPrimary = textPrimary
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(stringResource(R.string.label_default_delivery_day), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    WochentagChipRow(
-                        selected = editAuslieferungWochentag,
-                        weekdays = weekdays,
+                    WochentagChipRowFromResources(
+                        selected = editAuslieferungWochentag.coerceIn(-1, 6),
                         onSelect = { editAuslieferungWochentag = if (editAuslieferungWochentag == it) -1 else it },
                         primaryBlue = primaryBlue,
                         textPrimary = textPrimary

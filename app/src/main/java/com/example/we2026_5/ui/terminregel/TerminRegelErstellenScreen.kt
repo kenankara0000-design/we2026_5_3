@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.we2026_5.R
 import com.example.we2026_5.TerminRegelTyp
+import com.example.we2026_5.ui.common.WochentagListenMenue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -295,62 +296,3 @@ private fun RegelTypDropdown(
     }
 }
 
-private val WochentagChipPaddingVertical = 14.dp
-private val WochentagChipMinHeight = 48.dp
-private val WochentagChipCorner = 8.dp
-private val WochentagChipSpacing = 2.dp
-private val WochentagChipFontSize = 13.sp
-
-@Composable
-private fun WochentagListenMenue(
-    selectedDays: List<Int>,
-    onDayToggle: (Int) -> Unit,
-    primaryBlue: Color,
-    textPrimary: Color
-) {
-    val weekendColor = colorResource(R.color.status_overdue)
-    val weekendColorLight = weekendColor.copy(alpha = 0.25f)
-    val weekdayColorLight = Color(0xFFE0E0E0)
-
-    val wochentageShortResIds = listOf(
-        R.string.label_weekday_short_mo,
-        R.string.label_weekday_short_tu,
-        R.string.label_weekday_short_mi,
-        R.string.label_weekday_short_do,
-        R.string.label_weekday_short_fr,
-        R.string.label_weekday_short_sa,
-        R.string.label_weekday_short_su
-    )
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(WochentagChipSpacing)
-    ) {
-        wochentageShortResIds.forEachIndexed { index, resId ->
-            val isWeekend = index == 5 || index == 6 // Sa, So
-            val isSelected = index in selectedDays
-            val (bgColor, textColor) = when {
-                isSelected && isWeekend -> weekendColor to Color.White
-                isSelected && !isWeekend -> primaryBlue to Color.White
-                !isSelected && isWeekend -> weekendColorLight to weekendColor
-                else -> weekdayColorLight to textPrimary
-            }
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .defaultMinSize(minWidth = 0.dp)
-                    .heightIn(min = WochentagChipMinHeight)
-                    .background(bgColor, RoundedCornerShape(WochentagChipCorner))
-                    .clickable { onDayToggle(index) }
-                    .padding(vertical = WochentagChipPaddingVertical),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(resId),
-                    color = textColor,
-                    fontSize = WochentagChipFontSize,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-    }
-}

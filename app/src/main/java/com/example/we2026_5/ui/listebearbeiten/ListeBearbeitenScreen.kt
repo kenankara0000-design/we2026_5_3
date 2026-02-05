@@ -45,28 +45,8 @@ import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
+import com.example.we2026_5.ui.common.AlWochentagText
 import androidx.core.content.ContextCompat
-
-private val WOCHENTAG_RES = listOf(
-    R.string.label_weekday_short_mo, R.string.label_weekday_short_tu, R.string.label_weekday_short_mi,
-    R.string.label_weekday_short_do, R.string.label_weekday_short_fr, R.string.label_weekday_short_sa,
-    R.string.label_weekday_short_su
-)
-
-@Composable
-private fun AlWochentagText(kunde: Customer, textSecondary: Color) {
-    val a = kunde.defaultAbholungWochentag
-    val l = kunde.defaultAuslieferungWochentag
-    val aStr = if (a in 0..6) stringResource(WOCHENTAG_RES[a]) else null
-    val lStr = if (l in 0..6) stringResource(WOCHENTAG_RES[l]) else null
-    val txt = when {
-        aStr != null && lStr != null -> "$aStr A / $lStr L"
-        aStr != null -> "$aStr A"
-        lStr != null -> "$lStr L"
-        else -> return
-    }
-    Text(txt, fontSize = 12.sp, color = textSecondary, modifier = Modifier.padding(top = 2.dp))
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -385,7 +365,7 @@ private fun KundeInListeItem(
                     Text(kunde.name, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
                 }
                 Text(kunde.adresse, fontSize = 14.sp, color = textSecondary)
-                AlWochentagText(kunde = kunde, textSecondary = textSecondary)
+                AlWochentagText(customer = kunde, color = textSecondary)
             }
             if (showRemove) {
                 IconButton(onClick = onRemove) {

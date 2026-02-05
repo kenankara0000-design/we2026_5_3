@@ -12,6 +12,16 @@ import com.google.android.material.button.MaterialButton
  * Zentralisiert die Logik für die Anzeige von Gewerblich/Privat/Liste-Buttons.
  */
 object CustomerTypeButtonHelper {
+
+    /**
+     * Kurz-Label für Kundenart (G/P/T) für Badge-Anzeige.
+     */
+    fun getKundenArtLabel(customer: Customer): String = when {
+        customer.kundenArt == "Gewerblich" -> "G"
+        customer.kundenArt == "Privat" -> "P"
+        customer.kundenArt == "Tour" || customer.listeId.isNotEmpty() -> "T"
+        else -> "G"
+    }
     
     /**
      * Setzt den Kunden-Typ-Button basierend auf der Kunden-Art.

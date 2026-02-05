@@ -51,11 +51,11 @@ object TerminRegelManager {
 
         val count = minOf(abholTage.size, auslieferTage.size)
         return (0 until count).map { index ->
-            val abholungDatum = berechneNaechstenWochentag(startDatum, abholTage[index])
+            val abholungDatum = WochentagBerechnung.naechsterWochentagAb(startDatum, abholTage[index])
             val auslieferungDatum = if (abholTage[index] == auslieferTage[index]) {
                 abholungDatum + TimeUnit.DAYS.toMillis(zyklusTage.toLong())
             } else {
-                berechneNaechstenWochentag(startDatum, auslieferTage[index])
+                WochentagBerechnung.naechsterWochentagAb(startDatum, auslieferTage[index])
             }
             baseCustomerIntervall(
                 abholungDatum = abholungDatum,
@@ -111,11 +111,11 @@ object TerminRegelManager {
             tourSlots.filter { slot -> slot.wochentag in 0..6 }
         }
         val relevanteSlots = if (relevanteSlotsBase.isNotEmpty()) relevanteSlotsBase else tourSlots.filter { it.wochentag in 0..6 }
-        val defaultAbhol = kunde.defaultAbholungWochentag.takeIf { it.isValidWeekday() }
+        val defaultAbhol = kunde.defaultAbholungWochentag.takeIf { WochentagBerechnung.isValidWeekday(it) }
 
         val vorschlaege = mutableListOf<TerminSlotVorschlag>()
         relevanteSlots.forEach { slot ->
-            var datum = berechneNaechstenWochentag(startOfDay, slot.wochentag)
+            var datum = WochentagBerechnung.naechsterWochentagAb(startOfDay, slot.wochentag)
             while (datum <= horizon) {
                 vorschlaege += TerminSlotVorschlag(
                     datum = datum,
@@ -134,7 +134,7 @@ object TerminRegelManager {
         }
 
         defaultAbhol?.let { weekday ->
-            var datum = berechneNaechstenWochentag(startOfDay, weekday)
+            var datum = WochentagBerechnung.naechsterWochentagAb(startOfDay, weekday)
             while (datum <= horizon) {
                 vorschlaege += TerminSlotVorschlag(
                     datum = datum,
@@ -147,10 +147,10 @@ object TerminRegelManager {
             }
         }
 
-        val auslieferungTag = kunde.defaultAuslieferungWochentag.takeIf { it.isValidWeekday() }
+        val auslieferungTag = kunde.defaultAuslieferungWochentag.takeIf { WochentagBerechnung.isValidWeekday(it) }
             ?: regel?.auslieferungWochentage?.firstOrNull()
         auslieferungTag?.let { weekday ->
-            var datum = berechneNaechstenWochentag(startOfDay, weekday)
+            var datum = WochentagBerechnung.naechsterWochentagAb(startOfDay, weekday)
             while (datum <= horizon) {
                 vorschlaege += TerminSlotVorschlag(
                     datum = datum,
@@ -187,11 +187,11 @@ object TerminRegelManager {
 
         val count = minOf(abholTage.size, auslieferTage.size)
         return (0 until count).map { index ->
-            val abholungDatum = berechneNaechstenWochentag(startDatum, abholTage[index])
+            val abholungDatum = WochentagBerechnung.naechsterWochentagAb(startDatum, abholTage[index])
             val auslieferungDatum = if (abholTage[index] == auslieferTage[index]) {
                 abholungDatum + TimeUnit.DAYS.toMillis(zyklusTage.toLong())
             } else {
-                berechneNaechstenWochentag(startDatum, auslieferTage[index])
+                WochentagBerechnung.naechsterWochentagAb(startDatum, auslieferTage[index])
             }
             ListeIntervall(
                 abholungDatum = abholungDatum,
@@ -270,18 +270,18 @@ object TerminRegelManager {
     )
 
     private fun resolveAbholtage(regel: TerminRegel, customer: Customer?): List<Int> {
-        val regelTage = regel.abholungWochentage?.filter { it.isValidWeekday() }?.distinct()?.sorted().orEmpty()
+        val regelTage = regel.abholungWochentage?.filter { WochentagBerechnung.isValidWeekday(it) }?.distinct()?.sorted().orEmpty()
         if (regelTage.isNotEmpty()) return regelTage
-        if (regel.abholungWochentag.isValidWeekday()) return listOf(regel.abholungWochentag)
-        val customerTag = customer?.defaultAbholungWochentag?.takeIf { it.isValidWeekday() }
+        if (WochentagBerechnung.isValidWeekday(regel.abholungWochentag)) return listOf(regel.abholungWochentag)
+        val customerTag = customer?.defaultAbholungWochentag?.takeIf { WochentagBerechnung.isValidWeekday(it) }
         return customerTag?.let { listOf(it) } ?: emptyList()
     }
 
     private fun resolveAuslieferungstage(regel: TerminRegel, customer: Customer?): List<Int> {
-        val regelTage = regel.auslieferungWochentage?.filter { it.isValidWeekday() }?.distinct()?.sorted().orEmpty()
+        val regelTage = regel.auslieferungWochentage?.filter { WochentagBerechnung.isValidWeekday(it) }?.distinct()?.sorted().orEmpty()
         if (regelTage.isNotEmpty()) return regelTage
-        if (regel.auslieferungWochentag.isValidWeekday()) return listOf(regel.auslieferungWochentag)
-        val customerTag = customer?.defaultAuslieferungWochentag?.takeIf { it.isValidWeekday() }
+        if (WochentagBerechnung.isValidWeekday(regel.auslieferungWochentag)) return listOf(regel.auslieferungWochentag)
+        val customerTag = customer?.defaultAuslieferungWochentag?.takeIf { WochentagBerechnung.isValidWeekday(it) }
         return customerTag?.let { listOf(it) } ?: emptyList()
     }
 
@@ -303,36 +303,4 @@ object TerminRegelManager {
         return candidate.coerceIn(1, 365)
     }
 
-    /**
-     * Berechnet das nächste Vorkommen eines Wochentags ab einem Startdatum
-     * Automatische Berechnung: Nächstes Vorkommen ab Startdatum (kann heute sein, wenn Startdatum heute ist)
-     */
-    private fun berechneNaechstenWochentag(
-        startDatum: Long,
-        wochentag: Int
-    ): Long {
-        if (!wochentag.isValidWeekday()) {
-            return TerminBerechnungUtils.getStartOfDay(startDatum)
-        }
-
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = startDatum
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-
-        val aktuellerWochentagCalendar = calendar.get(Calendar.DAY_OF_WEEK)
-        val zielWochentagCalendar = if (wochentag == 6) 1 else (wochentag + 2)
-        val tageBisZiel = if (zielWochentagCalendar >= aktuellerWochentagCalendar) {
-            zielWochentagCalendar - aktuellerWochentagCalendar
-        } else {
-            (zielWochentagCalendar - aktuellerWochentagCalendar) + 7
-        }
-
-        calendar.add(Calendar.DAY_OF_YEAR, tageBisZiel)
-        return calendar.timeInMillis
-    }
-
-    private fun Int?.isValidWeekday(): Boolean = this != null && this in 0..6
 }

@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.common.WochentagChipRowFromResources
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -341,38 +342,14 @@ private fun WeekdaySelector(
     val context = LocalContext.current
     val textPrimary = Color(ContextCompat.getColor(context, R.color.text_primary))
     val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
-    val weekdays = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
-    val chipBg = Color(0xFFE0E0E0)
     Column {
         Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
         Spacer(modifier = Modifier.height(4.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            weekdays.forEachIndexed { index, title ->
-                val isSelected = selected == index
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .defaultMinSize(minWidth = 0.dp)
-                        .heightIn(min = 36.dp)
-                        .background(
-                            if (isSelected) primaryBlue else chipBg,
-                            RoundedCornerShape(6.dp)
-                        )
-                        .clickable { onSelect(index) }
-                        .padding(vertical = 6.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = title,
-                        color = if (isSelected) Color.White else textPrimary,
-                        fontSize = 13.sp,
-                        maxLines = 1
-                    )
-                }
-            }
-        }
+        WochentagChipRowFromResources(
+            selected = selected.coerceIn(-1, 6),
+            onSelect = onSelect,
+            primaryBlue = primaryBlue,
+            textPrimary = textPrimary
+        )
     }
 }
