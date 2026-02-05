@@ -61,7 +61,7 @@ Neu: `ui/common/WochentagUi.kt`;
   - [x] `CustomerDetailStatusSection.kt`
   - [x] `CustomerDetailRegelNameRow.kt`
   - [x] `CustomerDetailIntervallRow.kt`
-- [ ] **4.3** Gemeinsame UI-Konstanten (SectionSpacing etc.) in Theme/Constants oder Wochentag-UI, falls mehrfach genutzt.
+- [x] **4.3** Gemeinsame UI-Konstanten (SectionSpacing etc.) in `DetailUiConstants.kt`; genutzt in CustomerDetailScreen, CustomerDetailStatusSection, CustomerDetailRegelNameRow, CustomerDetailIntervallRow.
 - [ ] **4.4** Build + UI-Test Kunden-Detail.
 
 **Ziel:** CustomerDetailScreen.kt unter ~400 Zeilen.
@@ -71,10 +71,10 @@ Neu: `ui/common/WochentagUi.kt`;
 ## Schritt 5: Phase 1.4 – TourPlannerCallbackHandler aufteilen
 
 - [x] **5.1** Gemeinsame Hilfsfunktionen extrahieren (`TourPlannerCallbackHelpers.serializeVerschobeneTermine`) (z.B. `serializeVerschobeneTermine`, `executeErledigung`) → neue Datei z.B. `tourplanner/TourPlannerCallbackHelpers.kt` oder in bestehende Util.
-- [ ] **5.2** Nach Verantwortung aufteilen:
-  - [ ] `TourPlannerErledigungHandler` (Abholung, Auslieferung, KW, Rückgängig) – neue Datei.
-  - [ ] `TourPlannerVerschiebenUrlaubHandler` (Verschieben, Urlaub) – neue Datei.
-- [ ] **5.3** `TourPlannerCallbackHandler.kt` als Fassade oder Coordinator, der die neuen Handler nutzt.
+- [x] **5.2** Nach Verantwortung aufteilen:
+  - [x] `TourPlannerErledigungHandler` (Abholung, Auslieferung, KW, Rückgängig) – neue Datei.
+  - [x] `TourPlannerVerschiebenUrlaubHandler` (Verschieben, Urlaub) – neue Datei.
+- [x] **5.3** `TourPlannerCallbackHandler.kt` als Fassade oder Coordinator, der die neuen Handler nutzt.
 - [ ] **5.4** Build + Test Erledigung/Verschieben/Urlaub.
 
 **Betroffene Dateien:**  
@@ -106,7 +106,7 @@ Neu: `ui/common/WochentagUi.kt`;
 
 ## Schritt 8: Optional – Phase 1.6, 3, 4
 
-- [ ] **8.1** TourDataProcessor.kt: lange Blöcke in benannte Methoden oder kleine Helper (nur bei Bedarf).
+- [x] **8.1** TourDataProcessor.kt: Hilfsmethoden `warUeberfaelligUndErledigtAmDatum`, `istTerminUeberfaellig`, `hatUeberfaelligeAbholung`, `hatUeberfaelligeAuslieferung`, `berechneAlleTermineFuerKunde` extrahiert.
 - [ ] **8.2** Phase 3 (Paket/Dateinamen Liste vs. Tour): nur bei neuer Funktionalität „Tour“ nutzen; große Umbenennung separates Vorhaben.
 - [ ] **8.3** Phase 4: Deprecated abbauen (`Customer.getFaelligAm()`, `listenWochentag` etc.); TerminRegelManager nach 2.3 prüfen.
 

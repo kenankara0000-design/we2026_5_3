@@ -23,8 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
-
-private val BodySp = 14.sp
+import com.example.we2026_5.ui.common.DetailUiConstants
 
 @Composable
 fun CustomerDetailIntervallRow(
@@ -48,11 +47,11 @@ fun CustomerDetailIntervallRow(
         Row(modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = if (isEditMode) Modifier.clickable(onClick = onAbholungClick) else Modifier) {
                 Text(stringResource(R.string.label_abholung_date), fontSize = 12.sp, color = textSecondary)
-                Text(abholungText, fontSize = BodySp, color = if (abholungIsPlaceholder) textSecondary else textPrimary)
+                Text(abholungText, fontSize = DetailUiConstants.BodySp, color = if (abholungIsPlaceholder) textSecondary else textPrimary)
             }
             Column(modifier = if (isEditMode) Modifier.clickable(onClick = onAuslieferungClick) else Modifier) {
                 Text(stringResource(R.string.label_auslieferung_date), fontSize = 12.sp, color = textSecondary)
-                Text(auslieferungText, fontSize = BodySp, color = if (auslieferungIsPlaceholder) textSecondary else textPrimary)
+                Text(auslieferungText, fontSize = DetailUiConstants.BodySp, color = if (auslieferungIsPlaceholder) textSecondary else textPrimary)
             }
         }
         if (isEditMode && onDeleteClick != null) {

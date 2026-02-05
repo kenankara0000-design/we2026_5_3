@@ -64,18 +64,7 @@ import com.example.we2026_5.ui.common.WochentagChipRowFromResources
 import com.example.we2026_5.ui.detail.CustomerDetailIntervallRow
 import com.example.we2026_5.ui.detail.CustomerDetailRegelNameRow
 import com.example.we2026_5.ui.detail.CustomerDetailStatusSection
-
-// Einheitliche UI-Werte (Abstände, Schriftgrößen)
-private val SectionSpacing = 20.dp
-private val FieldSpacing = 12.dp
-private val SectionTitleSp = 16.sp
-private val FieldLabelSp = 14.sp
-private val BodySp = 14.sp
-private val IntervalCardPaddingH = 12.dp
-private val IntervalCardPaddingTop = 6.dp
-private val IntervalCardPaddingBottom = 12.dp
-private val IntervalRowPaddingVertical = 4.dp
-private val IntervalRowSpacing = 4.dp
+import com.example.we2026_5.ui.common.DetailUiConstants
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -248,7 +237,7 @@ fun CustomerDetailScreen(
                 if (!isInEditMode) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(FieldSpacing)
+                        horizontalArrangement = Arrangement.spacedBy(DetailUiConstants.FieldSpacing)
                     ) {
                         androidx.compose.material3.Button(
                             onClick = { customer.id?.let { onUrlaubStartActivity(it) } },
@@ -269,7 +258,7 @@ fun CustomerDetailScreen(
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         Text(stringResource(R.string.label_foto_uploading), fontSize = 12.sp, color = primaryBlue)
                     }
-                    Spacer(Modifier.height(SectionSpacing))
+                    Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
                 CustomerDetailStatusSection(
                     customer = customer,
                     onPauseCustomer = onPauseCustomer,
@@ -277,26 +266,26 @@ fun CustomerDetailScreen(
                     textPrimary = textPrimary,
                     surfaceWhite = surfaceWhite
                 )
-                Spacer(Modifier.height(SectionSpacing))
+                Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
                 val nextTermin = customer.getFaelligAm()
-                Text(stringResource(R.string.label_next_termin), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                Text(stringResource(R.string.label_next_termin), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                 Text(
                     text = if (nextTermin > 0) DateFormatter.formatDateWithWeekday(nextTermin) else stringResource(R.string.label_not_set),
                     modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp),
                     color = if (nextTermin > 0) textPrimary else textSecondary,
-                    fontSize = BodySp
+                    fontSize = DetailUiConstants.BodySp
                 )
-                Spacer(Modifier.height(FieldSpacing))
+                Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(FieldSpacing)
+                        horizontalArrangement = Arrangement.spacedBy(DetailUiConstants.FieldSpacing)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(stringResource(R.string.label_customer_type), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                            Text(text = typeLabel, modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = BodySp)
+                            Text(stringResource(R.string.label_customer_type), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                            Text(text = typeLabel, modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = DetailUiConstants.BodySp)
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(stringResource(R.string.label_kunden_typ), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                            Text(stringResource(R.string.label_kunden_typ), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                             Text(
                                 text = when (customer.kundenTyp) {
                                     com.example.we2026_5.KundenTyp.REGELMAESSIG -> stringResource(R.string.label_kunden_typ_regelmaessig)
@@ -304,45 +293,45 @@ fun CustomerDetailScreen(
                                 },
                                 modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp),
                                 color = textPrimary,
-                                fontSize = BodySp
+                                fontSize = DetailUiConstants.BodySp
                             )
                         }
                         if (customer.defaultAbholungWochentag in 0..6 || customer.defaultAuslieferungWochentag in 0..6) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(stringResource(R.string.label_abholung_auslieferung_tag), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                                Text(stringResource(R.string.label_abholung_auslieferung_tag), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                                 val wochen = listOf("Mo","Di","Mi","Do","Fr","Sa","So")
                                 val a = if (customer.defaultAbholungWochentag in 0..6) wochen[customer.defaultAbholungWochentag] + " A" else ""
                                 val l = if (customer.defaultAuslieferungWochentag in 0..6) wochen[customer.defaultAuslieferungWochentag] + " L" else ""
-                                Text(text = listOf(a, l).filter { it.isNotEmpty() }.joinToString(" / "), modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = BodySp)
+                                Text(text = listOf(a, l).filter { it.isNotEmpty() }.joinToString(" / "), modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = DetailUiConstants.BodySp)
                             }
                         }
                     }
-                    Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_address_label), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    Text(stringResource(R.string.label_address_label), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     Text(
                         text = customer.adresse.ifEmpty { stringResource(R.string.label_not_set) },
                         modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp).clickable(onClick = onAdresseClick),
                         color = if (customer.adresse.isNotEmpty()) textPrimary else textSecondary,
-                        fontSize = BodySp
+                        fontSize = DetailUiConstants.BodySp
                     )
-                    Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_phone_label), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    Text(stringResource(R.string.label_phone_label), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     Text(
                         text = customer.telefon.ifEmpty { stringResource(R.string.label_not_set) },
                         modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp).clickable(onClick = onTelefonClick),
                         color = if (customer.telefon.isNotEmpty()) textPrimary else textSecondary,
-                        fontSize = BodySp
+                        fontSize = DetailUiConstants.BodySp
                     )
-                    Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_notes_label), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    Text(stringResource(R.string.label_notes_label), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     Text(
                         text = customer.notizen.ifEmpty { stringResource(R.string.label_not_set) },
                         modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp),
                         color = if (customer.notizen.isNotEmpty()) textPrimary else textSecondary,
-                        fontSize = BodySp
+                        fontSize = DetailUiConstants.BodySp
                     )
                 } else {
-                    Text(stringResource(R.string.label_name), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Text(stringResource(R.string.label_name), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     OutlinedTextField(
                         value = editName,
                         onValueChange = { editName = it; nameError = null },
@@ -351,8 +340,8 @@ fun CustomerDetailScreen(
                         isError = nameError != null,
                         supportingText = nameError?.let { err -> { Text(err, color = statusOverdue) } }
                     )
-                    Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_customer_type), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    Text(stringResource(R.string.label_customer_type), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -363,25 +352,25 @@ fun CustomerDetailScreen(
                             modifier = Modifier.clickable { editKundenArt = "Gewerblich" }
                         ) {
                             RadioButton(selected = editKundenArt == "Gewerblich", onClick = { editKundenArt = "Gewerblich" })
-                            Text(stringResource(R.string.label_type_gewerblich), color = textPrimary, fontSize = BodySp, maxLines = 1)
+                            Text(stringResource(R.string.label_type_gewerblich), color = textPrimary, fontSize = DetailUiConstants.BodySp, maxLines = 1)
                         }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.clickable { editKundenArt = "Privat" }
                         ) {
                             RadioButton(selected = editKundenArt == "Privat", onClick = { editKundenArt = "Privat" })
-                            Text(stringResource(R.string.label_type_privat), color = textPrimary, fontSize = BodySp, maxLines = 1)
+                            Text(stringResource(R.string.label_type_privat), color = textPrimary, fontSize = DetailUiConstants.BodySp, maxLines = 1)
                         }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.clickable { editKundenArt = "Tour" }
                         ) {
                             RadioButton(selected = editKundenArt == "Tour", onClick = { editKundenArt = "Tour" })
-                            Text(stringResource(R.string.label_type_tour), color = textPrimary, fontSize = BodySp, maxLines = 1)
+                            Text(stringResource(R.string.label_type_tour), color = textPrimary, fontSize = DetailUiConstants.BodySp, maxLines = 1)
                         }
                     }
-                    Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_kunden_typ), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    Text(stringResource(R.string.label_kunden_typ), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -396,18 +385,18 @@ fun CustomerDetailScreen(
                             Text(stringResource(R.string.label_kunden_typ_unregelmaessig), color = textPrimary)
                         }
                     }
-                    Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_address_label), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    Text(stringResource(R.string.label_address_label), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     OutlinedTextField(value = editAdresse, onValueChange = { editAdresse = it }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                    Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_phone_label), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    Text(stringResource(R.string.label_phone_label), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     OutlinedTextField(value = editTelefon, onValueChange = { editTelefon = it }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                    Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_notes_label), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    Text(stringResource(R.string.label_notes_label), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     OutlinedTextField(value = editNotizen, onValueChange = { editNotizen = it }, modifier = Modifier.fillMaxWidth(), minLines = 3)
                     
-                    Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_default_pickup_day), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    Text(stringResource(R.string.label_default_pickup_day), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     WochentagChipRowFromResources(
                         selected = editAbholungWochentag.coerceIn(-1, 6),
                         onSelect = { editAbholungWochentag = if (editAbholungWochentag == it) -1 else it },
@@ -415,7 +404,7 @@ fun CustomerDetailScreen(
                         textPrimary = textPrimary
                     )
                     Spacer(Modifier.height(8.dp))
-                    Text(stringResource(R.string.label_default_delivery_day), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Text(stringResource(R.string.label_default_delivery_day), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     WochentagChipRowFromResources(
                         selected = editAuslieferungWochentag.coerceIn(-1, 6),
                         onSelect = { editAuslieferungWochentag = if (editAuslieferungWochentag == it) -1 else it },
@@ -424,7 +413,7 @@ fun CustomerDetailScreen(
                     )
                     if (editKundenTyp == KundenTyp.UNREGELMAESSIG) {
                         Spacer(Modifier.height(8.dp))
-                        Text(stringResource(R.string.label_a_plus_tage_l), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                        Text(stringResource(R.string.label_a_plus_tage_l), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                         OutlinedTextField(
                             value = if (editIntervallTageUnregel == 0) "" else editIntervallTageUnregel.toString(),
                             onValueChange = { s ->
@@ -436,25 +425,25 @@ fun CustomerDetailScreen(
                             supportingText = { Text(stringResource(R.string.hint_a_plus_tage), color = textSecondary, fontSize = 12.sp) }
                         )
                     }
-                    Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_default_time_optional), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    Text(stringResource(R.string.label_default_time_optional), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     OutlinedTextField(value = editDefaultUhrzeit, onValueChange = { editDefaultUhrzeit = it }, modifier = Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("09:00") })
-                    Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_kundennummer), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    Text(stringResource(R.string.label_kundennummer), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     OutlinedTextField(value = editKundennummer, onValueChange = { editKundennummer = it }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                    Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_customer_tags), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    Text(stringResource(R.string.label_customer_tags), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     OutlinedTextField(value = editTagsInput, onValueChange = { editTagsInput = it }, modifier = Modifier.fillMaxWidth(), minLines = 2, placeholder = { Text(stringResource(R.string.hint_tags_example)) })
-                    Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_tour_plan), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    Text(stringResource(R.string.label_tour_plan), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     OutlinedTextField(value = editTourStadt, onValueChange = { editTourStadt = it }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text(stringResource(R.string.label_tour_city)) })
                     Spacer(Modifier.height(8.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(value = editTourZeitStart, onValueChange = { editTourZeitStart = it }, modifier = Modifier.weight(1f), singleLine = true, label = { Text(stringResource(R.string.label_time_from)) }, placeholder = { Text("09:00") })
                         OutlinedTextField(value = editTourZeitEnde, onValueChange = { editTourZeitEnde = it }, modifier = Modifier.weight(1f), singleLine = true, label = { Text(stringResource(R.string.label_time_to)) }, placeholder = { Text("13:00") })
                     }
-                    Spacer(Modifier.height(FieldSpacing))
-                    Text(stringResource(R.string.label_urlaub), fontSize = FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    Text(stringResource(R.string.label_urlaub), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     androidx.compose.material3.Button(
                         onClick = { customer?.id?.let { onUrlaubStartActivity(it) } },
                         modifier = Modifier.fillMaxWidth(),
@@ -462,7 +451,7 @@ fun CustomerDetailScreen(
                     ) {
                         Text(stringResource(R.string.label_urlaub))
                     }
-                    Spacer(Modifier.height(SectionSpacing))
+                    Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
                     if (isUploading) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         Text(stringResource(R.string.label_foto_uploading), fontSize = 12.sp, color = primaryBlue)
@@ -528,8 +517,8 @@ fun CustomerDetailScreen(
                     }
                 }
 
-                Spacer(Modifier.height(SectionSpacing))
-                Text(stringResource(R.string.label_termin_regel), fontSize = SectionTitleSp, fontWeight = FontWeight.Bold, color = primaryBlue)
+                Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+                Text(stringResource(R.string.label_termin_regel), fontSize = DetailUiConstants.SectionTitleSp, fontWeight = FontWeight.Bold, color = primaryBlue)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = surfaceWhite),
@@ -537,10 +526,10 @@ fun CustomerDetailScreen(
                 ) {
                     Column(
                         modifier = Modifier.padding(
-                            start = IntervalCardPaddingH,
-                            top = IntervalCardPaddingTop,
-                            end = IntervalCardPaddingH,
-                            bottom = IntervalCardPaddingBottom
+                            start = DetailUiConstants.IntervalCardPaddingH,
+                            top = DetailUiConstants.IntervalCardPaddingTop,
+                            end = DetailUiConstants.IntervalCardPaddingH,
+                            bottom = DetailUiConstants.IntervalCardPaddingBottom
                         )
                     ) {
                         val intervalleToShow = if (isInEditMode) editIntervalle else customer.intervalle
@@ -557,9 +546,9 @@ fun CustomerDetailScreen(
                                 showDeleteButton = isInEditMode && regelId.isNotBlank(),
                                 onDeleteClick = if (isInEditMode && regelId.isNotBlank()) { { onRemoveRegel?.invoke(regelId) } } else null
                             )
-                            Spacer(Modifier.height(IntervalRowSpacing))
+                            Spacer(Modifier.height(DetailUiConstants.IntervalRowSpacing))
                         }
-                        Spacer(Modifier.height(FieldSpacing))
+                        Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
                         if (!isInEditMode) {
                             androidx.compose.material3.Button(onClick = onTerminAnlegen, modifier = Modifier.fillMaxWidth()) {
                                 Text(stringResource(R.string.label_termine_anlegen))
@@ -569,8 +558,8 @@ fun CustomerDetailScreen(
                 }
 
                 if (!isInEditMode && customer.fotoUrls.isNotEmpty()) {
-                    Spacer(Modifier.height(SectionSpacing))
-                    Text(stringResource(R.string.label_fotos), fontSize = SectionTitleSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+                    Text(stringResource(R.string.label_fotos), fontSize = DetailUiConstants.SectionTitleSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     Spacer(Modifier.height(8.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(customer.fotoUrls, key = { it }) { url ->
@@ -594,7 +583,7 @@ fun CustomerDetailScreen(
                     }
                 }
                 if (isInEditMode) {
-                    Spacer(Modifier.height(SectionSpacing))
+                    Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
                     androidx.compose.material3.OutlinedButton(onClick = onTakePhoto, modifier = Modifier.fillMaxWidth()) {
                         Icon(painter = painterResource(R.drawable.ic_camera), contentDescription = null, Modifier.size(20.dp))
                         Spacer(Modifier.size(8.dp))

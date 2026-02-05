@@ -21,9 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.R
-
-private val BodySp = 14.sp
-private val IntervalRowPaddingVertical = 4.dp
+import com.example.we2026_5.ui.common.DetailUiConstants
 
 @Composable
 fun CustomerDetailRegelNameRow(
@@ -39,13 +37,13 @@ fun CustomerDetailRegelNameRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = isClickable, onClick = onClick)
-            .padding(vertical = IntervalRowPaddingVertical),
+            .padding(vertical = DetailUiConstants.IntervalRowPaddingVertical),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = regelName,
-            fontSize = BodySp,
+            fontSize = DetailUiConstants.BodySp,
             fontWeight = FontWeight.Medium,
             color = if (isClickable) primaryBlue else textSecondary,
             modifier = Modifier.weight(1f)

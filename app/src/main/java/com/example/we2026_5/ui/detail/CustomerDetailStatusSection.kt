@@ -28,9 +28,7 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerStatus
 import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
-
-private val SectionTitleSp = 16.sp
-private val BodySp = 14.sp
+import com.example.we2026_5.ui.common.DetailUiConstants
 
 @Composable
 fun CustomerDetailStatusSection(
@@ -58,7 +56,7 @@ fun CustomerDetailStatusSection(
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = stringResource(R.string.customer_status_title),
-                fontSize = SectionTitleSp,
+                fontSize = DetailUiConstants.SectionTitleSp,
                 fontWeight = FontWeight.Bold,
                 color = textPrimary
             )
@@ -75,7 +73,7 @@ fun CustomerDetailStatusSection(
                 Text(
                     text = stringResource(R.string.customer_status_current, statusText),
                     color = textPrimary,
-                    fontSize = BodySp
+                    fontSize = DetailUiConstants.BodySp
                 )
             }
             if (customer.pauseEnde > 0) {
@@ -86,7 +84,7 @@ fun CustomerDetailStatusSection(
                         DateFormatter.formatDateWithWeekday(customer.pauseEnde)
                     ),
                     color = textPrimary,
-                    fontSize = BodySp
+                    fontSize = DetailUiConstants.BodySp
                 )
             }
             if (customer.tags.isNotEmpty()) {
@@ -94,7 +92,7 @@ fun CustomerDetailStatusSection(
                 Text(
                     text = stringResource(R.string.customer_tags_label, customer.tags.joinToString(", ")),
                     color = textPrimary,
-                    fontSize = BodySp
+                    fontSize = DetailUiConstants.BodySp
                 )
             }
             Spacer(Modifier.height(12.dp))
