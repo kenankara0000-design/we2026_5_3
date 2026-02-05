@@ -13,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
 import com.example.we2026_5.adapter.CustomerButtonVisibilityHelper
 import com.example.we2026_5.data.repository.CustomerRepository
-import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.ui.tourplanner.CustomerOverviewPayload
 import com.example.we2026_5.ui.tourplanner.ErledigungSheetArgs
 import com.example.we2026_5.ui.tourplanner.TourPlannerScreen
@@ -21,9 +20,7 @@ import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.example.we2026_5.tourplanner.ErledigungSheetState
 import com.example.we2026_5.tourplanner.TourPlannerCoordinator
 import com.example.we2026_5.util.TerminBerechnungUtils
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.SimpleDateFormat
@@ -34,7 +31,6 @@ class TourPlannerActivity : AppCompatActivity() {
     private val viewModel: TourPlannerViewModel by viewModel()
     private val repository: CustomerRepository by inject()
     private val listeRepository: com.example.we2026_5.data.repository.KundenListeRepository by inject()
-    private val regelRepository: TerminRegelRepository by inject()
     private lateinit var coordinator: TourPlannerCoordinator
     private lateinit var networkMonitor: NetworkMonitor
 
@@ -63,8 +59,7 @@ class TourPlannerActivity : AppCompatActivity() {
             activity = this,
             viewModel = viewModel,
             repository = repository,
-            listeRepository = listeRepository,
-            regelRepository = regelRepository
+            listeRepository = listeRepository
         )
 
         viewModel.setSelectedTimestamp(initialDate)
@@ -154,17 +149,6 @@ class TourPlannerActivity : AppCompatActivity() {
                 onCustomerClick = { payload ->
                     overviewPayload = payload
                     overviewRegelNamen = null
-                    val customer = payload.customer
-                    lifecycleScope.launch {
-                        val namen = withContext(Dispatchers.IO) {
-                            customer.intervalle
-                                .filter { it.terminRegelId.isNotBlank() }
-                                .mapNotNull { regelRepository.getRegelById(it.terminRegelId)?.name }
-                                .distinct()
-                                .joinToString("\n")
-                        }
-                        overviewRegelNamen = if (namen.isNotEmpty()) namen else null
-                    }
                 },
                 onAktionenClick = { customer ->
                     val ts = viewModel.getSelectedTimestamp() ?: return@TourPlannerScreen

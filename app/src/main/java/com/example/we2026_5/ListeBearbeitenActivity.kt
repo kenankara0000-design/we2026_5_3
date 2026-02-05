@@ -10,7 +10,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
-import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.liste.ListeBearbeitenCallbacks
 import com.example.we2026_5.ui.listebearbeiten.ListeBearbeitenScreen
 import com.example.we2026_5.ui.listebearbeiten.ListeBearbeitenViewModel
@@ -22,7 +21,6 @@ class ListeBearbeitenActivity : AppCompatActivity() {
 
     private val listeRepository: KundenListeRepository by inject()
     private val customerRepository: CustomerRepository by inject()
-    private val regelRepository: TerminRegelRepository by inject()
     private val viewModel: ListeBearbeitenViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,7 +40,6 @@ class ListeBearbeitenActivity : AppCompatActivity() {
                     activity = this@ListeBearbeitenActivity,
                     customerRepository = customerRepository,
                     listeRepository = listeRepository,
-                    regelRepository = regelRepository,
                     onDataReload = { viewModel.loadDaten(null) }
                 )
             }
@@ -77,14 +74,7 @@ class ListeBearbeitenActivity : AppCompatActivity() {
                         callbacks.deleteListe(liste.id) { finish() }
                     }
                 },
-                onTerminAnlegen = {
-                    val liste = state.liste ?: return@ListeBearbeitenScreen
-                    callbacks.showRegelAuswahlDialog { regel ->
-                        callbacks.wendeRegelAn(regel, liste) { updatedListe ->
-                            viewModel.updateListe(updatedListe)
-                        }
-                    }
-                },
+                onTerminAnlegen = { },
                 onRemoveKunde = { customer ->
                     val liste = state.liste ?: return@ListeBearbeitenScreen
                     callbacks.entferneKundeAusListe(customer, liste)

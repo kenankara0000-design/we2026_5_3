@@ -6,12 +6,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.we2026_5.databinding.ItemIntervallBinding
-import com.example.we2026_5.data.repository.TerminRegelRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 /**
  * Read-Only Adapter für die Anzeige von Intervallen im View-Mode
@@ -45,9 +39,7 @@ class IntervallViewAdapter(
     inner class ViewHolder(
         private val binding: ItemIntervallBinding,
         private val onRegelClick: (String) -> Unit
-    ) : RecyclerView.ViewHolder(binding.root), KoinComponent {
-
-        private val regelRepository: TerminRegelRepository by inject()
+    ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(intervall: CustomerIntervall) {
             // Alle Intervall-Details ausblenden
@@ -93,45 +85,15 @@ class IntervallViewAdapter(
                 }
             }
             
-            // Regel-Namen anzeigen (falls Regel-ID vorhanden)
-            if (intervall.terminRegelId.isNotEmpty()) {
-                // Regel laden und Namen anzeigen
-                CoroutineScope(Dispatchers.Main).launch {
-                    try {
-                        val regel = regelRepository.getRegelById(intervall.terminRegelId)
-                        if (regel != null) {
-                            // Regel-Namen als klickbaren Text anzeigen (nutze tvAbholungDatum als Container)
-                            binding.tvAbholungDatum.visibility = View.VISIBLE
-                            binding.tvAbholungDatum.text = regel.name
-                            binding.tvAbholungDatum.isClickable = true
-                            binding.tvAbholungDatum.setOnClickListener {
-                                onRegelClick(regel.id)
-                            }
-                            // Styling für klickbaren Regel-Namen
-                            binding.tvAbholungDatum.setTextColor(binding.root.context.getColor(com.example.we2026_5.R.color.primary_blue))
-                            binding.tvAbholungDatum.textSize = 16f
-                            binding.tvAbholungDatum.setTypeface(null, android.graphics.Typeface.BOLD)
-                        } else {
-                            // Regel nicht gefunden - Fallback
-                            binding.tvAbholungDatum.visibility = View.VISIBLE
-                            binding.tvAbholungDatum.text = binding.root.context.getString(com.example.we2026_5.R.string.intervall_rule_not_found)
-                            binding.tvAbholungDatum.isClickable = false
-                            binding.tvAbholungDatum.setTextColor(binding.root.context.getColor(com.example.we2026_5.R.color.text_secondary))
-                        }
-                    } catch (e: Exception) {
-                        binding.tvAbholungDatum.visibility = View.VISIBLE
-                        binding.tvAbholungDatum.text = binding.root.context.getString(com.example.we2026_5.R.string.stat_fehler_laden)
-                        binding.tvAbholungDatum.isClickable = false
-                        binding.tvAbholungDatum.setTextColor(binding.root.context.getColor(com.example.we2026_5.R.color.text_secondary))
-                    }
-                }
+            // Regel-Anzeige: nur Platzhalter (Regel-Vorlagen entfernt)
+            binding.tvAbholungDatum.visibility = View.VISIBLE
+            binding.tvAbholungDatum.text = if (intervall.terminRegelId.isNotEmpty()) {
+                binding.root.context.getString(com.example.we2026_5.R.string.intervall_rule_not_found)
             } else {
-                // Keine Regel-ID - Fallback: "Manuell erstellt"
-                binding.tvAbholungDatum.visibility = View.VISIBLE
-                binding.tvAbholungDatum.text = binding.root.context.getString(com.example.we2026_5.R.string.intervall_manual_created)
-                binding.tvAbholungDatum.isClickable = false
-                binding.tvAbholungDatum.setTextColor(binding.root.context.getColor(com.example.we2026_5.R.color.text_secondary))
+                binding.root.context.getString(com.example.we2026_5.R.string.intervall_manual_created)
             }
+            binding.tvAbholungDatum.isClickable = false
+            binding.tvAbholungDatum.setTextColor(binding.root.context.getColor(com.example.we2026_5.R.color.text_secondary))
         }
     }
 }

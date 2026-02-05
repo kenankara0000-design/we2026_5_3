@@ -70,7 +70,6 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                         val tageVoraus = if (c.kundenTyp == KundenTyp.AUF_ABRUF || c.kundenTyp == KundenTyp.REGELMAESSIG) 14 else 56
                         vorschlaege = TerminRegelManager.schlageSlotsVor(
                             kunde = c,
-                            regel = null,
                             tourSlots = tourSlots.orEmpty(),
                             startDatum = System.currentTimeMillis(),
                             tageVoraus = tageVoraus

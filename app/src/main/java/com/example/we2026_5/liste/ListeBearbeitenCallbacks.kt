@@ -7,12 +7,9 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.FirebaseRetryHelper
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListeIntervall
-import com.example.we2026_5.TerminRegel
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
-import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.R
-import com.example.we2026_5.util.TerminRegelManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,7 +21,6 @@ class ListeBearbeitenCallbacks(
     private val activity: AppCompatActivity,
     private val customerRepository: CustomerRepository,
     private val listeRepository: KundenListeRepository,
-    private val regelRepository: TerminRegelRepository,
     private val onDataReload: () -> Unit
 ) {
     
@@ -177,91 +173,4 @@ class ListeBearbeitenCallbacks(
         }
     }
     
-    /**
-     * Zeigt Dialog zur Regel-Auswahl
-     */
-    fun showRegelAuswahlDialog(
-        onRegelSelected: (TerminRegel) -> Unit
-    ) {
-        CoroutineScope(Dispatchers.Main).launch {
-            try {
-                val regeln = regelRepository.getAllRegeln()
-                
-                if (regeln.isEmpty()) {
-                    Toast.makeText(activity, activity.getString(R.string.toast_keine_regeln_vorhanden), Toast.LENGTH_LONG).show()
-                    return@launch
-                }
-                
-                val regelNamen = regeln.map { it.name }.toTypedArray()
-                
-                AlertDialog.Builder(activity)
-                    .setTitle(activity.getString(com.example.we2026_5.R.string.dialog_termin_regel_auswaehlen))
-                    .setItems(regelNamen) { _, which ->
-                        val ausgewaehlteRegel = regeln[which]
-                        onRegelSelected(ausgewaehlteRegel)
-                    }
-                    .setNegativeButton(activity.getString(com.example.we2026_5.R.string.btn_cancel), null)
-                    .show()
-            } catch (e: Exception) {
-                Toast.makeText(activity, activity.getString(R.string.error_fehler_laden_regeln, e.message ?: ""), Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-    
-    /**
-     * Wendet eine Regel auf die Liste an (mit RecyclerView-Adapter für XML-UI).
-     */
-    fun wendeRegelAn(
-        regel: TerminRegel,
-        liste: KundenListe,
-        intervalle: MutableList<ListeIntervall>,
-        intervallAdapter: com.example.we2026_5.ListeIntervallAdapter,
-        onSuccess: (KundenListe) -> Unit
-    ) {
-        wendeRegelAnInternal(regel, liste) { updatedListe ->
-            intervalle.clear()
-            intervalle.addAll(updatedListe.intervalle)
-            intervallAdapter.updateIntervalle(updatedListe.intervalle)
-            onSuccess(updatedListe)
-        }
-    }
-
-    /**
-     * Wendet eine Regel auf die Liste an (ohne Adapter, z. B. für Compose).
-     */
-    fun wendeRegelAn(
-        regel: TerminRegel,
-        liste: KundenListe,
-        onSuccess: (KundenListe) -> Unit
-    ) {
-        wendeRegelAnInternal(regel, liste, onSuccess)
-    }
-
-    private fun wendeRegelAnInternal(
-        regel: TerminRegel,
-        liste: KundenListe,
-        onComplete: (KundenListe) -> Unit
-    ) {
-        CoroutineScope(Dispatchers.Main).launch {
-            try {
-                val hinzugefuegteIntervalle = TerminRegelManager.wendeRegelAufListeAn(regel, liste)
-                val neueIntervalle = liste.intervalle.toMutableList().apply { addAll(hinzugefuegteIntervalle) }
-                val intervalleMap = neueIntervalle.map {
-                    mapOf(
-                        "abholungDatum" to it.abholungDatum,
-                        "auslieferungDatum" to it.auslieferungDatum,
-                        "wiederholen" to it.wiederholen,
-                        "intervallTage" to it.intervallTage,
-                        "intervallAnzahl" to it.intervallAnzahl
-                    )
-                }
-                listeRepository.updateListe(liste.id, mapOf("intervalle" to intervalleMap))
-                regelRepository.incrementVerwendungsanzahl(regel.id)
-                Toast.makeText(activity, activity.getString(R.string.toast_regel_angewendet, regel.name), Toast.LENGTH_SHORT).show()
-                onComplete(liste.copy(intervalle = neueIntervalle))
-            } catch (e: Exception) {
-                Toast.makeText(activity, activity.getString(R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
 }

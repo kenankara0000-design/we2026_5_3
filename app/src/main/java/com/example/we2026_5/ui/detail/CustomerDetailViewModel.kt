@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.data.repository.CustomerRepository
-import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.util.Result
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,8 +23,7 @@ import kotlinx.coroutines.launch
  * Activity beobachtet nur State und leitet Klicks weiter.
  */
 class CustomerDetailViewModel(
-    private val repository: CustomerRepository,
-    private val regelRepository: TerminRegelRepository
+    private val repository: CustomerRepository
 ) : ViewModel() {
 
     private val _customerId = MutableStateFlow<String?>(null)
@@ -95,15 +93,7 @@ class CustomerDetailViewModel(
             _isLoading.value = true
             _errorMessage.value = null
             when (val result = repository.updateCustomerResult(id, updates)) {
-                is Result.Success -> {
-                    if (result.data && newIntervalle != null && oldCustomer != null && updates.containsKey("intervalle")) {
-                        val oldRegelIds = oldCustomer.intervalle.map { it.terminRegelId }.filter { it.isNotBlank() }.toSet()
-                        val newRegelIds = newIntervalle.map { it.terminRegelId }.filter { it.isNotBlank() }.toSet()
-                        val removedRegelIds = oldRegelIds - newRegelIds
-                        removedRegelIds.forEach { regelRepository.decrementVerwendungsanzahl(it) }
-                    }
-                    onComplete?.invoke(result.data)
-                }
+                is Result.Success -> onComplete?.invoke(result.data)
                 is Result.Error -> _errorMessage.value = result.message
             }
             _isLoading.value = false

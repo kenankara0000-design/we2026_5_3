@@ -10,7 +10,6 @@ import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.adapter.CustomerDialogHelper
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
-import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.example.we2026_5.util.Result
 import androidx.lifecycle.lifecycleScope
@@ -25,8 +24,7 @@ class TourPlannerCoordinator(
     private val activity: AppCompatActivity,
     private val viewModel: TourPlannerViewModel,
     private val repository: CustomerRepository,
-    private val listeRepository: KundenListeRepository,
-    private val regelRepository: TerminRegelRepository
+    private val listeRepository: KundenListeRepository
 ) {
     private val viewDate = Calendar.getInstance()
 

@@ -3,14 +3,11 @@ package com.example.we2026_5.di
 import android.content.Context
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
-import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.data.repository.TourPlanRepository
 import com.example.we2026_5.ui.main.MainViewModel
 import com.example.we2026_5.ui.statistics.StatisticsViewModel
 import com.example.we2026_5.ui.liste.ListeErstellenViewModel
 import com.example.we2026_5.ui.customermanager.CustomerManagerViewModel
-import com.example.we2026_5.ui.terminregel.TerminRegelErstellenViewModel
-import com.example.we2026_5.ui.terminregel.TerminRegelManagerViewModel
 import com.example.we2026_5.ui.addcustomer.AddCustomerViewModel
 import com.example.we2026_5.ui.kundenlisten.KundenListenViewModel
 import com.example.we2026_5.ui.listebearbeiten.ListeBearbeitenViewModel
@@ -37,7 +34,6 @@ val appModule = module {
     // Repository (verwenden Realtime Database)
     single { CustomerRepository(get()) }
     single { KundenListeRepository(get()) }
-    single { TerminRegelRepository(get()) }
     single { TourPlanRepository(get()) }
     
     // ViewModels
@@ -46,12 +42,10 @@ val appModule = module {
     viewModel { ListeErstellenViewModel(get(), get()) }
     viewModel { CustomerManagerViewModel(get()) }
     viewModel { TourPlannerViewModel(get(), get()) }
-    viewModel { TerminRegelErstellenViewModel(get<TerminRegelRepository>(), get<CustomerRepository>()) }
-    viewModel { TerminRegelManagerViewModel(get<TerminRegelRepository>()) }
     viewModel { AddCustomerViewModel() }
     viewModel { KundenListenViewModel(get<Context>(), get<KundenListeRepository>(), get<CustomerRepository>()) }
     viewModel { ListeBearbeitenViewModel(get(), get<CustomerRepository>()) }
     viewModel { MapViewViewModel(get<CustomerRepository>(), get<KundenListeRepository>()) }
-    viewModel { CustomerDetailViewModel(get(), get()) }
+    viewModel { CustomerDetailViewModel(get()) }
     viewModel { (customerId: String) -> UrlaubViewModel(get(), customerId) }
 }

@@ -12,20 +12,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import com.example.we2026_5.CustomerStatus
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.DialogBaseHelper
-import com.example.we2026_5.util.buildTerminRegelInfoText
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.we2026_5.data.repository.CustomerRepository
-import com.example.we2026_5.data.repository.TerminRegelRepository
 import com.example.we2026_5.detail.CustomerPhotoManager
 import com.example.we2026_5.ui.detail.CustomerDetailScreen
 import com.example.we2026_5.ui.detail.CustomerDetailViewModel
@@ -41,7 +36,6 @@ class CustomerDetailActivity : AppCompatActivity() {
 
     private val viewModel: CustomerDetailViewModel by viewModel()
     private val repository: CustomerRepository by inject()
-    private val regelRepository: TerminRegelRepository by inject()
 
     private var photoManager: CustomerPhotoManager? = null
 
@@ -83,18 +77,7 @@ class CustomerDetailActivity : AppCompatActivity() {
             val editIntervalle by viewModel.editIntervalle.collectAsState(initial = emptyList())
             val isLoading by viewModel.isLoading.collectAsState(initial = false)
             val isUploading by viewModel.isUploading.collectAsState(initial = false)
-            var regelNameByRegelId by remember(customer?.id) { mutableStateOf<Map<String, String>>(emptyMap()) }
-
-            LaunchedEffect(customer) {
-                val c = customer ?: return@LaunchedEffect
-                val ids = c.intervalle.mapNotNull { i -> i.terminRegelId.takeIf { it.isNotBlank() } }.distinct()
-                val map = ids.associateWith { regelId ->
-                    withContext(Dispatchers.IO) {
-                        regelRepository.getRegelById(regelId)?.name ?: ""
-                    }
-                }
-                regelNameByRegelId = map
-            }
+            val regelNameByRegelId = emptyMap<String, String>()
 
             CustomerDetailScreen(
                 customer = customer,
@@ -173,12 +156,7 @@ class CustomerDetailActivity : AppCompatActivity() {
                     )
                 },
                 regelNameByRegelId = regelNameByRegelId,
-                onRegelClick = { regelId ->
-                    lifecycleScope.launch {
-                        val regel = withContext(Dispatchers.IO) { regelRepository.getRegelById(regelId) }
-                        regel?.let { showRegelDetailDialog(it) }
-                    }
-                },
+                onRegelClick = { },
                 onUrlaubStartActivity = { customerId ->
                     startActivity(Intent(this@CustomerDetailActivity, UrlaubActivity::class.java).apply {
                         putExtra("CUSTOMER_ID", customerId)
@@ -229,15 +207,6 @@ class CustomerDetailActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    private fun showRegelDetailDialog(regel: TerminRegel) {
-        val infoText = buildTerminRegelInfoText(regel) { getString(it) }
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.dialog_regel_info_title))
-            .setMessage(infoText)
-            .setNeutralButton(getString(R.string.dialog_close), null)
-            .show()
     }
 
     private fun pauseCustomer(customer: Customer) {

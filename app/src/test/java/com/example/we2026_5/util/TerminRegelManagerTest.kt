@@ -31,7 +31,6 @@ class TerminRegelManagerTest {
 
         val result = TerminRegelManager.schlageSlotsVor(
             kunde = customer,
-            regel = null,
             tourSlots = tourSlots,
             startDatum = System.currentTimeMillis(),
             tageVoraus = 7
