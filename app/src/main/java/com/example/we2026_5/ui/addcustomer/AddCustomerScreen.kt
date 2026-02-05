@@ -174,6 +174,12 @@ fun AddCustomerScreen(
                     onSelect = { onKundenTypChange(KundenTyp.UNREGELMAESSIG) },
                     textPrimary = textPrimary
                 )
+                AddCustomerRadioOption(
+                    text = stringResource(R.string.label_kunden_typ_auf_abruf),
+                    selected = state.kundenTyp == KundenTyp.AUF_ABRUF,
+                    onSelect = { onKundenTypChange(KundenTyp.AUF_ABRUF) },
+                    textPrimary = textPrimary
+                )
             }
             if (state.kundenTyp == KundenTyp.REGELMAESSIG) {
                 Spacer(modifier = Modifier.height(12.dp))
@@ -215,18 +221,20 @@ fun AddCustomerScreen(
                     textPrimary = textPrimary
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            AddCustomerWeekdaySelector(
-                label = stringResource(R.string.label_default_pickup_day),
-                selected = state.abholungWochentag,
-                onSelect = onAbholungTagChange
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            AddCustomerWeekdaySelector(
-                label = stringResource(R.string.label_default_delivery_day),
-                selected = state.auslieferungWochentag,
-                onSelect = onAuslieferungTagChange
-            )
+            if (state.kundenTyp != KundenTyp.AUF_ABRUF) {
+                Spacer(modifier = Modifier.height(12.dp))
+                AddCustomerWeekdaySelector(
+                    label = stringResource(R.string.label_default_pickup_day),
+                    selected = state.abholungWochentag,
+                    onSelect = onAbholungTagChange
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                AddCustomerWeekdaySelector(
+                    label = stringResource(R.string.label_default_delivery_day),
+                    selected = state.auslieferungWochentag,
+                    onSelect = onAuslieferungTagChange
+                )
+            }
             Spacer(modifier = Modifier.height(12.dp))
             Card(
                 modifier = Modifier.fillMaxWidth(),

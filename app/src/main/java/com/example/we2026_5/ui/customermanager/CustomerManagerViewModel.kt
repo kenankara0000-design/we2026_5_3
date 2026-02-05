@@ -55,6 +55,7 @@ class CustomerManagerViewModel(
         val typFiltered = when (typFilter) {
             1 -> tabFiltered.filter { it.kundenTyp == KundenTyp.REGELMAESSIG }
             2 -> tabFiltered.filter { it.kundenTyp == KundenTyp.UNREGELMAESSIG }
+            3 -> tabFiltered.filter { it.kundenTyp == KundenTyp.AUF_ABRUF }
             else -> tabFiltered
         }
         

@@ -207,6 +207,7 @@
     <string name="stat_gesamt_kunden">👥 Gesamt Kunden</string>
     <string name="stat_regelmaessig_kunden">🟢 Regelmäßig</string>
     <string name="stat_unregelmaessig_kunden">🟡 Unregelmäßig</string>
+    <string name="stat_auf_abruf_kunden">🔵 Auf Abruf</string>
     <string name="stat_fehler_laden">Fehler beim Laden</string>
     <string name="stat_loading">Laden…</string>
     <string name="stat_erledigungsquote_heute">📊 Erledigungsquote heute</string>
@@ -222,7 +223,12 @@
     <string name="label_kunden_typ">Termin-Typ:</string>
     <string name="label_kunden_typ_regelmaessig">Regelmäßig</string>
     <string name="label_kunden_typ_unregelmaessig">Unregelmäßig</string>
+    <string name="label_kunden_typ_auf_abruf">Auf Abruf</string>
     <string name="label_filter_kunden_typ">Filter (Termin-Typ):</string>
+    <string name="termin_anlegen_keine_slots_hinweis">Keine Terminvorschläge verfügbar. Bitte A/L-Tage beim Kunden setzen.</string>
+    <string name="termin_anlegen_auf_abruf_keine_slots">Keine Terminvorschläge verfügbar.</string>
+    <string name="termin_anlegen_auswaehlen_zwei_wochen">Termine auswählen (nächste 2 Wochen):</string>
+    <string name="termin_anlegen_auswaehlen_acht_wochen">Termine auswählen (bis 8 Wochen):</string>
     <string name="label_filter_all">Alle</string>
     <string name="label_list_search">Listen suchen…</string>
     <string name="label_list_sort_name">Sortierung: Name</string>

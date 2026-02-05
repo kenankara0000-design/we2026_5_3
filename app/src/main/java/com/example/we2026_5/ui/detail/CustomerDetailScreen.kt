@@ -290,19 +290,26 @@ fun CustomerDetailScreen(
                                 text = when (customer.kundenTyp) {
                                     com.example.we2026_5.KundenTyp.REGELMAESSIG -> stringResource(R.string.label_kunden_typ_regelmaessig)
                                     com.example.we2026_5.KundenTyp.UNREGELMAESSIG -> stringResource(R.string.label_kunden_typ_unregelmaessig)
+                                    com.example.we2026_5.KundenTyp.AUF_ABRUF -> stringResource(R.string.label_kunden_typ_auf_abruf)
                                 },
                                 modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp),
                                 color = textPrimary,
                                 fontSize = DetailUiConstants.BodySp
                             )
                         }
-                        if (customer.defaultAbholungWochentag in 0..6 || customer.defaultAuslieferungWochentag in 0..6) {
+                        if (customer.kundenTyp != com.example.we2026_5.KundenTyp.AUF_ABRUF && (customer.defaultAbholungWochentag in 0..6 || customer.defaultAuslieferungWochentag in 0..6)) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(stringResource(R.string.label_abholung_auslieferung_tag), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                                 val wochen = listOf("Mo","Di","Mi","Do","Fr","Sa","So")
                                 val a = if (customer.defaultAbholungWochentag in 0..6) wochen[customer.defaultAbholungWochentag] + " A" else ""
                                 val l = if (customer.defaultAuslieferungWochentag in 0..6) wochen[customer.defaultAuslieferungWochentag] + " L" else ""
                                 Text(text = listOf(a, l).filter { it.isNotEmpty() }.joinToString(" / "), modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = DetailUiConstants.BodySp)
+                            }
+                        }
+                        if (customer.kundenTyp == com.example.we2026_5.KundenTyp.AUF_ABRUF) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(stringResource(R.string.label_abholung_auslieferung_tag), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                                Text(text = "–", modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = DetailUiConstants.BodySp)
                             }
                         }
                     }
@@ -384,6 +391,10 @@ fun CustomerDetailScreen(
                             RadioButton(selected = editKundenTyp == KundenTyp.UNREGELMAESSIG, onClick = { editKundenTyp = KundenTyp.UNREGELMAESSIG })
                             Text(stringResource(R.string.label_kunden_typ_unregelmaessig), color = textPrimary)
                         }
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { editKundenTyp = KundenTyp.AUF_ABRUF }) {
+                            RadioButton(selected = editKundenTyp == KundenTyp.AUF_ABRUF, onClick = { editKundenTyp = KundenTyp.AUF_ABRUF })
+                            Text(stringResource(R.string.label_kunden_typ_auf_abruf), color = textPrimary)
+                        }
                     }
                     Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
                     Text(stringResource(R.string.label_address_label), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
@@ -395,22 +406,24 @@ fun CustomerDetailScreen(
                     Text(stringResource(R.string.label_notes_label), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     OutlinedTextField(value = editNotizen, onValueChange = { editNotizen = it }, modifier = Modifier.fillMaxWidth(), minLines = 3)
                     
-                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                    Text(stringResource(R.string.label_default_pickup_day), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    WochentagChipRowFromResources(
-                        selected = editAbholungWochentag.coerceIn(-1, 6),
-                        onSelect = { editAbholungWochentag = if (editAbholungWochentag == it) -1 else it },
-                        primaryBlue = primaryBlue,
-                        textPrimary = textPrimary
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(stringResource(R.string.label_default_delivery_day), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    WochentagChipRowFromResources(
-                        selected = editAuslieferungWochentag.coerceIn(-1, 6),
-                        onSelect = { editAuslieferungWochentag = if (editAuslieferungWochentag == it) -1 else it },
-                        primaryBlue = primaryBlue,
-                        textPrimary = textPrimary
-                    )
+                    if (editKundenTyp != KundenTyp.AUF_ABRUF) {
+                        Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                        Text(stringResource(R.string.label_default_pickup_day), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                        WochentagChipRowFromResources(
+                            selected = editAbholungWochentag.coerceIn(-1, 6),
+                            onSelect = { editAbholungWochentag = if (editAbholungWochentag == it) -1 else it },
+                            primaryBlue = primaryBlue,
+                            textPrimary = textPrimary
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(stringResource(R.string.label_default_delivery_day), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                        WochentagChipRowFromResources(
+                            selected = editAuslieferungWochentag.coerceIn(-1, 6),
+                            onSelect = { editAuslieferungWochentag = if (editAuslieferungWochentag == it) -1 else it },
+                            primaryBlue = primaryBlue,
+                            textPrimary = textPrimary
+                        )
+                    }
                     if (editKundenTyp == KundenTyp.UNREGELMAESSIG) {
                         Spacer(Modifier.height(8.dp))
                         Text(stringResource(R.string.label_a_plus_tage_l), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)

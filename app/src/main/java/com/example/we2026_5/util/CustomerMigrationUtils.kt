@@ -9,6 +9,8 @@ import com.example.we2026_5.KundenTyp
  * listenWochentag/wochentag werden nicht mehr gesetzt – A/L-Tag (defaultAbholungWochentag, defaultAuslieferungWochentag) sind die Quelle.
  */
 fun Customer.migrateKundenTyp(): Customer {
+    // AUF_ABRUF nur explizit vom Nutzer – nie durch Migration setzen
+    if (kundenTyp == KundenTyp.AUF_ABRUF) return this
     val newTyp = when {
         intervalle.isNotEmpty() || listeId.isNotEmpty() -> KundenTyp.REGELMAESSIG
         else -> KundenTyp.UNREGELMAESSIG

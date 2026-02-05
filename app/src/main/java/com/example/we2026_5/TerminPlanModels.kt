@@ -32,10 +32,11 @@ data class AdHocTemplate(
     val uhrzeit: String = ""
 )
 
-/** Kunden-Typ: Regelmäßig (Zyklus) oder Unregelmäßig. */
+/** Kunden-Typ: Regelmäßig (Zyklus), Unregelmäßig oder Auf Abruf (A+L am gewählten Tag). */
 enum class KundenTyp {
     REGELMAESSIG,
-    UNREGELMAESSIG
+    UNREGELMAESSIG,
+    AUF_ABRUF
 }
 
 /** Kundenstatus zur Steuerung von Pause/Fortsetzen. */

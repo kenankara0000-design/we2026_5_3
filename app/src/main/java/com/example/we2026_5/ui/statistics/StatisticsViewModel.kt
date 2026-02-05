@@ -25,6 +25,7 @@ data class StatisticsState(
     val totalCustomers: Int = 0,
     val regelmaessigCount: Int = 0,
     val unregelmaessigCount: Int = 0,
+    val aufAbrufCount: Int = 0,
     val quoteHeute: String = "—",
     val errorMessage: String? = null
 )
@@ -120,6 +121,7 @@ class StatisticsViewModel(
         val totalCustomers = allCustomers.size
         val regelmaessigCount = allCustomers.count { it.kundenTyp == com.example.we2026_5.KundenTyp.REGELMAESSIG }
         val unregelmaessigCount = allCustomers.count { it.kundenTyp == com.example.we2026_5.KundenTyp.UNREGELMAESSIG }
+        val aufAbrufCount = allCustomers.count { it.kundenTyp == com.example.we2026_5.KundenTyp.AUF_ABRUF }
         val faelligHeuteGesamt = heuteCount + doneTodayCount
         val quoteHeute = if (faelligHeuteGesamt > 0)
             (100.0 * doneTodayCount / faelligHeuteGesamt).toInt().toString() + "%"
@@ -135,6 +137,7 @@ class StatisticsViewModel(
             totalCustomers = totalCustomers,
             regelmaessigCount = regelmaessigCount,
             unregelmaessigCount = unregelmaessigCount,
+            aufAbrufCount = aufAbrufCount,
             quoteHeute = quoteHeute
         )
     }

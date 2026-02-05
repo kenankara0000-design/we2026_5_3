@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.TourPlanRepository
 import com.example.we2026_5.util.DateFormatter
@@ -66,12 +67,13 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                 tourPlanRepository.getTourSlotsFlow().first()
                             }
                         } ?: emptyList()
+                        val tageVoraus = if (c.kundenTyp == KundenTyp.AUF_ABRUF) 14 else 56
                         vorschlaege = TerminRegelManager.schlageSlotsVor(
                             kunde = c,
                             regel = null,
                             tourSlots = tourSlots.orEmpty(),
                             startDatum = System.currentTimeMillis(),
-                            tageVoraus = 56
+                            tageVoraus = tageVoraus
                         ).filter { it.typ == TerminTyp.ABHOLUNG }
                     }
                 } catch (e: Exception) {
@@ -115,10 +117,19 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                     } else if (customer == null) {
                         Text("Kunde nicht gefunden")
                     } else if (vorschlaege.isEmpty()) {
-                        Text("Keine Terminvorschläge verfügbar. Bitte A/L-Tage beim Kunden setzen.")
-                    } else {
                         Text(
-                            "Termine auswählen (bis 8 Wochen):",
+                            if (customer?.kundenTyp == KundenTyp.AUF_ABRUF)
+                                stringResource(R.string.termin_anlegen_auf_abruf_keine_slots)
+                            else
+                                stringResource(R.string.termin_anlegen_keine_slots_hinweis)
+                        )
+                    } else {
+                        val isAufAbruf = customer?.kundenTyp == KundenTyp.AUF_ABRUF
+                        Text(
+                            if (isAufAbruf)
+                                stringResource(R.string.termin_anlegen_auswaehlen_zwei_wochen)
+                            else
+                                stringResource(R.string.termin_anlegen_auswaehlen_acht_wochen),
                             style = MaterialTheme.typography.titleMedium
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -179,17 +190,31 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                         Toast.makeText(context, "Bitte mindestens einen Termin wählen", Toast.LENGTH_SHORT).show()
                                         return@launch
                                     }
-                                    val zahl = (c.intervalle.firstOrNull()?.intervallTage?.takeIf { it in 1..365 }
-                                        ?: @Suppress("DEPRECATION") c.intervallTage).coerceIn(1, 365).takeIf { it > 0 } ?: 7
-                                    val newIntervalle = toAdd.map { slot ->
-                                        CustomerIntervall(
-                                            id = UUID.randomUUID().toString(),
-                                            abholungDatum = slot.datum,
-                                            auslieferungDatum = slot.datum + TimeUnit.DAYS.toMillis(zahl.toLong()),
-                                            wiederholen = false,
-                                            intervallTage = zahl,
-                                            intervallAnzahl = 0
-                                        )
+                                    val isAufAbruf = c.kundenTyp == KundenTyp.AUF_ABRUF
+                                    val newIntervalle = if (isAufAbruf) {
+                                        toAdd.map { slot ->
+                                            CustomerIntervall(
+                                                id = UUID.randomUUID().toString(),
+                                                abholungDatum = slot.datum,
+                                                auslieferungDatum = slot.datum,
+                                                wiederholen = false,
+                                                intervallTage = 0,
+                                                intervallAnzahl = 0
+                                            )
+                                        }
+                                    } else {
+                                        val zahl = (c.intervalle.firstOrNull()?.intervallTage?.takeIf { it in 1..365 }
+                                            ?: @Suppress("DEPRECATION") c.intervallTage).coerceIn(1, 365).takeIf { it > 0 } ?: 7
+                                        toAdd.map { slot ->
+                                            CustomerIntervall(
+                                                id = UUID.randomUUID().toString(),
+                                                abholungDatum = slot.datum,
+                                                auslieferungDatum = slot.datum + TimeUnit.DAYS.toMillis(zahl.toLong()),
+                                                wiederholen = false,
+                                                intervallTage = zahl,
+                                                intervallAnzahl = 0
+                                            )
+                                        }
                                     }
                                     val existing = c.intervalle ?: emptyList()
                                     val updated = c.copy(intervalle = existing + newIntervalle)

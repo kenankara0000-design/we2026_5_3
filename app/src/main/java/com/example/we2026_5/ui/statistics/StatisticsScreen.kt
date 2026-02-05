@@ -183,6 +183,13 @@ fun StatisticsScreen(
                         valueColor = primaryBlue,
                         backgroundColor = surfaceWhite
                     )
+                    StatCard(
+                        label = stringResource(R.string.stat_auf_abruf_kunden),
+                        value = s.aufAbrufCount.toString(),
+                        labelColor = textPrimary,
+                        valueColor = primaryBlue,
+                        backgroundColor = surfaceWhite
+                    )
 
                     Spacer(modifier = Modifier.height(24.dp))
                 }

@@ -265,6 +265,11 @@ fun CustomerManagerScreen(
                         onClick = { onKundenTypFilterChange(2) },
                         label = { Text(stringResource(R.string.label_kunden_typ_unregelmaessig)) }
                     )
+                    FilterChip(
+                        selected = kundenTypFilter == 3,
+                        onClick = { onKundenTypFilterChange(3) },
+                        label = { Text(stringResource(R.string.label_kunden_typ_auf_abruf)) }
+                    )
                 }
                 Spacer(Modifier.height(8.dp))
 

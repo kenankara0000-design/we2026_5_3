@@ -287,6 +287,9 @@ class CustomerDetailActivity : AppCompatActivity() {
                 }
                 startTerminAnlegenDialogUnregelmaessig(customer)
             }
+            KundenTyp.AUF_ABRUF -> {
+                startTerminAnlegenDialogUnregelmaessig(customer)
+            }
             KundenTyp.REGELMAESSIG -> {
                 if (customer.intervalle.isEmpty()) {
                     val intervall = TerminAusKundeUtils.erstelleIntervallAusKunde(customer)

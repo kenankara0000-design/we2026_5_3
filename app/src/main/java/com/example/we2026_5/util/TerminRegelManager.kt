@@ -10,6 +10,7 @@ import com.example.we2026_5.TerminRegelTyp
 import com.example.we2026_5.TerminSlotVorschlag
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.TourSlot
+import com.example.we2026_5.KundenTyp
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -104,6 +105,27 @@ object TerminRegelManager {
     ): List<TerminSlotVorschlag> {
         val startOfDay = TerminBerechnungUtils.getStartOfDay(startDatum)
         val horizon = startOfDay + TimeUnit.DAYS.toMillis(tageVoraus.toLong())
+
+        // Auf Abruf: nächste tageVoraus Tage, nur Mo–Fr (0–4), ein Slot pro Tag (A+L am selben Tag)
+        if (kunde.kundenTyp == KundenTyp.AUF_ABRUF) {
+            val vorschlaege = mutableListOf<TerminSlotVorschlag>()
+            var datum = startOfDay
+            while (datum <= horizon && vorschlaege.size < MAX_VORSCHLAEGE) {
+                val cal = Calendar.getInstance().apply { timeInMillis = datum }
+                val wochentag = (cal.get(Calendar.DAY_OF_WEEK) + 5) % 7 // 0=Mo .. 6=So
+                if (wochentag in 0..4) {
+                    vorschlaege += TerminSlotVorschlag(
+                        datum = datum,
+                        typ = TerminTyp.ABHOLUNG,
+                        beschreibung = "${kunde.name} · A+L",
+                        customerId = kunde.id,
+                        customerName = kunde.name
+                    )
+                }
+                datum += TimeUnit.DAYS.toMillis(1)
+            }
+            return vorschlaege
+        }
 
         val relevanteSlotsBase = if (kunde.stadt.isNotBlank()) {
             tourSlots.filter { slot -> slot.wochentag in 0..6 && slot.stadt.equals(kunde.stadt, ignoreCase = true) }
