@@ -46,6 +46,8 @@ import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.ui.common.AlWochentagText
+import com.example.we2026_5.ui.listebearbeiten.ListeBearbeitenIntervallRow
+import com.example.we2026_5.ui.listebearbeiten.ListeBearbeitenKundeInListeItem
 import androidx.core.content.ContextCompat
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -248,7 +250,7 @@ fun ListeBearbeitenScreen(
                             Text(stringResource(R.string.label_intervals), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = primaryBlue)
                             Spacer(modifier = Modifier.height(8.dp))
                             state.intervalle.forEachIndexed { index, intervall ->
-                                IntervallRow(
+                                ListeBearbeitenIntervallRow(
                                     intervall = intervall,
                                     isEditMode = state.isInEditMode,
                                     onAbholungClick = { onDatumSelected(index, true) },
@@ -273,7 +275,7 @@ fun ListeBearbeitenScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
                 state.kundenInListe.forEach { kunde ->
-                    KundeInListeItem(kunde, showRemove = true, onRemove = { onRemoveKunde(kunde) }, onAdd = {}, textPrimary = textPrimary, textSecondary = textSecondary, statusOverdue = statusOverdue, statusDone = statusDone)
+                    ListeBearbeitenKundeInListeItem(kunde, showRemove = true, onRemove = { onRemoveKunde(kunde) }, onAdd = {}, textPrimary = textPrimary, textSecondary = textSecondary, statusOverdue = statusOverdue, statusDone = statusDone)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
@@ -281,99 +283,8 @@ fun ListeBearbeitenScreen(
                 Text(stringResource(R.string.label_add_available_customers), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = textPrimary)
                 Spacer(modifier = Modifier.height(8.dp))
                 state.verfuegbareKunden.forEach { kunde ->
-                    KundeInListeItem(kunde, showRemove = false, onRemove = {}, onAdd = { onAddKunde(kunde) }, textPrimary = textPrimary, textSecondary = textSecondary, statusOverdue = statusOverdue, statusDone = statusDone)
+                    ListeBearbeitenKundeInListeItem(kunde, showRemove = false, onRemove = {}, onAdd = { onAddKunde(kunde) }, textPrimary = textPrimary, textSecondary = textSecondary, statusOverdue = statusOverdue, statusDone = statusDone)
                     Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun IntervallRow(
-    intervall: ListeIntervall,
-    isEditMode: Boolean,
-    onAbholungClick: () -> Unit,
-    onAuslieferungClick: () -> Unit
-) {
-    val abholungText = if (intervall.abholungDatum > 0) DateFormatter.formatDateWithLeadingZeros(intervall.abholungDatum) else stringResource(R.string.label_not_set)
-    val auslieferungText = if (intervall.auslieferungDatum > 0) DateFormatter.formatDateWithLeadingZeros(intervall.auslieferungDatum) else stringResource(R.string.label_not_set)
-    val textSecondary = Color(androidx.compose.ui.platform.LocalContext.current.resources.getColor(R.color.text_secondary, null))
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (isEditMode) Modifier.clickable(onClick = {}) else Modifier),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Column(modifier = if (isEditMode) Modifier.clickable(onClick = onAbholungClick) else Modifier) {
-            Text(stringResource(R.string.label_abholung_date), fontSize = 12.sp, color = textSecondary)
-            Text(abholungText, fontSize = 14.sp)
-        }
-        Column(modifier = if (isEditMode) Modifier.clickable(onClick = onAuslieferungClick) else Modifier) {
-            Text(stringResource(R.string.label_auslieferung_date), fontSize = 12.sp, color = textSecondary)
-            Text(auslieferungText, fontSize = 14.sp)
-        }
-    }
-}
-
-@Composable
-private fun KundeInListeItem(
-    kunde: Customer,
-    showRemove: Boolean,
-    onRemove: () -> Unit,
-    onAdd: () -> Unit,
-    textPrimary: Color,
-    textSecondary: Color,
-    statusOverdue: Color,
-    statusDone: Color = Color.Unspecified
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(androidx.compose.ui.platform.LocalContext.current.resources.getColor(R.color.surface_white, null))),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (kunde.fotoUrls.isNotEmpty()) {
-                Card(
-                    modifier = Modifier.size(40.dp),
-                    shape = RoundedCornerShape(4.dp)
-                ) {
-                    AsyncImage(
-                        model = kunde.fotoUrls.first(),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                    )
-                }
-                Spacer(Modifier.size(12.dp))
-            }
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = when (kunde.kundenArt) {
-                            "Privat" -> stringResource(R.string.label_type_p_letter)
-                            "Tour" -> stringResource(R.string.label_type_t_letter)
-                            else -> stringResource(R.string.label_type_g)
-                        },
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text(kunde.name, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
-                }
-                Text(kunde.adresse, fontSize = 14.sp, color = textSecondary)
-                AlWochentagText(customer = kunde, color = textSecondary)
-            }
-            if (showRemove) {
-                IconButton(onClick = onRemove) {
-                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.content_desc_remove_from_list), tint = statusOverdue)
-                }
-            } else {
-                IconButton(onClick = onAdd) {
-                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.content_desc_add_to_list), tint = statusDone)
                 }
             }
         }

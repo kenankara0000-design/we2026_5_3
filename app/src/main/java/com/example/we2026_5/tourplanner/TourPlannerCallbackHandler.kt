@@ -169,7 +169,7 @@ class TourPlannerCallbackHandler(
                     ?: (customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())).takeIf { customer.letzterTermin > 0 } ?: 0L
                 val diff = newDateNorm - aktuellerFaelligAm
                 val neuerLetzterTermin = customer.letzterTermin + diff
-                val serializedLeer = serializeVerschobeneTermine(emptyList())
+                val serializedLeer = TourPlannerCallbackHelpers.serializeVerschobeneTermine(emptyList())
                 FirebaseRetryHelper.executeSuspendWithRetryAndToast(
                     operation = {
                         repository.updateCustomer(customer.id, mapOf(
@@ -201,7 +201,7 @@ class TourPlannerCallbackHandler(
                     TerminBerechnungUtils.getStartOfDay(it.originalDatum) == viewDateStart ||
                     TerminBerechnungUtils.getStartOfDay(it.verschobenAufDatum) == viewDateStart
                 } + newEntry
-                val serialized = serializeVerschobeneTermine(newList)
+                val serialized = TourPlannerCallbackHelpers.serializeVerschobeneTermine(newList)
                 FirebaseRetryHelper.executeSuspendWithRetryAndToast(
                     operation = { repository.updateCustomer(customer.id, mapOf("verschobeneTermine" to serialized)) },
                     context = context,
@@ -221,15 +221,6 @@ class TourPlannerCallbackHandler(
             }
         }
     }
-
-    /** Serialisiert verschobeneTermine für Firebase (Map mit originalDatum, verschobenAufDatum, typ). */
-    private fun serializeVerschobeneTermine(list: List<VerschobenerTermin>): Map<String, Map<String, Any>> = list.mapIndexed { index, it ->
-        index.toString() to mapOf(
-            "originalDatum" to it.originalDatum,
-            "verschobenAufDatum" to it.verschobenAufDatum,
-            "typ" to it.typ.name
-        )
-    }.toMap()
 
     private fun handleUrlaub(customer: Customer, von: Long, bis: Long) {
         CoroutineScope(Dispatchers.Main).launch {

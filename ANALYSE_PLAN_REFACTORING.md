@@ -55,12 +55,12 @@ Neu: `ui/common/WochentagUi.kt`;
 
 ## Schritt 4: Phase 1.2 – CustomerDetailScreen aufteilen
 
-- [x] **4.1** Wochentag-UI aus Schritt 2 nutzen (keine lokale `WochentagChipRow` mehr).
-- [ ] **4.2** Sub-Composables auslagern unter `ui/detail/`:
-  - [ ] `CustomerDetailWochentagChipRow.kt` (falls nicht vollständig in WochentagUi) oder nur Nutzung von WochentagUi.
-  - [ ] `CustomerDetailStatusSection.kt`
-  - [ ] `CustomerDetailRegelNameRow.kt`
-  - [ ] `CustomerDetailIntervallRow.kt`
+- [x] **4.1** Wochentag-UI aus Schritt 2 nutzen (bereits in Schritt 2) (keine lokale `WochentagChipRow` mehr).
+- [x] **4.2** Sub-Composables auslagern unter `ui/detail/`:
+  - [x] Wochentag-UI aus WochentagUi
+  - [x] `CustomerDetailStatusSection.kt`
+  - [x] `CustomerDetailRegelNameRow.kt`
+  - [x] `CustomerDetailIntervallRow.kt`
 - [ ] **4.3** Gemeinsame UI-Konstanten (SectionSpacing etc.) in Theme/Constants oder Wochentag-UI, falls mehrfach genutzt.
 - [ ] **4.4** Build + UI-Test Kunden-Detail.
 
@@ -70,7 +70,7 @@ Neu: `ui/common/WochentagUi.kt`;
 
 ## Schritt 5: Phase 1.4 – TourPlannerCallbackHandler aufteilen
 
-- [ ] **5.1** Gemeinsame Hilfsfunktionen extrahieren (z.B. `serializeVerschobeneTermine`, `executeErledigung`) → neue Datei z.B. `tourplanner/TourPlannerCallbackHelpers.kt` oder in bestehende Util.
+- [x] **5.1** Gemeinsame Hilfsfunktionen extrahieren (`TourPlannerCallbackHelpers.serializeVerschobeneTermine`) (z.B. `serializeVerschobeneTermine`, `executeErledigung`) → neue Datei z.B. `tourplanner/TourPlannerCallbackHelpers.kt` oder in bestehende Util.
 - [ ] **5.2** Nach Verantwortung aufteilen:
   - [ ] `TourPlannerErledigungHandler` (Abholung, Auslieferung, KW, Rückgängig) – neue Datei.
   - [ ] `TourPlannerVerschiebenUrlaubHandler` (Verschieben, Urlaub) – neue Datei.
@@ -96,7 +96,7 @@ Neu: `ui/common/WochentagUi.kt`;
 ## Schritt 7: Weitere große Screens (Phase 1.3, 1.5, 1.7, 1.8)
 
 - [ ] **7.1** CustomerManagerScreen.kt (~455 Z.): Kundenkarten-Liste als Composable z.B. `CustomerManagerCard.kt` in `ui/customermanager/`; `formatALWochentag` bereits in Schritt 2 ersetzt.
-- [ ] **7.2** ListeBearbeitenScreen.kt (~390 Z.): `ListeBearbeitenAlWochentagText`, `IntervallRow`, `KundeInListeItem` in eigene Dateien unter `ui/listebearbeiten/` (Wochentag aus Schritt 2).
+- [x] **7.2** ListeBearbeitenScreen.kt (~390 Z.): `IntervallRow`, `KundeInListeItem` in `ListeBearbeitenIntervallRow.kt`, `ListeBearbeitenKundeInListeItem.kt` (Wochentag aus Schritt 2).
 - [ ] **7.3** AddCustomerScreen.kt (~372 Z.): Große Blöcke (Typ, Adresse, Tour/Wochentag) → z.B. `AddCustomerTourSection.kt` in `ui/addcustomer/`.
 - [ ] **7.4** KundenListenScreen.kt (~352 Z.): Listen-Card, Filter-Chip-Bereich in `ui/kundenlisten/` auslagern.
 

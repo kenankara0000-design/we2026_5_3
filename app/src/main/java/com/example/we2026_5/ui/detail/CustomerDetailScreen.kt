@@ -61,6 +61,9 @@ import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.ui.common.WochentagChipRowFromResources
+import com.example.we2026_5.ui.detail.CustomerDetailIntervallRow
+import com.example.we2026_5.ui.detail.CustomerDetailRegelNameRow
+import com.example.we2026_5.ui.detail.CustomerDetailStatusSection
 
 // Einheitliche UI-Werte (Abstände, Schriftgrößen)
 private val SectionSpacing = 20.dp
@@ -267,7 +270,7 @@ fun CustomerDetailScreen(
                         Text(stringResource(R.string.label_foto_uploading), fontSize = 12.sp, color = primaryBlue)
                     }
                     Spacer(Modifier.height(SectionSpacing))
-                CustomerStatusSection(
+                CustomerDetailStatusSection(
                     customer = customer,
                     onPauseCustomer = onPauseCustomer,
                     onResumeCustomer = onResumeCustomer,
@@ -544,7 +547,7 @@ fun CustomerDetailScreen(
                         // In beiden Modi nur Termin-Regel-Namen anzeigen (keine 365 Intervall-Zeilen bei täglich)
                         val distinctRegelIds = intervalleToShow.map { it.terminRegelId }.distinct()
                         distinctRegelIds.forEach { regelId ->
-                            RegelNameRow(
+                            CustomerDetailRegelNameRow(
                                 regelName = if (regelId.isBlank()) stringResource(R.string.label_not_set)
                                     else regelNameByRegelId[regelId] ?: stringResource(R.string.label_not_set),
                                 isClickable = regelId.isNotBlank(),
@@ -603,168 +606,3 @@ fun CustomerDetailScreen(
     }
 }
 
-@Composable
-private fun CustomerStatusSection(
-    customer: Customer,
-    onPauseCustomer: () -> Unit,
-    onResumeCustomer: () -> Unit,
-    textPrimary: Color,
-    surfaceWhite: Color
-) {
-    val statusText = when (customer.status) {
-        CustomerStatus.AKTIV -> stringResource(R.string.customer_status_active)
-        CustomerStatus.PAUSIERT -> stringResource(R.string.customer_status_paused)
-        CustomerStatus.ADHOC -> stringResource(R.string.customer_status_adhoc)
-    }
-    val statusColor = when (customer.status) {
-        CustomerStatus.AKTIV -> colorResource(R.color.status_done)
-        CustomerStatus.PAUSIERT -> colorResource(R.color.status_warning)
-        CustomerStatus.ADHOC -> colorResource(R.color.status_info)
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = surfaceWhite)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = stringResource(R.string.customer_status_title),
-                fontSize = SectionTitleSp,
-                fontWeight = FontWeight.Bold,
-                color = textPrimary
-            )
-            Spacer(Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .background(statusColor.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(text = statusText, color = statusColor, fontWeight = FontWeight.Bold)
-                }
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.customer_status_current, statusText),
-                    color = textPrimary,
-                    fontSize = BodySp
-                )
-            }
-            if (customer.pauseEnde > 0) {
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = stringResource(
-                        R.string.customer_status_paused_until,
-                        DateFormatter.formatDateWithWeekday(customer.pauseEnde)
-                    ),
-                    color = textPrimary,
-                    fontSize = BodySp
-                )
-            }
-            if (customer.tags.isNotEmpty()) {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.customer_tags_label, customer.tags.joinToString(", ")),
-                    color = textPrimary,
-                    fontSize = BodySp
-                )
-            }
-            Spacer(Modifier.height(12.dp))
-            Button(
-                onClick = if (customer.status == CustomerStatus.PAUSIERT) onResumeCustomer else onPauseCustomer,
-                colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.primary_blue))
-            ) {
-                Text(
-                    text = if (customer.status == CustomerStatus.PAUSIERT) {
-                        stringResource(R.string.customer_btn_resume)
-                    } else {
-                        stringResource(R.string.customer_btn_pause)
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun RegelNameRow(
-    regelName: String,
-    isClickable: Boolean,
-    primaryBlue: Color,
-    textSecondary: Color,
-    onClick: () -> Unit,
-    showDeleteButton: Boolean = false,
-    onDeleteClick: (() -> Unit)? = null
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = isClickable, onClick = onClick)
-            .padding(vertical = IntervalRowPaddingVertical),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = regelName,
-            fontSize = BodySp,
-            fontWeight = FontWeight.Medium,
-            color = if (isClickable) primaryBlue else textSecondary,
-            modifier = Modifier.weight(1f)
-        )
-        if (showDeleteButton && onDeleteClick != null) {
-            IconButton(
-                onClick = onDeleteClick,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = stringResource(R.string.label_delete),
-                    tint = colorResource(R.color.status_overdue),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun CustomerIntervallRow(
-    intervall: CustomerIntervall,
-    isEditMode: Boolean,
-    onAbholungClick: () -> Unit,
-    onAuslieferungClick: () -> Unit,
-    onDeleteClick: (() -> Unit)? = null
-) {
-    val textPrimary = colorResource(R.color.text_primary)
-    val textSecondary = colorResource(R.color.text_secondary)
-    val abholungText = if (intervall.abholungDatum > 0) DateFormatter.formatDateWithLeadingZeros(intervall.abholungDatum) else stringResource(R.string.label_not_set)
-    val auslieferungText = if (intervall.auslieferungDatum > 0) DateFormatter.formatDateWithLeadingZeros(intervall.auslieferungDatum) else stringResource(R.string.label_not_set)
-    val abholungIsPlaceholder = intervall.abholungDatum <= 0
-    val auslieferungIsPlaceholder = intervall.auslieferungDatum <= 0
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.SpaceBetween) {
-            Column(modifier = if (isEditMode) Modifier.clickable(onClick = onAbholungClick) else Modifier) {
-                Text(stringResource(R.string.label_abholung_date), fontSize = 12.sp, color = textSecondary)
-                Text(abholungText, fontSize = BodySp, color = if (abholungIsPlaceholder) textSecondary else textPrimary)
-            }
-            Column(modifier = if (isEditMode) Modifier.clickable(onClick = onAuslieferungClick) else Modifier) {
-                Text(stringResource(R.string.label_auslieferung_date), fontSize = 12.sp, color = textSecondary)
-                Text(auslieferungText, fontSize = BodySp, color = if (auslieferungIsPlaceholder) textSecondary else textPrimary)
-            }
-        }
-        if (isEditMode && onDeleteClick != null) {
-            Spacer(Modifier.size(8.dp))
-            IconButton(onClick = onDeleteClick) {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = stringResource(R.string.label_delete),
-                    tint = colorResource(R.color.status_overdue),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-    }
-}
