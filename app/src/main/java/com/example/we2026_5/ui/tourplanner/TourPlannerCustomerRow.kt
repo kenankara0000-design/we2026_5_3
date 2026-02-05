@@ -44,6 +44,8 @@ private val CustomerBadgeFixedWidth = 100.dp
 private val CustomerButtonTextSp = 17.sp
 private val CustomerButtonMinHeight = 44.dp
 
+private val ErledigtBadgeGreen = Color(0xFF388E3C)
+
 @Composable
 internal fun TourCustomerRow(
     customer: Customer,
@@ -54,6 +56,7 @@ internal fun TourCustomerRow(
     verschobenVonInfo: String? = null,
     statusBadgeText: String,
     viewDateMillis: Long = 0L,
+    showErledigtBadge: Boolean = false,
     onCustomerClick: () -> Unit,
     onAktionenClick: () -> Unit
 ) {
@@ -146,6 +149,7 @@ internal fun TourCustomerRow(
                 if (showBadge) {
                     Spacer(Modifier.height(8.dp))
                     val isAlBadge = statusBadgeText == "AL" && !isOverdue && !isInUrlaub && !isVerschobenAmFaelligkeitstag
+                    val showACheck = showErledigtBadge && (statusBadgeText == "A" || statusBadgeText == "AL") && !isOverdue && !isInUrlaub && !isVerschobenAmFaelligkeitstag
                     if (isAlBadge) {
                         Row(
                             modifier = Modifier.width(CustomerBadgeFixedWidth),
@@ -158,7 +162,13 @@ internal fun TourCustomerRow(
                                     .padding(horizontal = 4.dp, vertical = CustomerBadgePaddingV),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("A", fontSize = CustomerBadgeSp, color = Color.White, fontWeight = FontWeight.SemiBold)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("A", fontSize = CustomerBadgeSp, color = Color.White, fontWeight = FontWeight.SemiBold)
+                                    if (showACheck) {
+                                        Spacer(Modifier.size(2.dp))
+                                        Text("✓", fontSize = CustomerBadgeSp, color = ErledigtBadgeGreen, fontWeight = FontWeight.Bold)
+                                    }
+                                }
                             }
                             Box(
                                 modifier = Modifier
@@ -175,15 +185,22 @@ internal fun TourCustomerRow(
                             .width(CustomerBadgeFixedWidth)
                             .background(color = badgeColor, shape = RoundedCornerShape(6.dp))
                             .padding(horizontal = CustomerBadgePaddingH, vertical = CustomerBadgePaddingV)
-                        val badgeTextComposable = @Composable {
-                            Text(
-                                text = badgeText,
-                                fontSize = CustomerBadgeSp,
-                                color = Color.White,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                        Box(modifier = baseBadge, contentAlignment = Alignment.Center) {
+                            if (showACheck && statusBadgeText == "A") {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("A", fontSize = CustomerBadgeSp, color = Color.White, fontWeight = FontWeight.SemiBold)
+                                    Spacer(Modifier.size(2.dp))
+                                    Text("✓", fontSize = CustomerBadgeSp, color = ErledigtBadgeGreen, fontWeight = FontWeight.Bold)
+                                }
+                            } else {
+                                Text(
+                                    text = badgeText,
+                                    fontSize = CustomerBadgeSp,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
                         }
-                        Box(modifier = baseBadge, contentAlignment = Alignment.Center) { badgeTextComposable() }
                     }
                 }
             }

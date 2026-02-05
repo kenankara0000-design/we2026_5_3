@@ -67,7 +67,7 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                 tourPlanRepository.getTourSlotsFlow().first()
                             }
                         } ?: emptyList()
-                        val tageVoraus = if (c.kundenTyp == KundenTyp.AUF_ABRUF) 14 else 56
+                        val tageVoraus = if (c.kundenTyp == KundenTyp.AUF_ABRUF || c.kundenTyp == KundenTyp.REGELMAESSIG) 14 else 56
                         vorschlaege = TerminRegelManager.schlageSlotsVor(
                             kunde = c,
                             regel = null,
@@ -118,15 +118,15 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                         Text("Kunde nicht gefunden")
                     } else if (vorschlaege.isEmpty()) {
                         Text(
-                            if (customer?.kundenTyp == KundenTyp.AUF_ABRUF)
-                                stringResource(R.string.termin_anlegen_auf_abruf_keine_slots)
-                            else
-                                stringResource(R.string.termin_anlegen_keine_slots_hinweis)
+                            when (customer?.kundenTyp) {
+                                KundenTyp.AUF_ABRUF -> stringResource(R.string.termin_anlegen_auf_abruf_keine_slots)
+                                else -> stringResource(R.string.termin_anlegen_keine_slots_hinweis)
+                            }
                         )
                     } else {
-                        val isAufAbruf = customer?.kundenTyp == KundenTyp.AUF_ABRUF
+                        val zweiWochen = customer?.kundenTyp == KundenTyp.AUF_ABRUF || customer?.kundenTyp == KundenTyp.REGELMAESSIG
                         Text(
-                            if (isAufAbruf)
+                            if (zweiWochen)
                                 stringResource(R.string.termin_anlegen_auswaehlen_zwei_wochen)
                             else
                                 stringResource(R.string.termin_anlegen_auswaehlen_acht_wochen),
@@ -191,8 +191,9 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                         return@launch
                                     }
                                     val isAufAbruf = c.kundenTyp == KundenTyp.AUF_ABRUF
-                                    val newIntervalle = if (isAufAbruf) {
-                                        toAdd.map { slot ->
+                                    val isRegelmaessig = c.kundenTyp == KundenTyp.REGELMAESSIG
+                                    val newIntervalle = when {
+                                        isAufAbruf -> toAdd.map { slot ->
                                             CustomerIntervall(
                                                 id = UUID.randomUUID().toString(),
                                                 abholungDatum = slot.datum,
@@ -202,18 +203,37 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                                 intervallAnzahl = 0
                                             )
                                         }
-                                    } else {
-                                        val zahl = (c.intervalle.firstOrNull()?.intervallTage?.takeIf { it in 1..365 }
-                                            ?: @Suppress("DEPRECATION") c.intervallTage).coerceIn(1, 365).takeIf { it > 0 } ?: 7
-                                        toAdd.map { slot ->
-                                            CustomerIntervall(
-                                                id = UUID.randomUUID().toString(),
-                                                abholungDatum = slot.datum,
-                                                auslieferungDatum = slot.datum + TimeUnit.DAYS.toMillis(zahl.toLong()),
-                                                wiederholen = false,
-                                                intervallTage = zahl,
-                                                intervallAnzahl = 0
-                                            )
+                                        isRegelmaessig -> {
+                                            val first = c.intervalle.firstOrNull()
+                                            val tageAzuL = if (first != null && first.auslieferungDatum > first.abholungDatum)
+                                                (TimeUnit.MILLISECONDS.toDays(first.auslieferungDatum - first.abholungDatum)).toInt().coerceIn(1, 365)
+                                            else 7
+                                            val zyklus = (first?.intervallTage?.takeIf { it in 1..365 }
+                                                ?: @Suppress("DEPRECATION") c.intervallTage).coerceIn(1, 365).takeIf { it > 0 } ?: 28
+                                            toAdd.map { slot ->
+                                                CustomerIntervall(
+                                                    id = UUID.randomUUID().toString(),
+                                                    abholungDatum = slot.datum,
+                                                    auslieferungDatum = slot.datum + TimeUnit.DAYS.toMillis(tageAzuL.toLong()),
+                                                    wiederholen = true,
+                                                    intervallTage = zyklus,
+                                                    intervallAnzahl = 0
+                                                )
+                                            }
+                                        }
+                                        else -> {
+                                            val zahl = (c.intervalle.firstOrNull()?.intervallTage?.takeIf { it in 1..365 }
+                                                ?: @Suppress("DEPRECATION") c.intervallTage).coerceIn(1, 365).takeIf { it > 0 } ?: 7
+                                            toAdd.map { slot ->
+                                                CustomerIntervall(
+                                                    id = UUID.randomUUID().toString(),
+                                                    abholungDatum = slot.datum,
+                                                    auslieferungDatum = slot.datum + TimeUnit.DAYS.toMillis(zahl.toLong()),
+                                                    wiederholen = false,
+                                                    intervallTage = zahl,
+                                                    intervallAnzahl = 0
+                                                )
+                                            }
                                         }
                                     }
                                     val existing = c.intervalle ?: emptyList()

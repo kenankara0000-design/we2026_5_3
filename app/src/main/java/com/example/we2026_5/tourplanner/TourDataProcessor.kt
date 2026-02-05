@@ -227,17 +227,12 @@ class TourDataProcessor {
         // 3. Normale Kunden (ohne solche, die bereits in einer Liste für diesen Tag stehen – z. B. Wochentagsliste)
         val normalOhneListen = normalGewerblich.filter { it.id !in kundenInListenIds }.sortedBy { it.name }
         normalOhneListen.forEach { items.add(ListItem.CustomerItem(it)) }
-        // 4. Erledigt-Bereich – G/P einzeln + Tour-Listen mit ihren erledigten Kunden
+        // 4. Erledigt-Bereich – eine Card mit Header + Einzelkunden + Tour-Listen
         val doneOhneListen = doneGewerblich.sortedBy { it.name }
         val erledigtGesamtCount = doneOhneListen.size + tourListenErledigt.sumOf { it.second.size }
         if (erledigtGesamtCount > 0) {
-            items.add(ListItem.SectionHeader("ERLEDIGT", erledigtGesamtCount, erledigtGesamtCount, SectionType.DONE, doneOhneListen))
-            if (SectionType.DONE in expandedSections) {
-                doneOhneListen.forEach { items.add(ListItem.CustomerItem(it, isErledigtAmTag = true)) }
-                tourListenErledigt.forEach { (liste, kunden) ->
-                    items.add(ListItem.TourListeErledigt(liste.name, kunden))
-                }
-            }
+            val tourListenPairs = tourListenErledigt.map { (liste, kunden) -> liste.name to kunden }
+            items.add(ListItem.ErledigtSection("ERLEDIGT", erledigtGesamtCount, erledigtGesamtCount, doneOhneListen, tourListenPairs))
         }
         return items
     }
@@ -258,6 +253,7 @@ class TourDataProcessor {
                 is ListItem.SectionHeader -> if (item.sectionType == SectionType.OVERDUE) item.kunden.size else 0
                 is ListItem.ListeHeader -> item.nichtErledigteKunden.size
                 is ListItem.TourListeErledigt -> 0
+                is ListItem.ErledigtSection -> 0
             }
         }
     }

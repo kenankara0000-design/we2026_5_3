@@ -430,6 +430,86 @@ fun TourPlannerScreen(
                     ) {
                         itemsIndexed(tourItems, key = { index, _ -> index }) { _, item ->
                             when (item) {
+                                is ListItem.ErledigtSection -> {
+                                    val expanded = isSectionExpanded(SectionType.DONE)
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = CardDefaults.cardColors(containerColor = colorResource(R.color.section_done_bg)),
+                                        shape = RoundedCornerShape(12.dp),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                    ) {
+                                        Column(modifier = Modifier.fillMaxWidth()) {
+                                            SectionHeaderRow(
+                                                title = item.title,
+                                                countText = "${item.erledigtCount}/${item.count}",
+                                                isExpanded = expanded,
+                                                sectionType = SectionType.DONE,
+                                                sectionOverdueBg = sectionOverdueBg,
+                                                sectionOverdueText = sectionOverdueText,
+                                                sectionDoneBg = colorResource(R.color.section_done_bg),
+                                                sectionDoneText = sectionDoneText,
+                                                onToggle = { onToggleSection(SectionType.DONE) }
+                                            )
+                                            if (expanded) {
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                                ) {
+                                                    item.doneOhneListen.forEach { customer ->
+                                                        val isInUrlaub = viewDateMillis != null &&
+                                                            TerminFilterUtils.istTerminInUrlaubEintraege(viewDateMillis!!, customer)
+                                                        val viewDate = viewDateMillis ?: 0L
+                                                        val urlaubInfo = if (isInUrlaub) {
+                                                            val viewStart = TerminBerechnungUtils.getStartOfDay(viewDate)
+                                                            val urlaubEntry = TerminFilterUtils.getEffectiveUrlaubEintraege(customer)
+                                                                .firstOrNull { e ->
+                                                                    val vonStart = TerminBerechnungUtils.getStartOfDay(e.von)
+                                                                    val bisStart = TerminBerechnungUtils.getStartOfDay(e.bis)
+                                                                    viewStart in vonStart..bisStart
+                                                                }
+                                                            urlaubEntry?.let { "${DateFormatter.formatDate(it.von)} – ${DateFormatter.formatDate(it.bis)}" }
+                                                                ?: if (customer.urlaubVon > 0 && customer.urlaubBis > 0)
+                                                                    "${DateFormatter.formatDate(customer.urlaubVon)} – ${DateFormatter.formatDate(customer.urlaubBis)}"
+                                                                else ""
+                                                        } else null
+                                                        val payload = CustomerOverviewPayload(
+                                                            customer = customer,
+                                                            urlaubInfo = urlaubInfo?.takeIf { it.isNotEmpty() },
+                                                            verschobenInfo = null,
+                                                            verschobenVonInfo = null,
+                                                            ueberfaelligInfo = null
+                                                        )
+                                                        TourCustomerRow(
+                                                            customer = customer,
+                                                            isOverdue = false,
+                                                            isInUrlaub = isInUrlaub,
+                                                            isVerschobenAmFaelligkeitstag = false,
+                                                            verschobenInfo = null,
+                                                            verschobenVonInfo = null,
+                                                            statusBadgeText = getStatusBadgeText(customer),
+                                                            viewDateMillis = viewDate,
+                                                            showErledigtBadge = true,
+                                                            onCustomerClick = { onCustomerClick(payload) },
+                                                            onAktionenClick = { onAktionenClick(customer) }
+                                                        )
+                                                    }
+                                                    item.tourListenErledigt.forEach { (listeName, kunden) ->
+                                                        TourListeErledigtRow(
+                                                            listeName = listeName,
+                                                            erledigteKunden = kunden,
+                                                            viewDateMillis = viewDateMillis,
+                                                            getStatusBadgeText = getStatusBadgeText,
+                                                            onCustomerClick = onCustomerClick,
+                                                            onAktionenClick = onAktionenClick
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                                 is ListItem.SectionHeader -> SectionHeaderRow(
                                     title = item.title,
                                     countText = when (item.sectionType) {

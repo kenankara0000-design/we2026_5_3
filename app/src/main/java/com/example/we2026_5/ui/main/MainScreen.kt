@@ -45,7 +45,6 @@ fun MainScreen(
     onTouren: () -> Unit,
     onKundenListen: () -> Unit,
     onStatistiken: () -> Unit,
-    onTerminRegeln: () -> Unit,
     onSlotSelected: (TerminSlotVorschlag) -> Unit
 ) {
     val primaryBlueDark = colorResource(R.color.primary_blue_dark)
@@ -226,22 +225,6 @@ fun MainScreen(
                 fontWeight = FontWeight.Bold
             )
         }
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Button(
-            onClick = onTerminRegeln,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(64.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = statusWarning)
-        ) {
-            Text(
-                stringResource(R.string.main_btn_termin_regeln),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(

@@ -17,7 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import com.example.we2026_5.CustomerStatus
 import com.example.we2026_5.KundenTyp
-import com.example.we2026_5.util.TerminAusKundeUtils
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.DialogBaseHelper
 import com.example.we2026_5.util.buildTerminRegelInfoText
@@ -237,12 +236,7 @@ class CustomerDetailActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.dialog_regel_info_title))
             .setMessage(infoText)
-            .setPositiveButton(getString(R.string.label_edit)) { _, _ ->
-                startActivity(Intent(this, TerminRegelErstellenActivity::class.java).apply {
-                    putExtra("REGEL_ID", regel.id)
-                })
-            }
-            .setNegativeButton(getString(R.string.dialog_close), null)
+            .setNeutralButton(getString(R.string.dialog_close), null)
             .show()
     }
 
@@ -291,22 +285,7 @@ class CustomerDetailActivity : AppCompatActivity() {
                 startTerminAnlegenDialogUnregelmaessig(customer)
             }
             KundenTyp.REGELMAESSIG -> {
-                if (customer.intervalle.isEmpty()) {
-                    val intervall = TerminAusKundeUtils.erstelleIntervallAusKunde(customer)
-                    if (intervall != null) {
-                        viewModel.saveCustomer(emptyMap(), listOf(intervall)) { success ->
-                            if (success) {
-                                Toast.makeText(this, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    } else {
-                        Toast.makeText(this, getString(R.string.validation_regelmaessig_al_required), Toast.LENGTH_LONG).show()
-                    }
-                } else {
-                    startActivity(Intent(this, TerminRegelManagerActivity::class.java).apply {
-                        putExtra("CUSTOMER_ID", id)
-                    })
-                }
+                startTerminAnlegenDialogUnregelmaessig(customer)
             }
         }
     }

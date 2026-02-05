@@ -57,7 +57,6 @@ class MainActivity : AppCompatActivity() {
                 onTouren = { startActivity(Intent(this@MainActivity, TourPlannerActivity::class.java)) },
                 onKundenListen = { startActivity(Intent(this@MainActivity, KundenListenActivity::class.java)) },
                 onStatistiken = { startActivity(Intent(this@MainActivity, StatisticsActivity::class.java)) },
-                onTerminRegeln = { startActivity(Intent(this@MainActivity, TerminRegelManagerActivity::class.java)) },
                 onSlotSelected = { slot -> handleSlotSelection(slot) }
             )
         }

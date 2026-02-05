@@ -43,7 +43,7 @@ internal fun TourListeErledigtRow(
                 modifier = Modifier.padding(8.dp),
                 color = sectionDoneText,
                 fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
+                fontSize = 17.sp
             )
         }
         Spacer(Modifier.height(4.dp))
@@ -80,6 +80,7 @@ internal fun TourListeErledigtRow(
                 verschobenVonInfo = null,
                 statusBadgeText = getStatusBadgeText(customer),
                 viewDateMillis = viewDate,
+                showErledigtBadge = true,
                 onCustomerClick = { onCustomerClick(payload) },
                 onAktionenClick = { onAktionenClick(customer) }
             )

@@ -34,6 +34,14 @@ sealed class ListItem {
         val listeName: String,
         val erledigteKunden: List<Customer>
     ) : ListItem()
+    /** Gesamter Erledigt-Bereich in einer Card (Header + Einzelkunden + Tour-Listen) */
+    data class ErledigtSection(
+        val title: String,
+        val count: Int,
+        val erledigtCount: Int,
+        val doneOhneListen: List<Customer>,
+        val tourListenErledigt: List<Pair<String, List<Customer>>>
+    ) : ListItem()
 }
 
 enum class SectionType {

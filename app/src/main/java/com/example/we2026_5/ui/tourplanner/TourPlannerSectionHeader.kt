@@ -36,6 +36,8 @@ internal fun SectionHeaderRow(
         SectionType.DONE -> sectionDoneBg to sectionDoneText
         SectionType.LISTE -> sectionDoneBg to sectionDoneText
     }
+    val titleFontSize = if (sectionType == SectionType.DONE) 18.sp else 14.sp
+    val rowPadding = if (sectionType == SectionType.DONE) 14.dp else 12.dp
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -46,13 +48,14 @@ internal fun SectionHeaderRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(rowPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = title,
                 color = textColor,
                 fontWeight = FontWeight.Bold,
+                fontSize = titleFontSize,
                 modifier = Modifier.weight(1f)
             )
             Text(text = countText, color = textColor, fontSize = 14.sp)
