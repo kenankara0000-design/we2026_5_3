@@ -56,39 +56,34 @@ fun getWochentagShortResIds(): List<Int> = WOCHENTAG_SHORT_RES
 fun getWochentagFullResIds(): List<Int> = WOCHENTAG_FULL_RES
 
 /**
- * Formatiert A/L-Wochentag als String (z. B. "Mo A / Do L").
+ * Formatiert A/L-Wochentage als String (z. B. "Mo A / Do L" oder "Mo, Mi A / Di, Do L").
  */
 fun formatALWochentag(customer: Customer, getString: (Int) -> String): String {
-    val a = customer.defaultAbholungWochentag
-    val l = customer.defaultAuslieferungWochentag
-    val aStr = if (a in 0..6) getString(WOCHENTAG_SHORT_RES[a]) else null
-    val lStr = if (l in 0..6) getString(WOCHENTAG_SHORT_RES[l]) else null
-    return when {
-        aStr != null && lStr != null -> "$aStr A / $lStr L"
-        aStr != null -> "$aStr A"
-        lStr != null -> "$lStr L"
-        else -> ""
-    }
+    val aDays = customer.effectiveAbholungWochentage
+    val lDays = customer.effectiveAuslieferungWochentage
+    val aStr = aDays.map { getString(WOCHENTAG_SHORT_RES[it]) }.joinToString(", ").takeIf { it.isNotEmpty() }?.let { "$it A" }
+    val lStr = lDays.map { getString(WOCHENTAG_SHORT_RES[it]) }.joinToString(", ").takeIf { it.isNotEmpty() }?.let { "$it L" }
+    return listOfNotNull(aStr, lStr).joinToString(" / ")
 }
 
 @Composable
 fun AlWochentagText(customer: Customer, color: Color) {
-    val a = customer.defaultAbholungWochentag
-    val l = customer.defaultAuslieferungWochentag
+    val aDays = customer.effectiveAbholungWochentage
+    val lDays = customer.effectiveAuslieferungWochentage
     val wochen = WOCHENTAG_SHORT_RES.map { stringResource(it) }
-    val aStr = if (a in 0..6) wochen[a] else null
-    val lStr = if (l in 0..6) wochen[l] else null
-    val txt = when {
-        aStr != null && lStr != null -> "$aStr A / $lStr L"
-        aStr != null -> "$aStr A"
-        lStr != null -> "$lStr L"
-        else -> return
-    }
+    val aStr = aDays.map { wochen[it] }.joinToString(", ").takeIf { it.isNotEmpty() }?.let { "$it A" }
+    val lStr = lDays.map { wochen[it] }.joinToString(", ").takeIf { it.isNotEmpty() }?.let { "$it L" }
+    val txt = listOfNotNull(aStr, lStr).joinToString(" / ")
+    if (txt.isEmpty()) return
     Text(txt, fontSize = 12.sp, color = color, modifier = Modifier.padding(top = 2.dp))
 }
 
+/** Hellgrau für Mo–Fr, hellrot für Sa/So (Standard Abhol-/Auslieferungstage). */
+private val CHIP_BG_WEEKDAY = Color(0xFFE0E0E0)
+
 /**
  * Einzeilige Chip-Row für einen Wochentag (Single-Select).
+ * Mo–Fr: hellgrauer Hintergrund, schwarzer Text. Sa/So: hellroter Hintergrund, roter Text.
  * selected: 0..6 oder -1 für keiner.
  */
 @Composable
@@ -99,24 +94,28 @@ fun WochentagChipRow(
     primaryBlue: Color,
     textPrimary: Color
 ) {
-    val chipBg = Color(0xFFE0E0E0)
+    val weekendBg = colorResource(R.color.section_overdue_bg)
+    val weekendText = colorResource(R.color.section_overdue_text)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
         weekdays.forEachIndexed { index, title ->
+            val isWeekend = index == 5 || index == 6
             val isSelected = selected == index
+            val (bgColor, textColor) = when {
+                isSelected -> primaryBlue to Color.White
+                isWeekend -> weekendBg to weekendText
+                else -> CHIP_BG_WEEKDAY to textPrimary
+            }
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .defaultMinSize(minWidth = 0.dp)
                     .heightIn(min = 36.dp)
-                    .background(
-                        if (isSelected) primaryBlue else chipBg,
-                        RoundedCornerShape(6.dp)
-                    )
+                    .background(bgColor, RoundedCornerShape(6.dp))
                     .clickable { onSelect(index) }
                     .padding(vertical = 6.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = title, color = if (isSelected) Color.White else textPrimary, fontSize = 13.sp, maxLines = 1)
+                Text(text = title, color = textColor, fontSize = 13.sp, maxLines = 1)
             }
         }
     }
@@ -134,6 +133,44 @@ fun WochentagChipRowFromResources(
 ) {
     val weekdays = WOCHENTAG_SHORT_RES.map { stringResource(it) }
     WochentagChipRow(selected = selected, weekdays = weekdays, onSelect = onSelect, primaryBlue = primaryBlue, textPrimary = textPrimary)
+}
+
+/**
+ * Multi-Select Wochentags-Chips in einer Zeile (gleiche Optik wie WochentagChipRow: Mo–Fr grau, Sa/So hellrot).
+ * Für Standard-Abhol-/Auslieferungstage mit Mehrfachauswahl.
+ */
+@Composable
+fun WochentagChipRowMultiSelectFromResources(
+    selectedDays: List<Int>,
+    onDayToggle: (Int) -> Unit,
+    primaryBlue: Color,
+    textPrimary: Color
+) {
+    val weekendBg = colorResource(R.color.section_overdue_bg)
+    val weekendText = colorResource(R.color.section_overdue_text)
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+        WOCHENTAG_SHORT_RES.forEachIndexed { index, resId ->
+            val isWeekend = index == 5 || index == 6
+            val isSelected = index in selectedDays
+            val (bgColor, textColor) = when {
+                isSelected -> primaryBlue to Color.White
+                isWeekend -> weekendBg to weekendText
+                else -> CHIP_BG_WEEKDAY to textPrimary
+            }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .defaultMinSize(minWidth = 0.dp)
+                    .heightIn(min = 36.dp)
+                    .background(bgColor, RoundedCornerShape(6.dp))
+                    .clickable { onDayToggle(index) }
+                    .padding(vertical = 6.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = stringResource(resId), color = textColor, fontSize = 13.sp, maxLines = 1)
+            }
+        }
+    }
 }
 
 /**

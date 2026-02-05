@@ -17,8 +17,8 @@ data class AddCustomerState(
     val tageAzuL: Int = 7,
     val intervallTage: Int = 7,
     val kundennummer: String = "",
-    val abholungWochentag: Int = -1,
-    val auslieferungWochentag: Int = -1,
+    val abholungWochentage: List<Int> = emptyList(),
+    val auslieferungWochentage: List<Int> = emptyList(),
     val defaultUhrzeit: String = "",
     val tagsInput: String = "",
     val tourWochentag: Int = -1,
@@ -85,12 +85,18 @@ class AddCustomerViewModel : ViewModel() {
         _state.value = (_state.value ?: AddCustomerState()).copy(kundennummer = nummer)
     }
 
-    fun setAbholungWochentag(tag: Int) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(abholungWochentag = tag)
+    fun toggleAbholungWochentag(tag: Int) {
+        val list = (_state.value?.abholungWochentage ?: emptyList()).toMutableList()
+        if (tag in list) list.remove(tag) else list.add(tag)
+        list.sort()
+        _state.value = (_state.value ?: AddCustomerState()).copy(abholungWochentage = list)
     }
 
-    fun setAuslieferungWochentag(tag: Int) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(auslieferungWochentag = tag)
+    fun toggleAuslieferungWochentag(tag: Int) {
+        val list = (_state.value?.auslieferungWochentage ?: emptyList()).toMutableList()
+        if (tag in list) list.remove(tag) else list.add(tag)
+        list.sort()
+        _state.value = (_state.value ?: AddCustomerState()).copy(auslieferungWochentage = list)
     }
 
     fun setDefaultUhrzeit(uhrzeit: String) {
@@ -127,5 +133,15 @@ class AddCustomerViewModel : ViewModel() {
 
     fun setSuccess() {
         _state.value = (_state.value ?: AddCustomerState()).copy(success = true, isSaving = false)
+    }
+
+    /** Setzt nur die Formularfelder (für gemeinsame CustomerStammdatenForm). */
+    fun setStateFromForm(newState: AddCustomerState) {
+        val current = _state.value ?: AddCustomerState()
+        _state.value = newState.copy(
+            isSaving = current.isSaving,
+            errorMessage = current.errorMessage,
+            success = current.success
+        )
     }
 }

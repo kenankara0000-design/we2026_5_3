@@ -1,0 +1,15 @@
+---
+description: Vor Änderungen prüfen – nichts kaputt machen, bei Unsicherheit nachfragen
+globs: 
+alwaysApply: true
+---
+
+# Regel: Nichts kaputt machen
+
+**Bevor du etwas änderst oder „fixest“:**
+
+1. **Sicher sein:** Verstehe, was der bestehende Code macht und welche Abhängigkeiten es gibt (z. B. Überfällig-Logik braucht vergangene Termine). Eine Änderung an einer Stelle kann andere Funktionen zerstören.
+2. **Nicht kaputt machen:** Wenn du nicht sicher bist, dass deine Änderung keine bestehende, funktionierende Logik bricht – **mach die Änderung nicht** oder **frage den Nutzer**, ob du unsicher bist.
+3. **Bei Unsicherheit:** Lieber nachfragen („Soll ich X so ändern? Dann könnte Y betroffen sein.“) statt etwas umzubauen und dabei etwas anderes zu zerstören.
+
+Diese Regel gilt immer.

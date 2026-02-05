@@ -170,8 +170,9 @@ class TourDataProcessor {
                 alleUeberfaelligeKunden.add(customer)
             }
         }
-        
-        val overdueOhneListen = alleUeberfaelligeKunden.sortedWith(compareBy<Customer> { customer ->
+        // Ein Kunde nur einmal in Überfällig (auch wenn in mehreren Listen)
+        val alleUeberfaelligeEindeutig = alleUeberfaelligeKunden.distinctBy { it.id }
+        val overdueOhneListen = alleUeberfaelligeEindeutig.sortedWith(compareBy<Customer> { customer ->
             val liste = if (customer.listeId.isNotEmpty()) allListen.find { it.id == customer.listeId } else null
             val alleTermine = berechneAlleTermineFuerKunde(customer, liste, viewDateStart)
             val ueberfaelligeDaten = alleTermine.filter { termin ->
@@ -187,16 +188,24 @@ class TourDataProcessor {
         
         // 1. Überfällige Kunden ganz oben – einzeln mit Überfällig-Design (kein Container)
         overdueOhneListen.forEach { items.add(ListItem.CustomerItem(it, isOverdue = true)) }
-        
+        // Ein Kunde pro Tag nur einmal: bereits in Überfällig angezeigte nicht nochmal in Listen/Normal
+        val bereitsAngezeigtCustomerIds = overdueOhneListen.map { it.id }.toSet().toMutableSet()
+
+        val istVergangenheit = viewDateStart < heuteStart
+
         // 2. Kunden nach Listen gruppiert – Wochentagslisten: nur nicht-erledigte; Tour-Listen: nur nicht-erledigte
-        // Erledigte Tour-Kunden gehen in Erledigt-Bereich unter ihrer Tour-Liste
+        // Vergangenheit: keine „normalen“ Listen-Karten (nur Überfällig/Erledigt)
+        // Pro Wochentag jeden Kunden nur einmal anzeigen (vermeidet doppelte Karten bei mehreren Listen mit gleichem Wochentag)
         val tourListenErledigt = mutableListOf<Pair<KundenListe, List<Customer>>>()
+        val bereitsAngezeigtWochentag = mutableSetOf<Pair<Int, String>>()
+        if (!istVergangenheit) {
         allListen.sortedBy { it.name }.forEach { liste ->
             val kundenInListe = listenMitKunden[liste.id] ?: return@forEach
             if (kundenInListe.isNotEmpty()) {
                 val nichtErledigteKunden = mutableListOf<Customer>()
                 val erledigteKundenInListe = mutableListOf<Customer>()
-                
+                val isWochentagsliste = liste.wochentag in 0..6
+
                 kundenInListe.forEach { customer ->
                     val istUeberfaellig = filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)
                     if (istUeberfaellig) return@forEach
@@ -222,19 +231,36 @@ class TourDataProcessor {
                         nichtErledigteKunden.add(customer)
                     }
                 }
-                
-                // Nur nicht-erledigte in der Liste anzeigen
-                nichtErledigteKunden.sortedBy { it.name }.forEach { items.add(ListItem.CustomerItem(it)) }
+
+                // Nur nicht-erledigte in der Liste anzeigen; jeder Kunde pro Tag nur einmal (nicht schon in Überfällig); Wochentagslisten: pro Wochentag nur einmal
+                nichtErledigteKunden.sortedBy { it.name }.forEach { customer ->
+                    if (customer.id in bereitsAngezeigtCustomerIds) return@forEach
+                    if (isWochentagsliste) {
+                        val key = liste.wochentag to customer.id
+                        if (key in bereitsAngezeigtWochentag) return@forEach
+                        bereitsAngezeigtWochentag.add(key)
+                    }
+                    bereitsAngezeigtCustomerIds.add(customer.id)
+                    items.add(ListItem.CustomerItem(customer))
+                }
                 // Tour-Listen (wochentag=-1): erledigte unter Erledigt-Bereich sammeln
                 if (erledigteKundenInListe.isNotEmpty() && (liste.wochentag !in 0..6)) {
                     tourListenErledigt.add(liste to erledigteKundenInListe.sortedBy { it.name })
                 }
             }
         }
-        
+        }
+
         // 3. Normale Kunden (ohne solche, die bereits in einer Liste für diesen Tag stehen – z. B. Wochentagsliste)
+        // Vergangenheit: keine normalen Karten; jeder Kunde pro Tag nur einmal
         val normalOhneListen = normalGewerblich.filter { it.id !in kundenInListenIds }.sortedBy { it.name }
-        normalOhneListen.forEach { items.add(ListItem.CustomerItem(it)) }
+        if (!istVergangenheit) {
+            normalOhneListen.forEach { customer ->
+                if (customer.id in bereitsAngezeigtCustomerIds) return@forEach
+                bereitsAngezeigtCustomerIds.add(customer.id)
+                items.add(ListItem.CustomerItem(customer))
+            }
+        }
         // Erledigt-Daten für Button „Erledigte (N)“ und Bottom-Sheet (nicht mehr in der Liste)
         val doneOhneListen = doneGewerblich.sortedBy { it.name }
         val tourListenPairs = tourListenErledigt.map { (liste, kunden) -> liste.name to kunden.sortedBy { it.name } }

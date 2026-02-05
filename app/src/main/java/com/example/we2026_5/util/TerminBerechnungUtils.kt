@@ -6,6 +6,7 @@ import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.VerschobenerTermin
 import com.example.we2026_5.TerminTyp
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 /**
@@ -13,7 +14,7 @@ import java.util.concurrent.TimeUnit
  * Unterstützt sowohl alte (einzelne Felder) als auch neue (intervalle-Liste) Struktur
  */
 object TerminBerechnungUtils {
-    
+
     /**
      * Normalisiert ein Datum auf Tagesanfang (00:00:00)
      */
@@ -158,8 +159,80 @@ object TerminBerechnungUtils {
     }
     
     /**
+     * Liefert Wochentag 0=Mo..6=So für ein Datum (Tagesanfang).
+     */
+    private fun getWochentagForDay(dayStart: Long): Int {
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = dayStart
+        return (cal.get(Calendar.DAY_OF_WEEK) + 5) % 7
+    }
+
+    /**
+     * Termine aus A-Wochentagen + Intervall: Nur A wird an A-Tagen erzeugt, L nur als A + tageAzuL (keine eigenen L-Tage).
+     * Intervall betrifft nur A (A alle 7 Tage an konfigurierten Wochentagen); L = A + tageAzuL.
+     * Start = startDatum; wenn customer.erstelltAm > 0, mindestens ab erstelltAm (alte Logik: neue Kunden keine Termine vor Anlage, Überfällig für bestehende bleibt).
+     */
+    private fun berechneTermineAusWochentagen(
+        customer: Customer,
+        startDatum: Long,
+        tageVoraus: Int
+    ): List<TerminInfo> {
+        val aTage = customer.effectiveAbholungWochentage
+        if (aTage.isEmpty()) return emptyList()
+        val tageAzuL = (customer.intervalle.firstOrNull()?.let {
+            if (it.abholungDatum > 0 && it.auslieferungDatum > 0)
+                TimeUnit.MILLISECONDS.toDays(it.auslieferungDatum - it.abholungDatum).toInt().coerceIn(0, 365)
+            else null
+        } ?: 7)
+        val startRequested = getStartOfDay(startDatum)
+        val start = if (customer.erstelltAm > 0) {
+            val erstelltStart = getStartOfDay(customer.erstelltAm)
+            maxOf(startRequested, erstelltStart)
+        } else {
+            startRequested
+        }
+        val end = start + TimeUnit.DAYS.toMillis(tageVoraus.toLong())
+        val result = mutableListOf<TerminInfo>()
+        var current = start
+        while (current <= end) {
+            val w = getWochentagForDay(current)
+            if (w in aTage) {
+                val verschoben = TerminFilterUtils.istTerminVerschoben(current, customer.verschobeneTermine.filter { it.typ == TerminTyp.ABHOLUNG }, "wochentag")
+                val finalDatum = verschoben?.verschobenAufDatum ?: current
+                if (!TerminFilterUtils.istTerminGeloescht(finalDatum, customer.geloeschteTermine)) {
+                    result.add(TerminInfo(
+                        datum = finalDatum,
+                        typ = TerminTyp.ABHOLUNG,
+                        intervallId = "wochentag",
+                        verschoben = verschoben != null,
+                        originalDatum = verschoben?.originalDatum
+                    ))
+                }
+            }
+            current += TimeUnit.DAYS.toMillis(1)
+        }
+        // L nur aus A + tageAzuL (keine eigenen L-Wochentage)
+        val aTermine = result.toList()
+        for (aTermin in aTermine) {
+            val lDatum = aTermin.datum + TimeUnit.DAYS.toMillis(tageAzuL.toLong())
+            val verschobenL = TerminFilterUtils.istTerminVerschoben(lDatum, customer.verschobeneTermine.filter { it.typ == TerminTyp.AUSLIEFERUNG }, "wochentag")
+            val finalL = verschobenL?.verschobenAufDatum ?: lDatum
+            if (!TerminFilterUtils.istTerminGeloescht(finalL, customer.geloeschteTermine)) {
+                result.add(TerminInfo(
+                    datum = finalL,
+                    typ = TerminTyp.AUSLIEFERUNG,
+                    intervallId = "wochentag",
+                    verschoben = verschobenL != null,
+                    originalDatum = verschobenL?.originalDatum
+                ))
+            }
+        }
+        return result
+    }
+
+    /**
      * Berechnet alle Termine für einen Kunden (365 Tage)
-     * Unterstützt sowohl alte als auch neue Struktur
+     * Unterstützt sowohl alte als auch neue Struktur. Bei gesetzten A-/L-Wochentagen werden zusätzlich Termine für alle diese Wochentage erzeugt (z. B. Di+So → A und L an Di und So).
      */
     fun berechneAlleTermineFuerKunde(
         customer: Customer,
@@ -231,7 +304,16 @@ object TerminBerechnungUtils {
                     alleTermine.addAll(termine)
                 }
         }
-        
+
+        // Ergänzung: A aus A-Wochentagen + Intervall; L nur als A + tageAzuL (keine eigenen L-Tage).
+        // Unabhängig von Liste: Listen haben keinen Einfluss auf Termin-Erstellung; Kunden-Wochentage immer anwenden.
+        if (customer.effectiveAbholungWochentage.isNotEmpty()) {
+            val existingKeys = alleTermine.map { getStartOfDay(it.datum) to it.typ }.toSet()
+            val fromWeekdays = berechneTermineAusWochentagen(customer, startDatum, tageVoraus)
+            val toAdd = fromWeekdays.filter { (getStartOfDay(it.datum) to it.typ) !in existingKeys }
+            alleTermine.addAll(toAdd)
+        }
+
         return alleTermine.sortedBy { it.datum }
     }
     

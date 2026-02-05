@@ -16,7 +16,9 @@ import com.example.we2026_5.ui.addcustomer.AddCustomerScreen
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
 import com.example.we2026_5.ui.addcustomer.AddCustomerViewModel
 import com.example.we2026_5.KundenTyp
+import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.TourSlot
+import com.example.we2026_5.Zeitfenster
 import com.example.we2026_5.util.TerminAusKundeUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -65,18 +67,7 @@ class AddCustomerActivity : AppCompatActivity() {
                 AddCustomerScreen(
                     state = state,
                     onBack = { finish() },
-                    onNameChange = { viewModel.setName(it) },
-                    onAdresseChange = { viewModel.setAdresse(it) },
-                    onStadtChange = { viewModel.setStadt(it) },
-                    onPlzChange = { viewModel.setPlz(it) },
-                    onTelefonChange = { viewModel.setTelefon(it) },
-                    onNotizenChange = { viewModel.setNotizen(it) },
-                    onKundenArtChange = { viewModel.setKundenArt(it) },
-                    onKundenTypChange = { viewModel.setKundenTyp(it) },
-                    onTageAzuLChange = { viewModel.setTageAzuL(it) },
-                    onIntervallTageChange = { viewModel.setIntervallTage(it) },
-                    onAbholungTagChange = { viewModel.setAbholungWochentag(it) },
-                    onAuslieferungTagChange = { viewModel.setAuslieferungWochentag(it) },
+                    onUpdate = { viewModel.setStateFromForm(it) },
                     onSave = { performSave(state) }
                 )
             }
@@ -121,14 +112,17 @@ class AddCustomerActivity : AppCompatActivity() {
         viewModel.setError(null)
         val name = state.name.trim()
         val customerId = UUID.randomUUID().toString()
-        val tourSlot = if (state.abholungWochentag >= 0) {
+        val hasTour = state.abholungWochentage.isNotEmpty() || state.tourStadt.isNotBlank() || state.tourZeitStart.isNotBlank() || state.tourZeitEnde.isNotBlank()
+        val tourSlot = if (hasTour) {
             TourSlot(
                 id = "customer-$customerId",
-                wochentag = state.abholungWochentag,
-                stadt = "",
-                zeitfenster = null
+                wochentag = state.abholungWochentage.firstOrNull() ?: -1,
+                stadt = state.tourStadt.trim(),
+                zeitfenster = if (state.tourZeitStart.isNotBlank() || state.tourZeitEnde.isNotBlank())
+                    Zeitfenster(state.tourZeitStart.trim(), state.tourZeitEnde.trim()) else null
             )
         } else null
+        val tagsList = state.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } }
         val baseCustomer = Customer(
             id = customerId,
             name = name,
@@ -148,12 +142,15 @@ class AddCustomerActivity : AppCompatActivity() {
             wochentag = "",
             kundenTyp = state.kundenTyp,
             listenWochentag = -1,
-            kundennummer = "",
-            defaultAbholungWochentag = state.abholungWochentag,
-            defaultAuslieferungWochentag = state.auslieferungWochentag,
-            defaultUhrzeit = "",
+            kundennummer = state.kundennummer.trim(),
+            erstelltAm = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis()),
+            defaultAbholungWochentag = state.abholungWochentage.firstOrNull() ?: -1,
+            defaultAuslieferungWochentag = state.auslieferungWochentage.firstOrNull() ?: -1,
+            defaultAbholungWochentage = state.abholungWochentage,
+            defaultAuslieferungWochentage = state.auslieferungWochentage,
+            defaultUhrzeit = state.defaultUhrzeit.trim(),
             defaultZeitfenster = null,
-            tags = emptyList(),
+            tags = tagsList,
             tourSlotId = tourSlot?.id ?: "",
             tourSlot = tourSlot,
             istImUrlaub = false

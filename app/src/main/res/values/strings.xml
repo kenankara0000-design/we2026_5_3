@@ -220,10 +220,10 @@
     <string name="validation_intervall_required">Bitte Intervall eingeben (1–365 Tage)</string>
     <string name="validation_listen_wochentag">Bitte Listen-Wochentag wählen</string>
     <string name="validation_list_wochentag">Bitte Wochentag für die Liste wählen</string>
-    <string name="label_kunden_typ">Termin-Typ:</string>
-    <string name="label_kunden_typ_regelmaessig">Regelmäßig</string>
-    <string name="label_kunden_typ_unregelmaessig">Unregelmäßig</string>
-    <string name="label_kunden_typ_auf_abruf">Auf Abruf</string>
+    <string name="label_kunden_typ">T.-Typ:</string>
+    <string name="label_kunden_typ_regelmaessig">Regelm.</string>
+    <string name="label_kunden_typ_unregelmaessig">Unregelm.</string>
+    <string name="label_kunden_typ_auf_abruf">Abruf</string>
     <string name="label_filter_kunden_typ">Filter (Termin-Typ):</string>
     <string name="termin_anlegen_keine_slots_hinweis">Keine Terminvorschläge verfügbar. Bitte A/L-Tage beim Kunden setzen.</string>
     <string name="termin_anlegen_auf_abruf_keine_slots">Keine Terminvorschläge verfügbar.</string>
@@ -335,9 +335,9 @@
     <string name="label_notes">Notizen</string>
     <string name="label_notes_label">Notizen:</string>
     <string name="label_no_notes">Keine Notizen</string>
-    <string name="label_customer_type">Kunden-Art:</string>
-    <string name="label_type_gewerblich">Gewerblich</string>
-    <string name="label_type_privat">Privat</string>
+    <string name="label_customer_type">K. Art:</string>
+    <string name="label_type_gewerblich">Gew.</string>
+    <string name="label_type_privat">Pri.</string>
     <string name="label_type_liste">Liste</string>
     <string name="label_type_tour">Tour</string>
     <string name="label_type_g">G</string>
@@ -450,12 +450,13 @@
     <string name="label_zip_optional">PLZ (Optional)</string>
     <string name="label_default_pickup_day">Standard-Abholungstag (A)</string>
     <string name="label_default_delivery_day">Standard-Auslieferungstag (L)</string>
-    <string name="label_a_plus_tage_l">A + Zahl (Tage) = L-Termin</string>
+    <string name="label_a_plus_tage_l">L-Termin</string>
     <string name="hint_a_plus_tage">Tage zwischen A und L (z. B. 7)</string>
     <string name="label_default_time_optional">Bevorzugte Uhrzeit (Optional)</string>
     <string name="label_customer_tags">Tags (durch Komma getrennt)</string>
     <string name="hint_tags_example">z. B. VIP, Nur Vormittags</string>
     <string name="label_tour_plan">Tour-Zuordnung</string>
+    <string name="weitere_angaben">Weitere Angaben</string>
     <string name="label_tour_weekday">Tour-Wochentag</string>
     <string name="label_tour_city">Tour-Stadt / Gebiet</string>
     <string name="label_time_from">Von</string>

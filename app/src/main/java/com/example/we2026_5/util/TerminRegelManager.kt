@@ -51,7 +51,7 @@ object TerminRegelManager {
             tourSlots.filter { slot -> slot.wochentag in 0..6 }
         }
         val relevanteSlots = if (relevanteSlotsBase.isNotEmpty()) relevanteSlotsBase else tourSlots.filter { it.wochentag in 0..6 }
-        val defaultAbhol = kunde.defaultAbholungWochentag.takeIf { WochentagBerechnung.isValidWeekday(it) }
+        val defaultAbhol = kunde.effectiveAbholungWochentage.firstOrNull()?.takeIf { WochentagBerechnung.isValidWeekday(it) }
 
         val vorschlaege = mutableListOf<TerminSlotVorschlag>()
         relevanteSlots.forEach { slot ->
@@ -87,7 +87,7 @@ object TerminRegelManager {
             }
         }
 
-        val auslieferungTag = kunde.defaultAuslieferungWochentag.takeIf { WochentagBerechnung.isValidWeekday(it) }
+        val auslieferungTag = kunde.effectiveAuslieferungWochentage.firstOrNull()?.takeIf { WochentagBerechnung.isValidWeekday(it) }
         auslieferungTag?.let { weekday ->
             var datum = WochentagBerechnung.naechsterWochentagAb(startOfDay, weekday)
             while (datum <= horizon) {

@@ -32,8 +32,17 @@ class ListeBearbeitenCallbacks(
         CoroutineScope(Dispatchers.Main).launch {
             val updates = if (liste.wochentag in 0..6) {
                 val map = mutableMapOf<String, Any>()
-                if (customer.defaultAbholungWochentag == liste.wochentag) map["defaultAbholungWochentag"] = -1
-                if (customer.defaultAuslieferungWochentag == liste.wochentag) map["defaultAuslieferungWochentag"] = -1
+                val w = liste.wochentag
+                if (w in customer.effectiveAbholungWochentage) {
+                    val newList = customer.effectiveAbholungWochentage.filter { it != w }
+                    map["defaultAbholungWochentage"] = newList
+                    map["defaultAbholungWochentag"] = newList.firstOrNull() ?: -1
+                }
+                if (w in customer.effectiveAuslieferungWochentage) {
+                    val newList = customer.effectiveAuslieferungWochentage.filter { it != w }
+                    map["defaultAuslieferungWochentage"] = newList
+                    map["defaultAuslieferungWochentag"] = newList.firstOrNull() ?: -1
+                }
                 map
             } else {
                 mapOf("listeId" to "")
@@ -63,11 +72,21 @@ class ListeBearbeitenCallbacks(
         CoroutineScope(Dispatchers.Main).launch {
             val updates = if (liste.wochentag in 0..6) {
                 val w = liste.wochentag
+                val aDays = customer.effectiveAbholungWochentage
+                val lDays = customer.effectiveAuslieferungWochentage
                 when {
-                    customer.defaultAbholungWochentag != w && customer.defaultAuslieferungWochentag != w ->
-                        mapOf("defaultAbholungWochentag" to w)
-                    customer.defaultAbholungWochentag != w -> mapOf("defaultAbholungWochentag" to w)
-                    else -> mapOf("defaultAuslieferungWochentag" to w)
+                    w !in aDays && w !in lDays -> mapOf(
+                        "defaultAbholungWochentage" to (aDays + w).sorted(),
+                        "defaultAbholungWochentag" to w
+                    )
+                    w !in aDays -> mapOf(
+                        "defaultAbholungWochentage" to (aDays + w).sorted(),
+                        "defaultAbholungWochentag" to w
+                    )
+                    else -> mapOf(
+                        "defaultAuslieferungWochentage" to (lDays + w).sorted(),
+                        "defaultAuslieferungWochentag" to w
+                    )
                 }
             } else {
                 mapOf("listeId" to liste.id)

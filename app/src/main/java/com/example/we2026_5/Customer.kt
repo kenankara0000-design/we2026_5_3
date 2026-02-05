@@ -48,8 +48,14 @@ data class Customer(
     @Deprecated("Verwende defaultAbholungWochentag/defaultAuslieferungWochentag")
     val listenWochentag: Int = -1,
     val kundennummer: String = "", // Optionale externe Referenz
+    /** Erstellungsdatum (Tagesanfang); wenn > 0, Wochentags-Termine nur ab diesem Datum (keine Vergangenheit für neue Kunden), Überfällig weiter über Intervall/Vergangenheit. */
+    val erstelltAm: Long = 0L,
     val defaultAbholungWochentag: Int = -1,
     val defaultAuslieferungWochentag: Int = -1,
+    /** Mehrere A-Tage (0=Mo..6=So). Wenn leer, zählt defaultAbholungWochentag. */
+    val defaultAbholungWochentage: List<Int> = emptyList(),
+    /** Mehrere L-Tage (0=Mo..6=So). Wenn leer, zählt defaultAuslieferungWochentag. */
+    val defaultAuslieferungWochentage: List<Int> = emptyList(),
     val defaultUhrzeit: String = "",
     val defaultZeitfenster: Zeitfenster? = null,
     val adHocTemplate: AdHocTemplate? = null,
@@ -150,4 +156,16 @@ data class Customer(
         }
 
         return 0L    }
+
+    /** Effektive A-Tage: Liste wenn gesetzt, sonst einzelner defaultAbholungWochentag falls gültig. */
+    val effectiveAbholungWochentage: List<Int>
+        get() = if (defaultAbholungWochentage.isNotEmpty()) defaultAbholungWochentage
+        else if (defaultAbholungWochentag in 0..6) listOf(defaultAbholungWochentag)
+        else emptyList()
+
+    /** Effektive L-Tage: Liste wenn gesetzt, sonst einzelner defaultAuslieferungWochentag falls gültig. */
+    val effectiveAuslieferungWochentage: List<Int>
+        get() = if (defaultAuslieferungWochentage.isNotEmpty()) defaultAuslieferungWochentage
+        else if (defaultAuslieferungWochentag in 0..6) listOf(defaultAuslieferungWochentag)
+        else emptyList()
 }

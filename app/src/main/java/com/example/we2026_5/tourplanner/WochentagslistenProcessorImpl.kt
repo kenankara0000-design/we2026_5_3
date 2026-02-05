@@ -22,7 +22,7 @@ class WochentagslistenProcessorImpl(
             val kunden = allCustomers.filter { k ->
                 (k.kundenArt == "Gewerblich" || k.kundenArt == "Privat") &&
                     k.listeId.isEmpty() &&
-                    (k.defaultAbholungWochentag == liste.wochentag || k.defaultAuslieferungWochentag == liste.wochentag)
+                    (liste.wochentag in k.effectiveAbholungWochentage || liste.wochentag in k.effectiveAuslieferungWochentage)
             }
             val fälligeKunden = kunden.filter { customer ->
                 val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&

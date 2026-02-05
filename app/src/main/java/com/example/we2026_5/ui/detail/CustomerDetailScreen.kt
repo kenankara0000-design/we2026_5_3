@@ -29,7 +29,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -60,11 +59,12 @@ import com.example.we2026_5.CustomerStatus
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
-import com.example.we2026_5.ui.common.WochentagChipRowFromResources
 import com.example.we2026_5.ui.detail.CustomerDetailIntervallRow
 import com.example.we2026_5.ui.detail.CustomerDetailRegelNameRow
 import com.example.we2026_5.ui.detail.CustomerDetailStatusSection
 import com.example.we2026_5.ui.common.DetailUiConstants
+import com.example.we2026_5.ui.addcustomer.AddCustomerState
+import com.example.we2026_5.ui.addcustomer.CustomerStammdatenForm
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,28 +100,39 @@ fun CustomerDetailScreen(
     val surfaceWhite = colorResource(R.color.surface_white)
     val statusOverdue = colorResource(R.color.status_overdue)
 
-    var editName by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.name ?: "") }
-    var editAdresse by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.adresse ?: "") }
-    var editTelefon by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.telefon ?: "") }
-    var editNotizen by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.notizen ?: "") }
-    var editKundenArt by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.kundenArt ?: "Gewerblich") }
-    var editKundenTyp by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.kundenTyp ?: KundenTyp.REGELMAESSIG) }
-    var editAbholungWochentag by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.defaultAbholungWochentag ?: -1) }
-    var editAuslieferungWochentag by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.defaultAuslieferungWochentag ?: -1) }
-    var editIntervallTageUnregel by remember(customer?.id, isInEditMode) {
-        val fromIntervalle = customer?.intervalle?.firstOrNull()?.intervallTage?.takeIf { it in 1..365 }
-        @Suppress("DEPRECATION")
-        val fromLegacy = customer?.intervallTage?.takeIf { it in 1..365 }
-        mutableStateOf(fromIntervalle ?: fromLegacy ?: 0)
+    var formState by remember(customer?.id, isInEditMode) {
+        mutableStateOf(
+            if (customer != null) {
+                val first = customer.intervalle.firstOrNull()
+                val tageAzuL = first?.let {
+                    if (it.abholungDatum > 0) ((it.auslieferungDatum - it.abholungDatum) / 86400000).toInt().coerceIn(0, 365) else 7
+                } ?: 7
+                @Suppress("DEPRECATION")
+                val intervallTage = first?.intervallTage?.takeIf { it in 1..365 } ?: customer.intervallTage.takeIf { it in 1..365 } ?: 7
+                AddCustomerState(
+                    name = customer.name,
+                    adresse = customer.adresse,
+                    stadt = customer.stadt,
+                    plz = customer.plz,
+                    telefon = customer.telefon,
+                    notizen = customer.notizen,
+                    kundenArt = customer.kundenArt,
+                    kundenTyp = customer.kundenTyp,
+                    tageAzuL = tageAzuL,
+                    intervallTage = intervallTage,
+                    kundennummer = customer.kundennummer,
+                    abholungWochentage = customer.effectiveAbholungWochentage,
+                    auslieferungWochentage = customer.effectiveAuslieferungWochentage,
+                    defaultUhrzeit = customer.defaultUhrzeit,
+                    tagsInput = customer.tags.joinToString(", "),
+                    tourStadt = customer.tourSlot?.stadt ?: "",
+                    tourZeitStart = customer.tourSlot?.zeitfenster?.start ?: "",
+                    tourZeitEnde = customer.tourSlot?.zeitfenster?.ende ?: ""
+                )
+            } else AddCustomerState()
+        )
     }
-    var editKundennummer by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.kundennummer ?: "") }
-    var editDefaultUhrzeit by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.defaultUhrzeit ?: "") }
-    var editTagsInput by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.tags?.joinToString(", ") ?: "") }
-    var editTourStadt by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.tourSlot?.stadt ?: "") }
-    var editTourZeitStart by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.tourSlot?.zeitfenster?.start ?: "") }
-    var editTourZeitEnde by remember(customer?.id, isInEditMode) { mutableStateOf(customer?.tourSlot?.zeitfenster?.ende ?: "") }
     var overflowMenuExpanded by remember { mutableStateOf(false) }
-    var nameError by remember { mutableStateOf<String?>(null) }
     val validationNameMissing = stringResource(R.string.validation_name_missing)
 
     val typeLabel = when (customer?.kundenArt) {
@@ -298,12 +309,12 @@ fun CustomerDetailScreen(
                                 fontSize = DetailUiConstants.BodySp
                             )
                         }
-                        if (customer.kundenTyp != com.example.we2026_5.KundenTyp.AUF_ABRUF && (customer.defaultAbholungWochentag in 0..6 || customer.defaultAuslieferungWochentag in 0..6)) {
+                        if (customer.kundenTyp != com.example.we2026_5.KundenTyp.AUF_ABRUF && (customer.effectiveAbholungWochentage.isNotEmpty() || customer.effectiveAuslieferungWochentage.isNotEmpty())) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(stringResource(R.string.label_abholung_auslieferung_tag), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                                 val wochen = listOf("Mo","Di","Mi","Do","Fr","Sa","So")
-                                val a = if (customer.defaultAbholungWochentag in 0..6) wochen[customer.defaultAbholungWochentag] + " A" else ""
-                                val l = if (customer.defaultAuslieferungWochentag in 0..6) wochen[customer.defaultAuslieferungWochentag] + " L" else ""
+                                val a = customer.effectiveAbholungWochentage.map { wochen[it] }.joinToString(", ").takeIf { it.isNotEmpty() }?.let { "$it A" } ?: ""
+                                val l = customer.effectiveAuslieferungWochentage.map { wochen[it] }.joinToString(", ").takeIf { it.isNotEmpty() }?.let { "$it L" } ?: ""
                                 Text(text = listOf(a, l).filter { it.isNotEmpty() }.joinToString(" / "), modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = DetailUiConstants.BodySp)
                             }
                         }
@@ -339,123 +350,10 @@ fun CustomerDetailScreen(
                         fontSize = DetailUiConstants.BodySp
                     )
                 } else {
-                    Text(stringResource(R.string.label_name), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    OutlinedTextField(
-                        value = editName,
-                        onValueChange = { editName = it; nameError = null },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        isError = nameError != null,
-                        supportingText = nameError?.let { err -> { Text(err, color = statusOverdue) } }
+                    CustomerStammdatenForm(
+                        state = formState,
+                        onUpdate = { formState = it }
                     )
-                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                    Text(stringResource(R.string.label_customer_type), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { editKundenArt = "Gewerblich" }
-                        ) {
-                            RadioButton(selected = editKundenArt == "Gewerblich", onClick = { editKundenArt = "Gewerblich" })
-                            Text(stringResource(R.string.label_type_gewerblich), color = textPrimary, fontSize = DetailUiConstants.BodySp, maxLines = 1)
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { editKundenArt = "Privat" }
-                        ) {
-                            RadioButton(selected = editKundenArt == "Privat", onClick = { editKundenArt = "Privat" })
-                            Text(stringResource(R.string.label_type_privat), color = textPrimary, fontSize = DetailUiConstants.BodySp, maxLines = 1)
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { editKundenArt = "Tour" }
-                        ) {
-                            RadioButton(selected = editKundenArt == "Tour", onClick = { editKundenArt = "Tour" })
-                            Text(stringResource(R.string.label_type_tour), color = textPrimary, fontSize = DetailUiConstants.BodySp, maxLines = 1)
-                        }
-                    }
-                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                    Text(stringResource(R.string.label_kunden_typ), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { editKundenTyp = KundenTyp.REGELMAESSIG }) {
-                            RadioButton(selected = editKundenTyp == KundenTyp.REGELMAESSIG, onClick = { editKundenTyp = KundenTyp.REGELMAESSIG })
-                            Text(stringResource(R.string.label_kunden_typ_regelmaessig), color = textPrimary)
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { editKundenTyp = KundenTyp.UNREGELMAESSIG }) {
-                            RadioButton(selected = editKundenTyp == KundenTyp.UNREGELMAESSIG, onClick = { editKundenTyp = KundenTyp.UNREGELMAESSIG })
-                            Text(stringResource(R.string.label_kunden_typ_unregelmaessig), color = textPrimary)
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { editKundenTyp = KundenTyp.AUF_ABRUF }) {
-                            RadioButton(selected = editKundenTyp == KundenTyp.AUF_ABRUF, onClick = { editKundenTyp = KundenTyp.AUF_ABRUF })
-                            Text(stringResource(R.string.label_kunden_typ_auf_abruf), color = textPrimary)
-                        }
-                    }
-                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                    Text(stringResource(R.string.label_address_label), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    OutlinedTextField(value = editAdresse, onValueChange = { editAdresse = it }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                    Text(stringResource(R.string.label_phone_label), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    OutlinedTextField(value = editTelefon, onValueChange = { editTelefon = it }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                    Text(stringResource(R.string.label_notes_label), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    OutlinedTextField(value = editNotizen, onValueChange = { editNotizen = it }, modifier = Modifier.fillMaxWidth(), minLines = 3)
-                    
-                    if (editKundenTyp != KundenTyp.AUF_ABRUF) {
-                        Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                        Text(stringResource(R.string.label_default_pickup_day), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                        WochentagChipRowFromResources(
-                            selected = editAbholungWochentag.coerceIn(-1, 6),
-                            onSelect = { editAbholungWochentag = if (editAbholungWochentag == it) -1 else it },
-                            primaryBlue = primaryBlue,
-                            textPrimary = textPrimary
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(stringResource(R.string.label_default_delivery_day), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                        WochentagChipRowFromResources(
-                            selected = editAuslieferungWochentag.coerceIn(-1, 6),
-                            onSelect = { editAuslieferungWochentag = if (editAuslieferungWochentag == it) -1 else it },
-                            primaryBlue = primaryBlue,
-                            textPrimary = textPrimary
-                        )
-                    }
-                    if (editKundenTyp == KundenTyp.UNREGELMAESSIG) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(stringResource(R.string.label_a_plus_tage_l), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                        OutlinedTextField(
-                            value = if (editIntervallTageUnregel == 0) "" else editIntervallTageUnregel.toString(),
-                            onValueChange = { s ->
-                                val v = s.filter { it.isDigit() }.toIntOrNull()?.coerceIn(0, 365) ?: 0
-                                editIntervallTageUnregel = v
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            supportingText = { Text(stringResource(R.string.hint_a_plus_tage), color = textSecondary, fontSize = 12.sp) }
-                        )
-                    }
-                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                    Text(stringResource(R.string.label_default_time_optional), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    OutlinedTextField(value = editDefaultUhrzeit, onValueChange = { editDefaultUhrzeit = it }, modifier = Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("09:00") })
-                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                    Text(stringResource(R.string.label_kundennummer), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    OutlinedTextField(value = editKundennummer, onValueChange = { editKundennummer = it }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                    Text(stringResource(R.string.label_customer_tags), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    OutlinedTextField(value = editTagsInput, onValueChange = { editTagsInput = it }, modifier = Modifier.fillMaxWidth(), minLines = 2, placeholder = { Text(stringResource(R.string.hint_tags_example)) })
-                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                    Text(stringResource(R.string.label_tour_plan), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    OutlinedTextField(value = editTourStadt, onValueChange = { editTourStadt = it }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text(stringResource(R.string.label_tour_city)) })
-                    Spacer(Modifier.height(8.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(value = editTourZeitStart, onValueChange = { editTourZeitStart = it }, modifier = Modifier.weight(1f), singleLine = true, label = { Text(stringResource(R.string.label_time_from)) }, placeholder = { Text("09:00") })
-                        OutlinedTextField(value = editTourZeitEnde, onValueChange = { editTourZeitEnde = it }, modifier = Modifier.weight(1f), singleLine = true, label = { Text(stringResource(R.string.label_time_to)) }, placeholder = { Text("13:00") })
-                    }
                     Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
                     Text(stringResource(R.string.label_urlaub), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     androidx.compose.material3.Button(
@@ -471,38 +369,43 @@ fun CustomerDetailScreen(
                         Text(stringResource(R.string.label_foto_uploading), fontSize = 12.sp, color = primaryBlue)
                         Spacer(Modifier.height(8.dp))
                     }
-                    
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         androidx.compose.material3.Button(
                             onClick = {
-                                val name = editName.trim()
-                                if (name.isEmpty()) nameError = validationNameMissing
-                                else {
-                                    nameError = null
+                                val name = formState.name.trim()
+                                if (name.isEmpty()) {
+                                    formState = formState.copy(errorMessage = validationNameMissing)
+                                } else {
+                                    val intervallTageForSave = if (formState.kundenTyp == KundenTyp.UNREGELMAESSIG) formState.tageAzuL
+                                        else editIntervalle.firstOrNull()?.intervallTage ?: formState.intervallTage
                                     onSave(
                                         buildMap {
                                             put("name", name)
-                                            put("adresse", editAdresse.trim())
-                                            put("telefon", editTelefon.trim())
-                                            put("notizen", editNotizen.trim())
-                                            put("kundenArt", editKundenArt)
-                                            put("kundenTyp", editKundenTyp.name)
-                                            put("defaultAbholungWochentag", editAbholungWochentag)
-                                            put("defaultAuslieferungWochentag", editAuslieferungWochentag)
-                                            put("intervallTage", editIntervallTageUnregel)
-                                            put("kundennummer", editKundennummer.trim())
-                                            put("defaultUhrzeit", editDefaultUhrzeit.trim())
-                                            put("tags", editTagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } })
-                                            val hasTour = editAbholungWochentag >= 0 || editTourStadt.isNotBlank() || editTourZeitStart.isNotBlank() || editTourZeitEnde.isNotBlank()
+                                            put("adresse", formState.adresse.trim())
+                                            put("stadt", formState.stadt.trim())
+                                            put("plz", formState.plz.trim())
+                                            put("telefon", formState.telefon.trim())
+                                            put("notizen", formState.notizen.trim())
+                                            put("kundenArt", formState.kundenArt)
+                                            put("kundenTyp", formState.kundenTyp.name)
+                                            put("defaultAbholungWochentag", formState.abholungWochentage.firstOrNull() ?: -1)
+                                            put("defaultAuslieferungWochentag", formState.auslieferungWochentage.firstOrNull() ?: -1)
+                                            put("defaultAbholungWochentage", formState.abholungWochentage)
+                                            put("defaultAuslieferungWochentage", formState.auslieferungWochentage)
+                                            put("intervallTage", intervallTageForSave)
+                                            put("kundennummer", formState.kundennummer.trim())
+                                            put("defaultUhrzeit", formState.defaultUhrzeit.trim())
+                                            put("tags", formState.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } })
+                                            val hasTour = formState.abholungWochentage.isNotEmpty() || formState.tourStadt.isNotBlank() || formState.tourZeitStart.isNotBlank() || formState.tourZeitEnde.isNotBlank()
                                             val slotId = if (hasTour) (customer?.tourSlot?.id ?: "customer-${customer?.id}") else ""
                                             put("tourSlotId", slotId)
                                             put("tourSlot", if (hasTour) mapOf<String, Any>(
                                                 "id" to slotId,
-                                                "wochentag" to editAbholungWochentag,
-                                                "stadt" to editTourStadt.trim(),
+                                                "wochentag" to (formState.abholungWochentage.firstOrNull() ?: -1),
+                                                "stadt" to formState.tourStadt.trim(),
                                                 "zeitfenster" to mapOf(
-                                                    "start" to editTourZeitStart.trim(),
-                                                    "ende" to editTourZeitEnde.trim()
+                                                    "start" to formState.tourZeitStart.trim(),
+                                                    "ende" to formState.tourZeitEnde.trim()
                                                 )
                                             ) else emptyMap<String, Any>())
                                             put("intervalle", editIntervalle.map {

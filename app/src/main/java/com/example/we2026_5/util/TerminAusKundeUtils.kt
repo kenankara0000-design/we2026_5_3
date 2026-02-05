@@ -25,7 +25,7 @@ object TerminAusKundeUtils {
         startDatum: Long = System.currentTimeMillis(),
         tageAzuL: Int = 7
     ): CustomerIntervall? {
-        val abholTag = customer.defaultAbholungWochentag.takeIf { WochentagBerechnung.isValidWeekday(it) } ?: return null
+        val abholTag = customer.effectiveAbholungWochentage.firstOrNull()?.takeIf { WochentagBerechnung.isValidWeekday(it) } ?: return null
         val zyklus = (customer.intervalle.firstOrNull()?.intervallTage?.takeIf { it in 1..365 }
             ?: @Suppress("DEPRECATION") customer.intervallTage).coerceIn(1, 365)
         val tageAL = tageAzuL.coerceIn(0, 365)

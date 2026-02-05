@@ -254,7 +254,7 @@ class CustomerDetailActivity : AppCompatActivity() {
     private fun handleTerminAnlegen(customer: Customer, id: String) {
         when (customer.kundenTyp) {
             KundenTyp.UNREGELMAESSIG -> {
-                if (customer.defaultAbholungWochentag < 0 && customer.defaultAuslieferungWochentag < 0) {
+                if (customer.effectiveAbholungWochentage.isEmpty() && customer.effectiveAuslieferungWochentage.isEmpty()) {
                     Toast.makeText(this, getString(R.string.validation_unregelmaessig_al_required), Toast.LENGTH_LONG).show()
                     return
                 }

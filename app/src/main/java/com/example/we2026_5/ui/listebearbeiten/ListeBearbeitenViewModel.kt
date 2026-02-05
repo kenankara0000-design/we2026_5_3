@@ -48,16 +48,16 @@ class ListeBearbeitenViewModel(
                 val alleKunden = withContext(Dispatchers.IO) { customerRepository.getAllCustomers() }
                 val inListe = if (geladeneListe.wochentag in 0..6) {
                     alleKunden.filter { k ->
-                        k.defaultAbholungWochentag == geladeneListe.wochentag ||
-                        k.defaultAuslieferungWochentag == geladeneListe.wochentag
+                        geladeneListe.wochentag in k.effectiveAbholungWochentage ||
+                        geladeneListe.wochentag in k.effectiveAuslieferungWochentage
                     }.sortedBy { it.name }
                 } else {
                     alleKunden.filter { it.listeId == geladeneListe.id }.sortedBy { it.name }
                 }
                 val verfuegbar = if (geladeneListe.wochentag in 0..6) {
                     alleKunden.filter { k ->
-                        k.defaultAbholungWochentag != geladeneListe.wochentag &&
-                        k.defaultAuslieferungWochentag != geladeneListe.wochentag
+                        geladeneListe.wochentag !in k.effectiveAbholungWochentage &&
+                        geladeneListe.wochentag !in k.effectiveAuslieferungWochentage
                     }.sortedBy { it.name }
                 } else {
                     alleKunden.filter { it.listeId.isEmpty() && it.kundenArt == "Tour" }.sortedBy { it.name }

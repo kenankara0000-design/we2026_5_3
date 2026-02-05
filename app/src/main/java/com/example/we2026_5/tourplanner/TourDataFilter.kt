@@ -14,7 +14,14 @@ import java.util.concurrent.TimeUnit
 class TourDataFilter(
     private val categorizer: TourDataCategorizer
 ) {
-    
+    /** L = A + tageAzuL. Aus erstem Intervall oder Default 7. */
+    private fun getTageAzuL(customer: Customer): Int =
+        customer.intervalle.firstOrNull()?.let {
+            if (it.abholungDatum > 0 && it.auslieferungDatum > 0)
+                TimeUnit.MILLISECONDS.toDays(it.auslieferungDatum - it.abholungDatum).toInt().coerceIn(0, 365)
+            else null
+        } ?: 7
+
     /**
      * Berechnet, wann ein Kunde fällig ist.
      */
@@ -123,13 +130,16 @@ class TourDataFilter(
         liste: KundenListe? = null,
         viewDateStart: Long
     ): Boolean {
-        // NEUE STRUKTUR: Verwende Intervalle-Liste
+        // NEUE STRUKTUR: L = A + tageAzuL → Termin am viewDateStart = A am viewDateStart oder L am viewDateStart (A am viewDateStart−tageAzuL).
         if (customer.intervalle.isNotEmpty() || (customer.listeId.isNotEmpty() && liste != null)) {
+            val tageAzuL = getTageAzuL(customer)
+            val startDatum = viewDateStart - TimeUnit.DAYS.toMillis(tageAzuL.toLong())
+            val tageVoraus = tageAzuL + 2
             val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
                 customer = customer,
                 liste = liste,
-                startDatum = viewDateStart - TimeUnit.DAYS.toMillis(1),
-                tageVoraus = 2
+                startDatum = startDatum,
+                tageVoraus = tageVoraus
             )
             val alleGeloeschteTermine = if (liste != null) {
                 (customer.geloeschteTermine + liste.geloeschteTermine).distinct()

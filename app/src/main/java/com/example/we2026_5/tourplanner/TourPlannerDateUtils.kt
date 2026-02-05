@@ -3,6 +3,7 @@ package com.example.we2026_5.tourplanner
 import com.example.we2026_5.Customer
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListeIntervall
+import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.TerminFilterUtils
 import java.util.concurrent.TimeUnit
@@ -14,7 +15,14 @@ import java.util.concurrent.TimeUnit
 class TourPlannerDateUtils(
     private val getListen: () -> List<KundenListe>
 ) {
-    
+    /** L = A + tageAzuL. Aus erstem Intervall oder Default 7. */
+    private fun getTageAzuL(customer: Customer): Int =
+        customer.intervalle.firstOrNull()?.let {
+            if (it.abholungDatum > 0 && it.auslieferungDatum > 0)
+                TimeUnit.MILLISECONDS.toDays(it.auslieferungDatum - it.abholungDatum).toInt().coerceIn(0, 365)
+            else null
+        } ?: 7
+
     /** Delegiert an TerminBerechnungUtils (Single Source of Truth). */
     fun getStartOfDay(ts: Long): Long = TerminBerechnungUtils.getStartOfDay(ts)
     
@@ -56,20 +64,19 @@ class TourPlannerDateUtils(
             }
             return 0L // Nicht fällig an diesem Tag
         } else {
-            // NEUE STRUKTUR: Verwende Intervalle-Liste wenn vorhanden (aus TerminRegeln)
-            if (customer.intervalle.isNotEmpty()) {
-                val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                    customer = customer,
-                    startDatum = viewDateStart - TimeUnit.DAYS.toMillis(1),
-                    tageVoraus = 2 // Nur 2 Tage (gestern, heute, morgen)
-                )
-                // Prüfe ob am angezeigten Tag ein Abholungstermin vorhanden ist
-                return termine.firstOrNull { 
-                    it.typ == com.example.we2026_5.TerminTyp.ABHOLUNG &&
-                    TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart
-                }?.datum ?: 0L
-            }
-            
+            // A am viewDateStart: nur diesen einen Tag berechnen (kein Fenster).
+            val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                customer = customer,
+                liste = null,
+                startDatum = viewDateStart,
+                tageVoraus = 1
+            )
+            val resultA = termine.firstOrNull {
+                it.typ == TerminTyp.ABHOLUNG &&
+                TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart
+            }?.datum ?: 0L
+            if (resultA > 0L) return resultA
+
             // ALTE STRUKTUR: Rückwärtskompatibilität für Kunden ohne Intervalle
             val verschobenAmViewDate = customer.verschobeneTermine.firstOrNull { getStartOfDay(it.verschobenAufDatum) == viewDateStart }
             if (verschobenAmViewDate != null) return verschobenAmViewDate.verschobenAufDatum
@@ -134,20 +141,22 @@ class TourPlannerDateUtils(
             }
             return 0L // Nicht fällig an diesem Tag
         } else {
-            // NEUE STRUKTUR: Verwende Intervalle-Liste wenn vorhanden (aus TerminRegeln)
-            if (customer.intervalle.isNotEmpty()) {
-                val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                    customer = customer,
-                    startDatum = viewDateStart - TimeUnit.DAYS.toMillis(1),
-                    tageVoraus = 2 // Nur 2 Tage (gestern, heute, morgen)
-                )
-                // Prüfe ob am angezeigten Tag ein Auslieferungstermin vorhanden ist
-                return termine.firstOrNull { 
-                    it.typ == com.example.we2026_5.TerminTyp.AUSLIEFERUNG &&
-                    TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart
-                }?.datum ?: 0L
+            // L = A + tageAzuL: L am viewDateStart existiert genau dann, wenn A am (viewDateStart − tageAzuL) existiert.
+            val tageAzuL = getTageAzuL(customer)
+            val aDatumStart = viewDateStart - TimeUnit.DAYS.toMillis(tageAzuL.toLong())
+            val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                customer = customer,
+                liste = null,
+                startDatum = aDatumStart,
+                tageVoraus = 1
+            )
+            val aTermin = termine.firstOrNull {
+                it.typ == TerminTyp.ABHOLUNG &&
+                TerminBerechnungUtils.getStartOfDay(it.datum) == aDatumStart
             }
-            
+            if (aTermin != null)
+                return aTermin.datum + TimeUnit.DAYS.toMillis(tageAzuL.toLong())
+
             // ALTE STRUKTUR: Rückwärtskompatibilität für Kunden ohne Intervalle
             val verschobenAmViewDateAusl = customer.verschobeneTermine.firstOrNull { getStartOfDay(it.verschobenAufDatum) == viewDateStart }
             if (verschobenAmViewDateAusl != null) return verschobenAmViewDateAusl.verschobenAufDatum

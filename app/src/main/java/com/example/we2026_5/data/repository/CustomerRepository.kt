@@ -83,13 +83,36 @@ class CustomerRepository(
     }
 
     /**
-     * Parst einen Kunden aus dem Snapshot und liest verschobeneTermine manuell,
-     * damit Long-Felder auch bei Firebase-Double-Werten korrekt gesetzt werden.
+     * Parst einen Kunden aus dem Snapshot und liest verschobeneTermine sowie
+     * Wochentags-Listen manuell (Firebase Realtime DB liefert Listen oft als Map "0","1",…
+     * und füllt dann List&lt;Int&gt; nicht zuverlässig).
      */
     private fun parseCustomerSnapshot(child: DataSnapshot, id: String): Customer? {
         val customer = child.getValue(Customer::class.java) ?: return null
         val verschobeneTermine = parseVerschobeneTermine(child.child("verschobeneTermine"))
-        return customer.copy(id = id, verschobeneTermine = verschobeneTermine).migrateKundenTyp()
+        val abholungWochentage = parseIntListFromSnapshot(child.child("defaultAbholungWochentage"))
+        val auslieferungWochentage = parseIntListFromSnapshot(child.child("defaultAuslieferungWochentage"))
+        return customer.copy(
+            id = id,
+            verschobeneTermine = verschobeneTermine,
+            defaultAbholungWochentage = abholungWochentage.ifEmpty { customer.defaultAbholungWochentage },
+            defaultAuslieferungWochentage = auslieferungWochentage.ifEmpty { customer.defaultAuslieferungWochentage }
+        ).migrateKundenTyp()
+    }
+
+    /** Liest eine Liste von Int aus einem Snapshot (Realtime DB speichert Listen als Map "0", "1", …). */
+    private fun parseIntListFromSnapshot(snapshot: DataSnapshot): List<Int> {
+        if (!snapshot.exists()) return emptyList()
+        val list = mutableListOf<Int>()
+        snapshot.children.forEach { entry ->
+            val v = entry.getValue(Any::class.java)
+            val i = when (v) {
+                is Number -> v.toInt()
+                else -> null
+            }
+            if (i != null && i in 0..6) list.add(i)
+        }
+        return list.sorted()
     }
 
     private fun parseVerschobeneTermine(snapshot: DataSnapshot): List<VerschobenerTermin> {
