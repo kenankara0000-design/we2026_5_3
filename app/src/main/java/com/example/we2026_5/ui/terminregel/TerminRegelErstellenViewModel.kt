@@ -177,10 +177,6 @@ class TerminRegelErstellenViewModel(
         }
     }
 
-    companion object {
-        val WOCENTAGE = arrayOf("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
-    }
-
     suspend fun loadRegelById(regelId: String): TerminRegel? =
         regelRepository.getRegelById(regelId)
 

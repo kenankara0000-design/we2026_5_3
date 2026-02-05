@@ -64,59 +64,7 @@ class TerminRegelManagerActivity : AppCompatActivity() {
     }
 
     private fun showRegelInfoDialogInternal(regel: TerminRegel) {
-        val wochentage = arrayOf("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
-
-        val infoText = buildString {
-            append("Name: ${regel.name}\n\n")
-
-            if (regel.beschreibung.isNotEmpty()) {
-                append("Beschreibung: ${regel.beschreibung}\n\n")
-            }
-
-            if (regel.wochentagBasiert) {
-                append("Typ: Wochentag-basiert\n\n")
-
-                if (regel.startDatum > 0) {
-                    val startDateText = com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(regel.startDatum)
-                    append("Startdatum: $startDateText\n")
-                }
-
-                if (regel.abholungWochentag >= 0) {
-                    append("Abholung: ${wochentage[regel.abholungWochentag]}\n")
-                }
-
-                if (regel.auslieferungWochentag >= 0) {
-                    append("Auslieferung: ${wochentage[regel.auslieferungWochentag]}\n")
-                }
-                append("\n")
-            } else {
-                append("Typ: Datum-basiert\n\n")
-
-                val abholungText = if (regel.abholungDatum > 0) {
-                    com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(regel.abholungDatum)
-                } else "Heute"
-                append("Abholung: $abholungText\n")
-
-                val auslieferungText = if (regel.auslieferungDatum > 0) {
-                    com.example.we2026_5.util.DateFormatter.formatDateWithLeadingZeros(regel.auslieferungDatum)
-                } else "Heute"
-                append("Auslieferung: $auslieferungText\n\n")
-            }
-
-            if (regel.wiederholen) {
-                append("Wiederholen: Ja\n")
-                append("Intervall: Alle ${regel.intervallTage} Tage\n")
-                if (regel.intervallAnzahl > 0) {
-                    append("Anzahl: ${regel.intervallAnzahl} Wiederholungen\n")
-                } else {
-                    append("Anzahl: Unbegrenzt\n")
-                }
-            } else {
-                append("Wiederholen: Nein\n")
-            }
-
-            append("\nVerwendungsanzahl: ${regel.verwendungsanzahl}x")
-        }
+        val infoText = com.example.we2026_5.util.buildTerminRegelInfoText(regel) { getString(it) }
 
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.dialog_regel_info_title))

@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.FirebaseRetryHelper
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.common.getWochentagFullResIds
 import com.example.we2026_5.data.repository.KundenListeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -59,7 +60,7 @@ class ListeErstellenViewModel(
         val current = _state.value ?: return
         val name = current.listName.trim()
         val wochentag = if (current.isWochentagListe) current.wochentag else -1
-        val weekdayNames = listOf("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
+        val weekdayNames = getWochentagFullResIds().map { appContext.getString(it) }
         val finalName = if (current.isWochentagListe && name.isEmpty() && wochentag in 0..6) {
             weekdayNames[wochentag]
         } else name

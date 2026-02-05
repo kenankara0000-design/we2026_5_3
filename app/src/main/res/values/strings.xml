@@ -311,7 +311,6 @@
     <string name="termin_regel_label_repeat_count">Anzahl Wiederholungen (0 = unbegrenzt):</string>
     <string name="termin_regel_btn_save">Speichern</string>
     <string name="termin_regel_btn_delete">Löschen</string>
-    <string name="termin_regel_weekday_sample">Montag</string>
     <string name="termin_regel_weekday_hint">Wochentage wählen</string>
 
     <!-- Item / Platzhalter -->

@@ -1,5 +1,6 @@
 package com.example.we2026_5.di
 
+import android.content.Context
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.data.repository.TerminRegelRepository
@@ -48,7 +49,7 @@ val appModule = module {
     viewModel { TerminRegelErstellenViewModel(get<TerminRegelRepository>(), get<CustomerRepository>()) }
     viewModel { TerminRegelManagerViewModel(get<TerminRegelRepository>()) }
     viewModel { AddCustomerViewModel() }
-    viewModel { KundenListenViewModel(get(), get<CustomerRepository>()) }
+    viewModel { KundenListenViewModel(get<Context>(), get<KundenListeRepository>(), get<CustomerRepository>()) }
     viewModel { ListeBearbeitenViewModel(get(), get<CustomerRepository>()) }
     viewModel { MapViewViewModel(get<CustomerRepository>(), get<KundenListeRepository>()) }
     viewModel { CustomerDetailViewModel(get(), get()) }

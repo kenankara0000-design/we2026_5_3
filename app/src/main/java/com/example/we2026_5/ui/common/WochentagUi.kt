@@ -33,11 +33,27 @@ private val WOCHENTAG_SHORT_RES = listOf(
     R.string.label_weekday_short_su
 )
 
+private val WOCHENTAG_FULL_RES = listOf(
+    R.string.label_weekday_monday,
+    R.string.label_weekday_tuesday,
+    R.string.label_weekday_wednesday,
+    R.string.label_weekday_thursday,
+    R.string.label_weekday_friday,
+    R.string.label_weekday_saturday,
+    R.string.label_weekday_sunday
+)
+
 /**
  * Kurzbezeichnungen Mo–So aus String-Ressourcen (für nicht-Composable Kontext).
  * Index = Wochentag 0..6.
  */
 fun getWochentagShortResIds(): List<Int> = WOCHENTAG_SHORT_RES
+
+/**
+ * Vollständige Wochentagsnamen (Montag–Sonntag) aus String-Ressourcen.
+ * Index = Wochentag 0..6.
+ */
+fun getWochentagFullResIds(): List<Int> = WOCHENTAG_FULL_RES
 
 /**
  * Formatiert A/L-Wochentag als String (z. B. "Mo A / Do L").

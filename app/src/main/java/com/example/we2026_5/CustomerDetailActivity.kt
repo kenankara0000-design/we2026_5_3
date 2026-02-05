@@ -20,7 +20,7 @@ import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.util.TerminAusKundeUtils
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.DialogBaseHelper
-import com.example.we2026_5.util.TerminRegelInfoText
+import com.example.we2026_5.util.buildTerminRegelInfoText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.lifecycle.lifecycleScope
@@ -233,7 +233,7 @@ class CustomerDetailActivity : AppCompatActivity() {
     }
 
     private fun showRegelDetailDialog(regel: TerminRegel) {
-        val infoText = TerminRegelInfoText.build(regel)
+        val infoText = buildTerminRegelInfoText(regel) { getString(it) }
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.dialog_regel_info_title))
             .setMessage(infoText)

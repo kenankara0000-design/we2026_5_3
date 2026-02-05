@@ -1,8 +1,10 @@
 package com.example.we2026_5.ui.kundenlisten
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.KundenListe
+import com.example.we2026_5.ui.common.getWochentagFullResIds
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
 import com.example.we2026_5.data.repository.CustomerRepository
@@ -25,6 +27,7 @@ sealed class KundenListenState {
 }
 
 class KundenListenViewModel(
+    private val context: Context,
     private val listeRepository: KundenListeRepository,
     private val customerRepository: CustomerRepository
 ) : ViewModel() {
@@ -65,7 +68,7 @@ class KundenListenViewModel(
     private suspend fun ensureWochentagListen(listen: MutableList<KundenListe>) {
         val hasWeekday = listen.any { it.wochentag in 0..6 }
         if (hasWeekday) return
-        val weekdays = listOf("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
+        val weekdays = getWochentagFullResIds().map { context.getString(it) }
         val created = weekdays.mapIndexed { index, name ->
             KundenListe(
                 id = "weekday-$index",

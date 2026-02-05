@@ -30,7 +30,7 @@ Konkrete Schritte in empfohlener Reihenfolge. Mit [ ] abhaken.
 - [x] **2.5** `WochentagListenMenue` aus `TerminRegelErstellenScreen.kt` (ab ~305) prüfen: entweder in `WochentagUi.kt` aufnehmen oder klar dokumentieren, warum getrennt.
 - [x] **2.6** Alle Screens umstellen:  
   `TourPlannerScreen.kt`, `CustomerDetailScreen.kt`, `ListeBearbeitenScreen.kt`, `CustomerManagerScreen.kt`, `TerminRegelErstellenScreen.kt`, `AddCustomerScreen.kt` (Chips) → Import aus `WochentagUi.kt`.
-- [ ] **2.7** String-Ressourcen für Mo–So zentral prüfen (z.B. in `strings.xml`); Doppelungen entfernen.
+- [x] **2.7** String-Ressourcen Mo–So zentral: Doppelung `termin_regel_weekday_sample` entfernt; `getWochentagFullResIds()` ergänzt; hardcodierte Wochentage in ListeErstellenViewModel, KundenListenViewModel, TerminRegelInfoText, TerminRegelManagerActivity durch String-Ressourcen ersetzt.
 
 **Betroffene Dateien:**  
 Neu: `ui/common/WochentagUi.kt`;  
