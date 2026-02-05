@@ -95,10 +95,10 @@ Neu: `ui/common/WochentagUi.kt`;
 
 ## Schritt 7: Weitere große Screens (Phase 1.3, 1.5, 1.7, 1.8)
 
-- [ ] **7.1** CustomerManagerScreen.kt (~455 Z.): Kundenkarten-Liste als Composable z.B. `CustomerManagerCard.kt` in `ui/customermanager/`; `formatALWochentag` bereits in Schritt 2 ersetzt.
+- [x] **7.1** CustomerManagerScreen.kt (~455 Z.): Kundenkarten-Liste in `CustomerManagerCard.kt`; `formatALWochentag` bereits in Schritt 2 ersetzt.
 - [x] **7.2** ListeBearbeitenScreen.kt (~390 Z.): `IntervallRow`, `KundeInListeItem` in `ListeBearbeitenIntervallRow.kt`, `ListeBearbeitenKundeInListeItem.kt` (Wochentag aus Schritt 2).
-- [ ] **7.3** AddCustomerScreen.kt (~372 Z.): Große Blöcke (Typ, Adresse, Tour/Wochentag) → z.B. `AddCustomerTourSection.kt` in `ui/addcustomer/`.
-- [ ] **7.4** KundenListenScreen.kt (~352 Z.): Listen-Card, Filter-Chip-Bereich in `ui/kundenlisten/` auslagern.
+- [x] **7.3** AddCustomerScreen.kt (~372 Z.): RadioOption, IntervallSchnellauswahl, WeekdaySelector in `AddCustomerComponents.kt`.
+- [x] **7.4** KundenListenScreen.kt (~352 Z.): ListenItem in `KundenListenListenItem.kt`.
 
 **Reihenfolge:** 7.1 → 7.2 → 7.3 → 7.4 (oder nach Priorität).
 

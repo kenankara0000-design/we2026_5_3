@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
+import com.example.we2026_5.ui.kundenlisten.KundenListenListenItem
 import androidx.core.content.ContextCompat
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -267,7 +268,7 @@ fun KundenListenScreen(
                         ) {
                             items(sortedListen, key = { it.id }) { liste ->
                                 val kundenCount = state.kundenProListe[liste.id] ?: 0
-                                ListenItem(
+                                KundenListenListenItem(
                                     liste = liste,
                                     kundenCount = kundenCount,
                                     surfaceWhite = surfaceWhite,
@@ -287,72 +288,3 @@ fun KundenListenScreen(
     )
 }
 
-@Composable
-internal fun ListenItem(
-    liste: KundenListe,
-    kundenCount: Int,
-    surfaceWhite: Color,
-    textPrimary: Color,
-    textSecondary: Color,
-    statusOverdue: Color,
-    onClick: () -> Unit,
-    onDelete: () -> Unit
-) {
-    val erstelltAm = DateFormatter.formatDateWithLeadingZeros(liste.erstelltAm)
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = surfaceWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = liste.name,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textPrimary,
-                    modifier = Modifier.weight(1f)
-                )
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = stringResource(R.string.content_desc_delete_list),
-                        tint = statusOverdue
-                    )
-                }
-            }
-            Text(
-                text = stringResource(R.string.list_art_format, liste.listeArt),
-                fontSize = 13.sp,
-                color = textSecondary
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.label_customers_count, kundenCount),
-                fontSize = 14.sp,
-                color = textSecondary
-            )
-            if (kundenCount == 0 && liste.wochentag in 0..6) {
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = stringResource(R.string.label_list_empty_weekday),
-                    fontSize = 12.sp,
-                    color = textSecondary
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = stringResource(R.string.label_created, erstelltAm),
-                fontSize = 12.sp,
-                color = textSecondary
-            )
-        }
-    }
-}

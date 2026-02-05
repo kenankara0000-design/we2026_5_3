@@ -57,6 +57,7 @@ import coil.compose.AsyncImage
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
 import com.example.we2026_5.ui.common.formatALWochentag
+import com.example.we2026_5.ui.customermanager.CustomerManagerCard
 
 private const val SEARCH_DEBOUNCE_MS = 300L
 
@@ -293,7 +294,7 @@ fun CustomerManagerScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(customers, key = { it.id }) { customer ->
-                                CustomerRow(
+                                CustomerManagerCard(
                                     customer = customer,
                                     isBulkMode = isBulkMode,
                                     isSelected = customer.id in selectedIds,
@@ -345,99 +346,3 @@ fun CustomerManagerScreen(
     }
 }
 
-@Composable
-private fun CustomerRow(
-    customer: Customer,
-    isBulkMode: Boolean,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    onToggleSelection: () -> Unit,
-    textPrimary: Color,
-    textSecondary: Color
-) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val alText = formatALWochentag(customer) { context.getString(it) }
-    val surfaceWhite = colorResource(R.color.surface_white)
-    val gplColor = when (customer.kundenArt) {
-        "Privat" -> colorResource(R.color.button_privat_glossy)
-        "Tour" -> colorResource(R.color.button_liste_glossy)
-        else -> colorResource(R.color.button_gewerblich_glossy)
-    }
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = surfaceWhite),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (isBulkMode) {
-                Checkbox(
-                    checked = isSelected,
-                    onCheckedChange = { onToggleSelection() }
-                )
-                Spacer(Modifier.size(8.dp))
-            }
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable(onClick = onClick)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (customer.fotoUrls.isNotEmpty()) {
-                        Card(
-                            modifier = Modifier.size(40.dp),
-                            shape = RoundedCornerShape(4.dp)
-                        ) {
-                            AsyncImage(
-                                model = customer.fotoUrls.first(),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                            )
-                        }
-                        Spacer(Modifier.size(8.dp))
-                    }
-                    Text(
-                        text = when (customer.kundenArt) {
-                            "Privat" -> "P"
-                            "Tour" -> stringResource(R.string.label_type_t_letter)
-                            else -> "G"
-                        },
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier
-                            .background(gplColor, RoundedCornerShape(8.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                    Spacer(Modifier.size(8.dp))
-                    Text(
-                        customer.name,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary
-                    )
-                }
-                Text(
-                    customer.adresse,
-                    fontSize = 14.sp,
-                    color = textSecondary,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-                if (alText.isNotEmpty()) {
-                    Text(
-                        text = alText,
-                        fontSize = 12.sp,
-                        color = textSecondary,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                }
-            }
-        }
-    }
-}
