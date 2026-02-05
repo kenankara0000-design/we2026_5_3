@@ -14,23 +14,25 @@ object TerminAusKundeUtils {
 
     /**
      * Erstellt ein CustomerIntervall aus den Kundendaten.
-     * @param customer Kunde mit defaultAbholungWochentag, defaultAuslieferungWochentag, intervallTage
+     * Regelmäßig: L = A + tageAzuL, Zyklus = intervallTage (Tage bis zum nächsten A).
+     * @param customer Kunde mit defaultAbholungWochentag, intervallTage (Zyklus)
      * @param startDatum Startdatum (z.B. heute)
-     * @return CustomerIntervall oder null wenn A/L-Tage fehlen
+     * @param tageAzuL Tage zwischen Abholung und Auslieferung (nur bei REGELMAESSIG)
+     * @return CustomerIntervall oder null wenn A-Tag fehlt
      */
-    fun erstelleIntervallAusKunde(customer: Customer, startDatum: Long = System.currentTimeMillis()): CustomerIntervall? {
+    fun erstelleIntervallAusKunde(
+        customer: Customer,
+        startDatum: Long = System.currentTimeMillis(),
+        tageAzuL: Int = 7
+    ): CustomerIntervall? {
         val abholTag = customer.defaultAbholungWochentag.takeIf { WochentagBerechnung.isValidWeekday(it) } ?: return null
-        val auslieferTag = customer.defaultAuslieferungWochentag.takeIf { WochentagBerechnung.isValidWeekday(it) } ?: return null
         val zyklus = (customer.intervalle.firstOrNull()?.intervallTage?.takeIf { it in 1..365 }
             ?: @Suppress("DEPRECATION") customer.intervallTage).coerceIn(1, 365)
+        val tageAL = tageAzuL.coerceIn(0, 365)
         val start = TerminBerechnungUtils.getStartOfDay(startDatum)
 
         val abholungDatum = WochentagBerechnung.naechsterWochentagAb(start, abholTag)
-        val auslieferungDatum = if (abholTag == auslieferTag) {
-            abholungDatum + TimeUnit.DAYS.toMillis(zyklus.toLong())
-        } else {
-            WochentagBerechnung.naechsterWochentagAb(start, auslieferTag)
-        }
+        val auslieferungDatum = abholungDatum + TimeUnit.DAYS.toMillis(tageAL.toLong())
 
         return CustomerIntervall(
             id = UUID.randomUUID().toString(),

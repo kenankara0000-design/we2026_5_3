@@ -46,15 +46,47 @@ internal fun AddCustomerRadioOption(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+internal fun AddCustomerTageAzuLField(
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    textPrimary: Color
+) {
+    Column {
+        Text(
+            text = stringResource(R.string.label_l_termin),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = textPrimary
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        OutlinedTextField(
+            value = if (value in 0..365) value.toString() else "",
+            onValueChange = { s ->
+                val digits = s.filter { it.isDigit() }
+                if (digits.isEmpty()) onValueChange(7)
+                else digits.toIntOrNull()?.coerceIn(0, 365)?.let { onValueChange(it) }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            placeholder = { Text("z.B. 7") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            supportingText = { Text("0–365 Tage", color = textPrimary.copy(alpha = 0.7f)) }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 internal fun AddCustomerIntervallSchnellauswahl(
     selected: Int,
     onSelect: (Int) -> Unit,
-    textPrimary: Color
+    textPrimary: Color,
+    labelResId: Int = R.string.label_intervall
 ) {
     val preset = listOf(7, 14, 21, 28)
     Column {
         Text(
-            text = stringResource(R.string.label_intervall_tage),
+            text = stringResource(labelResId),
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = textPrimary

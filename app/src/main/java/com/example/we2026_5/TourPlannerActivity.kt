@@ -15,6 +15,7 @@ import com.example.we2026_5.adapter.CustomerButtonVisibilityHelper
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.ui.tourplanner.CustomerOverviewPayload
 import com.example.we2026_5.ui.tourplanner.ErledigungSheetArgs
+import com.example.we2026_5.ui.tourplanner.ErledigtSheetContent
 import com.example.we2026_5.ui.tourplanner.TourPlannerScreen
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.example.we2026_5.tourplanner.ErledigungSheetState
@@ -38,6 +39,7 @@ class TourPlannerActivity : AppCompatActivity() {
     private var erledigungSheet by mutableStateOf<ErledigungSheetArgs?>(null)
     private var overviewPayload by mutableStateOf<CustomerOverviewPayload?>(null)
     private var overviewRegelNamen by mutableStateOf<String?>(null)
+    private var erledigtSheetVisible by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,6 +71,8 @@ class TourPlannerActivity : AppCompatActivity() {
 
         setContent {
             val tourItems by viewModel.tourItems.observeAsState(initial = emptyList())
+            val erledigtCount by viewModel.erledigtCount.observeAsState(initial = 0)
+            val erledigtSheetContent by viewModel.erledigtSheetContent.observeAsState(initial = null)
             val selectedTimestamp by viewModel.selectedTimestamp.observeAsState(initial = null)
             val isLoading by viewModel.isLoading.observeAsState(initial = false)
             val errorMessage by viewModel.error.observeAsState(initial = null)
@@ -177,9 +181,15 @@ class TourPlannerActivity : AppCompatActivity() {
                 overviewPayload = overviewPayload,
                 overviewRegelNamen = overviewRegelNamen,
                 onDismissOverview = { overviewPayload = null; overviewRegelNamen = null },
+                erledigtCount = erledigtCount,
+                erledigtSheetVisible = erledigtSheetVisible,
+                erledigtSheetContent = erledigtSheetContent,
+                onErledigtClick = { erledigtSheetVisible = true },
+                onDismissErledigtSheet = { erledigtSheetVisible = false },
                 onOpenDetails = { customerId ->
                     overviewPayload = null
                     overviewRegelNamen = null
+                    erledigtSheetVisible = false
                     if (customerId.isNotBlank()) {
                         startActivity(Intent(this@TourPlannerActivity, CustomerDetailActivity::class.java).apply { putExtra("CUSTOMER_ID", customerId) })
                     }

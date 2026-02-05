@@ -10,6 +10,12 @@ data class ErledigungSheetArgs(
     val state: ErledigungSheetState
 )
 
+/** Inhalt für das Bottom-Sheet „Erledigte heute (N)“ – nur erledigte Kunden des Tages. */
+data class ErledigtSheetContent(
+    val doneOhneListen: List<Customer>,
+    val tourListenErledigt: List<Pair<String, List<Customer>>>
+)
+
 /** Payload für den Overview-Dialog beim Klick auf eine Kundenkarte. */
 data class CustomerOverviewPayload(
     val customer: Customer,

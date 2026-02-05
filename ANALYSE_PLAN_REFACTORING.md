@@ -102,6 +102,8 @@ Neu: `ui/common/WochentagUi.kt`;
 
 **Reihenfolge:** 7.1 → 7.2 → 7.3 → 7.4 (oder nach Priorität).
 
+**Vereinheitlichung Kunde Anlegen / Kunde Bearbeiten:** AddCustomerScreen und CustomerDetailScreen (Bearbeitung) inhaltlich und optisch angleichen. Einheitliche Bezeichnungen **„Intervall“** und **„L-Termin“** für die beiden Felder (L-Termin = Tage nach A bis Auslieferung). Diese zwei Felder **nebeneinander** anordnen.
+
 ---
 
 ## Schritt 8: Optional – Phase 1.6, 3, 4

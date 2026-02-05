@@ -88,6 +88,7 @@ fun CustomerDetailScreen(
     onDatumSelected: (Int, Boolean) -> Unit,
     onDeleteIntervall: ((Int) -> Unit)? = null,
     onRemoveRegel: ((String) -> Unit)? = null,
+    onTageAzuLZyklusChange: ((Int, Int) -> Unit)? = null,
     regelNameByRegelId: Map<String, String> = emptyMap(),
     onRegelClick: (String) -> Unit = {},
     onUrlaubStartActivity: (String) -> Unit = {} // Callback to start UrlaubActivity
@@ -546,6 +547,49 @@ fun CustomerDetailScreen(
                         )
                     ) {
                         val intervalleToShow = if (isInEditMode) editIntervalle else customer.intervalle
+                        if (customer?.kundenTyp == KundenTyp.REGELMAESSIG && isInEditMode && editIntervalle.isNotEmpty()) {
+                            val first = editIntervalle.first()
+                            val tageAzuL = if (first.abholungDatum > 0) {
+                                (kotlin.math.round((first.auslieferungDatum - first.abholungDatum) / 86400000.0)).toInt().coerceIn(0, 365)
+                            } else 7
+                            val zyklusTage = first.intervallTage.coerceIn(1, 365)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(stringResource(R.string.label_l_termin), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = textSecondary)
+                                    Spacer(Modifier.height(4.dp))
+                                    androidx.compose.material3.OutlinedTextField(
+                                        value = tageAzuL.toString(),
+                                        onValueChange = { s ->
+                                            s.filter { it.isDigit() }.toIntOrNull()?.coerceIn(0, 365)?.let { newVal ->
+                                                onTageAzuLZyklusChange?.invoke(newVal, zyklusTage)
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true,
+                                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                                    )
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(stringResource(R.string.label_intervall), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = textSecondary)
+                                    Spacer(Modifier.height(4.dp))
+                                    androidx.compose.material3.OutlinedTextField(
+                                        value = zyklusTage.toString(),
+                                        onValueChange = { s ->
+                                            s.filter { it.isDigit() }.toIntOrNull()?.coerceIn(1, 365)?.let { newVal ->
+                                                onTageAzuLZyklusChange?.invoke(tageAzuL, newVal)
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true,
+                                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(DetailUiConstants.IntervalRowSpacing))
+                        }
                         // In beiden Modi nur Termin-Regel-Namen anzeigen (keine 365 Intervall-Zeilen bei täglich)
                         val distinctRegelIds = intervalleToShow.map { it.terminRegelId }.distinct()
                         distinctRegelIds.forEach { regelId ->

@@ -73,6 +73,7 @@ class AddCustomerActivity : AppCompatActivity() {
                     onNotizenChange = { viewModel.setNotizen(it) },
                     onKundenArtChange = { viewModel.setKundenArt(it) },
                     onKundenTypChange = { viewModel.setKundenTyp(it) },
+                    onTageAzuLChange = { viewModel.setTageAzuL(it) },
                     onIntervallTageChange = { viewModel.setIntervallTage(it) },
                     onAbholungTagChange = { viewModel.setAbholungWochentag(it) },
                     onAuslieferungTagChange = { viewModel.setAuslieferungWochentag(it) },
@@ -158,7 +159,7 @@ class AddCustomerActivity : AppCompatActivity() {
             istImUrlaub = false
         )
         val intervalle = if (state.kundenTyp == KundenTyp.REGELMAESSIG) {
-            TerminAusKundeUtils.erstelleIntervallAusKunde(baseCustomer)?.let { listOf(it) } ?: emptyList()
+            TerminAusKundeUtils.erstelleIntervallAusKunde(baseCustomer, System.currentTimeMillis(), state.tageAzuL)?.let { listOf(it) } ?: emptyList()
         } else {
             emptyList()
         }

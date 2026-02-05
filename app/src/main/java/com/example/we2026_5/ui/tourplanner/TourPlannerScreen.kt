@@ -57,6 +57,7 @@ import androidx.activity.compose.BackHandler
 import coil.compose.AsyncImage
 import com.example.we2026_5.Customer
 import com.example.we2026_5.ListItem
+import com.example.we2026_5.ui.tourplanner.ErledigtSheetContent
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.TerminFilterUtils
@@ -105,9 +106,15 @@ fun TourPlannerScreen(
     overviewPayload: CustomerOverviewPayload?,
     overviewRegelNamen: String?,
     onDismissOverview: () -> Unit,
-    onOpenDetails: (customerId: String) -> Unit
+    onOpenDetails: (customerId: String) -> Unit,
+    erledigtCount: Int = 0,
+    erledigtSheetVisible: Boolean = false,
+    erledigtSheetContent: ErledigtSheetContent? = null,
+    onErledigtClick: () -> Unit = {},
+    onDismissErledigtSheet: () -> Unit = {}
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val erledigtListSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
     if (overviewPayload != null) {
@@ -202,6 +209,9 @@ fun TourPlannerScreen(
 
     BackHandler(enabled = erledigungSheet != null) {
         onDismissErledigungSheet()
+    }
+    BackHandler(enabled = erledigtSheetVisible) {
+        onDismissErledigtSheet()
     }
     if (erledigungSheet != null) {
         ModalBottomSheet(
@@ -353,6 +363,18 @@ fun TourPlannerScreen(
                         Spacer(Modifier.size(8.dp))
                         Text(stringResource(R.string.tour_btn_today), color = Color.White)
                     }
+                    if (erledigtCount > 0) {
+                        Button(
+                            onClick = onErledigtClick,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.section_done_bg))
+                        ) {
+                            Text(
+                                stringResource(R.string.tour_btn_erledigte, erledigtCount),
+                                color = Color.White
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -430,86 +452,7 @@ fun TourPlannerScreen(
                     ) {
                         itemsIndexed(tourItems, key = { index, _ -> index }) { _, item ->
                             when (item) {
-                                is ListItem.ErledigtSection -> {
-                                    val expanded = isSectionExpanded(SectionType.DONE)
-                                    Card(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        colors = CardDefaults.cardColors(containerColor = colorResource(R.color.section_done_bg)),
-                                        shape = RoundedCornerShape(12.dp),
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                                    ) {
-                                        Column(modifier = Modifier.fillMaxWidth()) {
-                                            SectionHeaderRow(
-                                                title = item.title,
-                                                countText = "${item.erledigtCount}/${item.count}",
-                                                isExpanded = expanded,
-                                                sectionType = SectionType.DONE,
-                                                sectionOverdueBg = sectionOverdueBg,
-                                                sectionOverdueText = sectionOverdueText,
-                                                sectionDoneBg = colorResource(R.color.section_done_bg),
-                                                sectionDoneText = sectionDoneText,
-                                                onToggle = { onToggleSection(SectionType.DONE) }
-                                            )
-                                            if (expanded) {
-                                                Column(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                                                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                                                ) {
-                                                    item.doneOhneListen.forEach { customer ->
-                                                        val isInUrlaub = viewDateMillis != null &&
-                                                            TerminFilterUtils.istTerminInUrlaubEintraege(viewDateMillis!!, customer)
-                                                        val viewDate = viewDateMillis ?: 0L
-                                                        val urlaubInfo = if (isInUrlaub) {
-                                                            val viewStart = TerminBerechnungUtils.getStartOfDay(viewDate)
-                                                            val urlaubEntry = TerminFilterUtils.getEffectiveUrlaubEintraege(customer)
-                                                                .firstOrNull { e ->
-                                                                    val vonStart = TerminBerechnungUtils.getStartOfDay(e.von)
-                                                                    val bisStart = TerminBerechnungUtils.getStartOfDay(e.bis)
-                                                                    viewStart in vonStart..bisStart
-                                                                }
-                                                            urlaubEntry?.let { "${DateFormatter.formatDate(it.von)} – ${DateFormatter.formatDate(it.bis)}" }
-                                                                ?: if (customer.urlaubVon > 0 && customer.urlaubBis > 0)
-                                                                    "${DateFormatter.formatDate(customer.urlaubVon)} – ${DateFormatter.formatDate(customer.urlaubBis)}"
-                                                                else ""
-                                                        } else null
-                                                        val payload = CustomerOverviewPayload(
-                                                            customer = customer,
-                                                            urlaubInfo = urlaubInfo?.takeIf { it.isNotEmpty() },
-                                                            verschobenInfo = null,
-                                                            verschobenVonInfo = null,
-                                                            ueberfaelligInfo = null
-                                                        )
-                                                        TourCustomerRow(
-                                                            customer = customer,
-                                                            isOverdue = false,
-                                                            isInUrlaub = isInUrlaub,
-                                                            isVerschobenAmFaelligkeitstag = false,
-                                                            verschobenInfo = null,
-                                                            verschobenVonInfo = null,
-                                                            statusBadgeText = getStatusBadgeText(customer),
-                                                            viewDateMillis = viewDate,
-                                                            showErledigtBadge = true,
-                                                            onCustomerClick = { onCustomerClick(payload) },
-                                                            onAktionenClick = { onAktionenClick(customer) }
-                                                        )
-                                                    }
-                                                    item.tourListenErledigt.forEach { (listeName, kunden) ->
-                                                        TourListeErledigtRow(
-                                                            listeName = listeName,
-                                                            erledigteKunden = kunden,
-                                                            viewDateMillis = viewDateMillis,
-                                                            getStatusBadgeText = getStatusBadgeText,
-                                                            onCustomerClick = onCustomerClick,
-                                                            onAktionenClick = onAktionenClick
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                is ListItem.ErledigtSection -> { /* Erledigt-Bereich nur im Sheet, nicht in der Liste */ }
                                 is ListItem.SectionHeader -> SectionHeaderRow(
                                     title = item.title,
                                     countText = when (item.sectionType) {
@@ -590,6 +533,78 @@ fun TourPlannerScreen(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+            }
+            if (erledigtSheetVisible && erledigtSheetContent != null) {
+                val content = erledigtSheetContent
+                ModalBottomSheet(
+                    onDismissRequest = onDismissErledigtSheet,
+                    sheetState = erledigtListSheetState,
+                    containerColor = colorResource(R.color.section_done_bg)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .padding(bottom = 32.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            stringResource(R.string.status_erledigt),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                        content.doneOhneListen.forEach { customer ->
+                            val isInUrlaub = viewDateMillis != null &&
+                                TerminFilterUtils.istTerminInUrlaubEintraege(viewDateMillis!!, customer)
+                            val viewDate = viewDateMillis ?: 0L
+                            val urlaubInfo = if (isInUrlaub) {
+                                val viewStart = TerminBerechnungUtils.getStartOfDay(viewDate)
+                                val urlaubEntry = TerminFilterUtils.getEffectiveUrlaubEintraege(customer)
+                                    .firstOrNull { e ->
+                                        val vonStart = TerminBerechnungUtils.getStartOfDay(e.von)
+                                        val bisStart = TerminBerechnungUtils.getStartOfDay(e.bis)
+                                        viewStart in vonStart..bisStart
+                                    }
+                                urlaubEntry?.let { "${DateFormatter.formatDate(it.von)} – ${DateFormatter.formatDate(it.bis)}" }
+                                    ?: if (customer.urlaubVon > 0 && customer.urlaubBis > 0)
+                                        "${DateFormatter.formatDate(customer.urlaubVon)} – ${DateFormatter.formatDate(customer.urlaubBis)}"
+                                    else ""
+                            } else null
+                            val payload = CustomerOverviewPayload(
+                                customer = customer,
+                                urlaubInfo = urlaubInfo?.takeIf { it.isNotEmpty() },
+                                verschobenInfo = null,
+                                verschobenVonInfo = null,
+                                ueberfaelligInfo = null
+                            )
+                            TourCustomerRow(
+                                customer = customer,
+                                isOverdue = false,
+                                isInUrlaub = isInUrlaub,
+                                isVerschobenAmFaelligkeitstag = false,
+                                verschobenInfo = null,
+                                verschobenVonInfo = null,
+                                statusBadgeText = getStatusBadgeText(customer),
+                                viewDateMillis = viewDate,
+                                showErledigtBadge = true,
+                                onCustomerClick = { onCustomerClick(payload) },
+                                onAktionenClick = { onAktionenClick(customer) }
+                            )
+                        }
+                        content.tourListenErledigt.forEach { (listeName, kunden) ->
+                            TourListeErledigtRow(
+                                listeName = listeName,
+                                erledigteKunden = kunden,
+                                viewDateMillis = viewDateMillis,
+                                getStatusBadgeText = getStatusBadgeText,
+                                onCustomerClick = onCustomerClick,
+                                onAktionenClick = onAktionenClick
+                            )
                         }
                     }
                 }

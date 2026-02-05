@@ -12,6 +12,8 @@ import com.example.we2026_5.SectionType
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.tourplanner.TourDataProcessor
+import com.example.we2026_5.tourplanner.TourProcessResult
+import com.example.we2026_5.ui.tourplanner.ErledigtSheetContent
 import com.example.we2026_5.util.Result
 import com.example.we2026_5.util.TerminBerechnungUtils
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,18 +61,24 @@ class TourPlannerViewModel(
     // StateFlow für erweiterte Sections – ERLEDIGT standardmäßig eingeklappt, bleibt so bis Nutzer aufmacht
     private val expandedSectionsFlow = MutableStateFlow<Set<SectionType>>(emptySet())
     
-    // Kombiniere alle Flows für Tour-Items
-    val tourItems: LiveData<List<ListItem>> = combine(
+    // Kombiniere alle Flows: Ergebnis ohne Erledigt-Section in der Liste; Erledigt-Daten für Button/Sheet
+    private val processResultFlow = combine(
         customersFlow,
         listenFlow,
         selectedTimestampFlow,
         expandedSectionsFlow
     ) { customers, listen, timestamp, expandedSections ->
         if (timestamp == null) {
-            emptyList()
+            TourProcessResult(emptyList(), 0, emptyList(), emptyList())
         } else {
             dataProcessor.processTourData(customers, listen, timestamp, expandedSections)
         }
+    }
+
+    val tourItems: LiveData<List<ListItem>> = processResultFlow.map { it.items }.asLiveData()
+    val erledigtCount: LiveData<Int> = processResultFlow.map { it.erledigtCount }.asLiveData()
+    val erledigtSheetContent: LiveData<ErledigtSheetContent?> = processResultFlow.map { r ->
+        if (r.erledigtCount > 0) ErledigtSheetContent(r.erledigtDoneOhneListen, r.erledigtTourListen) else null
     }.asLiveData()
     
     private val _isLoading = MutableLiveData<Boolean>()

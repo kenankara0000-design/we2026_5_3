@@ -238,6 +238,9 @@
     <string name="label_refresh">Aktualisieren</string>
     <string name="label_listen_wochentag">Listen-Wochentag (für Kundenlisten):</string>
     <string name="label_intervall_tage">Intervall (Tage):</string>
+    <string name="label_tage_azu_l">Tage zwischen A und L:</string>
+    <string name="label_l_termin">L-Termin</string>
+    <string name="label_zyklus_tage">Intervall (Tage):</string>
     <string name="label_kundennummer">Kundennummer (optional):</string>
     <string name="label_next_termin">Nächster Termin:</string>
     <string name="dialog_duplikat_title">Kunde mit ähnlichem Namen</string>
@@ -284,6 +287,7 @@
     <string name="tour_label_date">Datum</string>
     <string name="tour_btn_map">Karte</string>
     <string name="tour_btn_today">Heute</string>
+    <string name="tour_btn_erledigte">Erledigte (%d)</string>
     <string name="tour_empty_title">Keine Touren für diesen Tag</string>
     <string name="tour_empty_subtitle">Für diesen Wochentag sind keine Kunden eingetragen.</string>
     <string name="tour_error_title">Fehler beim Laden</string>

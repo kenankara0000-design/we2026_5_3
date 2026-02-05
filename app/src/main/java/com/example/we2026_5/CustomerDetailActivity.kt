@@ -155,6 +155,16 @@ class CustomerDetailActivity : AppCompatActivity() {
                         onDatumSelected = { viewModel.updateEditIntervalle(intervalle) }
                     )
                 },
+                onTageAzuLZyklusChange = { tageAzuL, zyklusTage ->
+                    val list = viewModel.editIntervalle.value
+                    val first = list.firstOrNull() ?: return@CustomerDetailScreen
+                    val updated = first.copy(
+                        auslieferungDatum = first.abholungDatum + java.util.concurrent.TimeUnit.DAYS.toMillis(tageAzuL.toLong()),
+                        intervallTage = zyklusTage,
+                        zyklusTage = zyklusTage
+                    )
+                    viewModel.updateEditIntervalle(listOf(updated) + list.drop(1))
+                },
                 regelNameByRegelId = regelNameByRegelId,
                 onRegelClick = { },
                 onUrlaubStartActivity = { customerId ->

@@ -10,6 +10,14 @@ import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.TerminInfo
 import java.util.concurrent.TimeUnit
 
+/** Ergebnis von processTourData: Liste ohne Erledigt-Bereich + Erledigt-Daten für Button/Sheet. */
+data class TourProcessResult(
+    val items: List<ListItem>,
+    val erledigtCount: Int,
+    val erledigtDoneOhneListen: List<Customer>,
+    val erledigtTourListen: List<Pair<String, List<Customer>>>
+)
+
 /**
  * Prozessor für Tour-Datenverarbeitung.
  * Extrahiert die komplexe Datenverarbeitungslogik aus TourPlannerViewModel.
@@ -26,7 +34,7 @@ class TourDataProcessor {
         allListen: List<KundenListe>,
         selectedTimestamp: Long,
         expandedSections: Set<SectionType>
-    ): List<ListItem> {
+    ): TourProcessResult {
         val viewDateStart = categorizer.getStartOfDay(selectedTimestamp)
         val heuteStart = categorizer.getStartOfDay(System.currentTimeMillis())
         
@@ -227,14 +235,11 @@ class TourDataProcessor {
         // 3. Normale Kunden (ohne solche, die bereits in einer Liste für diesen Tag stehen – z. B. Wochentagsliste)
         val normalOhneListen = normalGewerblich.filter { it.id !in kundenInListenIds }.sortedBy { it.name }
         normalOhneListen.forEach { items.add(ListItem.CustomerItem(it)) }
-        // 4. Erledigt-Bereich – eine Card mit Header + Einzelkunden + Tour-Listen
+        // Erledigt-Daten für Button „Erledigte (N)“ und Bottom-Sheet (nicht mehr in der Liste)
         val doneOhneListen = doneGewerblich.sortedBy { it.name }
-        val erledigtGesamtCount = doneOhneListen.size + tourListenErledigt.sumOf { it.second.size }
-        if (erledigtGesamtCount > 0) {
-            val tourListenPairs = tourListenErledigt.map { (liste, kunden) -> liste.name to kunden }
-            items.add(ListItem.ErledigtSection("ERLEDIGT", erledigtGesamtCount, erledigtGesamtCount, doneOhneListen, tourListenPairs))
-        }
-        return items
+        val tourListenPairs = tourListenErledigt.map { (liste, kunden) -> liste.name to kunden.sortedBy { it.name } }
+        val erledigtGesamtCount = doneOhneListen.size + tourListenPairs.sumOf { it.second.size }
+        return TourProcessResult(items, erledigtGesamtCount, doneOhneListen, tourListenPairs)
     }
 
     /**
@@ -246,8 +251,8 @@ class TourDataProcessor {
         allListen: List<KundenListe>,
         selectedTimestamp: Long
     ): Int {
-        val items = processTourData(allCustomers, allListen, selectedTimestamp, emptySet())
-        return items.sumOf { item ->
+        val result = processTourData(allCustomers, allListen, selectedTimestamp, emptySet())
+        return result.items.sumOf { item ->
             when (item) {
                 is ListItem.CustomerItem -> if (item.isErledigtAmTag) 0 else 1
                 is ListItem.SectionHeader -> if (item.sectionType == SectionType.OVERDUE) item.kunden.size else 0

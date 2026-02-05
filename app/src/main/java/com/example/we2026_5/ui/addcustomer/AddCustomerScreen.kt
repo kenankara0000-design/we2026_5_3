@@ -63,6 +63,7 @@ fun AddCustomerScreen(
     onNotizenChange: (String) -> Unit,
     onKundenArtChange: (String) -> Unit,
     onKundenTypChange: (KundenTyp) -> Unit,
+    onTageAzuLChange: (Int) -> Unit,
     onIntervallTageChange: (Int) -> Unit,
     onAbholungTagChange: (Int) -> Unit,
     onAuslieferungTagChange: (Int) -> Unit,
@@ -183,11 +184,25 @@ fun AddCustomerScreen(
             }
             if (state.kundenTyp == KundenTyp.REGELMAESSIG) {
                 Spacer(modifier = Modifier.height(12.dp))
-                AddCustomerIntervallSchnellauswahl(
-                    selected = state.intervallTage,
-                    onSelect = onIntervallTageChange,
-                    textPrimary = textPrimary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        AddCustomerTageAzuLField(
+                            value = state.tageAzuL,
+                            onValueChange = onTageAzuLChange,
+                            textPrimary = textPrimary
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        AddCustomerIntervallSchnellauswahl(
+                            selected = state.intervallTage,
+                            onSelect = onIntervallTageChange,
+                            textPrimary = textPrimary
+                        )
+                    }
+                }
             }
             Spacer(modifier = Modifier.height(12.dp))
             Text(

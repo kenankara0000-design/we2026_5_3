@@ -14,6 +14,7 @@ data class AddCustomerState(
     val notizen: String = "",
     val kundenArt: String = "Gewerblich",
     val kundenTyp: KundenTyp = KundenTyp.REGELMAESSIG,
+    val tageAzuL: Int = 7,
     val intervallTage: Int = 7,
     val kundennummer: String = "",
     val abholungWochentag: Int = -1,
@@ -70,6 +71,10 @@ class AddCustomerViewModel : ViewModel() {
 
     fun setKundenTyp(typ: KundenTyp) {
         _state.value = (_state.value ?: AddCustomerState()).copy(kundenTyp = typ)
+    }
+
+    fun setTageAzuL(tage: Int) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(tageAzuL = tage.coerceIn(0, 365))
     }
 
     fun setIntervallTage(tage: Int) {
