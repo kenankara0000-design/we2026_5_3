@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -34,7 +35,7 @@ class CustomerManagerActivity : AppCompatActivity() {
         const val RESULT_CUSTOMER_DELETED = 2001
     }
 
-    private val detailLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+    private val detailLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val customerId = result.data?.getStringExtra("DELETED_CUSTOMER_ID")
         if (result.resultCode == RESULT_CUSTOMER_DELETED && customerId != null) {
             deletedCustomerIds = deletedCustomerIds + customerId
@@ -42,18 +43,22 @@ class CustomerManagerActivity : AppCompatActivity() {
             deletedCustomerIds = deletedCustomerIds - customerId
         }
         if (result.resultCode == NextCustomerHelper.RESULT_OPEN_NEXT) {
-            val ids = lastDetailCustomerIds ?: return@registerForActivityResult
+            val ids: List<String> = lastDetailCustomerIds ?: return@registerForActivityResult
             val editedIndex = NextCustomerHelper.getNextCustomerIndex(result.data)
             val nextIndex = editedIndex + 1
             if (nextIndex < ids.size) {
                 lastDetailIndex = nextIndex
-                val intent = Intent(this@CustomerManagerActivity, CustomerDetailActivity::class.java).apply {
+                val nextIntent: Intent = Intent(this@CustomerManagerActivity, CustomerDetailActivity::class.java).apply {
                     putExtra("CUSTOMER_ID", ids[nextIndex])
                     NextCustomerHelper.putNextCustomerExtras(this, ids, nextIndex)
                 }
-                detailLauncher.launch(intent)
+                window.decorView.post { launchDetail(nextIntent) }
             }
         }
+    }
+
+    private fun launchDetail(intent: Intent) {
+        detailLauncher.launch(intent)
     }
 
     private var deletedCustomerIds by mutableStateOf(setOf<String>())
@@ -112,7 +117,7 @@ class CustomerManagerActivity : AppCompatActivity() {
                         putExtra("CUSTOMER_ID", customer.id)
                         NextCustomerHelper.putNextCustomerExtras(this, ids, index)
                     }
-                    detailLauncher.launch(intent)
+                    launchDetail(intent)
                 },
                 onToggleSelection = { viewModel.toggleSelection(it) },
                 onBulkDone = { selectedCustomers ->
