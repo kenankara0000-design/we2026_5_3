@@ -5,7 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.ui.addcustomer.AddCustomerState
 import com.example.we2026_5.util.Result
+import com.example.we2026_5.util.intervallTageOrDefault
+import com.example.we2026_5.util.tageAzuLOrDefault
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -76,6 +79,10 @@ class CustomerDetailViewModel(
     private val _editIntervalle = MutableStateFlow<List<CustomerIntervall>>(emptyList())
     val editIntervalle: StateFlow<List<CustomerIntervall>> = _editIntervalle.asStateFlow()
 
+    /** Formular-State im Bearbeitungsmodus (überlebt Recomposition/Konfigurationswechsel, damit z. B. KundenTyp-Regelmaessig→Unregelmaessig erhalten bleibt). */
+    private val _editFormState = MutableStateFlow<AddCustomerState?>(null)
+    val editFormState: StateFlow<AddCustomerState?> = _editFormState.asStateFlow()
+
     fun setCustomerId(id: String) {
         _customerId.value = id
     }
@@ -121,7 +128,39 @@ class CustomerDetailViewModel(
         _isInEditMode.value = editing
         if (editing && customer != null) {
             _editIntervalle.value = customer.intervalle
+            _editFormState.value = buildFormStateFromCustomer(customer)
+        } else {
+            _editFormState.value = null
         }
+    }
+
+    fun updateEditFormState(state: AddCustomerState) {
+        _editFormState.value = state
+    }
+
+    private fun buildFormStateFromCustomer(c: Customer): AddCustomerState {
+        val tageAzuL = c.tageAzuLOrDefault(7)
+        val intervallTage = c.intervallTageOrDefault(7)
+        return AddCustomerState(
+            name = c.name,
+            adresse = c.adresse,
+            stadt = c.stadt,
+            plz = c.plz,
+            telefon = c.telefon,
+            notizen = c.notizen,
+            kundenArt = c.kundenArt,
+            kundenTyp = c.kundenTyp,
+            tageAzuL = tageAzuL,
+            intervallTage = intervallTage,
+            kundennummer = c.kundennummer,
+            abholungWochentage = c.effectiveAbholungWochentage,
+            auslieferungWochentage = c.effectiveAuslieferungWochentage,
+            defaultUhrzeit = c.defaultUhrzeit,
+            tagsInput = c.tags.joinToString(", "),
+            tourStadt = c.tourSlot?.stadt ?: "",
+            tourZeitStart = c.tourSlot?.zeitfenster?.start ?: "",
+            tourZeitEnde = c.tourSlot?.zeitfenster?.ende ?: ""
+        )
     }
 
     fun updateEditIntervalle(intervalle: List<CustomerIntervall>) {

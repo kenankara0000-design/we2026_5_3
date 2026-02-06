@@ -1,6 +1,7 @@
 package com.example.we2026_5.data.repository
 
 import com.example.we2026_5.Customer
+import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.util.migrateKundenTyp
 import com.example.we2026_5.VerschobenerTermin
@@ -103,7 +104,17 @@ class CustomerRepository(
         val verschobeneTermine = parseVerschobeneTermine(child.child("verschobeneTermine"))
         val abholungWochentage = parseIntListFromSnapshot(child.child("defaultAbholungWochentage"))
         val auslieferungWochentage = parseIntListFromSnapshot(child.child("defaultAuslieferungWochentage"))
-        return customer.copy(
+        // kundenTyp explizit aus Snapshot lesen (Firebase setzt Enum aus String oft nicht zuverlässig)
+        val kundenTypNode = child.child("kundenTyp")
+        val kundenTypStr = when {
+            !kundenTypNode.exists() -> null
+            else -> kundenTypNode.getValue(String::class.java)
+                ?: kundenTypNode.getValue(Any::class.java)?.toString()
+        }
+        val kundenTypParsed = kundenTypStr?.trim()?.let { s ->
+            try { KundenTyp.valueOf(s) } catch (_: Exception) { null }
+        }
+        val base = customer.copy(
             id = id,
             verschobeneTermine = verschobeneTermine,
             defaultAbholungWochentage = abholungWochentage.ifEmpty { customer.defaultAbholungWochentage },
@@ -112,8 +123,11 @@ class CustomerRepository(
             auslieferungDatum = optionalLong(child, "auslieferungDatum"),
             wiederholen = optionalBoolean(child, "wiederholen"),
             intervallTage = optionalInt(child, "intervallTage").coerceIn(1, 365).takeIf { it in 1..365 } ?: 7,
-            letzterTermin = optionalLong(child, "letzterTermin")
-        ).migrateKundenTyp()
+            letzterTermin = optionalLong(child, "letzterTermin"),
+            kundenTyp = kundenTypParsed ?: customer.kundenTyp
+        )
+        // Migration nur, wenn kundenTyp in Firebase fehlt (Legacy). Sonst gespeicherten Typ beibehalten.
+        return if (child.child("kundenTyp").exists()) base else base.migrateKundenTyp()
     }
 
     /** Liest eine Liste von Int aus einem Snapshot (Realtime DB speichert Listen als Map "0", "1", …). */

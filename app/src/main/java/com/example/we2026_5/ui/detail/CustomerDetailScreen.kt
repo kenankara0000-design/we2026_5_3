@@ -74,6 +74,8 @@ fun CustomerDetailScreen(
     customer: Customer?,
     isInEditMode: Boolean,
     editIntervalle: List<CustomerIntervall>,
+    editFormState: AddCustomerState?,
+    onUpdateEditFormState: (AddCustomerState) -> Unit,
     isLoading: Boolean,
     isUploading: Boolean = false,
     onBack: () -> Unit,
@@ -348,9 +350,12 @@ fun CustomerDetailScreen(
                         fontSize = DetailUiConstants.BodySp
                     )
                 } else {
+                    val currentFormState = editFormState ?: formState
                     CustomerStammdatenForm(
-                        state = formState,
-                        onUpdate = { formState = it }
+                        state = currentFormState,
+                        onUpdate = { newState ->
+                            if (isInEditMode) onUpdateEditFormState(newState) else formState = newState
+                        }
                     )
                     Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
                     Text(stringResource(R.string.label_urlaub), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
@@ -368,39 +373,41 @@ fun CustomerDetailScreen(
                         Spacer(Modifier.height(8.dp))
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        val stateForSave = editFormState ?: formState
                         androidx.compose.material3.Button(
                             onClick = {
-                                val name = formState.name.trim()
+                                val name = stateForSave.name.trim()
                                 if (name.isEmpty()) {
-                                    formState = formState.copy(errorMessage = validationNameMissing)
+                                    if (isInEditMode) onUpdateEditFormState(stateForSave.copy(errorMessage = validationNameMissing))
+                                    else formState = formState.copy(errorMessage = validationNameMissing)
                                 } else {
                                     onSave(
                                         buildMap {
                                             put("name", name)
-                                            put("adresse", formState.adresse.trim())
-                                            put("stadt", formState.stadt.trim())
-                                            put("plz", formState.plz.trim())
-                                            put("telefon", formState.telefon.trim())
-                                            put("notizen", formState.notizen.trim())
-                                            put("kundenArt", formState.kundenArt)
-                                            put("kundenTyp", formState.kundenTyp.name)
-                                            put("defaultAbholungWochentag", formState.abholungWochentage.firstOrNull() ?: -1)
-                                            put("defaultAuslieferungWochentag", formState.auslieferungWochentage.firstOrNull() ?: -1)
-                                            put("defaultAbholungWochentage", formState.abholungWochentage)
-                                            put("defaultAuslieferungWochentage", formState.auslieferungWochentage)
-                                            put("kundennummer", formState.kundennummer.trim())
-                                            put("defaultUhrzeit", formState.defaultUhrzeit.trim())
-                                            put("tags", formState.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } })
-                                            val hasTour = formState.abholungWochentage.isNotEmpty() || formState.tourStadt.isNotBlank() || formState.tourZeitStart.isNotBlank() || formState.tourZeitEnde.isNotBlank()
+                                            put("adresse", stateForSave.adresse.trim())
+                                            put("stadt", stateForSave.stadt.trim())
+                                            put("plz", stateForSave.plz.trim())
+                                            put("telefon", stateForSave.telefon.trim())
+                                            put("notizen", stateForSave.notizen.trim())
+                                            put("kundenArt", stateForSave.kundenArt)
+                                            put("kundenTyp", stateForSave.kundenTyp.name)
+                                            put("defaultAbholungWochentag", stateForSave.abholungWochentage.firstOrNull() ?: -1)
+                                            put("defaultAuslieferungWochentag", stateForSave.auslieferungWochentage.firstOrNull() ?: -1)
+                                            put("defaultAbholungWochentage", stateForSave.abholungWochentage)
+                                            put("defaultAuslieferungWochentage", stateForSave.auslieferungWochentage)
+                                            put("kundennummer", stateForSave.kundennummer.trim())
+                                            put("defaultUhrzeit", stateForSave.defaultUhrzeit.trim())
+                                            put("tags", stateForSave.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } })
+                                            val hasTour = stateForSave.abholungWochentage.isNotEmpty() || stateForSave.tourStadt.isNotBlank() || stateForSave.tourZeitStart.isNotBlank() || stateForSave.tourZeitEnde.isNotBlank()
                                             val slotId = if (hasTour) (customer?.tourSlot?.id ?: "customer-${customer?.id}") else ""
                                             put("tourSlotId", slotId)
                                             put("tourSlot", if (hasTour) mapOf<String, Any>(
                                                 "id" to slotId,
-                                                "wochentag" to (formState.abholungWochentage.firstOrNull() ?: -1),
-                                                "stadt" to formState.tourStadt.trim(),
+                                                "wochentag" to (stateForSave.abholungWochentage.firstOrNull() ?: -1),
+                                                "stadt" to stateForSave.tourStadt.trim(),
                                                 "zeitfenster" to mapOf(
-                                                    "start" to formState.tourZeitStart.trim(),
-                                                    "ende" to formState.tourZeitEnde.trim()
+                                                    "start" to stateForSave.tourZeitStart.trim(),
+                                                    "ende" to stateForSave.tourZeitEnde.trim()
                                                 )
                                             ) else emptyMap<String, Any>())
                                             put("intervalle", editIntervalle.map {

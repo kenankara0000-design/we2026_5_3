@@ -75,6 +75,7 @@ class CustomerDetailActivity : AppCompatActivity() {
             val customer by viewModel.currentCustomer.collectAsState(initial = null)
             val isInEditMode by viewModel.isInEditMode.collectAsState(initial = false)
             val editIntervalle by viewModel.editIntervalle.collectAsState(initial = emptyList())
+            val editFormState by viewModel.editFormState.collectAsState(initial = null)
             val isLoading by viewModel.isLoading.collectAsState(initial = false)
             val isUploading by viewModel.isUploading.collectAsState(initial = false)
             val regelNameByRegelId = emptyMap<String, String>()
@@ -83,6 +84,8 @@ class CustomerDetailActivity : AppCompatActivity() {
                 customer = customer,
                 isInEditMode = isInEditMode,
                 editIntervalle = editIntervalle,
+                editFormState = editFormState,
+                onUpdateEditFormState = { viewModel.updateEditFormState(it) },
                 isLoading = isLoading,
                 isUploading = isUploading,
                 onBack = { finish() },
