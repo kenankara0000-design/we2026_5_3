@@ -68,6 +68,7 @@ fun CustomerManagerScreen(
     selectedTab: Int,
     kundenTypFilter: Int,
     ohneTourFilter: Int,
+    pausierteFilter: Int,
     searchQuery: String,
     isBulkMode: Boolean,
     selectedIds: Set<String>,
@@ -78,6 +79,7 @@ fun CustomerManagerScreen(
     onTabSelected: (Int) -> Unit,
     onKundenTypFilterChange: (Int) -> Unit,
     onOhneTourFilterChange: (Int) -> Unit,
+    onPausierteFilterChange: (Int) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     pressedHeaderButton: String?, // "Auswählen", "Exportieren", "NeuerKunde" für orangefarbenes Feedback
     onBulkSelectClick: () -> Unit,
@@ -313,6 +315,26 @@ fun CustomerManagerScreen(
                             selected = ohneTourFilter == 2,
                             onClick = { onOhneTourFilterChange(2) },
                             label = { Text(stringResource(R.string.label_ohne_tour_ausblenden)) }
+                        )
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = stringResource(R.string.label_filter_pausierte),
+                        color = textPrimary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = pausierteFilter == 0,
+                            onClick = { onPausierteFilterChange(0) },
+                            label = { Text(stringResource(R.string.label_pausierte_ausblenden)) }
+                        )
+                        FilterChip(
+                            selected = pausierteFilter == 1,
+                            onClick = { onPausierteFilterChange(1) },
+                            label = { Text(stringResource(R.string.label_pausierte_anzeigen)) }
                         )
                     }
                     Spacer(Modifier.height(8.dp))

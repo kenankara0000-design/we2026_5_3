@@ -100,7 +100,8 @@ fun CustomerDetailScreen(
     onTageAzuLZyklusChange: ((Int, Int) -> Unit)? = null,
     regelNameByRegelId: Map<String, String> = emptyMap(),
     onRegelClick: (String) -> Unit = {},
-    onUrlaubStartActivity: (String) -> Unit = {} // Callback to start UrlaubActivity
+    onUrlaubStartActivity: (String) -> Unit = {},
+    onErfassungClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val primaryBlue = colorResource(R.color.primary_blue)
@@ -385,6 +386,14 @@ fun CustomerDetailScreen(
                         colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = colorResource(R.color.button_urlaub))
                     ) {
                         Text(stringResource(R.string.label_urlaub))
+                    }
+                    Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+                    Text(stringResource(R.string.wasch_erfassungen), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = onErfassungClick,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.wasch_artikel_hinzufuegen))
                     }
                     Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
                     if (isUploading) {

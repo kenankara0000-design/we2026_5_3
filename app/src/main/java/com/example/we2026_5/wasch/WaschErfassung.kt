@@ -2,20 +2,24 @@ package com.example.we2026_5.wasch
 
 import com.google.firebase.database.IgnoreExtraProperties
 
-/** Eine Position in einer Wäsche-Erfassung (Artikel + Menge). */
+/** Eine Position in einer Wäsche-Erfassung (Artikel + Menge + Einheit). */
 @IgnoreExtraProperties
 data class ErfassungPosition(
     val articleId: String = "",
-    val menge: Int = 0
+    val menge: Int = 0,
+    /** Einheit (z. B. Stk, kg) – von Artikel übernommen oder überschrieben. */
+    val einheit: String = ""
 )
 
-/** Eine Erfassung (Liste) pro Kunde: Datum + Artikel mit Stückzahlen. */
+/** Eine Erfassung pro Kunde: Datum (+ optional Zeit) + Artikelzeilen. */
 @IgnoreExtraProperties
 data class WaschErfassung(
     val id: String = "",
     val customerId: String = "",
-    /** Erfassungsdatum (Tagesanfang oder Zeitstempel). */
+    /** Erfassungsdatum (Tagesanfang). */
     val datum: Long = 0L,
+    /** Optional, z. B. "14:30" für Anzeige. */
+    val zeit: String = "",
     val positionen: List<ErfassungPosition> = emptyList(),
     /** Optional: z. B. "Paket 2" oder Notiz. */
     val notiz: String = ""

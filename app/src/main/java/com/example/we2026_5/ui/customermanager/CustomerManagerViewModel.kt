@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
+import com.example.we2026_5.CustomerStatus
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.util.Result
@@ -41,14 +42,27 @@ class CustomerManagerViewModel(
     private val ohneTourFilterFlow = MutableStateFlow(0)
     val ohneTourFilter: StateFlow<Int> = ohneTourFilterFlow.asStateFlow()
 
+    // StateFlow für Pausierte-Filter (0=Ausblenden, 1=Anzeigen)
+    private val pausierteFilterFlow = MutableStateFlow(0)
+    val pausierteFilter: StateFlow<Int> = pausierteFilterFlow.asStateFlow()
+
     // Kombiniere customers, searchQuery und selectedTab für gefilterte Liste
+    // combine(6 Flows) nutzt Vararg-Überladung → Lambda erhält ein Array
     val filteredCustomers: LiveData<List<Customer>> = combine(
         customersFlow,
         searchQueryFlow,
         selectedTabFlow,
         kundenTypFilterFlow,
-        ohneTourFilterFlow
-    ) { customers, query, selectedTab, typFilter, ohneTourFilter ->
+        ohneTourFilterFlow,
+        pausierteFilterFlow
+    ) { values ->
+        @Suppress("UNCHECKED_CAST")
+        val customers = values[0] as List<Customer>
+        val query = values[1] as String
+        val selectedTab = values[2] as Int
+        val typFilter = values[3] as Int
+        val ohneTourFilter = values[4] as Int
+        val pausierteFilter = values[5] as Int
         // Zuerst nach Tab filtern
         val tabFiltered = when (selectedTab) {
             0 -> customers.filter { it.kundenArt == "Gewerblich" }
@@ -69,18 +83,25 @@ class CustomerManagerViewModel(
             2 -> typFiltered.filter { !it.ohneTour }
             else -> typFiltered
         }
+
+        val pausierteFiltered = when (pausierteFilter) {
+            0 -> ohneTourFiltered.filter { it.status != CustomerStatus.PAUSIERT }
+            1 -> ohneTourFiltered
+            else -> ohneTourFiltered
+        }
         
         // Dann nach Such-Query filtern
-        if (query.isEmpty()) {
-            ohneTourFiltered
+        val queryFiltered = if (query.isEmpty()) {
+            pausierteFiltered
         } else {
-            ohneTourFiltered.filter {
+            pausierteFiltered.filter {
                 it.displayName.contains(query, ignoreCase = true) ||
                 it.name.contains(query, ignoreCase = true) ||
                 it.alias.contains(query, ignoreCase = true) ||
                 it.adresse.contains(query, ignoreCase = true)
             }
-        }.sortedBy { it.displayName.uppercase() }
+        }
+        queryFiltered.sortedBy { it.displayName.uppercase() }
     }.asLiveData()
     
     // Für Kompatibilität: customers ohne Filter
@@ -134,6 +155,10 @@ class CustomerManagerViewModel(
 
     fun setOhneTourFilter(filterIndex: Int) {
         ohneTourFilterFlow.value = filterIndex
+    }
+
+    fun setPausierteFilter(filterIndex: Int) {
+        pausierteFilterFlow.value = filterIndex
     }
     
     fun deleteCustomer(customerId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {

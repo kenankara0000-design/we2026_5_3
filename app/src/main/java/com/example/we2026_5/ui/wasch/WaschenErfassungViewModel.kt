@@ -6,6 +6,7 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.ErfassungRepository
+import com.example.we2026_5.wasch.Article
 import com.example.we2026_5.wasch.ErfassungPosition
 import com.example.we2026_5.wasch.WaschErfassung
 import com.example.we2026_5.util.TerminBerechnungUtils
@@ -16,20 +17,24 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** Einzelne Zeile in der Erfassung (Artikel + Menge) für die UI. */
+/** Einzelne Zeile in der Erfassung (Artikel + Menge + Einheit) für die UI. */
 data class ErfassungZeile(
     val articleId: String,
     val artikelName: String,
-    var menge: Int
+    val einheit: String,
+    val menge: Int
 )
 
 sealed class WaschenErfassungUiState {
-    object Auswahl : WaschenErfassungUiState()  // Start: Neue Erfassung oder Liste
+    object Auswahl : WaschenErfassungUiState()
     data class KundeWaehlen(val customers: List<Customer>) : WaschenErfassungUiState()
     data class Erfassen(
         val customer: Customer,
+        val datum: Long,
+        val zeit: String,
         val zeilen: List<ErfassungZeile>,
         val notiz: String,
+        val artikelSearchQuery: String = "",
         val isSaving: Boolean = false,
         val errorMessage: String? = null
     ) : WaschenErfassungUiState()
@@ -56,15 +61,68 @@ class WaschenErfassungViewModel(
 
     fun kundeGewaehlt(customer: Customer) {
         viewModelScope.launch {
-            val artList = articleRepository.getAllArticles()
-            val zeilen = artList.sortedBy { it.name }.map { a ->
-                ErfassungZeile(articleId = a.id, artikelName = a.name, menge = 0)
-            }
             _uiState.value = WaschenErfassungUiState.Erfassen(
                 customer = customer,
-                zeilen = zeilen,
+                datum = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis()),
+                zeit = "",
+                zeilen = emptyList(),
                 notiz = ""
             )
+        }
+    }
+
+    /** Startet Erfassen mit vorgewähltem Kunden (z. B. aus Kunden-Detail). */
+    fun startErfassenFuerKunde(customer: Customer) {
+        _uiState.value = WaschenErfassungUiState.Erfassen(
+            customer = customer,
+            datum = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis()),
+            zeit = "",
+            zeilen = emptyList(),
+            notiz = ""
+        )
+    }
+
+    fun setDatum(datum: Long) {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.Erfassen) {
+            _uiState.value = s.copy(datum = datum)
+        }
+    }
+
+    fun setZeit(zeit: String) {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.Erfassen) {
+            _uiState.value = s.copy(zeit = zeit.trim())
+        }
+    }
+
+    fun setArtikelSearchQuery(query: String) {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.Erfassen) {
+            _uiState.value = s.copy(artikelSearchQuery = query)
+        }
+    }
+
+    fun addPosition(article: Article) {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.Erfassen) {
+            val newZeile = ErfassungZeile(
+                articleId = article.id,
+                artikelName = article.name,
+                einheit = article.einheit.ifBlank { "Stk" },
+                menge = 1
+            )
+            _uiState.value = s.copy(
+                zeilen = s.zeilen + newZeile,
+                artikelSearchQuery = ""
+            )
+        }
+    }
+
+    fun removePosition(index: Int) {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.Erfassen && index in s.zeilen.indices) {
+            _uiState.value = s.copy(zeilen = s.zeilen.toMutableList().apply { removeAt(index) })
         }
     }
 
@@ -75,6 +133,15 @@ class WaschenErfassungViewModel(
                 if (z.articleId == articleId) z.copy(menge = menge.coerceAtLeast(0)) else z
             }
             _uiState.value = s.copy(zeilen = updated)
+        }
+    }
+
+    fun setMengeByIndex(index: Int, menge: Int) {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.Erfassen && index in s.zeilen.indices) {
+            val list = s.zeilen.toMutableList()
+            list[index] = list[index].copy(menge = menge.coerceAtLeast(0))
+            _uiState.value = s.copy(zeilen = list)
         }
     }
 
@@ -89,7 +156,7 @@ class WaschenErfassungViewModel(
         val s = _uiState.value
         if (s !is WaschenErfassungUiState.Erfassen) return
         val positionen = s.zeilen.filter { it.menge > 0 }.map { z ->
-            ErfassungPosition(articleId = z.articleId, menge = z.menge)
+            ErfassungPosition(articleId = z.articleId, menge = z.menge, einheit = z.einheit)
         }
         if (positionen.isEmpty()) {
             _uiState.value = s.copy(errorMessage = "Bitte mindestens einen Artikel mit Menge > 0 eintragen.")
@@ -97,11 +164,11 @@ class WaschenErfassungViewModel(
         }
         viewModelScope.launch {
             _uiState.value = s.copy(isSaving = true, errorMessage = null)
-            val datum = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
             val ok = erfassungRepository.saveErfassungNew(
                 WaschErfassung(
                     customerId = s.customer.id,
-                    datum = datum,
+                    datum = s.datum,
+                    zeit = s.zeit,
                     positionen = positionen,
                     notiz = s.notiz
                 )

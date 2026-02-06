@@ -42,20 +42,30 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
+import com.example.we2026_5.util.DateFormatter
+import com.example.we2026_5.wasch.Article
+import com.example.we2026_5.ui.wasch.ErfassungPositionenSection
 import com.example.we2026_5.ui.wasch.WaschenErfassungUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WaschenErfassungScreen(
     state: WaschenErfassungUiState,
+    articles: List<Article>,
     onBack: () -> Unit,
     onNeueErfassung: () -> Unit,
     onSevDeskImport: () -> Unit,
     onKundeWaehlen: (Customer) -> Unit,
     onMengeChange: (articleId: String, menge: Int) -> Unit,
+    onMengeChangeByIndex: (index: Int, menge: Int) -> Unit,
+    onZeitChange: (String) -> Unit,
     onNotizChange: (String) -> Unit,
     onSpeichern: () -> Unit,
-    onBackToKundeWaehlen: () -> Unit
+    onBackToKundeWaehlen: () -> Unit,
+    onDatumClick: (currentDatum: Long) -> Unit,
+    onArtikelSearchQueryChange: (String) -> Unit,
+    onAddPosition: (Article) -> Unit,
+    onRemovePosition: (Int) -> Unit
 ) {
     val context = LocalContext.current
     val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
@@ -159,35 +169,65 @@ fun WaschenErfassungScreen(
                 }
             }
             is WaschenErfassungUiState.Erfassen -> {
+                val textPrimary = colorResource(R.color.text_primary)
+                val scrollState = rememberScrollState()
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
                         .padding(16.dp)
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(scrollState)
                 ) {
-                    if (state.zeilen.isEmpty()) {
-                        Text(
-                            stringResource(R.string.wasch_keine_artikel),
-                            color = textSecondary,
-                            modifier = Modifier.padding(vertical = 16.dp)
-                        )
-                    }
+                    Text(
+                        stringResource(R.string.wasch_erfassung_kunde),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textPrimary,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onBackToKundeWaehlen() },
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             state.customer.displayName,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = textPrimary
                         )
-                        IconButton(onClick = onBackToKundeWaehlen) {
-                            Text("↩", fontSize = 18.sp)
-                        }
+                        Text("↩", fontSize = 18.sp, color = primaryBlue)
                     }
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        stringResource(R.string.wasch_erfassung_datum),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textPrimary,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable { onDatumClick(state.datum) },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            DateFormatter.formatDate(state.datum),
+                            fontSize = 16.sp,
+                            color = textPrimary
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = state.zeit,
+                        onValueChange = onZeitChange,
+                        label = { Text(stringResource(R.string.wasch_erfassung_zeit)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        placeholder = { Text("z.B. 14:30") }
+                    )
+                    Spacer(Modifier.height(4.dp))
                     OutlinedTextField(
                         value = state.notiz,
                         onValueChange = onNotizChange,
@@ -196,38 +236,21 @@ fun WaschenErfassungScreen(
                         singleLine = true
                     )
                     Spacer(Modifier.height(16.dp))
-                    Text(
-                        stringResource(R.string.wasch_artikel_hinzufuegen),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                    val searchResults = articles.filter { it.name.contains(state.artikelSearchQuery, ignoreCase = true) }
+                    ErfassungPositionenSection(
+                        searchQuery = state.artikelSearchQuery,
+                        onSearchQueryChange = onArtikelSearchQueryChange,
+                        searchResults = searchResults,
+                        onArticleSelected = onAddPosition,
+                        zeilen = state.zeilen,
+                        onMengeChange = onMengeChangeByIndex,
+                        onRemovePosition = onRemovePosition,
+                        textPrimary = textPrimary,
+                        textSecondary = textSecondary
                     )
-                    state.zeilen.forEach { zeile ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                zeile.artikelName,
-                                modifier = Modifier.weight(1f),
-                                fontSize = 14.sp
-                            )
-                            OutlinedTextField(
-                                value = zeile.menge.toString(),
-                                onValueChange = { s ->
-                                    onMengeChange(zeile.articleId, s.filter { it.isDigit() }.toIntOrNull() ?: 0)
-                                },
-                                modifier = Modifier.widthIn(min = 72.dp).padding(start = 8.dp),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true
-                            )
-                        }
-                    }
                     state.errorMessage?.let { msg ->
-                        Text(msg, color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
+                        Spacer(Modifier.height(8.dp))
+                        Text(msg, color = Color.Red, fontSize = 12.sp)
                     }
                     Spacer(Modifier.height(24.dp))
                     Button(

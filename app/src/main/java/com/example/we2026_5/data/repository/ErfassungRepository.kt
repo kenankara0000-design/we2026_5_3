@@ -60,20 +60,23 @@ class ErfassungRepository(
         posSnap.children.forEach { child ->
             val articleId = child.child("articleId").getValue(String::class.java) ?: ""
             val menge = (child.child("menge").getValue(Any::class.java) as? Number)?.toInt() ?: 0
-            if (articleId.isNotBlank()) positionen.add(ErfassungPosition(articleId = articleId, menge = menge))
+            val einheit = child.child("einheit").getValue(String::class.java) ?: ""
+            if (articleId.isNotBlank()) positionen.add(ErfassungPosition(articleId = articleId, menge = menge, einheit = einheit))
         }
-        return WaschErfassung(id = id, customerId = customerId, datum = datum, positionen = positionen, notiz = notiz)
+        val zeit = snapshot.child("zeit").getValue(String::class.java) ?: ""
+        return WaschErfassung(id = id, customerId = customerId, datum = datum, zeit = zeit, positionen = positionen, notiz = notiz)
     }
 
     suspend fun saveErfassung(erfassung: WaschErfassung): Boolean {
         return try {
             val key = if (erfassung.id.isNotBlank()) erfassung.id else erfassungenRef.push().key ?: return false
             val posMap = erfassung.positionen.mapIndexed { i, p ->
-                i.toString() to mapOf("articleId" to p.articleId, "menge" to p.menge)
+                i.toString() to mapOf("articleId" to p.articleId, "menge" to p.menge, "einheit" to p.einheit)
             }.toMap()
             val map = mapOf(
                 "customerId" to erfassung.customerId,
                 "datum" to erfassung.datum,
+                "zeit" to erfassung.zeit,
                 "notiz" to erfassung.notiz,
                 "positionen" to posMap
             )
@@ -88,13 +91,14 @@ class ErfassungRepository(
     suspend fun saveErfassungNew(erfassung: WaschErfassung): Boolean {
         val key = erfassungenRef.push().key ?: return false
         val posMap = erfassung.positionen.mapIndexed { i, p ->
-            i.toString() to mapOf("articleId" to p.articleId, "menge" to p.menge)
+            i.toString() to mapOf("articleId" to p.articleId, "menge" to p.menge, "einheit" to p.einheit)
         }.toMap()
         return try {
             withTimeout(2000) {
                 erfassungenRef.child(key).setValue(mapOf(
                     "customerId" to erfassung.customerId,
                     "datum" to erfassung.datum,
+                    "zeit" to erfassung.zeit,
                     "notiz" to erfassung.notiz,
                     "positionen" to posMap
                 )).await()

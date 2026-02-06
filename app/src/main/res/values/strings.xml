@@ -235,6 +235,9 @@
     <string name="label_filter_ohne_tour">Ohne Tour:</string>
     <string name="label_ohne_tour_anzeigen">Ohne Tour anzeigen</string>
     <string name="label_ohne_tour_ausblenden">Ohne Tour ausblenden</string>
+    <string name="label_filter_pausierte">Pausierte:</string>
+    <string name="label_pausierte_ausblenden">Pausierte ausblenden</string>
+    <string name="label_pausierte_anzeigen">Pausierte anzeigen</string>
     <string name="label_list_search">Listen suchen…</string>
     <string name="label_list_sort_name">Sortierung: Name</string>
     <string name="label_list_sort_count">Sortierung: Kundenanzahl</string>
@@ -604,4 +607,13 @@
     <string name="sevdesk_delete_articles_confirm">Nur hier in der App werden die importierten Artikel gelöscht. In SevDesk passiert nichts – die App hat nur Lesezugriff. Unwiderruflich löschen?</string>
     <string name="sevdesk_delete_confirm_ok">Löschen</string>
     <string name="wasch_btn_sevdesk">SevDesk Import</string>
+    <string name="wasch_erfassung_kunde">Kunde</string>
+    <string name="wasch_erfassung_datum">Datum</string>
+    <string name="wasch_erfassung_zeit">Zeit (optional)</string>
+    <string name="wasch_positionen">Positionen</string>
+    <string name="wasch_erfassungen">Erfassungen</string>
+    <string name="wasch_artikel_suchen">Artikel suchen…</string>
+    <string name="wasch_position_hinzufuegen">+ Position hinzufügen</string>
+    <string name="wasch_menge_kurz">Menge</string>
+    <string name="wasch_einheit">Einheit</string>
 </resources>

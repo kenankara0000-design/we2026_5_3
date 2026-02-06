@@ -193,6 +193,11 @@ class CustomerDetailActivity : AppCompatActivity() {
                     startActivity(Intent(this@CustomerDetailActivity, UrlaubActivity::class.java).apply {
                         putExtra("CUSTOMER_ID", customerId)
                     })
+                },
+                onErfassungClick = {
+                    startActivity(Intent(this@CustomerDetailActivity, WaschenErfassungActivity::class.java).apply {
+                        putExtra("CUSTOMER_ID", id)
+                    })
                 }
             )
         }
