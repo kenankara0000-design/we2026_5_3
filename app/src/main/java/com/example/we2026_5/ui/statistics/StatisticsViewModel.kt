@@ -71,7 +71,7 @@ class StatisticsViewModel(
 
         val heuteEnd = heuteStart + TimeUnit.DAYS.toMillis(1)
         val heuteCount = activeCustomers.count { customer ->
-            val faelligAm = customer.getFaelligAm()
+            val faelligAm = TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
             faelligAm >= heuteStart && faelligAm < heuteEnd &&
                 !(customer.abholungErfolgt && customer.auslieferungErfolgt)
         }
@@ -86,7 +86,7 @@ class StatisticsViewModel(
         }.timeInMillis
         val wocheEnd = wocheStart + TimeUnit.DAYS.toMillis(7)
         val wocheCount = activeCustomers.count { customer ->
-            val faelligAm = customer.getFaelligAm()
+            val faelligAm = TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
             faelligAm >= wocheStart && faelligAm < wocheEnd
         }
 
@@ -101,13 +101,13 @@ class StatisticsViewModel(
         cal.add(Calendar.MONTH, 1)
         val monatEnd = cal.timeInMillis
         val monatCount = activeCustomers.count { customer ->
-            val faelligAm = customer.getFaelligAm()
+            val faelligAm = TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
             faelligAm >= monatStart && faelligAm < monatEnd
         }
 
         val overdueCount = activeCustomers.count { customer ->
             val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-            val faelligAm = customer.getFaelligAm()
+            val faelligAm = TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
             !isDone && faelligAm < heuteStart
         }
 

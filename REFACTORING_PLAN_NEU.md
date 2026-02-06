@@ -74,7 +74,7 @@
 
 | # | Thema | Vorkommen | Maßnahme |
 |---|--------|-----------|----------|
-| B.1 | **Customer.getFaelligAm()** | CustomerDetailScreen („Nächster Termin“), StatisticsViewModel (4×), TourPlannerVerschiebenUrlaubHandler | Ersetzen durch TerminBerechnungUtils.berechneAlleTermineFuerKunde() (oder bestehende TourPlannerDateUtils.getFaelligAmDatumFuerAbholung/Auslieferung) und nächstes fälliges Datum ableiten. Anschließend getFaelligAm() in Customer entfernen oder intern delegieren. |
+| B.1 | **Customer.getFaelligAm()** | **Erledigt (Feb 2026):** TerminBerechnungUtils.naechstesFaelligAmDatum(customer) hinzugefügt; alle Aufrufer (CustomerDetailScreen, StatisticsViewModel 4×, TourPlannerVerschiebenUrlaubHandler) umgestellt; Customer.getFaelligAm() delegiert an Util. |
 | B.2 | **listenWochentag / wochentag** | AddCustomerActivity (listenWochentag = -1), Customer (Felder deprecated) | Sicherstellen, dass nirgends mehr fachlich darauf zugegriffen wird; nur Default beim Anlegen ist unkritisch. Optional: Parameter beim Anlegen entfernen, sobald DB-Migration keine alten Werte mehr erwartet. |
 | B.3 | **Weitere @Deprecated in Customer/KundenListe** | intervallTage, abholungDatum, auslieferungDatum, … | Prüfen: Alle Leser auf intervalle / neue Felder umgestellt? Dann Deprecated-Felder nur noch für DB-Lesen (Migration) behalten und klar dokumentieren; keine neuen Aufrufer. |
 

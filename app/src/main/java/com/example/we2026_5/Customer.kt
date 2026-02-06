@@ -1,8 +1,6 @@
 package com.example.we2026_5
 
-import com.example.we2026_5.util.TerminFilterUtils
 import com.example.we2026_5.util.TerminBerechnungUtils
-import com.example.we2026_5.util.firstIntervallOrNull
 import com.google.firebase.database.Exclude
 import com.google.firebase.firestore.IgnoreExtraProperties
 import kotlin.DeprecationLevel
@@ -125,25 +123,10 @@ data class Customer(
      * Nutzt intern bereits [intervalle] bzw. Legacy-Felder; nur für Rückwärtskompatibilität.
      */
     @Deprecated(
-        message = "Bevorzugt TerminBerechnungUtils.berechneAlleTermineFuerKunde() nutzen und nächstes fälliges Datum daraus ableiten.",
+        message = "Bevorzugt TerminBerechnungUtils.naechstesFaelligAmDatum(customer) nutzen.",
         level = DeprecationLevel.WARNING
     )
-    fun getFaelligAm(): Long {
-        if (firstIntervallOrNull() != null) {
-            val heute = System.currentTimeMillis()
-            val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                customer = this,
-                startDatum = heute,
-                tageVoraus = 365
-            )
-            val naechstesTermin = termine.firstOrNull {
-                it.datum >= com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(heute) &&
-                !com.example.we2026_5.util.TerminFilterUtils.istTerminGeloescht(it.datum, geloeschteTermine)
-            }
-            return naechstesTermin?.datum ?: 0L
-        }
-        return 0L
-    }
+    fun getFaelligAm(): Long = com.example.we2026_5.util.TerminBerechnungUtils.naechstesFaelligAmDatum(this)
 
     /** Effektive A-Tage: Liste wenn gesetzt, sonst einzelner defaultAbholungWochentag falls gültig. */
     val effectiveAbholungWochentage: List<Int>

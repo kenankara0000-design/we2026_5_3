@@ -8,6 +8,7 @@ import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.VerschobenerTermin
 import com.example.we2026_5.TerminTyp
 import java.util.Calendar
+import com.example.we2026_5.util.TerminFilterUtils
 import java.util.concurrent.TimeUnit
 
 /**
@@ -291,6 +292,26 @@ object TerminBerechnungUtils {
         }
     }
     
+    /**
+     * Nächstes fälliges Termin-Datum (A oder L) ab heute.
+     * Berücksichtigt gelöschte Termine. Ersetzt Customer.getFaelligAm().
+     */
+    fun naechstesFaelligAmDatum(customer: Customer): Long {
+        if (customer.intervalle.isEmpty() && customer.effectiveAbholungWochentage.isEmpty()) return 0L
+        val heute = System.currentTimeMillis()
+        val heuteStart = getStartOfDay(heute)
+        val termine = berechneAlleTermineFuerKunde(
+            customer = customer,
+            liste = null,
+            startDatum = heute,
+            tageVoraus = 365
+        )
+        val naechstes = termine.firstOrNull {
+            it.datum >= heuteStart && !TerminFilterUtils.istTerminGeloescht(it.datum, customer.geloeschteTermine)
+        }
+        return naechstes?.datum ?: 0L
+    }
+
     // Filter-Funktionen entfernt - jetzt in TerminFilterUtils
 }
 

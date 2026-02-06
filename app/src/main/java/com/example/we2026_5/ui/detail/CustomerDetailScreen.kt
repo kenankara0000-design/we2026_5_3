@@ -288,7 +288,7 @@ fun CustomerDetailScreen(
                     surfaceWhite = surfaceWhite
                 )
                 Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
-                val nextTermin = customer.getFaelligAm()
+                val nextTermin = com.example.we2026_5.util.TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
                 Text(stringResource(R.string.label_next_termin), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                 Text(
                     text = if (nextTermin > 0) DateFormatter.formatDateWithWeekday(nextTermin) else stringResource(R.string.label_not_set),

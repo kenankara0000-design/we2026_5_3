@@ -30,8 +30,7 @@ internal class TourPlannerVerschiebenUrlaubHandler(
         CoroutineScope(Dispatchers.Main).launch {
             val newDateNorm = TerminBerechnungUtils.getStartOfDay(newDate)
             val success = if (alleVerschieben) {
-                @Suppress("DEPRECATION")
-                val aktuellerFaelligAm = customer.getFaelligAm().takeIf { it > 0 }
+                val aktuellerFaelligAm = TerminBerechnungUtils.naechstesFaelligAmDatum(customer).takeIf { it > 0 }
                     ?: (customer.letzterTermin + TimeUnit.DAYS.toMillis(customer.intervallTage.toLong())).takeIf { customer.letzterTermin > 0 } ?: 0L
                 val diff = newDateNorm - aktuellerFaelligAm
                 val neuerLetzterTermin = customer.letzterTermin + diff
