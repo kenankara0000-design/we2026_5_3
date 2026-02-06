@@ -372,7 +372,7 @@
     <string name="label_details_open">Details öffnen</string>
     <string name="label_list_name">Liste Name</string>
     <string name="label_list_name_field">Liste-Name:</string>
-    <string name="label_list_type">Liste-Art:</string>
+    <string name="label_list_type">Tour Art:</string>
     <string name="label_list_wochentag">Wochentagsliste:</string>
     <string name="label_list_edit">Liste bearbeiten</string>
     <string name="label_intervals">Intervalle</string>
@@ -461,8 +461,6 @@
     <string name="label_time_from">Von</string>
     <string name="label_time_to">Bis</string>
     <string name="list_create_title">Neue Liste erstellen</string>
-    <string name="list_create_hint">💡 Hinweis</string>
-    <string name="list_create_hint_text">Termine können nach dem Erstellen der Liste über \'Termin Anlegen\' hinzugefügt werden.</string>
     <string name="section_overdue">ÜBERFÄLLIG</string>
     <string name="label_overdue_colon">Überfällig:</string>
     <string name="btn_cancel">Abbrechen</string>
@@ -491,7 +489,7 @@
     <string name="status_badge_u_short">U</string>
     <string name="label_section_count_format">%1$d/%2$d</string>
     <string name="overdue_date_format">Überfällig: %1$s</string>
-    <string name="list_art_format">Liste-Art: %1$s</string>
+    <string name="list_art_format">Tour Art: %1$s</string>
     <string name="intervall_regel_label">Regel:</string>
     <string name="intervall_rule_not_found">Regel nicht gefunden</string>
     <string name="intervall_manual_created">Manuell erstellt</string>

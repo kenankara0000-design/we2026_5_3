@@ -17,8 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -140,7 +138,7 @@ fun ListeErstellenScreen(
                         selected = state.selectedType == "Gewerbe",
                         onClick = { onTypeChange("Gewerbe") }
                     )
-                    Text(stringResource(R.string.label_type_gewerbe), color = textPrimary)
+                    Text(stringResource(R.string.label_type_gewerblich), color = textPrimary)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
@@ -151,10 +149,10 @@ fun ListeErstellenScreen(
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
-                        selected = state.selectedType == "Liste",
-                        onClick = { onTypeChange("Liste") }
+                        selected = state.selectedType == "Tour",
+                        onClick = { onTypeChange("Tour") }
                     )
-                    Text(stringResource(R.string.label_type_liste), color = textPrimary)
+                    Text(stringResource(R.string.label_type_tour), color = textPrimary)
                 }
             }
 
@@ -182,30 +180,6 @@ fun ListeErstellenScreen(
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = surfaceWhite),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(
-                        text = stringResource(R.string.list_create_hint),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.list_create_hint_text),
-                        fontSize = 12.sp,
-                        color = textSecondary
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             Button(
                 onClick = onSave,

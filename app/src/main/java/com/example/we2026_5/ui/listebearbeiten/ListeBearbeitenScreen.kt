@@ -200,8 +200,8 @@ fun ListeBearbeitenScreen(
                             Text(stringResource(R.string.label_type_privat), color = textPrimary)
                         }
                         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = editListeArt == "Liste", onClick = { editListeArt = "Liste" })
-                            Text(stringResource(R.string.label_type_liste), color = textPrimary)
+                            RadioButton(selected = editListeArt == "Tour", onClick = { editListeArt = "Tour" })
+                            Text(stringResource(R.string.label_type_tour), color = textPrimary)
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))

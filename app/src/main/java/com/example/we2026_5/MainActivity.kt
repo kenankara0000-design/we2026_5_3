@@ -15,6 +15,7 @@ import com.example.we2026_5.ui.main.MainScreen
 import com.example.we2026_5.ui.main.MainViewModel
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
+import com.example.we2026_5.util.runListeArtToTourMigration
 import com.example.we2026_5.util.runListeIntervalleMigration
 import com.example.we2026_5.util.runListeToTourMigration
 import com.example.we2026_5.util.runRemoveDeprecatedFieldsMigration
@@ -44,6 +45,7 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             runListeToTourMigration(this@MainActivity, customerRepository)
+            runListeArtToTourMigration(this@MainActivity, listeRepository)
             runListeIntervalleMigration(this@MainActivity, customerRepository, listeRepository)
             runRemoveDeprecatedFieldsMigration(this@MainActivity, customerRepository)
         }
