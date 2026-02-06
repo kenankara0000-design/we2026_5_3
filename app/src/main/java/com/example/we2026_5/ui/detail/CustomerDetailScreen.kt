@@ -60,6 +60,8 @@ import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.TerminAusKundeUtils
+import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.DialogBaseHelper
 import com.example.we2026_5.util.intervallTageOrDefault
 import com.example.we2026_5.util.tageAzuLOrDefault
 import com.example.we2026_5.ui.detail.CustomerDetailIntervallRow
@@ -132,7 +134,8 @@ fun CustomerDetailScreen(
                     tourStadt = customer.tourSlot?.stadt ?: "",
                     tourZeitStart = customer.tourSlot?.zeitfenster?.start ?: "",
                     tourZeitEnde = customer.tourSlot?.zeitfenster?.ende ?: "",
-                    ohneTour = customer.ohneTour
+                    ohneTour = customer.ohneTour,
+                    erstelltAm = customer.erstelltAm
                 )
             } else AddCustomerState()
         )
@@ -356,10 +359,22 @@ fun CustomerDetailScreen(
                     )
                 } else {
                     val currentFormState = editFormState ?: formState
+                    val ctx = LocalContext.current
                     CustomerStammdatenForm(
                         state = currentFormState,
                         onUpdate = { newState ->
                             if (isInEditMode) onUpdateEditFormState(newState) else formState = newState
+                        },
+                        onStartDatumClick = {
+                            DialogBaseHelper.showDatePickerDialog(
+                                context = ctx,
+                                initialDate = currentFormState.erstelltAm.takeIf { it > 0 } ?: System.currentTimeMillis(),
+                                title = ctx.getString(R.string.label_startdatum_a),
+                                onDateSelected = { selected ->
+                                    val newState = currentFormState.copy(erstelltAm = TerminBerechnungUtils.getStartOfDay(selected))
+                                    if (isInEditMode) onUpdateEditFormState(newState) else formState = newState
+                                }
+                            )
                         }
                     )
                     Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
@@ -402,8 +417,9 @@ fun CustomerDetailScreen(
                                     put("kundennummer", stateForSave.kundennummer.trim())
                                     put("defaultUhrzeit", stateForSave.defaultUhrzeit.trim())
                                     put("tags", stateForSave.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } })
-                                    put("ohneTour", stateForSave.ohneTour)
-                                    val hasTour = stateForSave.abholungWochentage.isNotEmpty() || stateForSave.tourStadt.isNotBlank() || stateForSave.tourZeitStart.isNotBlank() || stateForSave.tourZeitEnde.isNotBlank()
+                                            put("ohneTour", stateForSave.ohneTour)
+                                            put("erstelltAm", stateForSave.erstelltAm.takeIf { it > 0 } ?: TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis()))
+                                            val hasTour = stateForSave.abholungWochentage.isNotEmpty() || stateForSave.tourStadt.isNotBlank() || stateForSave.tourZeitStart.isNotBlank() || stateForSave.tourZeitEnde.isNotBlank()
                                     val slotId = if (hasTour) (customer?.tourSlot?.id ?: "customer-${customer?.id}") else ""
                                     put("tourSlotId", slotId)
                                     put("tourSlot", if (hasTour) mapOf<String, Any>(
@@ -415,15 +431,16 @@ fun CustomerDetailScreen(
                                             "ende" to stateForSave.tourZeitEnde.trim()
                                         )
                                     ) else emptyMap<String, Any>())
-                                    val intervalleToSave = if (editIntervalle.isEmpty() && stateForSave.kundenTyp == KundenTyp.REGELMAESSIG && stateForSave.abholungWochentage.isNotEmpty() && customer != null) {
-                                        val customerForIntervall = customer.copy(
-                                            defaultAbholungWochentag = stateForSave.abholungWochentage.firstOrNull() ?: -1,
-                                            defaultAuslieferungWochentag = stateForSave.auslieferungWochentage.firstOrNull() ?: -1,
-                                            defaultAbholungWochentage = stateForSave.abholungWochentage,
-                                            defaultAuslieferungWochentage = stateForSave.auslieferungWochentage,
-                                            tourSlotId = slotId
-                                        )
-                                        TerminAusKundeUtils.erstelleIntervallAusKunde(customerForIntervall, System.currentTimeMillis(), stateForSave.tageAzuL, stateForSave.intervallTage)?.let { listOf(it) } ?: emptyList()
+                                            val startDatumA = stateForSave.erstelltAm.takeIf { it > 0 } ?: TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+                                            val intervalleToSave = if (editIntervalle.isEmpty() && stateForSave.kundenTyp == KundenTyp.REGELMAESSIG && stateForSave.abholungWochentage.isNotEmpty() && customer != null) {
+                                                val customerForIntervall = customer.copy(
+                                                    defaultAbholungWochentag = stateForSave.abholungWochentage.firstOrNull() ?: -1,
+                                                    defaultAuslieferungWochentag = stateForSave.auslieferungWochentage.firstOrNull() ?: -1,
+                                                    defaultAbholungWochentage = stateForSave.abholungWochentage,
+                                                    defaultAuslieferungWochentage = stateForSave.auslieferungWochentage,
+                                                    tourSlotId = slotId
+                                                )
+                                                TerminAusKundeUtils.erstelleIntervallAusKunde(customerForIntervall, startDatumA, stateForSave.tageAzuL, stateForSave.intervallTage)?.let { listOf(it) } ?: emptyList()
                                     } else editIntervalle
                                     put("intervalle", intervalleToSave.map {
                                         mapOf(

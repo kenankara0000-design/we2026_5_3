@@ -161,7 +161,8 @@ class CustomerDetailViewModel(
             tourStadt = c.tourSlot?.stadt ?: "",
             tourZeitStart = c.tourSlot?.zeitfenster?.start ?: "",
             tourZeitEnde = c.tourSlot?.zeitfenster?.ende ?: "",
-            ohneTour = c.ohneTour
+            ohneTour = c.ohneTour,
+            erstelltAm = c.erstelltAm
         )
     }
 

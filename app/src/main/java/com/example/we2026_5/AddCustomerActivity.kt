@@ -144,7 +144,7 @@ class AddCustomerActivity : AppCompatActivity() {
             kundenTyp = state.kundenTyp,
             listenWochentag = -1,
             kundennummer = state.kundennummer.trim(),
-            erstelltAm = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis()),
+            erstelltAm = state.erstelltAm.takeIf { it > 0 }?.let { TerminBerechnungUtils.getStartOfDay(it) } ?: TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis()),
             defaultAbholungWochentag = state.abholungWochentage.firstOrNull() ?: -1,
             defaultAuslieferungWochentag = state.auslieferungWochentage.firstOrNull() ?: -1,
             defaultAbholungWochentage = state.abholungWochentage,
@@ -157,8 +157,9 @@ class AddCustomerActivity : AppCompatActivity() {
             ohneTour = state.ohneTour,
             istImUrlaub = false
         )
+        val startDatumA = state.erstelltAm.takeIf { it > 0 }?.let { TerminBerechnungUtils.getStartOfDay(it) } ?: TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
         val intervalle = if (state.kundenTyp == KundenTyp.REGELMAESSIG) {
-            TerminAusKundeUtils.erstelleIntervallAusKunde(baseCustomer, System.currentTimeMillis(), state.tageAzuL)?.let { listOf(it) } ?: emptyList()
+            TerminAusKundeUtils.erstelleIntervallAusKunde(baseCustomer, startDatumA, state.tageAzuL)?.let { listOf(it) } ?: emptyList()
         } else {
             emptyList()
         }

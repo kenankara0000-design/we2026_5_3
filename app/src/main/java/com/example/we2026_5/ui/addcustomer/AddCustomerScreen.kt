@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
+import com.example.we2026_5.util.DialogBaseHelper
+import com.example.we2026_5.util.TerminBerechnungUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +82,17 @@ fun AddCustomerScreen(
         ) {
             CustomerStammdatenForm(
                 state = state,
-                onUpdate = onUpdate
+                onUpdate = onUpdate,
+                onStartDatumClick = {
+                    DialogBaseHelper.showDatePickerDialog(
+                        context = context,
+                        initialDate = state.erstelltAm.takeIf { it > 0 } ?: System.currentTimeMillis(),
+                        title = context.getString(R.string.label_startdatum_a),
+                        onDateSelected = { selected ->
+                            onUpdate(state.copy(erstelltAm = TerminBerechnungUtils.getStartOfDay(selected)))
+                        }
+                    )
+                }
             )
             Spacer(modifier = Modifier.height(12.dp))
             Button(

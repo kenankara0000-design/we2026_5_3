@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
@@ -35,6 +36,7 @@ import com.example.we2026_5.ui.common.ExpandableSection
 fun CustomerStammdatenForm(
     state: AddCustomerState,
     onUpdate: (AddCustomerState) -> Unit,
+    onStartDatumClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -128,24 +130,6 @@ fun CustomerStammdatenForm(
         Spacer(modifier = Modifier.height(spacing))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            androidx.compose.material3.Checkbox(
-                checked = state.ohneTour,
-                onCheckedChange = { onUpdate(state.copy(ohneTour = it)) }
-            )
-            Text(
-                text = stringResource(R.string.label_ohne_tour),
-                color = textPrimary,
-                fontSize = DetailUiConstants.FieldLabelSp,
-                modifier = Modifier.clickable { onUpdate(state.copy(ohneTour = !state.ohneTour)) }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(spacing))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -173,6 +157,43 @@ fun CustomerStammdatenForm(
                 selected = state.kundenTyp == KundenTyp.AUF_ABRUF,
                 onSelect = { onUpdate(state.copy(kundenTyp = KundenTyp.AUF_ABRUF)) },
                 textPrimary = textPrimary
+            )
+        }
+
+        Spacer(modifier = Modifier.height(spacing))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onStartDatumClick() },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.label_startdatum_a),
+                    fontSize = DetailUiConstants.FieldLabelSp,
+                    fontWeight = FontWeight.Bold,
+                    color = textPrimary,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text(
+                    text = if (state.erstelltAm > 0) com.example.we2026_5.util.DateFormatter.formatDate(state.erstelltAm) else stringResource(R.string.hint_heute),
+                    fontSize = DetailUiConstants.FieldLabelSp,
+                    color = textSecondary
+                )
+            }
+            androidx.compose.material3.Checkbox(
+                checked = state.ohneTour,
+                onCheckedChange = { onUpdate(state.copy(ohneTour = it)) }
+            )
+            Text(
+                text = stringResource(R.string.label_ohne_tour),
+                color = textPrimary,
+                fontSize = DetailUiConstants.FieldLabelSp,
+                modifier = Modifier.clickable { onUpdate(state.copy(ohneTour = !state.ohneTour)) }
             )
         }
 

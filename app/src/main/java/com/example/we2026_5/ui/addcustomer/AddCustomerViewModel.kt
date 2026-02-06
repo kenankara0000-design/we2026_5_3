@@ -28,6 +28,8 @@ data class AddCustomerState(
     val tourZeitStart: String = "",
     val tourZeitEnde: String = "",
     val ohneTour: Boolean = false,
+    /** A-Termin Startdatum (Tagesanfang). 0 = beim Speichern „heute“ verwenden. */
+    val erstelltAm: Long = 0L,
     val isSaving: Boolean = false,
     val errorMessage: String? = null,
     val success: Boolean = false
