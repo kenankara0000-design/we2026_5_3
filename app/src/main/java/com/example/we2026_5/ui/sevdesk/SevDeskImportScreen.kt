@@ -13,13 +13,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -27,9 +25,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -50,54 +45,12 @@ fun SevDeskImportScreen(
     onSaveToken: () -> Unit,
     onImportContacts: () -> Unit,
     onImportArticles: () -> Unit,
-    onDeleteAllSevDeskContacts: () -> Unit,
-    onDeleteAllSevDeskArticles: () -> Unit,
     onClearMessage: () -> Unit
 ) {
     val context = LocalContext.current
     val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
     val textSecondary = colorResource(R.color.text_secondary)
-    val isBusy = state.isImportingContacts || state.isImportingArticles ||
-        state.isDeletingSevDeskContacts || state.isDeletingSevDeskArticles
-    var showDeleteContactsDialog by remember { mutableStateOf(false) }
-    var showDeleteArticlesDialog by remember { mutableStateOf(false) }
-
-    if (showDeleteContactsDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteContactsDialog = false },
-            title = { Text(stringResource(R.string.sevdesk_delete_contacts)) },
-            text = { Text(stringResource(R.string.sevdesk_delete_contacts_confirm)) },
-            confirmButton = {
-                Button(onClick = {
-                    onDeleteAllSevDeskContacts()
-                    showDeleteContactsDialog = false
-                }) { Text(stringResource(R.string.sevdesk_delete_confirm_ok)) }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { showDeleteContactsDialog = false }) {
-                    Text(stringResource(R.string.btn_cancel))
-                }
-            }
-        )
-    }
-    if (showDeleteArticlesDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteArticlesDialog = false },
-            title = { Text(stringResource(R.string.sevdesk_delete_articles)) },
-            text = { Text(stringResource(R.string.sevdesk_delete_articles_confirm)) },
-            confirmButton = {
-                Button(onClick = {
-                    onDeleteAllSevDeskArticles()
-                    showDeleteArticlesDialog = false
-                }) { Text(stringResource(R.string.sevdesk_delete_confirm_ok)) }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { showDeleteArticlesDialog = false }) {
-                    Text(stringResource(R.string.btn_cancel))
-                }
-            }
-        )
-    }
+    val isBusy = state.isImportingContacts || state.isImportingArticles
 
     Scaffold(
         topBar = {
@@ -141,23 +94,6 @@ fun SevDeskImportScreen(
             Spacer(Modifier.height(24.dp))
 
             Text(stringResource(R.string.sevdesk_before_reimport), fontWeight = FontWeight.SemiBold, color = textSecondary, fontSize = 14.sp)
-            Spacer(Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(
-                    onClick = { showDeleteContactsDialog = true },
-                    enabled = !isBusy,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(if (state.isDeletingSevDeskContacts) "…" else stringResource(R.string.sevdesk_delete_contacts))
-                }
-                OutlinedButton(
-                    onClick = { showDeleteArticlesDialog = true },
-                    enabled = !isBusy,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(if (state.isDeletingSevDeskArticles) "…" else stringResource(R.string.sevdesk_delete_articles))
-                }
-            }
             Spacer(Modifier.height(24.dp))
 
             Button(

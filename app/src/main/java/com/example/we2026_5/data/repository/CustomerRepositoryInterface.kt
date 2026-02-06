@@ -24,6 +24,6 @@ interface CustomerRepositoryInterface {
     /** Wie [deleteCustomer], gibt aber [Result] für einheitliche Fehlerbehandlung im ViewModel zurück. */
     suspend fun deleteCustomerResult(customerId: String): Result<Boolean>
 
-    /** Löscht alle Kunden, die aus SevDesk importiert wurden (kundennummer startet mit „sevdesk_“). @return Anzahl gelöschter Kunden oder Fehler. */
-    suspend fun deleteAllSevDeskContacts(): Result<Int>
+    /** Löscht alle Kunden, die aus SevDesk importiert wurden. @return (Anzahl gelöscht, Kundennummern der gelöschten) oder Fehler. */
+    suspend fun deleteAllSevDeskContacts(): Result<Pair<Int, List<String>>>
 }

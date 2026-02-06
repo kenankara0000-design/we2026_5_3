@@ -25,6 +25,7 @@ import com.example.we2026_5.detail.CustomerPhotoManager
 import com.example.we2026_5.ui.detail.CustomerDetailScreen
 import com.example.we2026_5.ui.detail.CustomerDetailViewModel
 import com.example.we2026_5.ui.urlaub.UrlaubActivity
+import com.example.we2026_5.sevdesk.SevDeskDeletedIds
 import com.example.we2026_5.util.IntervallManager
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collectLatest
@@ -103,6 +104,11 @@ class CustomerDetailActivity : AppCompatActivity() {
                         .setTitle(getString(R.string.dialog_delete_customer_title))
                         .setMessage(getString(R.string.dialog_delete_customer_message))
                         .setPositiveButton(getString(R.string.dialog_loeschen)) { _, _ ->
+                            customer?.let { c ->
+                                if (c.kundennummer.startsWith("sevdesk_")) {
+                                    SevDeskDeletedIds.add(this@CustomerDetailActivity, c.kundennummer)
+                                }
+                            }
                             val resultIntent = Intent().apply { putExtra("DELETED_CUSTOMER_ID", id) }
                             setResult(com.example.we2026_5.CustomerManagerActivity.RESULT_CUSTOMER_DELETED, resultIntent)
                             viewModel.deleteCustomer()

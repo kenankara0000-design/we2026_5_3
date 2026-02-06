@@ -30,6 +30,7 @@ class SevDeskImport(
             val contacts = SevDeskApi.getContacts(token)
             val existing = customerRepository.getAllCustomers()
             val byKundennummer = existing.filter { it.kundennummer.startsWith("sevdesk_") }.map { it.kundennummer to it }.toMap()
+            val deletedIds = SevDeskDeletedIds.getDeletedIds(context)
             var created = 0
             var updated = 0
             for (c in contacts) {
@@ -46,6 +47,8 @@ class SevDeskImport(
                         )
                     )
                     if (ok) updated++
+                } else if (c.id in deletedIds) {
+                    // Vom Nutzer gelöscht – nicht wieder anlegen
                 } else {
                     val customer = Customer(
                         id = UUID.randomUUID().toString(),

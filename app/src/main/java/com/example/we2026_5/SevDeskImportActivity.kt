@@ -27,8 +27,6 @@ class SevDeskImportActivity : AppCompatActivity() {
                     onSaveToken = { viewModel.saveToken() },
                     onImportContacts = { viewModel.importContacts() },
                     onImportArticles = { viewModel.importArticles() },
-                    onDeleteAllSevDeskContacts = { viewModel.deleteAllSevDeskContacts() },
-                    onDeleteAllSevDeskArticles = { viewModel.deleteAllSevDeskArticles() },
                     onClearMessage = { viewModel.clearMessage() }
                 )
             }

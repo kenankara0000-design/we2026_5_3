@@ -312,15 +312,19 @@ class CustomerRepository(
         }
     }
 
-    override suspend fun deleteAllSevDeskContacts(): Result<Int> {
+    override suspend fun deleteAllSevDeskContacts(): Result<Pair<Int, List<String>>> {
         return try {
             val all = getAllCustomers()
             val toDelete = all.filter { it.kundennummer.startsWith("sevdesk_") }
+            val kundennummern = mutableListOf<String>()
             var deleted = 0
             for (c in toDelete) {
-                if (deleteCustomer(c.id)) deleted++
+                if (deleteCustomer(c.id)) {
+                    deleted++
+                    kundennummern.add(c.kundennummer)
+                }
             }
-            Result.Success(deleted)
+            Result.Success(deleted to kundennummern)
         } catch (e: Exception) {
             android.util.Log.e("CustomerRepository", "Error deleting SevDesk contacts", e)
             Result.Error(AppErrorMapper.toDeleteMessage(e))

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.util.Result
+import com.example.we2026_5.sevdesk.SevDeskDeletedIds
 import com.example.we2026_5.sevdesk.getSevDeskToken
 import com.example.we2026_5.sevdesk.setSevDeskToken
 import com.example.we2026_5.sevdesk.SevDeskImport
@@ -98,7 +99,13 @@ class SevDeskImportViewModel(
             val result = withContext(Dispatchers.IO) { customerRepository.deleteAllSevDeskContacts() }
             _state.value = _state.value.copy(isDeletingSevDeskContacts = false)
             when (result) {
-                is Result.Success -> _state.value = _state.value.copy(message = "${result.data} SevDesk-Kontakte gelöscht.")
+                is Result.Success -> {
+                    val (count, kundennummern) = result.data
+                    if (kundennummern.isNotEmpty()) {
+                        SevDeskDeletedIds.addAll(context, kundennummern)
+                    }
+                    _state.value = _state.value.copy(message = "$count SevDesk-Kontakte gelöscht (werden beim Re-Import nicht wieder angelegt).")
+                }
                 is Result.Error -> _state.value = _state.value.copy(error = result.message)
             }
         }
