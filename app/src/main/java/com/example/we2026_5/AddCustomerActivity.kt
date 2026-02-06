@@ -154,6 +154,7 @@ class AddCustomerActivity : AppCompatActivity() {
             tags = tagsList,
             tourSlotId = tourSlot?.id ?: "",
             tourSlot = tourSlot,
+            ohneTour = state.ohneTour,
             istImUrlaub = false
         )
         val intervalle = if (state.kundenTyp == KundenTyp.REGELMAESSIG) {

@@ -37,13 +37,18 @@ class CustomerManagerViewModel(
     private val kundenTypFilterFlow = MutableStateFlow(0)
     val kundenTypFilter: StateFlow<Int> = kundenTypFilterFlow.asStateFlow()
 
+    // StateFlow für Ohne-Tour-Filter (0=Alle, 1=Nur Ohne Tour)
+    private val ohneTourFilterFlow = MutableStateFlow(0)
+    val ohneTourFilter: StateFlow<Int> = ohneTourFilterFlow.asStateFlow()
+
     // Kombiniere customers, searchQuery und selectedTab für gefilterte Liste
     val filteredCustomers: LiveData<List<Customer>> = combine(
         customersFlow,
         searchQueryFlow,
         selectedTabFlow,
-        kundenTypFilterFlow
-    ) { customers, query, selectedTab, typFilter ->
+        kundenTypFilterFlow,
+        ohneTourFilterFlow
+    ) { customers, query, selectedTab, typFilter, ohneTourFilter ->
         // Zuerst nach Tab filtern
         val tabFiltered = when (selectedTab) {
             0 -> customers.filter { it.kundenArt == "Gewerblich" }
@@ -58,12 +63,17 @@ class CustomerManagerViewModel(
             3 -> tabFiltered.filter { it.kundenTyp == KundenTyp.AUF_ABRUF }
             else -> tabFiltered
         }
+
+        val ohneTourFiltered = when (ohneTourFilter) {
+            1 -> typFiltered.filter { it.ohneTour }
+            else -> typFiltered
+        }
         
         // Dann nach Such-Query filtern
         if (query.isEmpty()) {
-            typFiltered
+            ohneTourFiltered
         } else {
-            typFiltered.filter {
+            ohneTourFiltered.filter {
                 it.displayName.contains(query, ignoreCase = true) ||
                 it.name.contains(query, ignoreCase = true) ||
                 it.alias.contains(query, ignoreCase = true) ||
@@ -119,6 +129,10 @@ class CustomerManagerViewModel(
 
     fun setKundenTypFilter(filterIndex: Int) {
         kundenTypFilterFlow.value = filterIndex
+    }
+
+    fun setOhneTourFilter(filterIndex: Int) {
+        ohneTourFilterFlow.value = filterIndex
     }
     
     fun deleteCustomer(customerId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {

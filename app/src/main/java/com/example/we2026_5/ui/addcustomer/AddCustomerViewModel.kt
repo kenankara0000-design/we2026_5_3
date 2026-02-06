@@ -27,6 +27,7 @@ data class AddCustomerState(
     val tourStadt: String = "",
     val tourZeitStart: String = "",
     val tourZeitEnde: String = "",
+    val ohneTour: Boolean = false,
     val isSaving: Boolean = false,
     val errorMessage: String? = null,
     val success: Boolean = false
@@ -123,6 +124,10 @@ class AddCustomerViewModel : ViewModel() {
 
     fun setTourZeitEnde(ende: String) {
         _state.value = (_state.value ?: AddCustomerState()).copy(tourZeitEnde = ende)
+    }
+
+    fun setOhneTour(ohneTour: Boolean) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(ohneTour = ohneTour)
     }
 
     fun setSaving(isSaving: Boolean) {

@@ -38,15 +38,17 @@ object TerminAusKundeUtils {
      * @param customer Kunde mit defaultAbholungWochentag, intervallTage (Zyklus)
      * @param startDatum Startdatum (z.B. heute)
      * @param tageAzuL Tage zwischen Abholung und Auslieferung (nur bei REGELMAESSIG)
+     * @param intervallTageOverride Wenn gesetzt, wird dieser Zyklus verwendet (z. B. beim Bearbeiten ohne bestehende Intervalle).
      * @return CustomerIntervall oder null wenn A-Tag fehlt
      */
     fun erstelleIntervallAusKunde(
         customer: Customer,
         startDatum: Long = System.currentTimeMillis(),
-        tageAzuL: Int = 7
+        tageAzuL: Int = 7,
+        intervallTageOverride: Int? = null
     ): CustomerIntervall? {
         val abholTag = customer.effectiveAbholungWochentage.firstOrNull()?.takeIf { WochentagBerechnung.isValidWeekday(it) } ?: return null
-        val zyklus = customer.intervallTageOrDefault(7)
+        val zyklus = intervallTageOverride?.coerceIn(1, 365) ?: customer.intervallTageOrDefault(7)
         val tageAL = tageAzuL.coerceIn(0, 365)
         val start = TerminBerechnungUtils.getStartOfDay(startDatum)
 

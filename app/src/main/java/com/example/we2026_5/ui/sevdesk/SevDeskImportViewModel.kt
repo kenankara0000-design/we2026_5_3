@@ -57,7 +57,15 @@ class SevDeskImportViewModel(
             }
             _state.value = _state.value.copy(isImportingContacts = false)
             result.fold(
-                onSuccess = { count -> _state.value = _state.value.copy(message = "$count Kontakte importiert (Name aus SevDesk; Alias bitte selbst ergänzen).") }
+                onSuccess = { (created, updated) ->
+                    val msg = buildString {
+                        if (created > 0) append("$created neu angelegt. ")
+                        if (updated > 0) append("$updated aktualisiert (nur Name/Adresse aus SevDesk). ")
+                        if (created == 0 && updated == 0) append("Keine Änderungen.")
+                        else append("Alias/Termine etc. bleiben unverändert.")
+                    }
+                    _state.value = _state.value.copy(message = msg.trim())
+                }
             ) { e -> _state.value = _state.value.copy(error = e.message ?: "Fehler beim Import.") }
         }
     }

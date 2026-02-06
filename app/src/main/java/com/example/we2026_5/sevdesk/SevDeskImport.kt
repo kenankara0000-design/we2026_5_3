@@ -21,29 +21,47 @@ class SevDeskImport(
     private val articleRepository: ArticleRepository
 ) {
 
-    suspend fun importContacts(token: String): Result<Int> = withContext(Dispatchers.IO) {
+    /**
+     * Importiert Kontakte von SevDesk: Neue werden angelegt, bestehende (gleiche sevdesk_<id>) werden
+     * nur in Name, Adresse, PLZ, Stadt aktualisiert (Merge). Alias, Notizen, Termine etc. bleiben unverändert.
+     */
+    suspend fun importContacts(token: String): Result<Pair<Int, Int>> = withContext(Dispatchers.IO) {
         try {
             val contacts = SevDeskApi.getContacts(token)
             val existing = customerRepository.getAllCustomers()
             val byKundennummer = existing.filter { it.kundennummer.startsWith("sevdesk_") }.map { it.kundennummer to it }.toMap()
-            var imported = 0
+            var created = 0
+            var updated = 0
             for (c in contacts) {
                 val key = "sevdesk_${c.id}"
-                if (key in byKundennummer) continue // bereits importiert
-                val customer = Customer(
-                    id = UUID.randomUUID().toString(),
-                    name = c.name,
-                    alias = "",
-                    adresse = c.adresse,
-                    plz = c.plz,
-                    stadt = c.stadt,
-                    kundennummer = key,
-                    erstelltAm = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis()),
-                    kundenTyp = KundenTyp.REGELMAESSIG
-                )
-                if (customerRepository.saveCustomer(customer)) imported++
+                val existingCustomer = byKundennummer[key]
+                if (existingCustomer != null) {
+                    val ok = customerRepository.updateCustomer(
+                        existingCustomer.id,
+                        mapOf(
+                            "name" to c.name,
+                            "adresse" to c.adresse,
+                            "plz" to c.plz,
+                            "stadt" to c.stadt
+                        )
+                    )
+                    if (ok) updated++
+                } else {
+                    val customer = Customer(
+                        id = UUID.randomUUID().toString(),
+                        name = c.name,
+                        alias = "",
+                        adresse = c.adresse,
+                        plz = c.plz,
+                        stadt = c.stadt,
+                        kundennummer = key,
+                        erstelltAm = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis()),
+                        kundenTyp = KundenTyp.REGELMAESSIG
+                    )
+                    if (customerRepository.saveCustomer(customer)) created++
+                }
             }
-            Result.success(imported)
+            Result.success(created to updated)
         } catch (e: SevDeskApiException) {
             Result.failure(e)
         } catch (e: Exception) {

@@ -57,6 +57,7 @@ class CustomerManagerActivity : AppCompatActivity() {
             val customers by viewModel.filteredCustomers.observeAsState(initial = emptyList())
             val selectedTab by viewModel.selectedTab.collectAsState(initial = 0)
             val kundenTypFilter by viewModel.kundenTypFilter.collectAsState(initial = 0)
+            val ohneTourFilter by viewModel.ohneTourFilter.collectAsState(initial = 0)
             val isBulkMode by viewModel.isBulkMode.collectAsState(initial = false)
             val selectedIds by viewModel.selectedIds.collectAsState(initial = emptySet())
             val isLoading by viewModel.isLoading.observeAsState(initial = false)
@@ -71,6 +72,7 @@ class CustomerManagerActivity : AppCompatActivity() {
                 customers = displayCustomers,
                 selectedTab = selectedTab,
                 kundenTypFilter = kundenTypFilter,
+                ohneTourFilter = ohneTourFilter,
                 searchQuery = "",
                 isBulkMode = isBulkMode,
                 selectedIds = selectedIds,
@@ -80,6 +82,7 @@ class CustomerManagerActivity : AppCompatActivity() {
                 onBack = { finish() },
                 onTabSelected = { viewModel.setSelectedTab(it) },
                 onKundenTypFilterChange = { viewModel.setKundenTypFilter(it) },
+                onOhneTourFilterChange = { viewModel.setOhneTourFilter(it) },
                 onSearchQueryChange = { viewModel.filterCustomers(it) },
                 pressedHeaderButton = pressedHeaderButton,
                 onBulkSelectClick = { pressedHeaderButton = "Auswählen"; viewModel.setBulkMode(true) },

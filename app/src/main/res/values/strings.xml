@@ -230,6 +230,9 @@
     <string name="termin_anlegen_auswaehlen_zwei_wochen">Termine auswählen (nächste 2 Wochen):</string>
     <string name="termin_anlegen_auswaehlen_acht_wochen">Termine auswählen (bis 8 Wochen):</string>
     <string name="label_filter_all">Alle</string>
+    <string name="label_ohne_tour">Ohne Tour (Kunde bringt/holt selbst)</string>
+    <string name="label_filter_ohne_tour">Ohne Tour:</string>
+    <string name="label_ohne_tour_anzeigen">Ohne Tour anzeigen</string>
     <string name="label_list_search">Listen suchen…</string>
     <string name="label_list_sort_name">Sortierung: Name</string>
     <string name="label_list_sort_count">Sortierung: Kundenanzahl</string>

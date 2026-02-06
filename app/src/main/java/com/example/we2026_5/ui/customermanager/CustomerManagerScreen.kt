@@ -67,6 +67,7 @@ fun CustomerManagerScreen(
     customers: List<Customer>,
     selectedTab: Int,
     kundenTypFilter: Int,
+    ohneTourFilter: Int,
     searchQuery: String,
     isBulkMode: Boolean,
     selectedIds: Set<String>,
@@ -76,6 +77,7 @@ fun CustomerManagerScreen(
     onBack: () -> Unit,
     onTabSelected: (Int) -> Unit,
     onKundenTypFilterChange: (Int) -> Unit,
+    onOhneTourFilterChange: (Int) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     pressedHeaderButton: String?, // "Auswählen", "Exportieren", "NeuerKunde" für orangefarbenes Feedback
     onBulkSelectClick: () -> Unit,
@@ -269,6 +271,26 @@ fun CustomerManagerScreen(
                         selected = kundenTypFilter == 3,
                         onClick = { onKundenTypFilterChange(3) },
                         label = { Text(stringResource(R.string.label_kunden_typ_auf_abruf)) }
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = stringResource(R.string.label_filter_ohne_tour),
+                    color = textPrimary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = ohneTourFilter == 0,
+                        onClick = { onOhneTourFilterChange(0) },
+                        label = { Text(stringResource(R.string.label_filter_all)) }
+                    )
+                    FilterChip(
+                        selected = ohneTourFilter == 1,
+                        onClick = { onOhneTourFilterChange(1) },
+                        label = { Text(stringResource(R.string.label_ohne_tour_anzeigen)) }
                     )
                 }
                 Spacer(Modifier.height(8.dp))

@@ -1,5 +1,6 @@
 package com.example.we2026_5.ui.addcustomer
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -121,6 +122,24 @@ fun CustomerStammdatenForm(
                 selected = state.kundenArt == "Tour",
                 onSelect = { onUpdate(state.copy(kundenArt = "Tour")) },
                 textPrimary = textPrimary
+            )
+        }
+
+        Spacer(modifier = Modifier.height(spacing))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            androidx.compose.material3.Checkbox(
+                checked = state.ohneTour,
+                onCheckedChange = { onUpdate(state.copy(ohneTour = it)) }
+            )
+            Text(
+                text = stringResource(R.string.label_ohne_tour),
+                color = textPrimary,
+                fontSize = DetailUiConstants.FieldLabelSp,
+                modifier = Modifier.clickable { onUpdate(state.copy(ohneTour = !state.ohneTour)) }
             )
         }
 

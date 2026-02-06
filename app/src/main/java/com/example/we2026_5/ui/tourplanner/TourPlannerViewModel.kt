@@ -73,6 +73,7 @@ class TourPlannerViewModel(
             TourProcessResult(emptyList(), 0, emptyList(), emptyList())
         } else {
             val activeCustomers = CustomerTermFilter.filterActiveForTerms(customers, System.currentTimeMillis())
+                .filter { !it.ohneTour }
             dataProcessor.processTourData(activeCustomers, listen, timestamp, expandedSections)
         }
     }

@@ -160,7 +160,8 @@ class CustomerDetailViewModel(
             tagsInput = c.tags.joinToString(", "),
             tourStadt = c.tourSlot?.stadt ?: "",
             tourZeitStart = c.tourSlot?.zeitfenster?.start ?: "",
-            tourZeitEnde = c.tourSlot?.zeitfenster?.ende ?: ""
+            tourZeitEnde = c.tourSlot?.zeitfenster?.ende ?: "",
+            ohneTour = c.ohneTour
         )
     }
 

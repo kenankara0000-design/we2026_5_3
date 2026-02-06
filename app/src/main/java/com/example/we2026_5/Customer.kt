@@ -77,6 +77,8 @@ data class Customer(
     val tourSlotId: String = "",
     val tourSlot: TourSlot? = null,
     val tourNotizen: String = "",
+    /** true = Kunde wird nicht angefahren, bringt/holt selbst („Ohne Tour“). Tourenplaner zeigt ihn nicht. */
+    val ohneTour: Boolean = false,
     val regelHistorie: List<RegelHistorieEintrag> = emptyList(),
     
     // Status
