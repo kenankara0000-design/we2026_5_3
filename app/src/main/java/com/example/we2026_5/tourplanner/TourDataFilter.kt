@@ -39,71 +39,7 @@ class TourDataFilter(
             }
             return naechstesTermin?.datum ?: 0L
         }
-        
-        // Für Kunden ohne Intervalle und ohne listeId: Alte Einzel-Felder
-        if (!c.wiederholen) {
-            val abholungStart = categorizer.getStartOfDay(c.abholungDatum)
-            val auslieferungStart = categorizer.getStartOfDay(c.auslieferungDatum)
-            val abDatumStart = categorizer.getStartOfDay(abDatum)
-            
-            val verschobenEntry = TerminFilterUtils.istTerminVerschoben(c.abholungDatum, c.verschobeneTermine)
-            if (verschobenEntry != null) {
-                val verschobenStart = TerminBerechnungUtils.getStartOfDay(verschobenEntry.verschobenAufDatum)
-                if (c.geloeschteTermine.contains(verschobenStart)) {
-                    return 0L
-                }
-                if (abDatumStart == verschobenStart) return verschobenEntry.verschobenAufDatum
-                if (abDatumStart < verschobenStart) return verschobenEntry.verschobenAufDatum
-                return 0L
-            }
-            
-            val abholungGeloescht = c.geloeschteTermine.contains(abholungStart)
-            val auslieferungGeloescht = c.geloeschteTermine.contains(auslieferungStart)
-            
-            if (abholungGeloescht && auslieferungGeloescht) return 0L
-            
-            if (abDatumStart == abholungStart && !abholungGeloescht) {
-                return c.abholungDatum
-            }
-            
-            if (abDatumStart == auslieferungStart && !auslieferungGeloescht) {
-                return c.auslieferungDatum
-            }
-            
-            if (abDatumStart > abholungStart && abDatumStart < auslieferungStart) {
-                return if (!auslieferungGeloescht) c.auslieferungDatum else 0L
-            }
-            if (abDatumStart > auslieferungStart && abDatumStart < abholungStart) {
-                return if (!abholungGeloescht) c.abholungDatum else 0L
-            }
-            
-            if (abDatumStart < abholungStart && abDatumStart < auslieferungStart) {
-                return if (!abholungGeloescht) c.abholungDatum else 
-                       if (!auslieferungGeloescht) c.auslieferungDatum else 0L
-            }
-            
-            if (abDatumStart > abholungStart && abDatumStart > auslieferungStart) {
-                return 0L
-            }
-            
-            if (!abholungGeloescht && !auslieferungGeloescht) {
-                return minOf(c.abholungDatum, c.auslieferungDatum)
-            }
-            if (!abholungGeloescht) return c.abholungDatum
-            if (!auslieferungGeloescht) return c.auslieferungDatum
-            return 0L
-        }
-        
-        // Wiederholender Termin: Alte Logik
-        val faelligAm = c.getFaelligAm()
-        val faelligAmStart = categorizer.getStartOfDay(faelligAm)
-        if (c.geloeschteTermine.contains(faelligAmStart)) {
-            if (c.wiederholen && c.letzterTermin > 0) {
-                return c.letzterTermin + TimeUnit.DAYS.toMillis(c.intervallTage.toLong())
-            }
-            return faelligAm + TimeUnit.DAYS.toMillis(1)
-        }
-        return faelligAm
+        return 0L
     }
     
     /**
@@ -133,10 +69,7 @@ class TourDataFilter(
             }
         }
         
-        // ALTE STRUKTUR: Rückwärtskompatibilität
-        val faelligAm = customerFaelligAm(customer, null, viewDateStart)
-        val faelligAmStart = categorizer.getStartOfDay(faelligAm)
-        return faelligAmStart == viewDateStart && faelligAm > 0
+        return false
     }
     
     /**
@@ -177,20 +110,7 @@ class TourDataFilter(
                 istUeberfaellig && sollAnzeigen
             }
         }
-        
-        // ALTE STRUKTUR: Rückwärtskompatibilität
-        val faelligAm = customerFaelligAm(customer, null, viewDateStart)
-        val abholungStart = categorizer.getStartOfDay(customer.abholungDatum)
-        val auslieferungStart = categorizer.getStartOfDay(customer.auslieferungDatum)
-        val abholungUeberfaellig = !customer.abholungErfolgt && customer.abholungDatum > 0 && 
-                                   abholungStart < heuteStart
-        val auslieferungUeberfaellig = !customer.auslieferungErfolgt && customer.auslieferungDatum > 0 && 
-                                      auslieferungStart < heuteStart
-        val wiederholendUeberfaellig = customer.wiederholen && faelligAm < heuteStart && faelligAm > 0
-        
-        return (abholungUeberfaellig && viewDateStart >= abholungStart && viewDateStart <= heuteStart) ||
-               (auslieferungUeberfaellig && viewDateStart >= auslieferungStart && viewDateStart <= heuteStart) ||
-               (wiederholendUeberfaellig && viewDateStart >= faelligAm && viewDateStart <= heuteStart)
+        return false
     }
     
     /**

@@ -14,6 +14,8 @@ import com.example.we2026_5.TerminSlotVorschlag
 import com.example.we2026_5.ui.main.MainScreen
 import com.example.we2026_5.ui.main.MainViewModel
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.data.repository.KundenListeRepository
+import com.example.we2026_5.util.runListeIntervalleMigration
 import com.example.we2026_5.util.runListeToTourMigration
 import com.google.firebase.auth.FirebaseAuth
 import org.koin.android.ext.android.inject
@@ -23,6 +25,7 @@ class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModel()
     private val customerRepository: CustomerRepository by inject()
+    private val listeRepository: KundenListeRepository by inject()
     private val auth = FirebaseAuth.getInstance()
     private lateinit var networkMonitor: NetworkMonitor
 
@@ -38,7 +41,10 @@ class MainActivity : AppCompatActivity() {
         networkMonitor = NetworkMonitor(this, lifecycleScope)
         networkMonitor.startMonitoring()
 
-        lifecycleScope.launch { runListeToTourMigration(this@MainActivity, customerRepository) }
+        lifecycleScope.launch {
+            runListeToTourMigration(this@MainActivity, customerRepository)
+            runListeIntervalleMigration(this@MainActivity, customerRepository, listeRepository)
+        }
 
         window.decorView.setBackgroundColor(ContextCompat.getColor(this, R.color.background_light))
         setContent {

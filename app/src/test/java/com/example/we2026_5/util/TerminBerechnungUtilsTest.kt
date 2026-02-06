@@ -1,14 +1,49 @@
 package com.example.we2026_5.util
 
+import com.example.we2026_5.Customer
+import com.example.we2026_5.CustomerIntervall
+import com.example.we2026_5.TerminTyp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.Calendar
 import java.util.TimeZone
+import java.util.concurrent.TimeUnit
 
 /**
- * Unit-Tests für TerminBerechnungUtils (getStartOfDay als Single Source of Truth).
+ * Unit-Tests für TerminBerechnungUtils (getStartOfDay; berechneAlleTermineFuerKunde mit liste=null).
  */
 class TerminBerechnungUtilsTest {
+
+    @Test
+    fun berechneAlleTermineFuerKunde_mitIntervalle_listeNull_berechnetTermine() {
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        cal.set(2026, Calendar.JANUARY, 1, 0, 0, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        val start = cal.timeInMillis
+        val abholung = start
+        val auslieferung = start + TimeUnit.DAYS.toMillis(7)
+        val customer = Customer(
+            id = "test-1",
+            name = "Test",
+            intervalle = listOf(
+                CustomerIntervall(
+                    id = "iv-1",
+                    abholungDatum = abholung,
+                    auslieferungDatum = auslieferung,
+                    wiederholen = false
+                )
+            )
+        )
+        val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+            customer = customer,
+            liste = null,
+            startDatum = start,
+            tageVoraus = 30
+        )
+        assertTrue(termine.any { it.typ == TerminTyp.ABHOLUNG })
+        assertTrue(termine.any { it.typ == TerminTyp.AUSLIEFERUNG })
+    }
 
     @Test
     fun getStartOfDay_normalizes_to_midnight() {

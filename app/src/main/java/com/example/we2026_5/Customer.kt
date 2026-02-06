@@ -112,7 +112,6 @@ data class Customer(
         level = DeprecationLevel.WARNING
     )
     fun getFaelligAm(): Long {
-        // NEUE STRUKTUR: Verwende Intervalle-Liste wenn vorhanden
         if (intervalle.isNotEmpty()) {
             val heute = System.currentTimeMillis()
             val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
@@ -120,42 +119,14 @@ data class Customer(
                 startDatum = heute,
                 tageVoraus = 365
             )
-            // Nächstes fälliges Datum (nicht gelöscht, nicht in Vergangenheit)
-            val naechstesTermin = termine.firstOrNull { 
+            val naechstesTermin = termine.firstOrNull {
                 it.datum >= com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(heute) &&
                 !com.example.we2026_5.util.TerminFilterUtils.istTerminGeloescht(it.datum, geloeschteTermine)
             }
             return naechstesTermin?.datum ?: 0L
         }
-        
-        // ALTE STRUKTUR: Rückwärtskompatibilität
-        // Diese Logik sollte idealerweise migriert und dann entfernt werden.
-        // If there are no new intervals, we fall back to the old single abholungDatum/wiederholen logic if present.
-        if (abholungDatum > 0 || auslieferungDatum > 0) {
-            val heuteForLegacy = System.currentTimeMillis() // 'heute' für Legacy-Code
-            val altesIntervall = CustomerIntervall(
-                id = "legacy",
-                abholungDatum = abholungDatum,
-                auslieferungDatum = auslieferungDatum,
-                wiederholen = wiederholen,
-                intervallTage = intervallTage,
-                intervallAnzahl = 0 // Alte Struktur hat keine Anzahl
-            )
-            val termine = TerminBerechnungUtils.berechneTermineFuerIntervall(
-                intervall = altesIntervall,
-                startDatum = heuteForLegacy,
-                tageVoraus = 365,
-                geloeschteTermine = geloeschteTermine,
-                verschobeneTermine = verschobeneTermine
-            )
-            val naechstesTermin = termine.firstOrNull { 
-                it.datum >= TerminBerechnungUtils.getStartOfDay(heuteForLegacy) &&
-                !TerminFilterUtils.istTerminGeloescht(it.datum, geloeschteTermine)
-            }
-            return naechstesTermin?.datum ?: 0L
-        }
-
-        return 0L    }
+        return 0L
+    }
 
     /** Effektive A-Tage: Liste wenn gesetzt, sonst einzelner defaultAbholungWochentag falls gültig. */
     val effectiveAbholungWochentage: List<Int>

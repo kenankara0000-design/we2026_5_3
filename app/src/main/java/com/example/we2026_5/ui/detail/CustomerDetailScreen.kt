@@ -107,8 +107,7 @@ fun CustomerDetailScreen(
                 val tageAzuL = first?.let {
                     if (it.abholungDatum > 0) ((it.auslieferungDatum - it.abholungDatum) / 86400000).toInt().coerceIn(0, 365) else 7
                 } ?: 7
-                @Suppress("DEPRECATION")
-                val intervallTage = first?.intervallTage?.takeIf { it in 1..365 } ?: customer.intervallTage.takeIf { it in 1..365 } ?: 7
+                val intervallTage = first?.intervallTage?.takeIf { it in 1..365 } ?: 7
                 AddCustomerState(
                     name = customer.name,
                     adresse = customer.adresse,

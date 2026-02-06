@@ -43,29 +43,6 @@ class TourPlannerDateUtils(
             TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart
         }?.datum ?: 0L
         if (resultA > 0L) return resultA
-
-        // ALTE STRUKTUR: Rückwärtskompatibilität für Kunden ohne Intervalle
-        val verschobenAmViewDate = customer.verschobeneTermine.firstOrNull { getStartOfDay(it.verschobenAufDatum) == viewDateStart }
-        if (verschobenAmViewDate != null) return verschobenAmViewDate.verschobenAufDatum
-        val abholungStart = getStartOfDay(customer.abholungDatum)
-        if (abholungStart == viewDateStart) return customer.abholungDatum
-        // Für wiederholende Termine
-        if (customer.wiederholen && customer.letzterTermin > 0) {
-            val intervallTage = customer.intervallTage.coerceIn(1, 365)
-            val intervallTageLong = intervallTage.toLong()
-            val letzterTerminStart = getStartOfDay(customer.letzterTermin)
-            
-            if (viewDateStart > letzterTerminStart) {
-                val tageSeitLetztemTermin = TimeUnit.MILLISECONDS.toDays(viewDateStart - letzterTerminStart)
-                val zyklus = tageSeitLetztemTermin / intervallTageLong
-                val erwartetesDatum = letzterTerminStart + TimeUnit.DAYS.toMillis(zyklus * intervallTageLong)
-                val erwartetesDatumStart = getStartOfDay(erwartetesDatum)
-                
-                if (erwartetesDatumStart == viewDateStart && tageSeitLetztemTermin <= 365) {
-                    return erwartetesDatum
-                }
-            }
-        }
         return 0L
     }
     
@@ -89,29 +66,6 @@ class TourPlannerDateUtils(
         }
         if (aTermin != null)
             return aTermin.datum + TimeUnit.DAYS.toMillis(tageAzuL.toLong())
-
-        // ALTE STRUKTUR: Rückwärtskompatibilität für Kunden ohne Intervalle
-        val verschobenAmViewDateAusl = customer.verschobeneTermine.firstOrNull { getStartOfDay(it.verschobenAufDatum) == viewDateStart }
-        if (verschobenAmViewDateAusl != null) return verschobenAmViewDateAusl.verschobenAufDatum
-        val auslieferungStart = getStartOfDay(customer.auslieferungDatum)
-        if (auslieferungStart == viewDateStart) return customer.auslieferungDatum
-        // Für wiederholende Termine
-        if (customer.wiederholen && customer.letzterTermin > 0) {
-            val intervallTage = customer.intervallTage.coerceIn(1, 365)
-            val intervallTageLong = intervallTage.toLong()
-            val letzterTerminStart = getStartOfDay(customer.letzterTermin)
-            
-            if (viewDateStart > letzterTerminStart) {
-                val tageSeitLetztemTermin = TimeUnit.MILLISECONDS.toDays(viewDateStart - letzterTerminStart)
-                val zyklus = tageSeitLetztemTermin / intervallTageLong
-                val erwartetesDatum = letzterTerminStart + TimeUnit.DAYS.toMillis(zyklus * intervallTageLong)
-                val erwartetesDatumStart = getStartOfDay(erwartetesDatum)
-                
-                if (erwartetesDatumStart == viewDateStart && tageSeitLetztemTermin <= 365) {
-                    return erwartetesDatum
-                }
-            }
-        }
         return 0L
     }
     

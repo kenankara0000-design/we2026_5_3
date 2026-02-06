@@ -103,9 +103,7 @@ class CustomerExportHelper(
                         else -> "Offen"
                     }
 
-                    val intervallTage = customer.intervalle.firstOrNull()?.intervallTage?.takeIf { it in 1..365 }
-                        ?: @Suppress("DEPRECATION") customer.intervallTage.takeIf { it in 1..365 }
-                        ?: 0
+                    val intervallTage = customer.intervalle.firstOrNull()?.intervallTage?.takeIf { it in 1..365 } ?: 0
 
                     @Suppress("DEPRECATION")
                     val letzterTermin = if (customer.letzterTermin > 0) {

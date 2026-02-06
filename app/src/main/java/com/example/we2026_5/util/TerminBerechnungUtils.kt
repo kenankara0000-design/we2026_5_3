@@ -254,29 +254,8 @@ object TerminBerechnungUtils {
                 )
                 alleTermine.addAll(termine)
             }
-        } else {
-                // ALTE STRUKTUR: Einzelne Felder (Rückwärtskompatibilität)
-                // Diese Logik sollte idealerweise migriert und dann entfernt werden.
-                if (customer.abholungDatum > 0 || customer.auslieferungDatum > 0) {
-                    val altesIntervall = CustomerIntervall(
-                        id = "legacy",
-                        abholungDatum = customer.abholungDatum,
-                        auslieferungDatum = customer.auslieferungDatum,
-                        wiederholen = customer.wiederholen,
-                        intervallTage = customer.intervallTage,
-                        intervallAnzahl = 0 // Alte Struktur hat keine Anzahl
-                    )
-                    val termine = berechneTermineFuerIntervall(
-                        intervall = altesIntervall,
-                        startDatum = startDatum,
-                        tageVoraus = tageVoraus,
-                        geloeschteTermine = customer.geloeschteTermine,
-                        // verschobenAufDatum wird hier nicht mehr direkt genutzt
-                        verschobeneTermine = customer.verschobeneTermine
-                    )
-                    alleTermine.addAll(termine)
-                }
         }
+        // Kunden ohne intervalle: keine Intervall-Termine (Migration 2.1 füllt intervalle aus Liste/Legacy)
 
         // Ergänzung: A aus A-Wochentagen + Intervall; L nur als A + tageAzuL (keine eigenen L-Tage).
         // Unabhängig von Liste: Listen haben keinen Einfluss auf Termin-Erstellung; Kunden-Wochentage immer anwenden.
