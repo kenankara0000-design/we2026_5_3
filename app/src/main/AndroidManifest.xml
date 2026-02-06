@@ -88,6 +88,11 @@
             android:theme="@style/Theme.We2026_5.LightBackground" />
 
         <activity
+            android:name=".ArtikelVerwaltungActivity"
+            android:exported="false"
+            android:theme="@style/Theme.We2026_5.LightBackground" />
+
+        <activity
             android:name=".SevDeskImportActivity"
             android:exported="false"
             android:theme="@style/Theme.We2026_5.LightBackground" />

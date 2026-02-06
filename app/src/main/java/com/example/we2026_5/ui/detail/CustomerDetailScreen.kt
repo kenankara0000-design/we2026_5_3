@@ -97,7 +97,7 @@ fun CustomerDetailScreen(
     onDatumSelected: (Int, Boolean) -> Unit,
     onDeleteIntervall: ((Int) -> Unit)? = null,
     onRemoveRegel: ((String) -> Unit)? = null,
-    onTageAzuLZyklusChange: ((Int, Int) -> Unit)? = null,
+    onResetToAutomatic: () -> Unit = {},
     regelNameByRegelId: Map<String, String> = emptyMap(),
     onRegelClick: (String) -> Unit = {},
     onUrlaubStartActivity: (String) -> Unit = {},
@@ -441,7 +441,8 @@ fun CustomerDetailScreen(
                                         )
                                     ) else emptyMap<String, Any>())
                                             val startDatumA = stateForSave.erstelltAm.takeIf { it > 0 } ?: TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-                                            val intervalleToSave = if (editIntervalle.isEmpty() && stateForSave.kundenTyp == KundenTyp.REGELMAESSIG && stateForSave.abholungWochentage.isNotEmpty() && customer != null) {
+                                            // Haupt-Intervall immer aus den zwei Originalfeldern (Intervall, L-Termin) im Formular; ggf. weitere Regeln anhängen.
+                                            val intervalleToSave = if (stateForSave.kundenTyp == KundenTyp.REGELMAESSIG && stateForSave.abholungWochentage.isNotEmpty() && customer != null) {
                                                 val customerForIntervall = customer.copy(
                                                     defaultAbholungWochentag = stateForSave.abholungWochentage.firstOrNull() ?: -1,
                                                     defaultAuslieferungWochentag = stateForSave.auslieferungWochentage.firstOrNull() ?: -1,
@@ -449,7 +450,9 @@ fun CustomerDetailScreen(
                                                     defaultAuslieferungWochentage = stateForSave.auslieferungWochentage,
                                                     tourSlotId = slotId
                                                 )
-                                                TerminAusKundeUtils.erstelleIntervallAusKunde(customerForIntervall, startDatumA, stateForSave.tageAzuL, stateForSave.intervallTage)?.let { listOf(it) } ?: emptyList()
+                                                val mainFromForm = TerminAusKundeUtils.erstelleIntervallAusKunde(customerForIntervall, startDatumA, stateForSave.tageAzuL, stateForSave.intervallTage)
+                                                val fromRules = editIntervalle.filter { it.terminRegelId.isNotBlank() }
+                                                (mainFromForm?.let { listOf(it) } ?: emptyList()) + fromRules
                                     } else editIntervalle
                                     put("intervalle", intervalleToSave.map {
                                         mapOf(
@@ -501,49 +504,7 @@ fun CustomerDetailScreen(
                         )
                     ) {
                         val intervalleToShow = if (isInEditMode) editIntervalle else customer.intervalle
-                        if (customer?.kundenTyp == KundenTyp.REGELMAESSIG && isInEditMode && editIntervalle.isNotEmpty()) {
-                            val first = editIntervalle.first()
-                            val tageAzuL = if (first.abholungDatum > 0) {
-                                (kotlin.math.round((first.auslieferungDatum - first.abholungDatum) / 86400000.0)).toInt().coerceIn(0, 365)
-                            } else 7
-                            val zyklusTage = first.intervallTage.coerceIn(1, 365)
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(stringResource(R.string.label_l_termin), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = textSecondary)
-                                    Spacer(Modifier.height(4.dp))
-                                    androidx.compose.material3.OutlinedTextField(
-                                        value = tageAzuL.toString(),
-                                        onValueChange = { s ->
-                                            s.filter { it.isDigit() }.toIntOrNull()?.coerceIn(0, 365)?.let { newVal ->
-                                                onTageAzuLZyklusChange?.invoke(newVal, zyklusTage)
-                                            }
-                                        },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        singleLine = true,
-                                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
-                                    )
-                                }
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(stringResource(R.string.label_intervall), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = textSecondary)
-                                    Spacer(Modifier.height(4.dp))
-                                    androidx.compose.material3.OutlinedTextField(
-                                        value = zyklusTage.toString(),
-                                        onValueChange = { s ->
-                                            s.filter { it.isDigit() }.toIntOrNull()?.coerceIn(1, 365)?.let { newVal ->
-                                                onTageAzuLZyklusChange?.invoke(tageAzuL, newVal)
-                                            }
-                                        },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        singleLine = true,
-                                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
-                                    )
-                                }
-                            }
-                            Spacer(Modifier.height(DetailUiConstants.IntervalRowSpacing))
-                        }
+                        // L-Termin und Intervall existieren nur oben im Stammdaten-Formular; hier keine Duplikate.
                         // In beiden Modi nur Termin-Regel-Namen anzeigen (keine 365 Intervall-Zeilen bei täglich)
                         val distinctRegelIds = intervalleToShow.map { it.terminRegelId }.distinct()
                         distinctRegelIds.forEach { regelId ->
@@ -560,6 +521,12 @@ fun CustomerDetailScreen(
                             Spacer(Modifier.height(DetailUiConstants.IntervalRowSpacing))
                         }
                         Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                        if (isInEditMode && customer?.kundenTyp == KundenTyp.REGELMAESSIG) {
+                            androidx.compose.material3.OutlinedButton(onClick = onResetToAutomatic, modifier = Modifier.fillMaxWidth()) {
+                                Text(stringResource(R.string.btn_reset_to_automatic))
+                            }
+                            Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                        }
                         if (!isInEditMode) {
                             androidx.compose.material3.Button(onClick = onTerminAnlegen, modifier = Modifier.fillMaxWidth()) {
                                 Text(stringResource(R.string.label_termine_anlegen))

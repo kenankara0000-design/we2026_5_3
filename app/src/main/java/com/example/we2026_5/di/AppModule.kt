@@ -17,6 +17,7 @@ import com.example.we2026_5.ui.mapview.MapViewViewModel
 import com.example.we2026_5.ui.detail.CustomerDetailViewModel
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.example.we2026_5.ui.urlaub.UrlaubViewModel
+import com.example.we2026_5.ui.wasch.ArtikelVerwaltungViewModel
 import com.example.we2026_5.ui.wasch.WaschenErfassungViewModel
 import com.example.we2026_5.ui.sevdesk.SevDeskImportViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -55,5 +56,6 @@ val appModule = module {
     viewModel { CustomerDetailViewModel(get()) }
     viewModel { (customerId: String) -> UrlaubViewModel(get(), customerId) }
     viewModel { WaschenErfassungViewModel(get(), get(), get()) }
+    viewModel { ArtikelVerwaltungViewModel(get()) }
     viewModel { (ctx: Context) -> SevDeskImportViewModel(ctx, get(), get()) }
 }

@@ -272,4 +272,27 @@ class WaschenErfassungViewModel(
             }
         }
     }
+
+    /** Erfassung löschen; bei Erfolg aus Detail zurück zur Liste, Liste aktualisiert sich per Flow. */
+    fun deleteErfassung(erfassung: WaschErfassung, onDeleted: () -> Unit) {
+        viewModelScope.launch {
+            val ok = erfassungRepository.deleteErfassung(erfassung.id)
+                if (ok) {
+                val s = _uiState.value
+                if (s is WaschenErfassungUiState.ErfassungDetail && s.erfassung.id == erfassung.id) {
+                    val customer = customerRepository.getCustomerById(erfassung.customerId)
+                    if (customer != null) {
+                        _uiState.value = WaschenErfassungUiState.ErfassungenListe(customer)
+                        erfassungenJob?.cancel()
+                        erfassungenJob = viewModelScope.launch {
+                            erfassungRepository.getErfassungenByCustomerFlow(customer.id).collect {
+                                _erfassungenList.value = it
+                            }
+                        }
+                    }
+                }
+                onDeleted()
+            }
+        }
+    }
 }

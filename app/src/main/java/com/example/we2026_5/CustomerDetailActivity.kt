@@ -166,6 +166,7 @@ class CustomerDetailActivity : AppCompatActivity() {
                         .setNegativeButton(R.string.btn_cancel, null)
                         .show()
                 },
+                onResetToAutomatic = { viewModel.resetToAutomaticIntervall(customer, editFormState) },
                 onPhotoClick = { url -> photoManager?.showImageInDialog(url) },
                 onDatumSelected = { position, isAbholung ->
                     val intervalle = editIntervalle.toMutableList()
@@ -176,16 +177,6 @@ class CustomerDetailActivity : AppCompatActivity() {
                         isAbholung = isAbholung,
                         onDatumSelected = { viewModel.updateEditIntervalle(intervalle) }
                     )
-                },
-                onTageAzuLZyklusChange = { tageAzuL, zyklusTage ->
-                    val list = viewModel.editIntervalle.value
-                    val first = list.firstOrNull() ?: return@CustomerDetailScreen
-                    val updated = first.copy(
-                        auslieferungDatum = first.abholungDatum + java.util.concurrent.TimeUnit.DAYS.toMillis(tageAzuL.toLong()),
-                        intervallTage = zyklusTage,
-                        zyklusTage = zyklusTage
-                    )
-                    viewModel.updateEditIntervalle(listOf(updated) + list.drop(1))
                 },
                 regelNameByRegelId = regelNameByRegelId,
                 onRegelClick = { },

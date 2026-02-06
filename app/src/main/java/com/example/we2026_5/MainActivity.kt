@@ -70,6 +70,7 @@ class MainActivity : AppCompatActivity() {
                 onKundenListen = { startActivity(Intent(this@MainActivity, KundenListenActivity::class.java)) },
                 onStatistiken = { startActivity(Intent(this@MainActivity, StatisticsActivity::class.java)) },
                 onArtikelErfassen = { startActivity(Intent(this@MainActivity, WaschenErfassungActivity::class.java)) },
+                onArtikelVerwalten = { startActivity(Intent(this@MainActivity, ArtikelVerwaltungActivity::class.java)) },
                 onSlotSelected = { slot -> handleSlotSelection(slot) }
             )
         }

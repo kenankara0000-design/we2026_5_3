@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
+import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.util.TerminAusKundeUtils
+import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
 import com.example.we2026_5.util.Result
 import com.example.we2026_5.util.intervallTageOrDefault
@@ -182,5 +185,30 @@ class CustomerDetailViewModel(
     /** Entfernt alle Intervalle mit der angegebenen Regel-ID aus der Bearbeitungsliste (z. B. ganze Regel „täglich“). */
     fun removeRegelFromEdit(regelId: String) {
         _editIntervalle.value = _editIntervalle.value.filter { it.terminRegelId != regelId }
+    }
+
+    /**
+     * Setzt die Intervalle auf genau ein automatisches Intervall aus den Formulardaten (A-Tag, Intervall, L-Termin).
+     * Entfernt manuell angelegte Termine (z. B. aus „Termin anlegen“). Nur bei REGELMAESSIG und gültigem A-Tag.
+     */
+    fun resetToAutomaticIntervall(customer: Customer?, formState: AddCustomerState?) {
+        if (customer == null || formState == null) return
+        if (customer.kundenTyp != KundenTyp.REGELMAESSIG || formState.abholungWochentage.isEmpty()) return
+        val slotId = customer.tourSlot?.id ?: "customer-${customer.id}"
+        val customerForIntervall = customer.copy(
+            defaultAbholungWochentag = formState.abholungWochentage.firstOrNull() ?: -1,
+            defaultAuslieferungWochentag = formState.auslieferungWochentage.firstOrNull() ?: -1,
+            defaultAbholungWochentage = formState.abholungWochentage,
+            defaultAuslieferungWochentage = formState.auslieferungWochentage,
+            tourSlotId = slotId
+        )
+        val startDatum = formState.erstelltAm.takeIf { it > 0 } ?: TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+        val one = TerminAusKundeUtils.erstelleIntervallAusKunde(
+            customerForIntervall,
+            startDatum,
+            formState.tageAzuL,
+            formState.intervallTage
+        ) ?: return
+        _editIntervalle.value = listOf(one)
     }
 }

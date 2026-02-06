@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
@@ -67,7 +68,19 @@ class WaschenErfassungActivity : AppCompatActivity() {
                     onBackFromErfassen = { viewModel.backFromErfassenToListe() },
                     onArtikelSearchQueryChange = { viewModel.setArtikelSearchQuery(it) },
                     onAddPosition = { viewModel.addPosition(it) },
-                    onRemovePosition = { viewModel.removePosition(it) }
+                    onRemovePosition = { viewModel.removePosition(it) },
+                    onDeleteErfassung = { erfassung ->
+                        AlertDialog.Builder(this@WaschenErfassungActivity)
+                            .setTitle(R.string.dialog_erfassung_loeschen_title)
+                            .setMessage(R.string.dialog_erfassung_loeschen_message)
+                            .setPositiveButton(R.string.dialog_loeschen) { _, _ ->
+                                viewModel.deleteErfassung(erfassung) {
+                                    Toast.makeText(this@WaschenErfassungActivity, getString(R.string.wasch_erfassung_geloescht), Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                            .setNegativeButton(R.string.btn_cancel, null)
+                            .show()
+                    }
                 )
             }
         }

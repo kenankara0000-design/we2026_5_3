@@ -19,7 +19,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -68,7 +71,8 @@ fun WaschenErfassungScreen(
     onBackFromErfassen: () -> Unit,
     onArtikelSearchQueryChange: (String) -> Unit,
     onAddPosition: (Article) -> Unit,
-    onRemovePosition: (Int) -> Unit
+    onRemovePosition: (Int) -> Unit,
+    onDeleteErfassung: (com.example.we2026_5.wasch.WaschErfassung) -> Unit = {}
 ) {
     val context = LocalContext.current
     val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
@@ -202,21 +206,32 @@ fun WaschenErfassungScreen(
                                 val zeitStr = if (e.zeit.isNotBlank()) " ${e.zeit}" else ""
                                 val count = e.positionen.size
                                 Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { onErfassungClick(e) },
+                                    modifier = Modifier.fillMaxWidth(),
                                     colors = CardDefaults.cardColors(containerColor = Color.White),
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
+                                            .clickable { onErfassungClick(e) }
                                             .padding(16.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text("$datumStr$zeitStr", fontSize = 16.sp, color = colorResource(R.color.text_primary))
-                                        Text(stringResource(R.string.wasch_x_artikel, count), fontSize = 14.sp, color = textSecondary)
+                                        Row(
+                                            modifier = Modifier.weight(1f),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text("$datumStr$zeitStr", fontSize = 16.sp, color = colorResource(R.color.text_primary))
+                                            Spacer(Modifier.widthIn(8.dp))
+                                            Text(stringResource(R.string.wasch_x_artikel, count), fontSize = 14.sp, color = textSecondary)
+                                        }
+                                        IconButton(
+                                            onClick = { onDeleteErfassung(e) },
+                                            modifier = Modifier.padding(start = 4.dp)
+                                        ) {
+                                            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.wasch_erfassung_loeschen), tint = Color.Red)
+                                        }
                                     }
                                 }
                             }
@@ -234,13 +249,30 @@ fun WaschenErfassungScreen(
                         .padding(16.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    Text(
-                        "$datumStr ${e.zeit.ifBlank { "-" }}",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = colorResource(R.color.text_primary),
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "$datumStr ${e.zeit.ifBlank { "-" }}",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = colorResource(R.color.text_primary)
+                        )
+                        Button(
+                            onClick = { onDeleteErfassung(e) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Filled.Delete, contentDescription = null, Modifier.size(18.dp))
+                            Spacer(Modifier.widthIn(4.dp))
+                            Text(stringResource(R.string.wasch_erfassung_loeschen), fontSize = 14.sp)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
                     state.positionenAnzeige.forEachIndexed { idx, pos ->
                         Row(
                             modifier = Modifier

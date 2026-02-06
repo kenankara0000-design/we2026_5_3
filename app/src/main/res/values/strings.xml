@@ -381,6 +381,7 @@
     <string name="label_add_photo">Foto hinzufügen</string>
     <string name="label_termine_regeln">Termin-Regeln</string>
     <string name="label_termin_regel">Termin-Regel</string>
+    <string name="btn_reset_to_automatic">Auf automatisch zurücksetzen</string>
     <string name="label_details_open">Details öffnen</string>
     <string name="label_list_name">Liste Name</string>
     <string name="label_list_name_field">Liste-Name:</string>
@@ -618,6 +619,15 @@
     <string name="wasch_neue_erfassung">Neue Erfassung</string>
     <string name="wasch_x_artikel">%d Artikel</string>
     <string name="wasch_keine_erfassungen">Noch keine Erfassungen für diesen Kunden.</string>
+    <string name="wasch_erfassung_loeschen">Erfassung löschen</string>
+    <string name="dialog_erfassung_loeschen_title">Erfassung löschen?</string>
+    <string name="dialog_erfassung_loeschen_message">Diese Erfassung unwiderruflich löschen?</string>
+    <string name="wasch_erfassung_geloescht">Erfassung gelöscht</string>
+    <string name="wasch_artikel_verwalten">Artikel verwalten</string>
+    <string name="dialog_artikel_loeschen_title">Artikel löschen?</string>
+    <string name="dialog_artikel_loeschen_message">Diesen Artikel unwiderruflich löschen? Er wird aus keiner Erfassung entfernt (alte Belege behalten die Artikel-ID).</string>
+    <string name="artikel_loeschen">Löschen</string>
+    <string name="artikel_geloescht">Artikel gelöscht</string>
     <string name="wasch_artikel_suchen">Artikel suchen…</string>
     <string name="wasch_position_hinzufuegen">+ Position hinzufügen</string>
     <string name="wasch_menge_kurz">Menge</string>
