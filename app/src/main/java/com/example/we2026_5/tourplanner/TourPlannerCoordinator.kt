@@ -46,7 +46,6 @@ class TourPlannerCoordinator(
         dateUtils = dateUtils,
         viewDate = viewDate,
         reloadCurrentView = { reloadCurrentView() },
-        resetTourCycle = { customerId -> resetTourCycle(customerId) },
         onError = { msg -> viewModel.setError(msg) }
     )
     val sheetDialogHelper: CustomerDialogHelper = CustomerDialogHelper(
@@ -110,22 +109,6 @@ class TourPlannerCoordinator(
                             }
                         }
                     )
-                    reloadCurrentView()
-                }
-                is Result.Error -> {
-                    viewModel.setError(result.message)
-                    android.widget.Toast.makeText(activity, result.message, android.widget.Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    fun resetTourCycle(customerId: String) {
-        activity.lifecycleScope.launch {
-            when (val result = viewModel.resetTourCycle(customerId)) {
-                is Result.Success -> {
-                    viewModel.clearError()
-                    android.widget.Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.toast_tour_completed), android.widget.Toast.LENGTH_SHORT).show()
                     reloadCurrentView()
                 }
                 is Result.Error -> {

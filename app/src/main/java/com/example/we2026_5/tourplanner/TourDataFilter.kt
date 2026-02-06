@@ -5,6 +5,8 @@ import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.TerminFilterUtils
+import com.example.we2026_5.util.firstIntervallOrNull
+import com.example.we2026_5.util.tageAzuLOrDefault
 import java.util.concurrent.TimeUnit
 
 /**
@@ -14,20 +16,15 @@ import java.util.concurrent.TimeUnit
 class TourDataFilter(
     private val categorizer: TourDataCategorizer
 ) {
-    /** L = A + tageAzuL. Aus erstem Intervall oder Default 7. */
-    private fun getTageAzuL(customer: Customer): Int =
-        customer.intervalle.firstOrNull()?.let {
-            if (it.abholungDatum > 0 && it.auslieferungDatum > 0)
-                TimeUnit.MILLISECONDS.toDays(it.auslieferungDatum - it.abholungDatum).toInt().coerceIn(0, 365)
-            else null
-        } ?: 7
+    /** L = A + tageAzuL. Zentrale Abstraktion (TerminAusKundeUtils). */
+    private fun getTageAzuL(customer: Customer): Int = customer.tageAzuLOrDefault(7)
 
     /**
      * Berechnet, wann ein Kunde fällig ist.
      */
     fun customerFaelligAm(c: Customer, liste: KundenListe? = null, abDatum: Long = System.currentTimeMillis()): Long {
         // Term-Daten nur aus Kunde (liste nur Gruppierung; kein getNaechstesListeDatum(liste)).
-        if (c.intervalle.isNotEmpty() || c.listeId.isNotEmpty()) {
+        if (c.firstIntervallOrNull() != null || c.listeId.isNotEmpty()) {
             val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
                 customer = c,
                 liste = null,
@@ -51,7 +48,7 @@ class TourDataFilter(
         viewDateStart: Long
     ): Boolean {
         // Term-Daten nur aus Kunde (liste nur Gruppierung).
-        if (customer.intervalle.isNotEmpty() || customer.listeId.isNotEmpty()) {
+        if (customer.firstIntervallOrNull() != null || customer.listeId.isNotEmpty()) {
             val tageAzuL = getTageAzuL(customer)
             val startDatum = viewDateStart - TimeUnit.DAYS.toMillis(tageAzuL.toLong())
             val tageVoraus = tageAzuL + 2
@@ -86,7 +83,7 @@ class TourDataFilter(
         if (isDone) return false
         
         // Term-Daten nur aus Kunde (liste nur Gruppierung).
-        if (customer.intervalle.isNotEmpty() || customer.listeId.isNotEmpty()) {
+        if (customer.firstIntervallOrNull() != null || customer.listeId.isNotEmpty()) {
             if (viewDateStart > heuteStart) {
                 return false
             }

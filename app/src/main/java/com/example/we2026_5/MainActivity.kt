@@ -17,6 +17,7 @@ import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.util.runListeIntervalleMigration
 import com.example.we2026_5.util.runListeToTourMigration
+import com.example.we2026_5.util.runRemoveDeprecatedFieldsMigration
 import com.google.firebase.auth.FirebaseAuth
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -44,6 +45,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             runListeToTourMigration(this@MainActivity, customerRepository)
             runListeIntervalleMigration(this@MainActivity, customerRepository, listeRepository)
+            runRemoveDeprecatedFieldsMigration(this@MainActivity, customerRepository)
         }
 
         window.decorView.setBackgroundColor(ContextCompat.getColor(this, R.color.background_light))

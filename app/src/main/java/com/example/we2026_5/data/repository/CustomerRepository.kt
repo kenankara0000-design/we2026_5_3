@@ -82,10 +82,21 @@ class CustomerRepository(
         return customers.sortedBy { it.name }
     }
 
+    /** Alte Struktur-Felder werden nicht mehr geschrieben; optional aus DB lesen (Rückwärtskompatibilität). */
+    private fun optionalLong(snapshot: DataSnapshot, key: String): Long =
+        snapshotValueToLong(snapshot.child(key).getValue())
+
+    private fun optionalInt(snapshot: DataSnapshot, key: String): Int =
+        (snapshot.child(key).getValue(Any::class.java) as? Number)?.toInt() ?: 7
+
+    private fun optionalBoolean(snapshot: DataSnapshot, key: String): Boolean =
+        snapshot.child(key).getValue(Boolean::class.java) ?: false
+
     /**
      * Parst einen Kunden aus dem Snapshot und liest verschobeneTermine sowie
      * Wochentags-Listen manuell (Firebase Realtime DB liefert Listen oft als Map "0","1",…
      * und füllt dann List&lt;Int&gt; nicht zuverlässig).
+     * Alte Struktur-Felder (abholungDatum, …) werden optional aus dem Snapshot gelesen (@Exclude-Felder).
      */
     private fun parseCustomerSnapshot(child: DataSnapshot, id: String): Customer? {
         val customer = child.getValue(Customer::class.java) ?: return null
@@ -96,7 +107,12 @@ class CustomerRepository(
             id = id,
             verschobeneTermine = verschobeneTermine,
             defaultAbholungWochentage = abholungWochentage.ifEmpty { customer.defaultAbholungWochentage },
-            defaultAuslieferungWochentage = auslieferungWochentage.ifEmpty { customer.defaultAuslieferungWochentage }
+            defaultAuslieferungWochentage = auslieferungWochentage.ifEmpty { customer.defaultAuslieferungWochentage },
+            abholungDatum = optionalLong(child, "abholungDatum"),
+            auslieferungDatum = optionalLong(child, "auslieferungDatum"),
+            wiederholen = optionalBoolean(child, "wiederholen"),
+            intervallTage = optionalInt(child, "intervallTage").coerceIn(1, 365).takeIf { it in 1..365 } ?: 7,
+            letzterTermin = optionalLong(child, "letzterTermin")
         ).migrateKundenTyp()
     }
 
@@ -186,13 +202,19 @@ class CustomerRepository(
         }
     }
     
+    /** Deprecated-Felder werden nicht mehr geschrieben (Phase 3.7/3.8). */
+    private fun withoutDeprecatedCustomerFields(updates: Map<String, Any>): Map<String, Any> =
+        updates.filterKeys { it !in setOf("abholungDatum", "auslieferungDatum", "wiederholen", "intervallTage", "letzterTermin") }
+
     /**
      * Aktualisiert einen Kunden
      */
     override suspend fun updateCustomer(customerId: String, updates: Map<String, Any>): Boolean {
         return try {
+            val filtered = withoutDeprecatedCustomerFields(updates)
+            if (filtered.isEmpty()) return true
             // Realtime Database speichert sofort lokal im Offline-Modus
-            val task = customersRef.child(customerId).updateChildren(updates)
+            val task = customersRef.child(customerId).updateChildren(filtered)
             
             // Versuchen, auf Abschluss zu warten, aber mit Timeout (2 Sekunden)
             // Im Offline-Modus ist die lokale Aktualisierung bereits sofort erfolgt
@@ -217,7 +239,9 @@ class CustomerRepository(
 
     override suspend fun updateCustomerResult(customerId: String, updates: Map<String, Any>): Result<Boolean> {
         return try {
-            val task = customersRef.child(customerId).updateChildren(updates)
+            val filtered = withoutDeprecatedCustomerFields(updates)
+            if (filtered.isEmpty()) return Result.Success(true)
+            val task = customersRef.child(customerId).updateChildren(filtered)
             try {
                 withTimeout(2000) { task.await() }
                 Result.Success(true)
@@ -272,5 +296,52 @@ class CustomerRepository(
             android.util.Log.e("CustomerRepository", "Error deleting customer", e)
             Result.Error(AppErrorMapper.toDeleteMessage(e))
         }
+    }
+
+    /**
+     * Einmalige Bereinigung: Entfernt die alten Struktur-Felder (abholungDatum, auslieferungDatum,
+     * wiederholen, intervallTage, letzterTermin) aus allen Kunden in Firebase.
+     * In Firebase Realtime DB entfernt updateChildren mit Wert null den Key.
+     * @return Anzahl der Kunden, bei denen die Felder entfernt wurden
+     */
+    suspend fun removeDeprecatedFieldsFromFirebase(): Int {
+        val snapshot = customersRef.get().await()
+        val keysToRemove = mapOf<String, Any?>(
+            "abholungDatum" to null,
+            "auslieferungDatum" to null,
+            "wiederholen" to null,
+            "intervallTage" to null,
+            "letzterTermin" to null
+        )
+        var count = 0
+        snapshot.children.forEach { child ->
+            val key = child.key ?: return@forEach
+            try {
+                withTimeout(3000) {
+                    customersRef.child(key).updateChildren(keysToRemove).await()
+                }
+                count++
+            } catch (_: Exception) {
+                // Einzelner Fehler: überspringen, nächsten Kunden versuchen
+            }
+        }
+        return count
+    }
+
+    private val deprecatedFieldKeys = listOf("abholungDatum", "auslieferungDatum", "wiederholen", "intervallTage", "letzterTermin")
+
+    /**
+     * Prüft in Firebase, ob noch Kunden existieren, bei denen eines der veralteten Felder gesetzt ist.
+     * @return Liste der Kunden-IDs, die mindestens eines der Felder noch haben
+     */
+    suspend fun getCustomerIdsWithDeprecatedFields(): List<String> {
+        val snapshot = customersRef.get().await()
+        val ids = mutableListOf<String>()
+        snapshot.children.forEach { child ->
+            val id = child.key ?: return@forEach
+            val hasAny = deprecatedFieldKeys.any { child.child(it).exists() }
+            if (hasAny) ids.add(id)
+        }
+        return ids
     }
 }

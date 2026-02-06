@@ -171,18 +171,4 @@ class TourPlannerViewModel(
         }
         return repository.updateCustomerResult(customer.id, mapOf("geloeschteTermine" to aktuelleGeloeschteTermine))
     }
-
-    /**
-     * Setzt Tour-Zyklus zurück (letzterTermin = jetzt, A/L = false, verschobenAufDatum = 0).
-     * Activity ruft auf und zeigt Ergebnis.
-     */
-    suspend fun resetTourCycle(customerId: String): Result<Boolean> {
-        val resetData = mapOf(
-            "letzterTermin" to System.currentTimeMillis(),
-            "abholungErfolgt" to false,
-            "auslieferungErfolgt" to false,
-            "verschobenAufDatum" to 0
-        )
-        return repository.updateCustomerResult(customerId, resetData)
-    }
 }

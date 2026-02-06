@@ -22,6 +22,8 @@ import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.TourPlanRepository
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.TerminRegelManager
+import com.example.we2026_5.util.intervallTageOrDefault
+import com.example.we2026_5.util.tageAzuLOrDefault
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -203,12 +205,8 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                             )
                                         }
                                         isRegelmaessig -> {
-                                            val first = c.intervalle.firstOrNull()
-                                            val tageAzuL = if (first != null && first.auslieferungDatum > first.abholungDatum)
-                                                (TimeUnit.MILLISECONDS.toDays(first.auslieferungDatum - first.abholungDatum)).toInt().coerceIn(1, 365)
-                                            else 7
-                                            val zyklus = (first?.intervallTage?.takeIf { it in 1..365 }
-                                                ?: @Suppress("DEPRECATION") c.intervallTage).coerceIn(1, 365).takeIf { it > 0 } ?: 28
+                                            val tageAzuL = c.tageAzuLOrDefault(7)
+                                            val zyklus = c.intervallTageOrDefault(28).coerceIn(1, 365).takeIf { it > 0 } ?: 28
                                             toAdd.map { slot ->
                                                 CustomerIntervall(
                                                     id = UUID.randomUUID().toString(),
@@ -221,8 +219,7 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                             }
                                         }
                                         else -> {
-                                            val zahl = (c.intervalle.firstOrNull()?.intervallTage?.takeIf { it in 1..365 }
-                                                ?: @Suppress("DEPRECATION") c.intervallTage).coerceIn(1, 365).takeIf { it > 0 } ?: 7
+                                            val zahl = c.intervallTageOrDefault(7).coerceIn(1, 365).takeIf { it > 0 } ?: 7
                                             toAdd.map { slot ->
                                                 CustomerIntervall(
                                                     id = UUID.randomUUID().toString(),

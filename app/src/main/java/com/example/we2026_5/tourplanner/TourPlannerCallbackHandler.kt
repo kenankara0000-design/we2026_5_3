@@ -19,7 +19,6 @@ class TourPlannerCallbackHandler(
     private val dateUtils: TourPlannerDateUtils,
     private val viewDate: java.util.Calendar,
     private val reloadCurrentView: () -> Unit,
-    private val resetTourCycle: (String) -> Unit,
     private val onError: ((String) -> Unit)? = null
 ) {
 

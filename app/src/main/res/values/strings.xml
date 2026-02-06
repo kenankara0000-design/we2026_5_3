@@ -39,7 +39,6 @@
     <string name="dialog_undo_termin_title">Termin ausgesetzt</string>
     <string name="dialog_undo_termin_message">Möchten Sie den Termin wiederherstellen?</string>
     <string name="btn_undo">Rückgängig</string>
-    <string name="toast_tour_completed">Tour abgeschlossen!</string>
 
     <!-- TerminRegelErstellen -->
     <string name="termin_regel_titel_bearbeiten">Regel bearbeiten</string>
@@ -510,7 +509,6 @@
     <string name="error_save_generic">Fehler beim Speichern. Bitte erneut versuchen.</string>
     <string name="error_delete_generic">Fehler beim Löschen. Bitte erneut versuchen.</string>
     <string name="error_delete_termin">Fehler beim Löschen des Termins. Bitte erneut versuchen.</string>
-    <string name="error_reset_tour">Fehler beim Zurücksetzen. Bitte erneut versuchen.</string>
     <string name="error_load_generic">Fehler beim Laden. Bitte erneut versuchen.</string>
     <string name="error_list_id_missing">Fehler: Keine Liste-ID übergeben</string>
     <string name="error_list_not_found">Liste nicht gefunden</string>

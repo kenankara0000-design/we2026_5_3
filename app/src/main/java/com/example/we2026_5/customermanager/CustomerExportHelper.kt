@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.example.we2026_5.Customer
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.util.intervallTageOrDefault
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -103,7 +104,7 @@ class CustomerExportHelper(
                         else -> "Offen"
                     }
 
-                    val intervallTage = customer.intervalle.firstOrNull()?.intervallTage?.takeIf { it in 1..365 } ?: 0
+                    val intervallTage = customer.intervallTageOrDefault(0)
 
                     @Suppress("DEPRECATION")
                     val letzterTermin = if (customer.letzterTermin > 0) {

@@ -59,6 +59,8 @@ import com.example.we2026_5.CustomerStatus
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
+import com.example.we2026_5.util.intervallTageOrDefault
+import com.example.we2026_5.util.tageAzuLOrDefault
 import com.example.we2026_5.ui.detail.CustomerDetailIntervallRow
 import com.example.we2026_5.ui.detail.CustomerDetailRegelNameRow
 import com.example.we2026_5.ui.detail.CustomerDetailStatusSection
@@ -103,11 +105,8 @@ fun CustomerDetailScreen(
     var formState by remember(customer?.id, isInEditMode) {
         mutableStateOf(
             if (customer != null) {
-                val first = customer.intervalle.firstOrNull()
-                val tageAzuL = first?.let {
-                    if (it.abholungDatum > 0) ((it.auslieferungDatum - it.abholungDatum) / 86400000).toInt().coerceIn(0, 365) else 7
-                } ?: 7
-                val intervallTage = first?.intervallTage?.takeIf { it in 1..365 } ?: 7
+                val tageAzuL = customer.tageAzuLOrDefault(7)
+                val intervallTage = customer.intervallTageOrDefault(7)
                 AddCustomerState(
                     name = customer.name,
                     adresse = customer.adresse,
@@ -375,8 +374,6 @@ fun CustomerDetailScreen(
                                 if (name.isEmpty()) {
                                     formState = formState.copy(errorMessage = validationNameMissing)
                                 } else {
-                                    val intervallTageForSave = if (formState.kundenTyp == KundenTyp.UNREGELMAESSIG) formState.tageAzuL
-                                        else editIntervalle.firstOrNull()?.intervallTage ?: formState.intervallTage
                                     onSave(
                                         buildMap {
                                             put("name", name)
@@ -391,7 +388,6 @@ fun CustomerDetailScreen(
                                             put("defaultAuslieferungWochentag", formState.auslieferungWochentage.firstOrNull() ?: -1)
                                             put("defaultAbholungWochentage", formState.abholungWochentage)
                                             put("defaultAuslieferungWochentage", formState.auslieferungWochentage)
-                                            put("intervallTage", intervallTageForSave)
                                             put("kundennummer", formState.kundennummer.trim())
                                             put("defaultUhrzeit", formState.defaultUhrzeit.trim())
                                             put("tags", formState.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } })

@@ -3,6 +3,7 @@ package com.example.we2026_5.util
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.KundenListe
+import com.example.we2026_5.util.tageAzuLOrDefault
 import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.VerschobenerTermin
 import com.example.we2026_5.TerminTyp
@@ -179,11 +180,7 @@ object TerminBerechnungUtils {
     ): List<TerminInfo> {
         val aTage = customer.effectiveAbholungWochentage
         if (aTage.isEmpty()) return emptyList()
-        val tageAzuL = (customer.intervalle.firstOrNull()?.let {
-            if (it.abholungDatum > 0 && it.auslieferungDatum > 0)
-                TimeUnit.MILLISECONDS.toDays(it.auslieferungDatum - it.abholungDatum).toInt().coerceIn(0, 365)
-            else null
-        } ?: 7)
+        val tageAzuL = customer.tageAzuLOrDefault(7)
         val startRequested = getStartOfDay(startDatum)
         val start = if (customer.erstelltAm > 0) {
             val erstelltStart = getStartOfDay(customer.erstelltAm)

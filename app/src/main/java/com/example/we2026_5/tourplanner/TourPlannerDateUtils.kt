@@ -6,6 +6,7 @@ import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.TerminFilterUtils
+import com.example.we2026_5.util.tageAzuLOrDefault
 import java.util.concurrent.TimeUnit
 
 /**
@@ -15,13 +16,8 @@ import java.util.concurrent.TimeUnit
 class TourPlannerDateUtils(
     private val getListen: () -> List<KundenListe>
 ) {
-    /** L = A + tageAzuL. Aus erstem Intervall oder Default 7. */
-    private fun getTageAzuL(customer: Customer): Int =
-        customer.intervalle.firstOrNull()?.let {
-            if (it.abholungDatum > 0 && it.auslieferungDatum > 0)
-                TimeUnit.MILLISECONDS.toDays(it.auslieferungDatum - it.abholungDatum).toInt().coerceIn(0, 365)
-            else null
-        } ?: 7
+    /** L = A + tageAzuL. Zentrale Abstraktion (TerminAusKundeUtils). */
+    private fun getTageAzuL(customer: Customer): Int = customer.tageAzuLOrDefault(7)
 
     /** Delegiert an TerminBerechnungUtils (Single Source of Truth). */
     fun getStartOfDay(ts: Long): Long = TerminBerechnungUtils.getStartOfDay(ts)

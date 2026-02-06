@@ -7,6 +7,26 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 /**
+ * Zentrale Abstraktion: erstes Intervall eines Kunden (Phase 3.1).
+ * Alle Stellen, die „erstes Intervall“ oder abgeleitete Werte brauchen, nutzen diese Erweiterungen.
+ */
+
+/** Erstes Intervall des Kunden; null wenn keine Intervalle. */
+fun Customer.firstIntervallOrNull(): CustomerIntervall? = intervalle.firstOrNull()
+
+/** Tage A→L aus erstem Intervall; sonst [default]. */
+fun Customer.tageAzuLOrDefault(default: Int = 7): Int =
+    firstIntervallOrNull()?.let {
+        if (it.abholungDatum > 0 && it.auslieferungDatum > 0)
+            TimeUnit.MILLISECONDS.toDays(it.auslieferungDatum - it.abholungDatum).toInt().coerceIn(0, 365)
+        else null
+    } ?: default
+
+/** Intervall-Tage (Zyklus) aus erstem Intervall; sonst [default]. */
+fun Customer.intervallTageOrDefault(default: Int = 7): Int =
+    firstIntervallOrNull()?.intervallTage?.takeIf { it in 1..365 }?.coerceIn(1, 365) ?: default
+
+/**
  * Erstellt ein CustomerIntervall aus Kundendaten (ohne TerminRegel).
  * Nutzt defaultAbholungWochentag, defaultAuslieferungWochentag, intervallTage.
  */
@@ -26,7 +46,7 @@ object TerminAusKundeUtils {
         tageAzuL: Int = 7
     ): CustomerIntervall? {
         val abholTag = customer.effectiveAbholungWochentage.firstOrNull()?.takeIf { WochentagBerechnung.isValidWeekday(it) } ?: return null
-        val zyklus = customer.intervalle.firstOrNull()?.intervallTage?.takeIf { it in 1..365 }?.coerceIn(1, 365) ?: 7
+        val zyklus = customer.intervallTageOrDefault(7)
         val tageAL = tageAzuL.coerceIn(0, 365)
         val start = TerminBerechnungUtils.getStartOfDay(startDatum)
 

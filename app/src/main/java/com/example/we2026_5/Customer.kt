@@ -2,6 +2,7 @@ package com.example.we2026_5
 
 import com.example.we2026_5.util.TerminFilterUtils
 import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.firstIntervallOrNull
 import com.google.firebase.database.Exclude
 import com.google.firebase.firestore.IgnoreExtraProperties
 import kotlin.DeprecationLevel
@@ -29,16 +30,21 @@ data class Customer(
     // Termine - NEUE STRUKTUR: Mehrere Intervalle pro Kunde
     val intervalle: List<CustomerIntervall> = emptyList(), // Liste der Intervalle (für Gewerblich-Kunden)
     
-    // Termine - ALTE STRUKTUR (für Rückwärtskompatibilität, @Deprecated)
+    // Termine - ALTE STRUKTUR (@Exclude: nicht mehr schreiben; nur optional aus DB lesen für Migration/Export)
     @Deprecated("Verwende intervalle statt einzelner Felder. Wird für Migration beibehalten.")
+    @Exclude
     val abholungDatum: Long = 0, // Erstes Abholungsdatum
     @Deprecated("Verwende intervalle statt einzelner Felder. Wird für Migration beibehalten.")
+    @Exclude
     val auslieferungDatum: Long = 0, // Erstes Auslieferungsdatum
     @Deprecated("Verwende intervalle statt einzelner Felder. Wird für Migration beibehalten.")
+    @Exclude
     val wiederholen: Boolean = false, // Ob Termine wiederholt werden sollen
     @Deprecated("Verwende intervalle statt einzelner Felder. Wird für Migration beibehalten.")
+    @Exclude
     val intervallTage: Int = 7, // Wiederholungs-Intervall (nur wenn wiederholen = true)
     @Deprecated("Verwende intervalle statt einzelner Felder. Wird für Migration beibehalten.")
+    @Exclude
     val letzterTermin: Long = 0,
     @Deprecated("Wird nicht mehr verwendet")
     val wochentagOld: Int = 0,
@@ -112,7 +118,7 @@ data class Customer(
         level = DeprecationLevel.WARNING
     )
     fun getFaelligAm(): Long {
-        if (intervalle.isNotEmpty()) {
+        if (firstIntervallOrNull() != null) {
             val heute = System.currentTimeMillis()
             val termine = com.example.we2026_5.util.TerminBerechnungUtils.berechneAlleTermineFuerKunde(
                 customer = this,
