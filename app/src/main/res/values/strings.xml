@@ -233,6 +233,7 @@
     <string name="label_ohne_tour">Ohne Tour (Kunde bringt/holt selbst)</string>
     <string name="label_filter_ohne_tour">Ohne Tour:</string>
     <string name="label_ohne_tour_anzeigen">Ohne Tour anzeigen</string>
+    <string name="label_ohne_tour_ausblenden">Ohne Tour ausblenden</string>
     <string name="label_list_search">Listen suchen…</string>
     <string name="label_list_sort_name">Sortierung: Name</string>
     <string name="label_list_sort_count">Sortierung: Kundenanzahl</string>
@@ -253,6 +254,7 @@
     <string name="validation_telefon">Ungültiges Telefonnummer-Format</string>
     <string name="save_in_progress">Speichere…</string>
     <string name="btn_save">Speichern</string>
+    <string name="btn_save_and_next_customer">Speichern und nächster Kunde</string>
     <string name="toast_gespeichert">Änderungen gespeichert</string>
     <string name="toast_customer_deleted">Kunde und alle Termine gelöscht</string>
     <string name="toast_customer_created_hint">Kunde angelegt. In der Übersicht kannst du A/L-Tag und Intervalle ergänzen.</string>
@@ -260,6 +262,7 @@
     <!-- Barrierefreiheit (contentDescription) -->
     <string name="content_desc_navigation">Mit Google Maps zur Adresse navigieren</string>
     <string name="content_desc_back">Zurück</string>
+    <string name="content_desc_filter">Filter anzeigen oder ausblenden</string>
     <string name="content_desc_more_options">Mehr Optionen</string>
     <string name="content_desc_prev_day">Vorheriger Tag</string>
     <string name="content_desc_next_day">Nächster Tag</string>

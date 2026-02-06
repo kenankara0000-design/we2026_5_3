@@ -41,10 +41,25 @@ class CustomerManagerActivity : AppCompatActivity() {
         } else if (result.resultCode == RESULT_CANCELED && customerId != null) {
             deletedCustomerIds = deletedCustomerIds - customerId
         }
+        if (result.resultCode == NextCustomerHelper.RESULT_OPEN_NEXT) {
+            val ids = lastDetailCustomerIds ?: return@registerForActivityResult
+            val editedIndex = NextCustomerHelper.getNextCustomerIndex(result.data)
+            val nextIndex = editedIndex + 1
+            if (nextIndex < ids.size) {
+                lastDetailIndex = nextIndex
+                val intent = Intent(this@CustomerManagerActivity, CustomerDetailActivity::class.java).apply {
+                    putExtra("CUSTOMER_ID", ids[nextIndex])
+                    NextCustomerHelper.putNextCustomerExtras(this, ids, nextIndex)
+                }
+                detailLauncher.launch(intent)
+            }
+        }
     }
 
     private var deletedCustomerIds by mutableStateOf(setOf<String>())
     private var pressedHeaderButton by mutableStateOf<String?>(null)
+    private var lastDetailCustomerIds: List<String>? = null
+    private var lastDetailIndex: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,8 +104,13 @@ class CustomerManagerActivity : AppCompatActivity() {
                 onExportClick = { pressedHeaderButton = "Exportieren"; exportHelper.showExportDialog() },
                 onNewCustomerClick = { pressedHeaderButton = "NeuerKunde"; startActivity(Intent(this@CustomerManagerActivity, AddCustomerActivity::class.java)) },
                 onCustomerClick = { customer ->
+                    val ids = displayCustomers.map { it.id }
+                    val index = ids.indexOf(customer.id).coerceAtLeast(0)
+                    lastDetailCustomerIds = ids
+                    lastDetailIndex = index
                     val intent = Intent(this@CustomerManagerActivity, CustomerDetailActivity::class.java).apply {
                         putExtra("CUSTOMER_ID", customer.id)
+                        NextCustomerHelper.putNextCustomerExtras(this, ids, index)
                     }
                     detailLauncher.launch(intent)
                 },

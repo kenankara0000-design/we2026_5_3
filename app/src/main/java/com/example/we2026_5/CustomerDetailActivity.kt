@@ -62,6 +62,9 @@ class CustomerDetailActivity : AppCompatActivity() {
 
         viewModel.setCustomerId(id)
 
+        val showSaveAndNext = NextCustomerHelper.hasNextCustomerExtras(intent)
+        val nextCustomerIndex = intent.getIntExtra(NextCustomerHelper.EXTRA_CURRENT_INDEX, -1)
+
         photoManager = CustomerPhotoManager(
             activity = this,
             repository = repository,
@@ -99,6 +102,16 @@ class CustomerDetailActivity : AppCompatActivity() {
                         }
                     }
                 },
+                showSaveAndNext = showSaveAndNext,
+                onSaveAndNext = if (showSaveAndNext) { updates, newIntervalle ->
+                    viewModel.saveCustomer(updates, newIntervalle) { success ->
+                        if (success) {
+                            setResult(NextCustomerHelper.RESULT_OPEN_NEXT, Intent().putExtra(NextCustomerHelper.RESULT_EXTRA_INDEX, nextCustomerIndex))
+                            Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                            finish()
+                        }
+                    }
+                } else null,
                 onDelete = {
                     AlertDialog.Builder(this@CustomerDetailActivity)
                         .setTitle(getString(R.string.dialog_delete_customer_title))

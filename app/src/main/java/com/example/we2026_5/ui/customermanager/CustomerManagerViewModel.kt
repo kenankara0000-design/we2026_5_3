@@ -37,7 +37,7 @@ class CustomerManagerViewModel(
     private val kundenTypFilterFlow = MutableStateFlow(0)
     val kundenTypFilter: StateFlow<Int> = kundenTypFilterFlow.asStateFlow()
 
-    // StateFlow für Ohne-Tour-Filter (0=Alle, 1=Nur Ohne Tour)
+    // StateFlow für Ohne-Tour-Filter (0=Alle, 1=Nur Ohne Tour, 2=Ohne Tour ausblenden)
     private val ohneTourFilterFlow = MutableStateFlow(0)
     val ohneTourFilter: StateFlow<Int> = ohneTourFilterFlow.asStateFlow()
 
@@ -66,6 +66,7 @@ class CustomerManagerViewModel(
 
         val ohneTourFiltered = when (ohneTourFilter) {
             1 -> typFiltered.filter { it.ohneTour }
+            2 -> typFiltered.filter { !it.ohneTour }
             else -> typFiltered
         }
         

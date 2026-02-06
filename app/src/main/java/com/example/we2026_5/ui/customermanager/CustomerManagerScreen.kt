@@ -90,6 +90,7 @@ fun CustomerManagerScreen(
     onRetry: () -> Unit
 ) {
     var localSearch by remember { mutableStateOf(searchQuery) }
+    var filterExpanded by remember { mutableStateOf(false) }
     val snackbarHostState = rememberSnackbarHostState()
     
     LaunchedEffect(localSearch) {
@@ -236,62 +237,85 @@ fun CustomerManagerScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                OutlinedTextField(
-                    value = localSearch,
-                    onValueChange = { localSearch = it },
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(stringResource(R.string.hint_search_customer)) },
-                    singleLine = true
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.label_filter_kunden_typ),
-                    color = textPrimary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(Modifier.height(6.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = kundenTypFilter == 0,
-                        onClick = { onKundenTypFilterChange(0) },
-                        label = { Text(stringResource(R.string.label_filter_all)) }
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = localSearch,
+                        onValueChange = { localSearch = it },
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text(stringResource(R.string.hint_search_customer)) },
+                        singleLine = true
                     )
-                    FilterChip(
-                        selected = kundenTypFilter == 1,
-                        onClick = { onKundenTypFilterChange(1) },
-                        label = { Text(stringResource(R.string.label_kunden_typ_regelmaessig)) }
-                    )
-                    FilterChip(
-                        selected = kundenTypFilter == 2,
-                        onClick = { onKundenTypFilterChange(2) },
-                        label = { Text(stringResource(R.string.label_kunden_typ_unregelmaessig)) }
-                    )
-                    FilterChip(
-                        selected = kundenTypFilter == 3,
-                        onClick = { onKundenTypFilterChange(3) },
-                        label = { Text(stringResource(R.string.label_kunden_typ_auf_abruf)) }
-                    )
+                    IconButton(
+                        onClick = { filterExpanded = !filterExpanded }
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_filter),
+                            contentDescription = stringResource(R.string.content_desc_filter),
+                            tint = if (filterExpanded) primaryBlue else textSecondary
+                        )
+                    }
                 }
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = stringResource(R.string.label_filter_ohne_tour),
-                    color = textPrimary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(Modifier.height(6.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = ohneTourFilter == 0,
-                        onClick = { onOhneTourFilterChange(0) },
-                        label = { Text(stringResource(R.string.label_filter_all)) }
+                if (filterExpanded) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.label_filter_kunden_typ),
+                        color = textPrimary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                    FilterChip(
-                        selected = ohneTourFilter == 1,
-                        onClick = { onOhneTourFilterChange(1) },
-                        label = { Text(stringResource(R.string.label_ohne_tour_anzeigen)) }
+                    Spacer(Modifier.height(6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = kundenTypFilter == 0,
+                            onClick = { onKundenTypFilterChange(0) },
+                            label = { Text(stringResource(R.string.label_filter_all)) }
+                        )
+                        FilterChip(
+                            selected = kundenTypFilter == 1,
+                            onClick = { onKundenTypFilterChange(1) },
+                            label = { Text(stringResource(R.string.label_kunden_typ_regelmaessig)) }
+                        )
+                        FilterChip(
+                            selected = kundenTypFilter == 2,
+                            onClick = { onKundenTypFilterChange(2) },
+                            label = { Text(stringResource(R.string.label_kunden_typ_unregelmaessig)) }
+                        )
+                        FilterChip(
+                            selected = kundenTypFilter == 3,
+                            onClick = { onKundenTypFilterChange(3) },
+                            label = { Text(stringResource(R.string.label_kunden_typ_auf_abruf)) }
+                        )
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = stringResource(R.string.label_filter_ohne_tour),
+                        color = textPrimary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
                     )
+                    Spacer(Modifier.height(6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = ohneTourFilter == 0,
+                            onClick = { onOhneTourFilterChange(0) },
+                            label = { Text(stringResource(R.string.label_filter_all)) }
+                        )
+                        FilterChip(
+                            selected = ohneTourFilter == 1,
+                            onClick = { onOhneTourFilterChange(1) },
+                            label = { Text(stringResource(R.string.label_ohne_tour_anzeigen)) }
+                        )
+                        FilterChip(
+                            selected = ohneTourFilter == 2,
+                            onClick = { onOhneTourFilterChange(2) },
+                            label = { Text(stringResource(R.string.label_ohne_tour_ausblenden)) }
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
                 }
                 Spacer(Modifier.height(8.dp))
 

@@ -82,6 +82,8 @@ fun CustomerDetailScreen(
     onBack: () -> Unit,
     onEdit: () -> Unit,
     onSave: (Map<String, Any>, List<CustomerIntervall>) -> Unit,
+    showSaveAndNext: Boolean = false,
+    onSaveAndNext: ((Map<String, Any>, List<CustomerIntervall>) -> Unit)? = null,
     onDelete: () -> Unit,
     onTerminAnlegen: () -> Unit,
     onPauseCustomer: (pauseEndeWochen: Int?) -> Unit,
@@ -377,77 +379,83 @@ fun CustomerDetailScreen(
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         val stateForSave = editFormState ?: formState
-                        androidx.compose.material3.Button(
-                            onClick = {
-                                val name = stateForSave.name.trim()
-                                if (name.isEmpty()) {
-                                    if (isInEditMode) onUpdateEditFormState(stateForSave.copy(errorMessage = validationNameMissing))
-                                    else formState = formState.copy(errorMessage = validationNameMissing)
-                                } else {
-                                    onSave(
-                                        buildMap {
-                                            put("name", name)
-                                            put("alias", stateForSave.alias.trim())
-                                            put("adresse", stateForSave.adresse.trim())
-                                            put("stadt", stateForSave.stadt.trim())
-                                            put("plz", stateForSave.plz.trim())
-                                            put("telefon", stateForSave.telefon.trim())
-                                            put("notizen", stateForSave.notizen.trim())
-                                            put("kundenArt", stateForSave.kundenArt)
-                                            put("kundenTyp", stateForSave.kundenTyp.name)
-                                            put("defaultAbholungWochentag", stateForSave.abholungWochentage.firstOrNull() ?: -1)
-                                            put("defaultAuslieferungWochentag", stateForSave.auslieferungWochentage.firstOrNull() ?: -1)
-                                            put("defaultAbholungWochentage", stateForSave.abholungWochentage)
-                                            put("defaultAuslieferungWochentage", stateForSave.auslieferungWochentage)
-                                            put("kundennummer", stateForSave.kundennummer.trim())
-                                            put("defaultUhrzeit", stateForSave.defaultUhrzeit.trim())
-                                            put("tags", stateForSave.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } })
-                                            put("ohneTour", stateForSave.ohneTour)
-                                            val hasTour = stateForSave.abholungWochentage.isNotEmpty() || stateForSave.tourStadt.isNotBlank() || stateForSave.tourZeitStart.isNotBlank() || stateForSave.tourZeitEnde.isNotBlank()
-                                            val slotId = if (hasTour) (customer?.tourSlot?.id ?: "customer-${customer?.id}") else ""
-                                            put("tourSlotId", slotId)
-                                            put("tourSlot", if (hasTour) mapOf<String, Any>(
-                                                "id" to slotId,
-                                                "wochentag" to (stateForSave.abholungWochentage.firstOrNull() ?: -1),
-                                                "stadt" to stateForSave.tourStadt.trim(),
-                                                "zeitfenster" to mapOf(
-                                                    "start" to stateForSave.tourZeitStart.trim(),
-                                                    "ende" to stateForSave.tourZeitEnde.trim()
-                                                )
-                                            ) else emptyMap<String, Any>())
-                                            val intervalleToSave = if (editIntervalle.isEmpty() && stateForSave.kundenTyp == KundenTyp.REGELMAESSIG && stateForSave.abholungWochentage.isNotEmpty() && customer != null) {
-                                                val customerForIntervall = customer.copy(
-                                                    defaultAbholungWochentag = stateForSave.abholungWochentage.firstOrNull() ?: -1,
-                                                    defaultAuslieferungWochentag = stateForSave.auslieferungWochentage.firstOrNull() ?: -1,
-                                                    defaultAbholungWochentage = stateForSave.abholungWochentage,
-                                                    defaultAuslieferungWochentage = stateForSave.auslieferungWochentage,
-                                                    tourSlotId = slotId
-                                                )
-                                                TerminAusKundeUtils.erstelleIntervallAusKunde(customerForIntervall, System.currentTimeMillis(), stateForSave.tageAzuL, stateForSave.intervallTage)?.let { listOf(it) } ?: emptyList()
-                                            } else editIntervalle
-                                            put("intervalle", intervalleToSave.map {
-                                                mapOf(
-                                                    "id" to it.id,
-                                                    "abholungDatum" to it.abholungDatum,
-                                                    "auslieferungDatum" to it.auslieferungDatum,
-                                                    "wiederholen" to it.wiederholen,
-                                                    "intervallTage" to it.intervallTage,
-                                                    "intervallAnzahl" to it.intervallAnzahl,
-                                                    "erstelltAm" to it.erstelltAm,
-                                                    "terminRegelId" to it.terminRegelId
-                                                )
-                                            })
-                                        },
-                                        editIntervalle
-                                    )
+                        val performSave: (Boolean) -> Unit = { andNext ->
+                            val name = stateForSave.name.trim()
+                            if (name.isEmpty()) {
+                                if (isInEditMode) onUpdateEditFormState(stateForSave.copy(errorMessage = validationNameMissing))
+                                else formState = formState.copy(errorMessage = validationNameMissing)
+                            } else {
+                                val updates = buildMap {
+                                    put("name", name)
+                                    put("alias", stateForSave.alias.trim())
+                                    put("adresse", stateForSave.adresse.trim())
+                                    put("stadt", stateForSave.stadt.trim())
+                                    put("plz", stateForSave.plz.trim())
+                                    put("telefon", stateForSave.telefon.trim())
+                                    put("notizen", stateForSave.notizen.trim())
+                                    put("kundenArt", stateForSave.kundenArt)
+                                    put("kundenTyp", stateForSave.kundenTyp.name)
+                                    put("defaultAbholungWochentag", stateForSave.abholungWochentage.firstOrNull() ?: -1)
+                                    put("defaultAuslieferungWochentag", stateForSave.auslieferungWochentage.firstOrNull() ?: -1)
+                                    put("defaultAbholungWochentage", stateForSave.abholungWochentage)
+                                    put("defaultAuslieferungWochentage", stateForSave.auslieferungWochentage)
+                                    put("kundennummer", stateForSave.kundennummer.trim())
+                                    put("defaultUhrzeit", stateForSave.defaultUhrzeit.trim())
+                                    put("tags", stateForSave.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } })
+                                    put("ohneTour", stateForSave.ohneTour)
+                                    val hasTour = stateForSave.abholungWochentage.isNotEmpty() || stateForSave.tourStadt.isNotBlank() || stateForSave.tourZeitStart.isNotBlank() || stateForSave.tourZeitEnde.isNotBlank()
+                                    val slotId = if (hasTour) (customer?.tourSlot?.id ?: "customer-${customer?.id}") else ""
+                                    put("tourSlotId", slotId)
+                                    put("tourSlot", if (hasTour) mapOf<String, Any>(
+                                        "id" to slotId,
+                                        "wochentag" to (stateForSave.abholungWochentage.firstOrNull() ?: -1),
+                                        "stadt" to stateForSave.tourStadt.trim(),
+                                        "zeitfenster" to mapOf(
+                                            "start" to stateForSave.tourZeitStart.trim(),
+                                            "ende" to stateForSave.tourZeitEnde.trim()
+                                        )
+                                    ) else emptyMap<String, Any>())
+                                    val intervalleToSave = if (editIntervalle.isEmpty() && stateForSave.kundenTyp == KundenTyp.REGELMAESSIG && stateForSave.abholungWochentage.isNotEmpty() && customer != null) {
+                                        val customerForIntervall = customer.copy(
+                                            defaultAbholungWochentag = stateForSave.abholungWochentage.firstOrNull() ?: -1,
+                                            defaultAuslieferungWochentag = stateForSave.auslieferungWochentage.firstOrNull() ?: -1,
+                                            defaultAbholungWochentage = stateForSave.abholungWochentage,
+                                            defaultAuslieferungWochentage = stateForSave.auslieferungWochentage,
+                                            tourSlotId = slotId
+                                        )
+                                        TerminAusKundeUtils.erstelleIntervallAusKunde(customerForIntervall, System.currentTimeMillis(), stateForSave.tageAzuL, stateForSave.intervallTage)?.let { listOf(it) } ?: emptyList()
+                                    } else editIntervalle
+                                    put("intervalle", intervalleToSave.map {
+                                        mapOf(
+                                            "id" to it.id,
+                                            "abholungDatum" to it.abholungDatum,
+                                            "auslieferungDatum" to it.auslieferungDatum,
+                                            "wiederholen" to it.wiederholen,
+                                            "intervallTage" to it.intervallTage,
+                                            "intervallAnzahl" to it.intervallAnzahl,
+                                            "erstelltAm" to it.erstelltAm,
+                                            "terminRegelId" to it.terminRegelId
+                                        )
+                                    })
                                 }
-                            },
+                                if (andNext && onSaveAndNext != null) onSaveAndNext(updates, editIntervalle)
+                                else onSave(updates, editIntervalle)
+                            }
+                        }
+                        androidx.compose.material3.Button(
+                            onClick = { performSave(false) },
                             modifier = Modifier.weight(1f),
                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                                 containerColor = colorResource(R.color.termin_regel_button_save),
                                 contentColor = Color.White
                             )
                         ) { Text(stringResource(R.string.btn_save)) }
+                        if (showSaveAndNext && onSaveAndNext != null) {
+                            androidx.compose.material3.OutlinedButton(
+                                onClick = { performSave(true) },
+                                modifier = Modifier.weight(1f)
+                            ) { Text(stringResource(R.string.btn_save_and_next_customer)) }
+                        }
                     }
                 }
 
