@@ -114,8 +114,8 @@ class CustomerDetailActivity : AppCompatActivity() {
                     val c = customer ?: return@CustomerDetailScreen
                     handleTerminAnlegen(c, id)
                 },
-                onPauseCustomer = {
-                    customer?.let { pauseCustomer(it) } ?: showCustomerActionError()
+                onPauseCustomer = { weeks ->
+                    customer?.let { pauseCustomer(it, weeks) } ?: showCustomerActionError()
                 },
                 onResumeCustomer = {
                     customer?.let { resumeCustomer(it) } ?: showCustomerActionError()
@@ -222,11 +222,14 @@ class CustomerDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun pauseCustomer(customer: Customer) {
+    private fun pauseCustomer(customer: Customer, pauseEndeWochen: Int?) {
+        val now = System.currentTimeMillis()
+        val pauseEnde = if (pauseEndeWochen == null || pauseEndeWochen <= 0) 0L
+        else now + java.util.concurrent.TimeUnit.DAYS.toMillis(pauseEndeWochen * 7L)
         val updates = mapOf(
             "status" to CustomerStatus.PAUSIERT.name,
-            "pauseStart" to System.currentTimeMillis(),
-            "pauseEnde" to 0L,
+            "pauseStart" to now,
+            "pauseEnde" to pauseEnde,
             "reaktivierungsDatum" to 0L
         )
         viewModel.saveCustomer(updates) { success ->

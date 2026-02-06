@@ -83,7 +83,7 @@ fun CustomerDetailScreen(
     onSave: (Map<String, Any>, List<CustomerIntervall>) -> Unit,
     onDelete: () -> Unit,
     onTerminAnlegen: () -> Unit,
-    onPauseCustomer: () -> Unit,
+    onPauseCustomer: (pauseEndeWochen: Int?) -> Unit,
     onResumeCustomer: () -> Unit,
     onTakePhoto: () -> Unit,
     onAdresseClick: () -> Unit,

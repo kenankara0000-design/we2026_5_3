@@ -8,6 +8,7 @@ import com.example.we2026_5.R
 import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
+import com.example.we2026_5.util.CustomerTermFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,21 +47,23 @@ class ListeBearbeitenViewModel(
                     return@launch
                 }
                 val alleKunden = withContext(Dispatchers.IO) { customerRepository.getAllCustomers() }
+                val now = System.currentTimeMillis()
+                val activeKunden = CustomerTermFilter.filterActiveForTerms(alleKunden, now)
                 val inListe = if (geladeneListe.wochentag in 0..6) {
-                    alleKunden.filter { k ->
+                    activeKunden.filter { k ->
                         geladeneListe.wochentag in k.effectiveAbholungWochentage ||
                         geladeneListe.wochentag in k.effectiveAuslieferungWochentage
                     }.sortedBy { it.name }
                 } else {
-                    alleKunden.filter { it.listeId == geladeneListe.id }.sortedBy { it.name }
+                    activeKunden.filter { it.listeId == geladeneListe.id }.sortedBy { it.name }
                 }
                 val verfuegbar = if (geladeneListe.wochentag in 0..6) {
-                    alleKunden.filter { k ->
+                    activeKunden.filter { k ->
                         geladeneListe.wochentag !in k.effectiveAbholungWochentage &&
                         geladeneListe.wochentag !in k.effectiveAuslieferungWochentage
                     }.sortedBy { it.name }
                 } else {
-                    alleKunden.filter { it.listeId.isEmpty() && it.kundenArt == "Tour" }.sortedBy { it.name }
+                    activeKunden.filter { it.listeId.isEmpty() && it.kundenArt == "Tour" }.sortedBy { it.name }
                 }
                 val intervalle = if (_state.value.isInEditMode) _state.value.intervalle else geladeneListe.intervalle
                 _state.value = _state.value.copy(

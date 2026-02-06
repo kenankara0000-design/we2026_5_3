@@ -441,6 +441,14 @@
     <string name="customer_status_paused_until">Pausiert bis %1$s</string>
     <string name="customer_btn_pause">Pause aktivieren</string>
     <string name="customer_btn_resume">Pause deaktivieren</string>
+    <string name="customer_confirm_pause_title">Pause aktivieren?</string>
+    <string name="customer_confirm_pause_message">Kunde pausieren? Der Status wird auf \'Pausiert\' gesetzt.</string>
+    <string name="customer_pause_duration_title">Wie lange pausieren?</string>
+    <string name="customer_pause_1_week">1 Woche</string>
+    <string name="customer_pause_weeks">%d Wochen</string>
+    <string name="customer_pause_unbestimmt">Unbestimmt (keine Frist)</string>
+    <string name="customer_confirm_resume_title">Pause beenden?</string>
+    <string name="customer_confirm_resume_message">Kunde wieder aktiv setzen?</string>
     <string name="customer_tags_label">Tags: %1$s</string>
     <string name="toast_customer_paused">Pause bis %1$s gespeichert</string>
     <string name="toast_customer_paused_simple">Kunde pausiert</string>

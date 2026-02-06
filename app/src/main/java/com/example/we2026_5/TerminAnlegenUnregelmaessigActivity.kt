@@ -103,6 +103,7 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                         .fillMaxSize()
                         .padding(padding)
                         .padding(16.dp)
+                        .padding(bottom = 32.dp)
                 ) {
                     if (isLoading) {
                         Box(

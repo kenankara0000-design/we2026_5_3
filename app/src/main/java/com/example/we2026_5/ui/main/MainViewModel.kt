@@ -10,6 +10,7 @@ import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.data.repository.TourPlanRepository
 import com.example.we2026_5.tourplanner.TourDataProcessor
+import com.example.we2026_5.util.CustomerTermFilter
 import com.example.we2026_5.util.TerminRegelManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
@@ -43,8 +44,10 @@ class MainViewModel(
             ) { customers, listen ->
                 Pair(customers, listen)
             }.collect { (customers, listen) ->
+                val now = System.currentTimeMillis()
+                val activeCustomers = CustomerTermFilter.filterActiveForTerms(customers, now)
                 val count = withContext(Dispatchers.IO) {
-                    dataProcessor.getFälligCount(customers, listen, System.currentTimeMillis())
+                    dataProcessor.getFälligCount(activeCustomers, listen, now)
                 }
                 _tourFälligCount.value = count
             }
@@ -57,8 +60,10 @@ class MainViewModel(
             ) { customers, tourSlots ->
                 Pair(customers, tourSlots)
             }.collect { (customers, tourSlots) ->
+                val now = System.currentTimeMillis()
+                val activeCustomers = CustomerTermFilter.filterActiveForTerms(customers, now)
                 val slots = withContext(Dispatchers.Default) {
-                    customers
+                    activeCustomers
                         .filter { it.status == CustomerStatus.ADHOC || it.adHocTemplate != null }
                         .flatMap { customer ->
                             TerminRegelManager.schlageSlotsVor(

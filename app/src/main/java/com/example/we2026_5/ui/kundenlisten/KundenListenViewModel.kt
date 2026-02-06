@@ -9,6 +9,7 @@ import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
+import com.example.we2026_5.util.CustomerTermFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,16 +42,18 @@ class KundenListenViewModel(
             try {
                 val listen = withContext(Dispatchers.IO) { listeRepository.getAllListen() }.toMutableList()
                 val allCustomers = withContext(Dispatchers.IO) { customerRepository.getAllCustomers() }
+                val now = System.currentTimeMillis()
+                val activeCustomers = CustomerTermFilter.filterActiveForTerms(allCustomers, now)
                 ensureWochentagListen(listen)
                 val sortedListen = sortListen(listen)
                 val kundenProListe = sortedListen.associate { liste ->
                     val count = if (liste.wochentag in 0..6) {
-                        allCustomers.count { k ->
+                        activeCustomers.count { k ->
                             liste.wochentag in k.effectiveAbholungWochentage ||
                             liste.wochentag in k.effectiveAuslieferungWochentage
                         }
                     } else {
-                        allCustomers.count { it.listeId == liste.id }
+                        activeCustomers.count { it.listeId == liste.id }
                     }
                     liste.id to count
                 }

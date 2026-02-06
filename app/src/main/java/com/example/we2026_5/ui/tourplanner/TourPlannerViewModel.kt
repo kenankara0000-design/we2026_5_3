@@ -14,6 +14,7 @@ import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.tourplanner.TourDataProcessor
 import com.example.we2026_5.tourplanner.TourProcessResult
 import com.example.we2026_5.ui.tourplanner.ErledigtSheetContent
+import com.example.we2026_5.util.CustomerTermFilter
 import com.example.we2026_5.util.Result
 import com.example.we2026_5.util.TerminBerechnungUtils
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -71,7 +72,8 @@ class TourPlannerViewModel(
         if (timestamp == null) {
             TourProcessResult(emptyList(), 0, emptyList(), emptyList())
         } else {
-            dataProcessor.processTourData(customers, listen, timestamp, expandedSections)
+            val activeCustomers = CustomerTermFilter.filterActiveForTerms(customers, System.currentTimeMillis())
+            dataProcessor.processTourData(activeCustomers, listen, timestamp, expandedSections)
         }
     }
 

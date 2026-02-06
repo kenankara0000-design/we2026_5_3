@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.util.AppErrorMapper
+import com.example.we2026_5.util.CustomerTermFilter
 import com.example.we2026_5.util.TerminBerechnungUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -64,11 +65,12 @@ class StatisticsViewModel(
 
     private fun computeStatistics(allCustomers: List<Customer>): StatisticsState {
         val heute = System.currentTimeMillis()
+        val activeCustomers = CustomerTermFilter.filterActiveForTerms(allCustomers, heute)
         val heuteStart = TerminBerechnungUtils.getStartOfDay(heute)
         val cal = Calendar.getInstance()
 
         val heuteEnd = heuteStart + TimeUnit.DAYS.toMillis(1)
-        val heuteCount = allCustomers.count { customer ->
+        val heuteCount = activeCustomers.count { customer ->
             val faelligAm = customer.getFaelligAm()
             faelligAm >= heuteStart && faelligAm < heuteEnd &&
                 !(customer.abholungErfolgt && customer.auslieferungErfolgt)
@@ -83,7 +85,7 @@ class StatisticsViewModel(
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
         val wocheEnd = wocheStart + TimeUnit.DAYS.toMillis(7)
-        val wocheCount = allCustomers.count { customer ->
+        val wocheCount = activeCustomers.count { customer ->
             val faelligAm = customer.getFaelligAm()
             faelligAm >= wocheStart && faelligAm < wocheEnd
         }
@@ -98,18 +100,18 @@ class StatisticsViewModel(
         }.timeInMillis
         cal.add(Calendar.MONTH, 1)
         val monatEnd = cal.timeInMillis
-        val monatCount = allCustomers.count { customer ->
+        val monatCount = activeCustomers.count { customer ->
             val faelligAm = customer.getFaelligAm()
             faelligAm >= monatStart && faelligAm < monatEnd
         }
 
-        val overdueCount = allCustomers.count { customer ->
+        val overdueCount = activeCustomers.count { customer ->
             val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
             val faelligAm = customer.getFaelligAm()
             !isDone && faelligAm < heuteStart
         }
 
-        val doneTodayCount = allCustomers.count { customer ->
+        val doneTodayCount = activeCustomers.count { customer ->
             val abholungHeute = customer.abholungErledigtAm > 0 &&
                 TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) == heuteStart
             val auslieferungHeute = customer.auslieferungErledigtAm > 0 &&
@@ -118,10 +120,10 @@ class StatisticsViewModel(
                 customer.keinerWäscheErledigtAm > 0 && TerminBerechnungUtils.getStartOfDay(customer.keinerWäscheErledigtAm) == heuteStart)
         }
 
-        val totalCustomers = allCustomers.size
-        val regelmaessigCount = allCustomers.count { it.kundenTyp == com.example.we2026_5.KundenTyp.REGELMAESSIG }
-        val unregelmaessigCount = allCustomers.count { it.kundenTyp == com.example.we2026_5.KundenTyp.UNREGELMAESSIG }
-        val aufAbrufCount = allCustomers.count { it.kundenTyp == com.example.we2026_5.KundenTyp.AUF_ABRUF }
+        val totalCustomers = activeCustomers.size
+        val regelmaessigCount = activeCustomers.count { it.kundenTyp == com.example.we2026_5.KundenTyp.REGELMAESSIG }
+        val unregelmaessigCount = activeCustomers.count { it.kundenTyp == com.example.we2026_5.KundenTyp.UNREGELMAESSIG }
+        val aufAbrufCount = activeCustomers.count { it.kundenTyp == com.example.we2026_5.KundenTyp.AUF_ABRUF }
         val faelligHeuteGesamt = heuteCount + doneTodayCount
         val quoteHeute = if (faelligHeuteGesamt > 0)
             (100.0 * doneTodayCount / faelligHeuteGesamt).toInt().toString() + "%"
