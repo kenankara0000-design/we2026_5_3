@@ -20,6 +20,7 @@ class TourDataCategorizer {
     
     /**
      * Berechnet das nächste Datum für eine Liste basierend auf ihren Intervallen.
+     * Nur für optionale Gruppierung/Anzeige; Terminlogik nutzt ausschließlich Kundendaten.
      */
     fun getNaechstesListeDatum(liste: KundenListe, abDatum: Long = System.currentTimeMillis(), geloeschteTermine: List<Long> = emptyList()): Long? {
         val abDatumStart = getStartOfDay(abDatum)

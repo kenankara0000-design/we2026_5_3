@@ -26,37 +26,21 @@ class TourDataFilter(
      * Berechnet, wann ein Kunde fällig ist.
      */
     fun customerFaelligAm(c: Customer, liste: KundenListe? = null, abDatum: Long = System.currentTimeMillis()): Long {
-        // NEUE STRUKTUR: Verwende Intervalle-Liste wenn vorhanden
-        if (c.intervalle.isNotEmpty()) {
+        // Term-Daten nur aus Kunde (liste nur Gruppierung; kein getNaechstesListeDatum(liste)).
+        if (c.intervalle.isNotEmpty() || c.listeId.isNotEmpty()) {
             val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
                 customer = c,
-                liste = liste,
+                liste = null,
                 startDatum = abDatum,
                 tageVoraus = 365
             )
-            val naechstesTermin = termine.firstOrNull { 
+            val naechstesTermin = termine.firstOrNull {
                 it.datum >= categorizer.getStartOfDay(abDatum)
             }
             return naechstesTermin?.datum ?: 0L
         }
         
-        // Für Kunden in Listen: Daten der Liste verwenden
-        if (c.listeId.isNotEmpty() && liste != null) {
-            val verschobenEntry = TerminFilterUtils.istTerminVerschoben(c.abholungDatum, c.verschobeneTermine)
-            if (verschobenEntry != null) {
-                val verschobenStart = TerminBerechnungUtils.getStartOfDay(verschobenEntry.verschobenAufDatum)
-                if (c.geloeschteTermine.contains(verschobenStart)) {
-                    val naechstesDatum = categorizer.getNaechstesListeDatum(liste, verschobenStart + TimeUnit.DAYS.toMillis(1))
-                    return naechstesDatum ?: abDatum
-                }
-                return verschobenEntry.verschobenAufDatum
-            }
-            
-            val naechstesDatum = categorizer.getNaechstesListeDatum(liste, abDatum, c.geloeschteTermine)
-            return naechstesDatum ?: 0L
-        }
-        
-        // Für Kunden ohne Liste: Normale Logik
+        // Für Kunden ohne Intervalle und ohne listeId: Alte Einzel-Felder
         if (!c.wiederholen) {
             val abholungStart = categorizer.getStartOfDay(c.abholungDatum)
             val auslieferungStart = categorizer.getStartOfDay(c.auslieferungDatum)
@@ -130,22 +114,18 @@ class TourDataFilter(
         liste: KundenListe? = null,
         viewDateStart: Long
     ): Boolean {
-        // NEUE STRUKTUR: L = A + tageAzuL → Termin am viewDateStart = A am viewDateStart oder L am viewDateStart (A am viewDateStart−tageAzuL).
-        if (customer.intervalle.isNotEmpty() || (customer.listeId.isNotEmpty() && liste != null)) {
+        // Term-Daten nur aus Kunde (liste nur Gruppierung).
+        if (customer.intervalle.isNotEmpty() || customer.listeId.isNotEmpty()) {
             val tageAzuL = getTageAzuL(customer)
             val startDatum = viewDateStart - TimeUnit.DAYS.toMillis(tageAzuL.toLong())
             val tageVoraus = tageAzuL + 2
             val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
                 customer = customer,
-                liste = liste,
+                liste = null,
                 startDatum = startDatum,
                 tageVoraus = tageVoraus
             )
-            val alleGeloeschteTermine = if (liste != null) {
-                (customer.geloeschteTermine + liste.geloeschteTermine).distinct()
-            } else {
-                customer.geloeschteTermine
-            }
+            val alleGeloeschteTermine = customer.geloeschteTermine
             return termine.any { termin ->
                 val terminStart = TerminBerechnungUtils.getStartOfDay(termin.datum)
                 terminStart == viewDateStart &&
@@ -154,7 +134,7 @@ class TourDataFilter(
         }
         
         // ALTE STRUKTUR: Rückwärtskompatibilität
-        val faelligAm = customerFaelligAm(customer, liste, viewDateStart)
+        val faelligAm = customerFaelligAm(customer, null, viewDateStart)
         val faelligAmStart = categorizer.getStartOfDay(faelligAm)
         return faelligAmStart == viewDateStart && faelligAm > 0
     }
@@ -169,19 +149,18 @@ class TourDataFilter(
         heuteStart: Long
     ): Boolean {
         val customerDone = customer.abholungErfolgt || customer.auslieferungErfolgt
-        val listeDone = liste?.let { it.abholungErfolgt || it.auslieferungErfolgt } ?: false
-        val isDone = customerDone || listeDone
+        val isDone = customerDone
         if (isDone) return false
         
-        // NEUE STRUKTUR: Verwende Intervalle-Liste
-        if (customer.intervalle.isNotEmpty() || (customer.listeId.isNotEmpty() && liste != null)) {
+        // Term-Daten nur aus Kunde (liste nur Gruppierung).
+        if (customer.intervalle.isNotEmpty() || customer.listeId.isNotEmpty()) {
             if (viewDateStart > heuteStart) {
                 return false
             }
             
             val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
                 customer = customer,
-                liste = liste,
+                liste = null,
                 startDatum = heuteStart - TimeUnit.DAYS.toMillis(365),
                 tageVoraus = 730
             )
@@ -200,7 +179,7 @@ class TourDataFilter(
         }
         
         // ALTE STRUKTUR: Rückwärtskompatibilität
-        val faelligAm = customerFaelligAm(customer, liste, viewDateStart)
+        val faelligAm = customerFaelligAm(customer, null, viewDateStart)
         val abholungStart = categorizer.getStartOfDay(customer.abholungDatum)
         val auslieferungStart = categorizer.getStartOfDay(customer.auslieferungDatum)
         val abholungUeberfaellig = !customer.abholungErfolgt && customer.abholungDatum > 0 && 

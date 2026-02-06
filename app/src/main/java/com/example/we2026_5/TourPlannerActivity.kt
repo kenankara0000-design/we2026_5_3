@@ -97,7 +97,7 @@ class TourPlannerActivity : AppCompatActivity() {
                 val getAbholungDatum: (Customer) -> Long = { c -> coordinator.dateUtils.calculateAbholungDatum(c, viewDateStart, heuteStart) }
                 val getAuslieferungDatum: (Customer) -> Long = { c -> coordinator.dateUtils.calculateAuslieferungDatum(c, viewDateStart, heuteStart) }
                 val getTermineFuerKunde = { c: Customer, start: Long, days: Int ->
-                    TerminBerechnungUtils.berechneAlleTermineFuerKunde(c, viewModel.getListen().find { l -> l.id == c.listeId }, start, days)
+                    TerminBerechnungUtils.berechneAlleTermineFuerKunde(c, null, start, days)
                 }
                 val helper = CustomerButtonVisibilityHelper(this@TourPlannerActivity, ts, emptyMap(), getAbholungDatum, getAuslieferungDatum, getTermineFuerKunde)
                 return helper.getSheetState(customer)?.statusBadgeText ?: ""
@@ -106,12 +106,11 @@ class TourPlannerActivity : AppCompatActivity() {
             val ts = selectedTimestamp
             val counts = ts?.let { timestamp ->
                 val viewDateStart = coordinator.dateUtils.getStartOfDay(timestamp)
-                val listen = viewModel.getListen()
                 val customers = tourItems.filterIsInstance<ListItem.CustomerItem>().map { it.customer }
                 val termine = customers.flatMap { c ->
                     TerminBerechnungUtils.berechneAlleTermineFuerKunde(
                         customer = c,
-                        liste = listen.find { it.id == c.listeId },
+                        liste = null,
                         startDatum = viewDateStart,
                         tageVoraus = 1
                     ).filter { coordinator.dateUtils.getStartOfDay(it.datum) == viewDateStart }
@@ -161,7 +160,7 @@ class TourPlannerActivity : AppCompatActivity() {
                     val getAbholungDatum: (Customer) -> Long = { c -> coordinator.dateUtils.calculateAbholungDatum(c, viewDateStart, heuteStart) }
                     val getAuslieferungDatum: (Customer) -> Long = { c -> coordinator.dateUtils.calculateAuslieferungDatum(c, viewDateStart, heuteStart) }
                     val getTermineFuerKunde = { c: Customer, start: Long, days: Int ->
-                        TerminBerechnungUtils.berechneAlleTermineFuerKunde(c, viewModel.getListen().find { l -> l.id == c.listeId }, start, days)
+                        TerminBerechnungUtils.berechneAlleTermineFuerKunde(c, null, start, days)
                     }
                     val helper = CustomerButtonVisibilityHelper(this@TourPlannerActivity, ts, emptyMap(), getAbholungDatum, getAuslieferungDatum, getTermineFuerKunde)
                     val state: ErledigungSheetState? = helper.getSheetState(customer)

@@ -254,33 +254,6 @@ object TerminBerechnungUtils {
                 )
                 alleTermine.addAll(termine)
             }
-        } else if (customer.listeId.isNotEmpty() && liste != null) {
-            // Kunde in Liste: Verwende Listen-Intervalle
-            // Kombiniere gelöschte und verschobene Termine von Kunde UND Liste
-            val alleGeloeschteTermine = (customer.geloeschteTermine + liste.geloeschteTermine).distinct()
-            val alleVerschobeneTermine = (customer.verschobeneTermine + liste.verschobeneTermine).distinctBy { 
-                it.originalDatum to it.verschobenAufDatum to it.typ
-            }
-            
-            liste.intervalle.forEach { listeIntervall ->
-                // Konvertiere ListeIntervall zu CustomerIntervall für Berechnung
-                val customerIntervall = CustomerIntervall(
-                    id = "", // Liste-Intervalle haben keine ID
-                    abholungDatum = listeIntervall.abholungDatum,
-                    auslieferungDatum = listeIntervall.auslieferungDatum,
-                    wiederholen = listeIntervall.wiederholen,
-                    intervallTage = listeIntervall.intervallTage,
-                    intervallAnzahl = listeIntervall.intervallAnzahl
-                )
-                val termine = berechneTermineFuerIntervall(
-                    intervall = customerIntervall,
-                    startDatum = startDatum,
-                    tageVoraus = tageVoraus,
-                    geloeschteTermine = alleGeloeschteTermine,
-                    verschobeneTermine = alleVerschobeneTermine
-                )
-                alleTermine.addAll(termine)
-            }
         } else {
                 // ALTE STRUKTUR: Einzelne Felder (Rückwärtskompatibilität)
                 // Diese Logik sollte idealerweise migriert und dann entfernt werden.

@@ -42,10 +42,8 @@ class MapViewViewModel(
                     val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
                     customersWithAddress = withContext(Dispatchers.IO) {
                         customersWithAddress.filter { customer ->
-                            val liste = if (customer.listeId.isNotBlank())
-                                listeRepository.getListeById(customer.listeId) else null
-                            TerminBerechnungUtils.hatTerminAmDatum(customer, liste, heuteStart, TerminTyp.ABHOLUNG) ||
-                                TerminBerechnungUtils.hatTerminAmDatum(customer, liste, heuteStart, TerminTyp.AUSLIEFERUNG)
+                            TerminBerechnungUtils.hatTerminAmDatum(customer, null, heuteStart, TerminTyp.ABHOLUNG) ||
+                                TerminBerechnungUtils.hatTerminAmDatum(customer, null, heuteStart, TerminTyp.AUSLIEFERUNG)
                         }
                     }
                     filteredToToday = true

@@ -53,10 +53,7 @@ internal class TourPlannerErledigungHandler(
         if (!customer.abholungErfolgt) {
             CoroutineScope(Dispatchers.Main).launch {
                 val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-                val liste = withContext(Dispatchers.IO) {
-                    if (customer.listeId.isNotBlank()) listeRepository.getListeById(customer.listeId) else null
-                }
-                val istAbholungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.ABHOLUNG, heuteStart, liste)
+                val istAbholungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.ABHOLUNG, heuteStart, null)
 
                 if (!istAbholungHeute) {
                     Toast.makeText(context, context.getString(R.string.toast_abholung_nur_heute), Toast.LENGTH_LONG).show()
@@ -83,10 +80,7 @@ internal class TourPlannerErledigungHandler(
             } else {
                 CoroutineScope(Dispatchers.Main).launch {
                     val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-                    val liste = withContext(Dispatchers.IO) {
-                        if (customer.listeId.isNotBlank()) listeRepository.getListeById(customer.listeId) else null
-                    }
-                    val istAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart, liste)
+                    val istAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart, null)
                     if (!istAuslieferungHeute) {
                         Toast.makeText(context, context.getString(R.string.toast_auslieferung_nur_heute), Toast.LENGTH_LONG).show()
                         return@launch
@@ -109,11 +103,8 @@ internal class TourPlannerErledigungHandler(
     fun handleKw(customer: Customer) {
         CoroutineScope(Dispatchers.Main).launch {
             val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-            val liste = withContext(Dispatchers.IO) {
-                if (customer.listeId.isNotBlank()) listeRepository.getListeById(customer.listeId) else null
-            }
-            val hatAbholungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.ABHOLUNG, heuteStart, liste)
-            val hatAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart, liste)
+            val hatAbholungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.ABHOLUNG, heuteStart, null)
+            val hatAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart, null)
             if (!hatAbholungHeute && !hatAuslieferungHeute) {
                 Toast.makeText(context, context.getString(R.string.toast_kw_nur_abholung_auslieferung), Toast.LENGTH_LONG).show()
                 return@launch
@@ -261,7 +252,7 @@ internal class TourPlannerErledigungHandler(
         if (istErledigt) return false
         val vergangeneTermine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
             customer = customer,
-            liste = liste,
+            liste = null,
             startDatum = heuteStart - TimeUnit.DAYS.toMillis(60),
             tageVoraus = 60
         )

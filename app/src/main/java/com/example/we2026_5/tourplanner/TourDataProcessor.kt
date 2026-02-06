@@ -165,7 +165,7 @@ class TourDataProcessor {
         
         // Überfällige Kunden aus Listen hinzufügen
         listenMitKunden.values.flatten().forEach { customer ->
-            val istUeberfaellig = filter.istKundeUeberfaellig(customer, allListen.find { it.id == customer.listeId }, viewDateStart, heuteStart)
+            val istUeberfaellig = filter.istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)
             if (istUeberfaellig) {
                 alleUeberfaelligeKunden.add(customer)
             }
@@ -173,8 +173,7 @@ class TourDataProcessor {
         // Ein Kunde nur einmal in Überfällig (auch wenn in mehreren Listen)
         val alleUeberfaelligeEindeutig = alleUeberfaelligeKunden.distinctBy { it.id }
         val overdueOhneListen = alleUeberfaelligeEindeutig.sortedWith(compareBy<Customer> { customer ->
-            val liste = if (customer.listeId.isNotEmpty()) allListen.find { it.id == customer.listeId } else null
-            val alleTermine = berechneAlleTermineFuerKunde(customer, liste, viewDateStart)
+            val alleTermine = berechneAlleTermineFuerKunde(customer, null, viewDateStart)
             val ueberfaelligeDaten = alleTermine.filter { termin ->
                 if (viewDateStart > heuteStart) return@filter false
                 val terminStart = categorizer.getStartOfDay(termin.datum)
@@ -207,16 +206,16 @@ class TourDataProcessor {
                 val isWochentagsliste = liste.wochentag in 0..6
 
                 kundenInListe.forEach { customer ->
-                    val istUeberfaellig = filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)
+                    val istUeberfaellig = filter.istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)
                     if (istUeberfaellig) return@forEach
                     
                     val kwErledigtAmTagListe = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
                         categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
                     val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTagListe
-                    val listeDone = liste.abholungErfolgt || liste.auslieferungErfolgt
+                    // Erledigung nur aus Kundendaten (Liste nur Gruppierung).
 
-                    val sollAlsErledigtAnzeigen = if (isDone || listeDone) {
-                        val termine = berechneAlleTermineFuerKunde(customer, liste, viewDateStart)
+                    val sollAlsErledigtAnzeigen = if (isDone) {
+                        val termine = berechneAlleTermineFuerKunde(customer, null, viewDateStart)
                         val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
                         val warUeberfaelligUndErledigtAmDatum = isDone && warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
                         val hatAbholungAmTagListe = termineAmTag.any { it.typ == TerminTyp.ABHOLUNG }

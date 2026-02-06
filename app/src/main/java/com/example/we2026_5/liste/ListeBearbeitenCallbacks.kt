@@ -7,6 +7,7 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.FirebaseRetryHelper
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListeIntervall
+import java.util.UUID
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.R
@@ -89,7 +90,23 @@ class ListeBearbeitenCallbacks(
                     )
                 }
             } else {
-                mapOf("listeId" to liste.id)
+                // Manuelle Liste: listeId setzen; Listen-Intervalle auf Kunde kopieren, damit Term-Daten nur vom Kunden kommen
+                val base = mutableMapOf<String, Any>("listeId" to liste.id)
+                if (liste.intervalle.isNotEmpty()) {
+                    base["intervalle"] = liste.intervalle.map {
+                        mapOf(
+                            "id" to UUID.randomUUID().toString(),
+                            "abholungDatum" to it.abholungDatum,
+                            "auslieferungDatum" to it.auslieferungDatum,
+                            "wiederholen" to it.wiederholen,
+                            "intervallTage" to it.intervallTage,
+                            "intervallAnzahl" to it.intervallAnzahl,
+                            "erstelltAm" to System.currentTimeMillis(),
+                            "terminRegelId" to ""
+                        )
+                    }
+                }
+                base
             }
             val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
                 operation = { customerRepository.updateCustomer(customer.id, updates) },

@@ -25,9 +25,10 @@ class TourListenProcessorImpl(
         kundenNachListen.forEach { (listeId, kunden) ->
             if (listeId.isEmpty()) return@forEach
             val liste = allListen.find { it.id == listeId } ?: return@forEach
-            val istFaellig = liste.intervalle.any { intervall ->
-                filter.isIntervallFaelligAm(intervall, viewDateStart) ||
-                    filter.isIntervallFaelligInZukunft(intervall, viewDateStart)
+            // Liste fällig am Tag = mindestens ein Kunde der Liste hat Termin oder ist überfällig (nur Kundendaten).
+            val istFaellig = kunden.any { customer ->
+                filter.hatKundeTerminAmDatum(customer, null, viewDateStart) ||
+                    filter.istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)
             }
             if (istFaellig) {
                 val fälligeKunden = kunden.filter { customer ->
@@ -37,7 +38,7 @@ class TourListenProcessorImpl(
                     if (isDone) {
                         val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
                             customer = customer,
-                            liste = liste,
+                            liste = null,
                             startDatum = viewDateStart - TimeUnit.DAYS.toMillis(365),
                             tageVoraus = 730
                         )
@@ -56,9 +57,9 @@ class TourListenProcessorImpl(
                         val wurdeAmTagErledigt = wasCompletedOnDay(customer, viewDateStart, hatAbholungAmTag, hatAuslieferungAmTag, kwErledigtAmTag)
                         if (warUeberfaelligUndErledigtAmDatum || wurdeAmTagErledigt) return@filter true
                     }
-                    val isOverdue = filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)
+                    val isOverdue = filter.istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)
                     if (isOverdue) return@filter true
-                    filter.hatKundeTerminAmDatum(customer, liste, viewDateStart)
+                    filter.hatKundeTerminAmDatum(customer, null, viewDateStart)
                 }
                 if (fälligeKunden.isNotEmpty()) {
                     listenMitKunden[listeId] = fälligeKunden.sortedBy { it.name }
