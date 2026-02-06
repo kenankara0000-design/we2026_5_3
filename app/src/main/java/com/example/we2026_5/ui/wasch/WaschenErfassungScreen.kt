@@ -3,6 +3,8 @@ package com.example.we2026_5.ui.wasch
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -52,17 +54,18 @@ import com.example.we2026_5.ui.wasch.WaschenErfassungUiState
 fun WaschenErfassungScreen(
     state: WaschenErfassungUiState,
     articles: List<Article>,
+    erfassungen: List<com.example.we2026_5.wasch.WaschErfassung>,
     onBack: () -> Unit,
-    onNeueErfassung: () -> Unit,
-    onSevDeskImport: () -> Unit,
+    onCustomerSearchQueryChange: (String) -> Unit,
     onKundeWaehlen: (Customer) -> Unit,
-    onMengeChange: (articleId: String, menge: Int) -> Unit,
+    onBackToKundeSuchen: () -> Unit,
+    onErfassungClick: (com.example.we2026_5.wasch.WaschErfassung) -> Unit,
+    onNeueErfassungFromListe: () -> Unit,
+    onBackFromDetail: () -> Unit,
     onMengeChangeByIndex: (index: Int, menge: Int) -> Unit,
-    onZeitChange: (String) -> Unit,
     onNotizChange: (String) -> Unit,
     onSpeichern: () -> Unit,
-    onBackToKundeWaehlen: () -> Unit,
-    onDatumClick: (currentDatum: Long) -> Unit,
+    onBackFromErfassen: () -> Unit,
     onArtikelSearchQueryChange: (String) -> Unit,
     onAddPosition: (Article) -> Unit,
     onRemovePosition: (Int) -> Unit
@@ -98,72 +101,155 @@ fun WaschenErfassungScreen(
         containerColor = backgroundLight
     ) { paddingValues ->
         when (state) {
-            is WaschenErfassungUiState.Auswahl -> {
+            is WaschenErfassungUiState.KundeSuchen -> {
+                val filtered = state.customers.filter {
+                    state.customerSearchQuery.isBlank() || it.displayName.contains(state.customerSearchQuery, ignoreCase = true)
+                }
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .padding(16.dp)
                 ) {
-                    Button(
-                        onClick = onNeueErfassung,
+                    OutlinedTextField(
+                        value = state.customerSearchQuery,
+                        onValueChange = onCustomerSearchQueryChange,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(stringResource(R.string.wasch_btn_neue_erfassung), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    }
+                        placeholder = { Text(stringResource(R.string.wasch_kunde_suchen), color = textSecondary) },
+                        singleLine = true
+                    )
                     Spacer(Modifier.height(12.dp))
-                    Button(
-                        onClick = onSevDeskImport,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(stringResource(R.string.wasch_btn_sevdesk), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    if (filtered.isEmpty()) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(stringResource(R.string.wasch_keine_kunden), color = textSecondary)
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(filtered.size) { i ->
+                                val customer = filtered[i]
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onKundeWaehlen(customer) },
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text(
+                                        customer.displayName,
+                                        modifier = Modifier.padding(16.dp),
+                                        fontSize = 16.sp
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
-            is WaschenErfassungUiState.KundeWaehlen -> {
-                if (state.customers.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
-                            .padding(24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(stringResource(R.string.wasch_keine_kunden), color = textSecondary)
-                    }
-                } else {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
-                            .verticalScroll(rememberScrollState())
-                            .padding(16.dp)
+            is WaschenErfassungUiState.ErfassungenListe -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            stringResource(R.string.wasch_kunde_waehlen),
-                            fontSize = 16.sp,
+                            state.customer.displayName,
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 12.dp)
+                            color = colorResource(R.color.text_primary)
                         )
-                        state.customers.forEach { customer ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                                    .clickable { onKundeWaehlen(customer) },
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text(
-                                    customer.displayName,
-                                    modifier = Modifier.padding(16.dp),
-                                    fontSize = 16.sp
-                                )
+                        IconButton(onClick = onBackToKundeSuchen) {
+                            Text("↩", fontSize = 18.sp, color = primaryBlue)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        stringResource(R.string.wasch_erfasste_sachen),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = colorResource(R.color.text_primary),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Button(
+                        onClick = onNeueErfassungFromListe,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(stringResource(R.string.wasch_neue_erfassung))
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    if (erfassungen.isEmpty()) {
+                        Text(
+                            stringResource(R.string.wasch_keine_erfassungen),
+                            fontSize = 14.sp,
+                            color = textSecondary,
+                            modifier = Modifier.padding(vertical = 16.dp)
+                        )
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(erfassungen.size) { i ->
+                                val e = erfassungen[i]
+                                val datumStr = com.example.we2026_5.util.DateFormatter.formatDate(e.datum)
+                                val zeitStr = if (e.zeit.isNotBlank()) " ${e.zeit}" else ""
+                                val count = e.positionen.size
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onErfassungClick(e) },
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("$datumStr$zeitStr", fontSize = 16.sp, color = colorResource(R.color.text_primary))
+                                        Text(stringResource(R.string.wasch_x_artikel, count), fontSize = 14.sp, color = textSecondary)
+                                    }
+                                }
                             }
+                        }
+                    }
+                }
+            }
+            is WaschenErfassungUiState.ErfassungDetail -> {
+                val e = state.erfassung
+                val datumStr = com.example.we2026_5.util.DateFormatter.formatDate(e.datum)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        "$datumStr ${e.zeit.ifBlank { "-" }}",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = colorResource(R.color.text_primary),
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    state.positionenAnzeige.forEachIndexed { idx, pos ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(pos.artikelName, modifier = Modifier.weight(1f), fontSize = 14.sp, color = colorResource(R.color.text_primary))
+                            Text("${pos.menge} ${pos.einheit}", fontSize = 14.sp, color = textSecondary)
                         }
                     }
                 }
@@ -186,9 +272,7 @@ fun WaschenErfassungScreen(
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onBackToKundeWaehlen() },
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -198,36 +282,11 @@ fun WaschenErfassungScreen(
                             fontWeight = FontWeight.Bold,
                             color = textPrimary
                         )
-                        Text("↩", fontSize = 18.sp, color = primaryBlue)
-                    }
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        stringResource(R.string.wasch_erfassung_datum),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth().clickable { onDatumClick(state.datum) },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            DateFormatter.formatDate(state.datum),
-                            fontSize = 16.sp,
-                            color = textPrimary
-                        )
+                        IconButton(onClick = onBackFromErfassen) {
+                            Text("↩", fontSize = 18.sp, color = primaryBlue)
+                        }
                     }
                     Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = state.zeit,
-                        onValueChange = onZeitChange,
-                        label = { Text(stringResource(R.string.wasch_erfassung_zeit)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        placeholder = { Text("z.B. 14:30") }
-                    )
-                    Spacer(Modifier.height(4.dp))
                     OutlinedTextField(
                         value = state.notiz,
                         onValueChange = onNotizChange,

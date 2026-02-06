@@ -206,7 +206,7 @@ fun MainScreen(
             colors = ButtonDefaults.buttonColors(containerColor = primaryBlueLight)
         ) {
             Text(
-                stringResource(R.string.main_btn_artikel_erfassen),
+                stringResource(R.string.main_btn_erfassung),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             )

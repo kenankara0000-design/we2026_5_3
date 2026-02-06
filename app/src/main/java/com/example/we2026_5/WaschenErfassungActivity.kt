@@ -12,8 +12,6 @@ import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.ui.wasch.WaschenErfassungScreen
 import com.example.we2026_5.ui.wasch.WaschenErfassungUiState
 import com.example.we2026_5.ui.wasch.WaschenErfassungViewModel
-import com.example.we2026_5.util.DialogBaseHelper
-import com.example.we2026_5.util.TerminBerechnungUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,32 +36,35 @@ class WaschenErfassungActivity : AppCompatActivity() {
             MaterialTheme {
                 val state by viewModel.uiState.collectAsState()
                 val articles by viewModel.articles.collectAsState(initial = emptyList())
+                val erfassungen by viewModel.erfassungenList.collectAsState(initial = emptyList())
                 WaschenErfassungScreen(
                     state = state,
                     articles = articles,
-                    onBack = { finish() },
-                    onNeueErfassung = { viewModel.startNeueErfassung() },
-                    onSevDeskImport = { startActivity(Intent(this@WaschenErfassungActivity, SevDeskImportActivity::class.java)) },
+                    erfassungen = erfassungen,
+                    onBack = {
+                        when (state) {
+                            is WaschenErfassungUiState.KundeSuchen -> finish()
+                            is WaschenErfassungUiState.ErfassungenListe -> viewModel.backToKundeSuchen()
+                            is WaschenErfassungUiState.ErfassungDetail -> viewModel.backFromDetail()
+                            is WaschenErfassungUiState.Erfassen -> viewModel.backFromErfassenToListe()
+                        }
+                    },
+                    onCustomerSearchQueryChange = { viewModel.setCustomerSearchQuery(it) },
                     onKundeWaehlen = { viewModel.kundeGewaehlt(it) },
-                    onMengeChange = { id, menge -> viewModel.setMenge(id, menge) },
+                    onBackToKundeSuchen = { viewModel.backToKundeSuchen() },
+                    onErfassungClick = { viewModel.openErfassungDetail(it) },
+                    onNeueErfassungFromListe = {
+                        (state as? WaschenErfassungUiState.ErfassungenListe)?.let { viewModel.neueErfassungClick(it.customer) }
+                    },
+                    onBackFromDetail = { viewModel.backFromDetail() },
                     onMengeChangeByIndex = { index, menge -> viewModel.setMengeByIndex(index, menge) },
-                    onZeitChange = { viewModel.setZeit(it) },
                     onNotizChange = { viewModel.setNotiz(it) },
                     onSpeichern = {
                         viewModel.speichern {
                             Toast.makeText(this@WaschenErfassungActivity, getString(R.string.wasch_erfassung_gespeichert), Toast.LENGTH_SHORT).show()
-                            viewModel.backToAuswahl()
                         }
                     },
-                    onBackToKundeWaehlen = { viewModel.backToKundeWaehlen() },
-                    onDatumClick = { current ->
-                        DialogBaseHelper.showDatePickerDialog(
-                            context = this@WaschenErfassungActivity,
-                            initialDate = current,
-                            title = getString(R.string.wasch_erfassung_datum),
-                            onDateSelected = { viewModel.setDatum(TerminBerechnungUtils.getStartOfDay(it)) }
-                        )
-                    },
+                    onBackFromErfassen = { viewModel.backFromErfassenToListe() },
                     onArtikelSearchQueryChange = { viewModel.setArtikelSearchQuery(it) },
                     onAddPosition = { viewModel.addPosition(it) },
                     onRemovePosition = { viewModel.removePosition(it) }

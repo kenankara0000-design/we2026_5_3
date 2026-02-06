@@ -105,7 +105,7 @@ fun ErfassungPositionenSection(
                     modifier = Modifier.width(32.dp)
                 )
                 OutlinedTextField(
-                    value = zeile.menge.toString(),
+                    value = if (zeile.menge == 0) "" else zeile.menge.toString(),
                     onValueChange = { s ->
                         onMengeChange(index, s.filter { it.isDigit() }.toIntOrNull() ?: 0)
                     },

@@ -174,6 +174,7 @@
     <string name="main_btn_kunden">Kunden</string>
     <string name="main_btn_touren">Touren Planer</string>
     <string name="main_btn_artikel_erfassen">📦 Artikel erfassen</string>
+    <string name="main_btn_erfassung">Erfassung</string>
     <string name="main_btn_listen">📋 Kunden Listen</string>
     <string name="main_btn_statistiken">📊 Statistiken</string>
     <string name="main_btn_termin_regeln">📋 Regel-Vorlagen</string>
@@ -612,6 +613,11 @@
     <string name="wasch_erfassung_zeit">Zeit (optional)</string>
     <string name="wasch_positionen">Positionen</string>
     <string name="wasch_erfassungen">Erfassungen</string>
+    <string name="wasch_kunde_suchen">Kunde suchen…</string>
+    <string name="wasch_erfasste_sachen">Erfasste Sachen</string>
+    <string name="wasch_neue_erfassung">Neue Erfassung</string>
+    <string name="wasch_x_artikel">%d Artikel</string>
+    <string name="wasch_keine_erfassungen">Noch keine Erfassungen für diesen Kunden.</string>
     <string name="wasch_artikel_suchen">Artikel suchen…</string>
     <string name="wasch_position_hinzufuegen">+ Position hinzufügen</string>
     <string name="wasch_menge_kurz">Menge</string>

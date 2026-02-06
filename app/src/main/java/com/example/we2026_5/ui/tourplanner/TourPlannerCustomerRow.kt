@@ -23,13 +23,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
 import com.example.we2026_5.ui.CustomerTypeButtonHelper
@@ -115,20 +113,6 @@ internal fun TourCustomerRow(
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                     Spacer(Modifier.size(8.dp))
-                    if (customer.fotoUrls.isNotEmpty()) {
-                        Card(
-                            modifier = Modifier.size(40.dp),
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            AsyncImage(
-                                model = customer.fotoUrls.first(),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                        Spacer(Modifier.size(10.dp))
-                    }
                     Text(
                         text = customer.displayName,
                         fontSize = CustomerNameSp,
