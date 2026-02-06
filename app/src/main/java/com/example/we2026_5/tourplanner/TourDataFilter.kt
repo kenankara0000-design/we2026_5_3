@@ -47,6 +47,10 @@ class TourDataFilter(
         liste: KundenListe? = null,
         viewDateStart: Long
     ): Boolean {
+        // Ausnahme-Termine: Kunde hat an diesem Tag einen A oder L Ausnahme-Termin
+        if (customer.ausnahmeTermine.any { TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart }) {
+            return true
+        }
         // Term-Daten nur aus Kunde (liste nur Gruppierung).
         if (customer.firstIntervallOrNull() != null || customer.listeId.isNotEmpty()) {
             val tageAzuL = getTageAzuL(customer)

@@ -4,6 +4,7 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.util.migrateKundenTyp
+import com.example.we2026_5.AusnahmeTermin
 import com.example.we2026_5.VerschobenerTermin
 import com.example.we2026_5.util.AppErrorMapper
 import com.example.we2026_5.util.Result
@@ -102,6 +103,7 @@ class CustomerRepository(
     private fun parseCustomerSnapshot(child: DataSnapshot, id: String): Customer? {
         val customer = child.getValue(Customer::class.java) ?: return null
         val verschobeneTermine = parseVerschobeneTermine(child.child("verschobeneTermine"))
+        val ausnahmeTermine = parseAusnahmeTermine(child.child("ausnahmeTermine"))
         val abholungWochentage = parseIntListFromSnapshot(child.child("defaultAbholungWochentage"))
         val auslieferungWochentage = parseIntListFromSnapshot(child.child("defaultAuslieferungWochentage"))
         // kundenTyp explizit aus Snapshot lesen (Firebase setzt Enum aus String oft nicht zuverlässig)
@@ -117,6 +119,7 @@ class CustomerRepository(
         val base = customer.copy(
             id = id,
             verschobeneTermine = verschobeneTermine,
+            ausnahmeTermine = ausnahmeTermine,
             defaultAbholungWochentage = abholungWochentage.ifEmpty { customer.defaultAbholungWochentage },
             defaultAuslieferungWochentage = auslieferungWochentage.ifEmpty { customer.defaultAuslieferungWochentage },
             abholungDatum = optionalLong(child, "abholungDatum"),
@@ -176,6 +179,22 @@ class CustomerRepository(
                 "typ" to it.typ.name
             )
         }.toMap()
+
+    private fun parseAusnahmeTermine(snapshot: DataSnapshot): List<AusnahmeTermin> {
+        if (!snapshot.exists()) return emptyList()
+        val list = mutableListOf<AusnahmeTermin>()
+        snapshot.children.forEach { entry ->
+            val datum = snapshotValueToLong(entry.child("datum").getValue())
+            val typ = entry.child("typ").getValue(String::class.java) ?: "A"
+            if (datum != 0L && typ in listOf("A", "L")) list.add(AusnahmeTermin(datum = datum, typ = typ))
+        }
+        return list
+    }
+
+    private fun serializeAusnahmeTermine(list: List<AusnahmeTermin>): Map<String, Map<String, Any>> =
+        list.mapIndexed { index, it ->
+            index.toString() to mapOf("datum" to it.datum, "typ" to it.typ)
+        }.toMap()
     
     /**
      * Lädt einen einzelnen Kunden
@@ -204,9 +223,12 @@ class CustomerRepository(
                 // Timeout: Realtime Database hat bereits lokal gespeichert (im Offline-Modus)
                 android.util.Log.d("CustomerRepository", "Save completed (timeout, but saved locally)")
             }
-            // verschobeneTermine ist @Exclude und wird bei setValue nicht geschrieben – separat schreiben
+            // verschobeneTermine / ausnahmeTermine sind @Exclude – separat schreiben
             if (customer.verschobeneTermine.isNotEmpty()) {
                 updateCustomer(customer.id, mapOf("verschobeneTermine" to serializeVerschobeneTermine(customer.verschobeneTermine)))
+            }
+            if (customer.ausnahmeTermine.isNotEmpty()) {
+                updateCustomer(customer.id, mapOf("ausnahmeTermine" to serializeAusnahmeTermine(customer.ausnahmeTermine)))
             }
             true
         } catch (e: Exception) {
@@ -249,6 +271,13 @@ class CustomerRepository(
             android.util.Log.e("CustomerRepository", "Error updating customer", e)
             false
         }
+    }
+
+    /** Fügt einen Ausnahme-Termin hinzu (A oder L an einem Datum). */
+    suspend fun addAusnahmeTermin(customerId: String, termin: AusnahmeTermin): Boolean {
+        val customer = getCustomerById(customerId) ?: return false
+        val newList = customer.ausnahmeTermine + termin
+        return updateCustomer(customerId, mapOf("ausnahmeTermine" to serializeAusnahmeTermine(newList)))
     }
 
     override suspend fun updateCustomerResult(customerId: String, updates: Map<String, Any>): Result<Boolean> {

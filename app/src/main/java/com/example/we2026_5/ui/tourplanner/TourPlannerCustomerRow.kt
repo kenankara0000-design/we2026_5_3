@@ -78,10 +78,12 @@ internal fun TourCustomerRow(
         else -> statusBadgeText
     }
     val showBadge = isOverdue || isInUrlaub || isVerschobenAmFaelligkeitstag || statusBadgeText.isNotEmpty()
+    val isAusnahmeBadge = statusBadgeText == "A-A" || statusBadgeText == "A-L"
     val badgeColor = when {
         isOverdue -> colorResource(R.color.status_overdue)
         isInUrlaub -> colorResource(R.color.button_urlaub)
         isVerschobenAmFaelligkeitstag -> colorResource(R.color.status_info)
+        isAusnahmeBadge -> colorResource(R.color.status_ausnahme)
         statusBadgeText == "L" -> colorResource(R.color.termin_regel_auslieferung)
         else -> colorResource(R.color.termin_regel_abholung)
     }

@@ -273,21 +273,26 @@ class CustomerDetailActivity : AppCompatActivity() {
     }
 
     private fun handleTerminAnlegen(customer: Customer, id: String) {
-        when (customer.kundenTyp) {
-            KundenTyp.UNREGELMAESSIG -> {
-                if (customer.effectiveAbholungWochentage.isEmpty() && customer.effectiveAuslieferungWochentage.isEmpty()) {
-                    Toast.makeText(this, getString(R.string.validation_unregelmaessig_al_required), Toast.LENGTH_LONG).show()
-                    return
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.label_termine_anlegen))
+            .setMessage(getString(R.string.termin_anlegen_option_regulaer) + " oder " + getString(R.string.termin_anlegen_option_ausnahme) + "?")
+            .setPositiveButton(getString(R.string.termin_anlegen_option_regulaer)) { _, _ ->
+                when (customer.kundenTyp) {
+                    KundenTyp.UNREGELMAESSIG -> {
+                        if (customer.effectiveAbholungWochentage.isEmpty() && customer.effectiveAuslieferungWochentage.isEmpty()) {
+                            Toast.makeText(this, getString(R.string.validation_unregelmaessig_al_required), Toast.LENGTH_LONG).show()
+                            return@setPositiveButton
+                        }
+                        startTerminAnlegenDialogUnregelmaessig(customer)
+                    }
+                    KundenTyp.AUF_ABRUF, KundenTyp.REGELMAESSIG -> startTerminAnlegenDialogUnregelmaessig(customer)
                 }
-                startTerminAnlegenDialogUnregelmaessig(customer)
             }
-            KundenTyp.AUF_ABRUF -> {
-                startTerminAnlegenDialogUnregelmaessig(customer)
+            .setNeutralButton(getString(R.string.termin_anlegen_option_ausnahme)) { _, _ ->
+                startActivity(Intent(this, AusnahmeTerminActivity::class.java).putExtra("CUSTOMER_ID", customer.id))
             }
-            KundenTyp.REGELMAESSIG -> {
-                startTerminAnlegenDialogUnregelmaessig(customer)
-            }
-        }
+            .setNegativeButton(getString(R.string.btn_cancel), null)
+            .show()
     }
 
     private fun startTerminAnlegenDialogUnregelmaessig(customer: Customer) {

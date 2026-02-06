@@ -390,6 +390,14 @@
     <string name="label_list_edit">Liste bearbeiten</string>
     <string name="label_intervals">Intervalle</string>
     <string name="label_termine_anlegen">Termin Anlegen</string>
+    <string name="termin_anlegen_option_regulaer">Regulärer Termin</string>
+    <string name="termin_anlegen_option_ausnahme">Ausnahme-Termin</string>
+    <string name="termin_anlegen_ausnahme_datum_waehlen">Datum wählen (nächste 2 Wochen)</string>
+    <string name="termin_anlegen_ausnahme_typ_waehlen">Abholung (A) oder Auslieferung (L)?</string>
+    <string name="termin_anlegen_ausnahme_abholung">Abholung (A)</string>
+    <string name="termin_anlegen_ausnahme_auslieferung">Auslieferung (L)</string>
+    <string name="badge_ausnahme_a">A-A</string>
+    <string name="badge_ausnahme_l">A-L</string>
     <string name="label_customers_in_list">Kunden in dieser Liste</string>
     <string name="label_add_available_customers">Verfügbare Kunden hinzufügen</string>
     <string name="label_termin_detail">Termin-Details</string>

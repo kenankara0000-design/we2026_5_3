@@ -14,6 +14,7 @@
     <color name="status_done">#388E3C</color> <!-- Material Green 700 -->
     <color name="status_warning">#F57C00</color> <!-- Material Orange 700 -->
     <color name="status_info">#1976D2</color> <!-- Material Blue 700 -->
+    <color name="status_ausnahme">#F9A825</color> <!-- Gelb für Ausnahme-Termin (A-A / A-L) -->
     <color name="error_red">#D32F2F</color>
     
     <!-- Button-Farben - Modernisiert -->

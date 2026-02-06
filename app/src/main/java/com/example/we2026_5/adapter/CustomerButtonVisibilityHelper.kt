@@ -117,8 +117,20 @@ class CustomerButtonVisibilityHelper(
         val showAuslieferungFinal = if (nurInfoAmFaelligkeitstag) false else sollLButtonAnzeigen
         val showKwFinal = if (nurInfoAmFaelligkeitstag) false else sollKwButtonAnzeigen
 
+        // Ausnahme-Termine (A-A / A-L) zuerst; haben keinen Einfluss auf reguläre A/L
+        val ausnahmeA = customer.ausnahmeTermine.any {
+            TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart && it.typ == "A"
+        }
+        val ausnahmeL = customer.ausnahmeTermine.any {
+            TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart && it.typ == "L"
+        }
         // Nur A und L als Badge; Ü (Überfällig), KW, U (Urlaub) nur über Karten-Hintergrund/Status
         val statusBadgeText = when {
+            ausnahmeA || ausnahmeL -> when {
+                ausnahmeA && ausnahmeL -> context.getString(com.example.we2026_5.R.string.badge_ausnahme_a)
+                ausnahmeA -> context.getString(com.example.we2026_5.R.string.badge_ausnahme_a)
+                else -> context.getString(com.example.we2026_5.R.string.badge_ausnahme_l)
+            }
             istImUrlaubAmTag -> ""
             (hatKlassischUeberfaelligeAbholung || hatKlassischUeberfaelligeAuslieferung) && viewDateStart <= heuteStart -> ""
             nurInfoAmFaelligkeitstag -> when {

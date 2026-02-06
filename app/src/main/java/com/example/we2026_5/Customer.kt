@@ -104,6 +104,10 @@ data class Customer(
     @Exclude
     val verschobeneTermine: List<VerschobenerTermin> = emptyList(), // NEUE Logik: Einzelne Termine verschieben
     
+    /** Ausnahme-Termine (einmalig A oder L), haben keinen Einfluss auf reguläre A/L. @Exclude, manuell lesen/schreiben. */
+    @Exclude
+    val ausnahmeTermine: List<AusnahmeTermin> = emptyList(),
+    
     val fotoUrls: List<String> = listOf(),
     val istImUrlaub: Boolean = false,
     val geloeschteTermine: List<Long> = listOf(), // Liste von gelöschten Termin-Daten (für einzelne Termin-Löschungen)
