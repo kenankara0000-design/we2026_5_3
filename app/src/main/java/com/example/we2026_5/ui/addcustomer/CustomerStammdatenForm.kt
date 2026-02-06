@@ -70,21 +70,25 @@ fun CustomerStammdatenForm(
             singleLine = true
         )
         Spacer(modifier = Modifier.height(spacing))
-        OutlinedTextField(
-            value = state.stadt,
-            onValueChange = { onUpdate(state.copy(stadt = it)) },
-            label = { Text(stringResource(R.string.label_city_optional)) },
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.height(spacing))
-        OutlinedTextField(
-            value = state.plz,
-            onValueChange = { onUpdate(state.copy(plz = it)) },
-            label = { Text(stringResource(R.string.label_zip_optional)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedTextField(
+                value = state.plz,
+                onValueChange = { onUpdate(state.copy(plz = it)) },
+                label = { Text(stringResource(R.string.label_zip_optional)) },
+                modifier = Modifier.weight(0.35f),
+                singleLine = true
+            )
+            OutlinedTextField(
+                value = state.stadt,
+                onValueChange = { onUpdate(state.copy(stadt = it)) },
+                label = { Text(stringResource(R.string.label_city_optional)) },
+                modifier = Modifier.weight(0.65f),
+                singleLine = true
+            )
+        }
         Spacer(modifier = Modifier.height(spacing))
         OutlinedTextField(
             value = state.telefon,
