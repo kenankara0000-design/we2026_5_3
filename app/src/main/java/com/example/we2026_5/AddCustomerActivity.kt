@@ -126,6 +126,7 @@ class AddCustomerActivity : AppCompatActivity() {
         val baseCustomer = Customer(
             id = customerId,
             name = name,
+            alias = state.alias.trim(),
             adresse = state.adresse.trim(),
             stadt = state.stadt.trim(),
             plz = state.plz.trim(),

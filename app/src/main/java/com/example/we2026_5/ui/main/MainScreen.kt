@@ -45,6 +45,7 @@ fun MainScreen(
     onTouren: () -> Unit,
     onKundenListen: () -> Unit,
     onStatistiken: () -> Unit,
+    onArtikelErfassen: () -> Unit,
     onSlotSelected: (TerminSlotVorschlag) -> Unit
 ) {
     val primaryBlueDark = colorResource(R.color.primary_blue_dark)
@@ -196,6 +197,21 @@ fun MainScreen(
                 .fillMaxWidth()
                 .padding(bottom = 12.dp)
         )
+
+        Button(
+            onClick = onArtikelErfassen,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = primaryBlueLight)
+        ) {
+            Text(
+                stringResource(R.string.main_btn_artikel_erfassen),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
 
         Button(
             onClick = onKundenListen,

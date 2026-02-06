@@ -111,6 +111,7 @@ fun CustomerDetailScreen(
                 val intervallTage = customer.intervallTageOrDefault(7)
                 AddCustomerState(
                     name = customer.name,
+                    alias = customer.alias,
                     adresse = customer.adresse,
                     stadt = customer.stadt,
                     plz = customer.plz,
@@ -170,7 +171,7 @@ fun CustomerDetailScreen(
                         )
                         Spacer(Modifier.size(12.dp))
                         Text(
-                            text = customer?.name ?: stringResource(R.string.label_customer_name),
+                            text = customer?.displayName ?: stringResource(R.string.label_customer_name),
                             color = Color.White,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
@@ -384,6 +385,7 @@ fun CustomerDetailScreen(
                                     onSave(
                                         buildMap {
                                             put("name", name)
+                                            put("alias", stateForSave.alias.trim())
                                             put("adresse", stateForSave.adresse.trim())
                                             put("stadt", stateForSave.stadt.trim())
                                             put("plz", stateForSave.plz.trim())

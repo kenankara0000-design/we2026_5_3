@@ -121,7 +121,7 @@ fun TourPlannerScreen(
         val customer = overviewPayload.customer
         AlertDialog(
             onDismissRequest = onDismissOverview,
-            title = { Text(customer.name, fontWeight = FontWeight.Bold) },
+            title = { Text(customer.displayName, fontWeight = FontWeight.Bold) },
             text = {
                 Column {
                     Text(

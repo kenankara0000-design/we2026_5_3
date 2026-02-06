@@ -1,7 +1,9 @@
 package com.example.we2026_5.di
 
 import android.content.Context
+import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.data.repository.ErfassungRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.data.repository.TourPlanRepository
 import com.example.we2026_5.ui.main.MainViewModel
@@ -15,6 +17,8 @@ import com.example.we2026_5.ui.mapview.MapViewViewModel
 import com.example.we2026_5.ui.detail.CustomerDetailViewModel
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.example.we2026_5.ui.urlaub.UrlaubViewModel
+import com.example.we2026_5.ui.wasch.WaschenErfassungViewModel
+import com.example.we2026_5.ui.sevdesk.SevDeskImportViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
@@ -35,6 +39,8 @@ val appModule = module {
     single { CustomerRepository(get()) }
     single { KundenListeRepository(get()) }
     single { TourPlanRepository(get()) }
+    single { ArticleRepository(get()) }
+    single { ErfassungRepository(get()) }
     
     // ViewModels
     viewModel { MainViewModel(get(), get(), get()) }
@@ -48,4 +54,6 @@ val appModule = module {
     viewModel { MapViewViewModel(get<CustomerRepository>(), get<KundenListeRepository>()) }
     viewModel { CustomerDetailViewModel(get()) }
     viewModel { (customerId: String) -> UrlaubViewModel(get(), customerId) }
+    viewModel { WaschenErfassungViewModel(get(), get(), get()) }
+    viewModel { (ctx: Context) -> SevDeskImportViewModel(ctx, get(), get()) }
 }

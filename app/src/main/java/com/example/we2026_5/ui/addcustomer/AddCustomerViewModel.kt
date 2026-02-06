@@ -7,6 +7,8 @@ import com.example.we2026_5.KundenTyp
 
 data class AddCustomerState(
     val name: String = "",
+    /** Alias: Anzeigename in der App; für Rechnung wird name verwendet. */
+    val alias: String = "",
     val adresse: String = "",
     val stadt: String = "",
     val plz: String = "",

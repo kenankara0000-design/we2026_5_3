@@ -101,7 +101,7 @@ internal fun CustomerManagerCard(
                     )
                     Spacer(Modifier.size(8.dp))
                     Text(
-                        customer.name,
+                        customer.displayName,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = textPrimary

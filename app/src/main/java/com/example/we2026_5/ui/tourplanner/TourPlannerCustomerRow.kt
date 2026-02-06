@@ -130,7 +130,7 @@ internal fun TourCustomerRow(
                         Spacer(Modifier.size(10.dp))
                     }
                     Text(
-                        text = customer.name,
+                        text = customer.displayName,
                         fontSize = CustomerNameSp,
                         color = nameColor,
                         fontWeight = FontWeight.SemiBold

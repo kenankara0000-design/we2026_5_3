@@ -143,6 +143,7 @@ class CustomerDetailViewModel(
         val intervallTage = c.intervallTageOrDefault(7)
         return AddCustomerState(
             name = c.name,
+            alias = c.alias,
             adresse = c.adresse,
             stadt = c.stadt,
             plz = c.plz,

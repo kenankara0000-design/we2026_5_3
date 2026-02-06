@@ -173,6 +173,7 @@
     <string name="main_btn_neu_kunde">+ Neu Kunde</string>
     <string name="main_btn_kunden">Kunden</string>
     <string name="main_btn_touren">Touren Planer</string>
+    <string name="main_btn_artikel_erfassen">📦 Artikel erfassen</string>
     <string name="main_btn_listen">📋 Kunden Listen</string>
     <string name="main_btn_statistiken">📊 Statistiken</string>
     <string name="main_btn_termin_regeln">📋 Regel-Vorlagen</string>
@@ -569,4 +570,31 @@
     <string name="item_expand_plus">+</string>
     <string name="item_date_placeholder">25.01.2026</string>
     <string name="content_desc_edit_urlaub">Beschreibung für den Urlaubs-Bearbeitungs-Button</string>
+
+    <!-- Artikel erfassen / Wäscheliste -->
+    <string name="wasch_title">Artikel erfassen</string>
+    <string name="wasch_btn_neue_erfassung">Neue Erfassung</string>
+    <string name="wasch_kunde_waehlen">Kunde wählen</string>
+    <string name="wasch_artikel_hinzufuegen">Artikel hinzufügen</string>
+    <string name="wasch_menge">Stück</string>
+    <string name="wasch_speichern">Speichern</string>
+    <string name="wasch_keine_artikel">Keine Artikel. Bitte zuerst Artikel importieren (z. B. SevDesk).</string>
+    <string name="wasch_keine_kunden">Keine Kunden.</string>
+    <string name="wasch_erfassung_gespeichert">Erfassung gespeichert</string>
+    <string name="wasch_fehler_speichern">Fehler beim Speichern</string>
+    <string name="label_customer_alias">Alias (Anzeigename in der App)</string>
+
+    <!-- SevDesk Import -->
+    <string name="sevdesk_import_title">SevDesk Import</string>
+    <string name="sevdesk_token_hint">API-Token (SevDesk: Erweiterungen → API)</string>
+    <string name="sevdesk_save_token">Token speichern</string>
+    <string name="sevdesk_import_contacts">Kontakte importieren</string>
+    <string name="sevdesk_import_articles">Artikel importieren</string>
+    <string name="sevdesk_before_reimport">Vor Re-Import (alle aus SevDesk gelöschten Einträge entfernen)</string>
+    <string name="sevdesk_delete_contacts">SevDesk-Kontakte löschen</string>
+    <string name="sevdesk_delete_contacts_confirm">Nur hier in der App werden die importierten Kontakte gelöscht. In SevDesk passiert nichts – die App hat nur Lesezugriff. Unwiderruflich löschen?</string>
+    <string name="sevdesk_delete_articles">SevDesk-Artikel löschen</string>
+    <string name="sevdesk_delete_articles_confirm">Nur hier in der App werden die importierten Artikel gelöscht. In SevDesk passiert nichts – die App hat nur Lesezugriff. Unwiderruflich löschen?</string>
+    <string name="sevdesk_delete_confirm_ok">Löschen</string>
+    <string name="wasch_btn_sevdesk">SevDesk Import</string>
 </resources>

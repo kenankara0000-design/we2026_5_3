@@ -18,6 +18,8 @@ data class UrlaubEintrag(
 data class Customer(
     val id: String = "",
     val name: String = "",
+    /** Anzeigename in der App; für Rechnung wird der offizielle Name (name) verwendet. Leer = name verwenden. */
+    val alias: String = "",
     val adresse: String = "",
     val telefon: String = "",
     val notizen: String = "",
@@ -108,6 +110,9 @@ data class Customer(
     @Exclude
     private val faelligAm: Long = 0
 ) {
+    /** Anzeigename in der App: Alias, falls gesetzt, sonst name (z. B. für Rechnung bleibt name). */
+    val displayName: String get() = alias.trim().ifBlank { name }
+
     /**
      * Berechnet das nächste Fälligkeitsdatum basierend auf letzterTermin und Intervall.
      * Berücksichtigt verschobenAufDatum und gelöschte Termine.

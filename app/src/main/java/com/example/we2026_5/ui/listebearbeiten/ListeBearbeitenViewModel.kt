@@ -53,17 +53,17 @@ class ListeBearbeitenViewModel(
                     activeKunden.filter { k ->
                         geladeneListe.wochentag in k.effectiveAbholungWochentage ||
                         geladeneListe.wochentag in k.effectiveAuslieferungWochentage
-                    }.sortedBy { it.name }
+                    }.sortedBy { it.displayName }
                 } else {
-                    activeKunden.filter { it.listeId == geladeneListe.id }.sortedBy { it.name }
+                    activeKunden.filter { it.listeId == geladeneListe.id }.sortedBy { it.displayName }
                 }
                 val verfuegbar = if (geladeneListe.wochentag in 0..6) {
                     activeKunden.filter { k ->
                         geladeneListe.wochentag !in k.effectiveAbholungWochentage &&
                         geladeneListe.wochentag !in k.effectiveAuslieferungWochentage
-                    }.sortedBy { it.name }
+                    }.sortedBy { it.displayName }
                 } else {
-                    activeKunden.filter { it.listeId.isEmpty() && it.kundenArt == "Tour" }.sortedBy { it.name }
+                    activeKunden.filter { it.listeId.isEmpty() && it.kundenArt == "Tour" }.sortedBy { it.displayName }
                 }
                 val intervalle = if (_state.value.isInEditMode) _state.value.intervalle else geladeneListe.intervalle
                 _state.value = _state.value.copy(

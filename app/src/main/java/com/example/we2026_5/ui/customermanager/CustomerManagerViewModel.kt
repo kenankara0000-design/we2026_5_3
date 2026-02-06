@@ -24,7 +24,7 @@ class CustomerManagerViewModel(
     
     // Echtzeit-Listener: Flow wird automatisch in LiveData umgewandelt
     private val customersFlow = repository.getAllCustomersFlow()
-        .map { customers -> customers.sortedBy { it.name.uppercase() } }
+        .map { customers -> customers.sortedBy { it.displayName.uppercase() } }
     
     // StateFlow für Such-Query
     private val searchQueryFlow = MutableStateFlow("")
@@ -64,10 +64,12 @@ class CustomerManagerViewModel(
             typFiltered
         } else {
             typFiltered.filter {
+                it.displayName.contains(query, ignoreCase = true) ||
                 it.name.contains(query, ignoreCase = true) ||
+                it.alias.contains(query, ignoreCase = true) ||
                 it.adresse.contains(query, ignoreCase = true)
             }
-        }.sortedBy { it.name.uppercase() }
+        }.sortedBy { it.displayName.uppercase() }
     }.asLiveData()
     
     // Für Kompatibilität: customers ohne Filter

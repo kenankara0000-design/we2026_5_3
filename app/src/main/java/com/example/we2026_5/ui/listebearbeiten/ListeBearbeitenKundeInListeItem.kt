@@ -79,7 +79,7 @@ internal fun ListeBearbeitenKundeInListeItem(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(end = 8.dp)
                     )
-                    Text(kunde.name, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    Text(kunde.displayName, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
                 }
                 Text(kunde.adresse, fontSize = 14.sp, color = textSecondary)
                 AlWochentagText(customer = kunde, color = textSecondary)

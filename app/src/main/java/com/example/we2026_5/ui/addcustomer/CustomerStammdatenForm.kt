@@ -52,6 +52,14 @@ fun CustomerStammdatenForm(
         )
         Spacer(modifier = Modifier.height(spacing))
         OutlinedTextField(
+            value = state.alias,
+            onValueChange = { onUpdate(state.copy(alias = it)) },
+            label = { Text(stringResource(R.string.label_customer_alias)) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+        Spacer(modifier = Modifier.height(spacing))
+        OutlinedTextField(
             value = state.adresse,
             onValueChange = { onUpdate(state.copy(adresse = it)) },
             label = { Text(stringResource(R.string.hint_address_optional)) },

@@ -23,7 +23,7 @@
         <activity
             android:name=".LoginActivity"
             android:exported="true"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            android:theme="@style/Theme.We2026_5.AppCompat">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -79,6 +79,16 @@
 
         <activity
             android:name=".ui.urlaub.UrlaubActivity"
+            android:exported="false"
+            android:theme="@style/Theme.We2026_5.LightBackground" />
+
+        <activity
+            android:name=".WaschenErfassungActivity"
+            android:exported="false"
+            android:theme="@style/Theme.We2026_5.LightBackground" />
+
+        <activity
+            android:name=".SevDeskImportActivity"
             android:exported="false"
             android:theme="@style/Theme.We2026_5.LightBackground" />
 

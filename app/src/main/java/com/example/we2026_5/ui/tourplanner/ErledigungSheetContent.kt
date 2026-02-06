@@ -58,7 +58,7 @@ fun ErledigungSheetContent(
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val dateStr = if (viewDateMillis > 0) DateFormatter.formatDate(viewDateMillis) else ""
-    val title = "${customer.name} – $dateStr"
+    val title = "${customer.displayName} – $dateStr"
     val primaryBlueDark = colorResource(R.color.primary_blue_dark)
     val divider = colorResource(R.color.divider)
     val textSecondary = colorResource(R.color.text_secondary)

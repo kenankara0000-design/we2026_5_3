@@ -30,4 +30,12 @@
     <style name="Theme.We2026_5.LightBackground" parent="Theme.We2026_5">
         <item name="android:windowBackground">@color/background_light</item>
     </style>
+
+    <!-- AppCompat-Basis für LoginActivity (AppCompatActivity benötigt Theme.AppCompat) -->
+    <style name="Theme.We2026_5.AppCompat" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@color/background_light</item>
+        <item name="android:statusBarColor">@color/primary_blue_dark</item>
+        <item name="colorPrimary">@color/primary_blue</item>
+        <item name="colorPrimaryDark">@color/primary_blue_dark</item>
+    </style>
 </resources>

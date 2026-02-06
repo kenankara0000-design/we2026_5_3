@@ -312,6 +312,21 @@ class CustomerRepository(
         }
     }
 
+    override suspend fun deleteAllSevDeskContacts(): Result<Int> {
+        return try {
+            val all = getAllCustomers()
+            val toDelete = all.filter { it.kundennummer.startsWith("sevdesk_") }
+            var deleted = 0
+            for (c in toDelete) {
+                if (deleteCustomer(c.id)) deleted++
+            }
+            Result.Success(deleted)
+        } catch (e: Exception) {
+            android.util.Log.e("CustomerRepository", "Error deleting SevDesk contacts", e)
+            Result.Error(AppErrorMapper.toDeleteMessage(e))
+        }
+    }
+
     /**
      * Einmalige Bereinigung: Entfernt die alten Struktur-Felder (abholungDatum, auslieferungDatum,
      * wiederholen, intervallTage, letzterTermin) aus allen Kunden in Firebase.
