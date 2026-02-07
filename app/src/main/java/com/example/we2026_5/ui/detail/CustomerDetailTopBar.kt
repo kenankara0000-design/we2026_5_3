@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -43,7 +44,10 @@ fun CustomerDetailTopBar(
     onDelete: () -> Unit,
     overflowMenuExpanded: Boolean,
     onOverflowMenuDismiss: () -> Unit,
-    onOverflowMenuExpand: () -> Unit
+    onOverflowMenuExpand: () -> Unit,
+    onSave: (() -> Unit)? = null,
+    showSaveAndNext: Boolean = false,
+    onSaveAndNext: (() -> Unit)? = null
 ) {
     val primaryBlue = colorResource(R.color.primary_blue)
     TopAppBar(
@@ -83,6 +87,16 @@ fun CustomerDetailTopBar(
             }
         },
         actions = {
+            if (isInEditMode && onSave != null) {
+                TextButton(onClick = onSave) {
+                    Text(stringResource(R.string.btn_save), color = Color.White)
+                }
+            }
+            if (isInEditMode && showSaveAndNext && onSaveAndNext != null) {
+                TextButton(onClick = onSaveAndNext) {
+                    Text(stringResource(R.string.btn_save_and_next_customer), color = Color.White)
+                }
+            }
             if (isInEditMode) {
                 Box {
                     IconButton(onClick = onOverflowMenuExpand) {

@@ -260,6 +260,9 @@
     <string name="save_in_progress">Speichere…</string>
     <string name="btn_save">Speichern</string>
     <string name="btn_save_and_next_customer">Speichern und nächster Kunde</string>
+    <string name="tab_stammdaten">Stammdaten</string>
+    <string name="tab_termine_tour">Termine &amp; Tour</string>
+    <string name="content_desc_save">Speichern</string>
     <string name="toast_gespeichert">Änderungen gespeichert</string>
     <string name="toast_customer_deleted">Kunde und alle Termine gelöscht</string>
     <string name="toast_customer_created_hint">Kunde angelegt. In der Übersicht kannst du A/L-Tag und Intervalle ergänzen.</string>
