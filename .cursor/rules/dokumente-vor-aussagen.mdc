@@ -1,0 +1,17 @@
+---
+description: Vor Aussagen oder Aktionen: PROJECT_MANIFEST.md lesen – niemals nur aus Code schließen
+globs: 
+alwaysApply: true
+---
+
+# Regel: Manifest vor Aussagen (strikt)
+
+**Vor Aussagen zu Design-Zielen, Planung, Scope oder relevanten Aktionen:**
+
+1. **PROJECT_MANIFEST.md lesen.** Diese Datei ist die Single Source of Truth für Ziele und Scope. Du **musst** sie lesen, bevor du etwas zu Planung, Design oder Scope aussagst.
+
+2. **Nicht nur aus Code schließen.** Aussagen wie „die App war nicht für 500 Kunden geplant“ dürfen **nicht** ohne Prüfung des Manifests getroffen werden.
+
+3. **Wenn das Manifest fehlt oder veraltet ist:** Das offen sagen. Nicht raten. Den Nutzer fragen oder im Manifest nachtragen.
+
+4. **Regeln einhalten.** Die Regeln in `.cursorrules` und `.cursor/rules/` gelten immer.

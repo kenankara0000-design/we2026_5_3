@@ -1,41 +1,20 @@
 package com.example.we2026_5.ui.customermanager
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import com.example.we2026_5.util.ShowErrorSnackbar
 import com.example.we2026_5.util.rememberSnackbarHostState
 import androidx.compose.runtime.Composable
@@ -44,19 +23,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
-import com.example.we2026_5.ui.common.formatALWochentag
 import com.example.we2026_5.ui.customermanager.CustomerManagerCard
 
 private const val SEARCH_DEBOUNCE_MS = 300L
@@ -118,116 +89,23 @@ fun CustomerManagerScreen(
     Scaffold(
         containerColor = backgroundLight,
         topBar = {
-            Column {
-                TopAppBar(
-                    title = {
-                        Text(
-                            stringResource(R.string.menu_kunden),
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.content_desc_back),
-                                tint = Color.White
-                            )
-                        }
-                    },
-                    actions = {
-                        if (isOffline) {
-                            Row(
-                                modifier = Modifier
-                                    .background(Color(0xFFFFEB3B).copy(alpha = 0.3f), RoundedCornerShape(4.dp))
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_offline),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = Color(0xFFFFEB3B)
-                                )
-                                Text(
-                                    stringResource(R.string.main_offline),
-                                    color = Color(0xFFFFEB3B),
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(start = 4.dp)
-                                )
-                            }
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue)
-                )
-                // Button-Zeile
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(primaryBlue)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val auswaehlenOrange = isBulkMode || pressedHeaderButton == "Auswählen"
-                    androidx.compose.material3.Button(
-                        onClick = onBulkSelectClick,
-                        modifier = Modifier.weight(1f),
-                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = if (auswaehlenOrange) statusWarning else buttonBlue),
-                        shape = RoundedCornerShape(20.dp)
-                    ) {
-                        Icon(painter = painterResource(R.drawable.ic_checklist), contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.size(8.dp))
-                        Text(stringResource(R.string.cm_btn_select), fontSize = 14.sp)
-                    }
-                    val exportOrange = pressedHeaderButton == "Exportieren"
-                    androidx.compose.material3.Button(
-                        onClick = onExportClick,
-                        modifier = Modifier.weight(1f),
-                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = if (exportOrange) statusWarning else buttonBlue),
-                        shape = RoundedCornerShape(20.dp)
-                    ) {
-                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.size(8.dp))
-                        Text(stringResource(R.string.content_desc_export), fontSize = 14.sp)
-                    }
-                    val neuKundeOrange = pressedHeaderButton == "NeuerKunde"
-                    FloatingActionButton(
-                        onClick = onNewCustomerClick,
-                        modifier = Modifier.size(48.dp),
-                        containerColor = if (neuKundeOrange) statusWarning else buttonBlue,
-                        contentColor = Color.White
-                    ) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = stringResource(R.string.content_desc_new_customer)
-                        )
-                    }
-                }
-                // Tabs
-                TabRow(
-                    selectedTabIndex = selectedTab,
-                    containerColor = primaryBlue,
-                    contentColor = Color.White
-                ) {
-                    listOf("Gewerblich", "Privat", "Tour").forEachIndexed { index, title ->
-                        Tab(
-                            selected = selectedTab == index,
-                            onClick = { onTabSelected(index) },
-                            text = { Text(title) }
-                        )
-                    }
-                }
-            }
+            CustomerManagerTopBar(
+                isOffline = isOffline,
+                isBulkMode = isBulkMode,
+                pressedHeaderButton = pressedHeaderButton,
+                onBack = onBack,
+                onBulkSelectClick = onBulkSelectClick,
+                onExportClick = onExportClick,
+                onNewCustomerClick = onNewCustomerClick,
+                selectedTab = selectedTab,
+                onTabSelected = onTabSelected
+            )
         },
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(backgroundLight)
@@ -235,133 +113,31 @@ fun CustomerManagerScreen(
         ) {
             Column(
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxSize()
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(
+                        bottom = if (isBulkMode && selectedIds.isNotEmpty()) 56.dp else 0.dp
+                    )
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = localSearch,
-                        onValueChange = { localSearch = it },
-                        modifier = Modifier.weight(1f),
-                        placeholder = { Text(stringResource(R.string.hint_search_customer)) },
-                        singleLine = true
-                    )
-                    IconButton(
-                        onClick = { filterExpanded = !filterExpanded }
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_filter),
-                            contentDescription = stringResource(R.string.content_desc_filter),
-                            tint = if (filterExpanded) primaryBlue else textSecondary
-                        )
-                    }
-                }
-                if (filterExpanded) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.label_filter_kunden_typ),
-                        color = textPrimary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(
-                            selected = kundenTypFilter == 0,
-                            onClick = { onKundenTypFilterChange(0) },
-                            label = { Text(stringResource(R.string.label_filter_all)) }
-                        )
-                        FilterChip(
-                            selected = kundenTypFilter == 1,
-                            onClick = { onKundenTypFilterChange(1) },
-                            label = { Text(stringResource(R.string.label_kunden_typ_regelmaessig)) }
-                        )
-                        FilterChip(
-                            selected = kundenTypFilter == 2,
-                            onClick = { onKundenTypFilterChange(2) },
-                            label = { Text(stringResource(R.string.label_kunden_typ_unregelmaessig)) }
-                        )
-                        FilterChip(
-                            selected = kundenTypFilter == 3,
-                            onClick = { onKundenTypFilterChange(3) },
-                            label = { Text(stringResource(R.string.label_kunden_typ_auf_abruf)) }
-                        )
-                    }
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        text = stringResource(R.string.label_filter_ohne_tour),
-                        color = textPrimary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(
-                            selected = ohneTourFilter == 0,
-                            onClick = { onOhneTourFilterChange(0) },
-                            label = { Text(stringResource(R.string.label_filter_all)) }
-                        )
-                        FilterChip(
-                            selected = ohneTourFilter == 1,
-                            onClick = { onOhneTourFilterChange(1) },
-                            label = { Text(stringResource(R.string.label_ohne_tour_anzeigen)) }
-                        )
-                        FilterChip(
-                            selected = ohneTourFilter == 2,
-                            onClick = { onOhneTourFilterChange(2) },
-                            label = { Text(stringResource(R.string.label_ohne_tour_ausblenden)) }
-                        )
-                    }
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        text = stringResource(R.string.label_filter_pausierte),
-                        color = textPrimary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(
-                            selected = pausierteFilter == 0,
-                            onClick = { onPausierteFilterChange(0) },
-                            label = { Text(stringResource(R.string.label_pausierte_ausblenden)) }
-                        )
-                        FilterChip(
-                            selected = pausierteFilter == 1,
-                            onClick = { onPausierteFilterChange(1) },
-                            label = { Text(stringResource(R.string.label_pausierte_anzeigen)) }
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
-                }
-                Spacer(Modifier.height(8.dp))
-
+                CustomerManagerSearchAndFilter(
+                    searchValue = localSearch,
+                    onSearchChange = { localSearch = it },
+                    filterExpanded = filterExpanded,
+                    onFilterToggle = { filterExpanded = !filterExpanded },
+                    kundenTypFilter = kundenTypFilter,
+                    onKundenTypFilterChange = onKundenTypFilterChange,
+                    ohneTourFilter = ohneTourFilter,
+                    onOhneTourFilterChange = onOhneTourFilterChange,
+                    pausierteFilter = pausierteFilter,
+                    onPausierteFilterChange = onPausierteFilterChange,
+                    textPrimary = textPrimary,
+                    textSecondary = textSecondary,
+                    primaryBlue = primaryBlue
+                )
                 when {
-                    isLoading -> {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text(stringResource(R.string.stat_loading), color = textSecondary)
-                        }
-                    }
-                    // Fehler werden jetzt als Snackbar angezeigt (siehe ShowErrorSnackbar oben)
-                    customers.isEmpty() -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("👥", fontSize = 64.sp)
-                                Spacer(Modifier.height(16.dp))
-                                Text(stringResource(R.string.cm_empty_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = textSecondary)
-                                Spacer(Modifier.height(8.dp))
-                                Text(stringResource(R.string.cm_empty_subtitle), fontSize = 14.sp, color = textSecondary)
-                            }
-                        }
-                    }
+                    isLoading -> CustomerManagerLoadingView(textSecondary = textSecondary)
+                    customers.isEmpty() -> CustomerManagerEmptyView(textSecondary = textSecondary)
                     else -> {
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -385,34 +161,15 @@ fun CustomerManagerScreen(
                 }
             }
 
-            // Bulk-Action-Bar unten
             if (isBulkMode && selectedIds.isNotEmpty()) {
-                val selectedCustomers = customers.filter { it.id in selectedIds }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(primaryBlue)
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        stringResource(R.string.cm_selected_count, selectedIds.size),
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
+                Box(Modifier.align(Alignment.BottomCenter)) {
+                    CustomerManagerBulkBar(
+                        selectedCount = selectedIds.size,
+                        selectedCustomers = customers.filter { it.id in selectedIds },
+                        primaryBlue = primaryBlue,
+                        onBulkDone = onBulkDone,
+                        onBulkCancel = onBulkCancel
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        androidx.compose.material3.Button(
-                            onClick = { onBulkDone(selectedCustomers) },
-                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = colorResource(R.color.status_done))
-                        ) {
-                            Text(stringResource(R.string.cm_mark_done))
-                        }
-                        androidx.compose.material3.OutlinedButton(onClick = onBulkCancel) {
-                            Text(stringResource(R.string.btn_cancel))
-                        }
-                    }
                 }
             }
         }

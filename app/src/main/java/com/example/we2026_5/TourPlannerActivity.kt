@@ -196,7 +196,7 @@ class TourPlannerActivity : AppCompatActivity() {
             )
         }
 
-        coordinator.reloadCurrentView()
+        lifecycleScope.launch { coordinator.reloadCurrentView() }
     }
 
     override fun onDestroy() {

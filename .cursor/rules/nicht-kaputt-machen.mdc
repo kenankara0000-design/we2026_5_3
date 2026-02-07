@@ -12,4 +12,13 @@ alwaysApply: true
 2. **Nicht kaputt machen:** Wenn du nicht sicher bist, dass deine Änderung keine bestehende, funktionierende Logik bricht – **mach die Änderung nicht** oder **frage den Nutzer**, ob du unsicher bist.
 3. **Bei Unsicherheit:** Lieber nachfragen („Soll ich X so ändern? Dann könnte Y betroffen sein.“) statt etwas umzubauen und dabei etwas anderes zu zerstören.
 
+## Löschen von Code
+
+**Bevor irgendwelcher Code gelöscht wird,** muss **bestätigt** werden, dass die Löschung **keine Auswirkung** auf **Funktionen** und **Design** hat:
+
+- Prüfen: Wird die Klasse/Datei/Funktion irgendwo referenziert? (Kotlin, XML-Layouts, AndroidManifest, Gradle, Koin/DI.)
+- Prüfen: Wird ein Layout (z. B. `item_*.xml`) nur von diesem Code genutzt? Wenn ja, gehört die Nutzungsprüfung dazu.
+- Erst wenn **keine Referenz** gefunden wurde (oder nur interne, ungenutzte), darf gelöscht werden – und optional mit einem kurzen Vermerk im Plan/Commit dokumentieren.
+- Bei Unsicherheit: **nicht löschen**, im Plan als „ungeklärt“ vermerken und Nutzer/Team fragen.
+
 Diese Regel gilt immer.

@@ -21,6 +21,7 @@ import com.example.we2026_5.util.runListeToTourMigration
 import com.example.we2026_5.util.runPauseExpiredReset
 import com.example.we2026_5.util.runRemoveDeprecatedFieldsMigration
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.Dispatchers
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -44,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         networkMonitor = NetworkMonitor(this, lifecycleScope)
         networkMonitor.startMonitoring()
 
-        lifecycleScope.launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             runListeToTourMigration(this@MainActivity, customerRepository)
             runListeArtToTourMigration(this@MainActivity, listeRepository)
             runListeIntervalleMigration(this@MainActivity, customerRepository, listeRepository)

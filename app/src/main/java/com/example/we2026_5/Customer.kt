@@ -114,7 +114,8 @@ data class Customer(
     @Exclude
     private val faelligAm: Long = 0
 ) {
-    /** Anzeigename in der App: Alias, falls gesetzt, sonst name (z. B. für Rechnung bleibt name). */
+    /** Anzeigename in der App: Alias, falls gesetzt, sonst name (z. B. für Rechnung bleibt name). @Exclude: nur berechnet, nie in Firebase speichern. */
+    @get:Exclude
     val displayName: String get() = alias.trim().ifBlank { name }
 
     /**
@@ -128,13 +129,15 @@ data class Customer(
     )
     fun getFaelligAm(): Long = com.example.we2026_5.util.TerminBerechnungUtils.naechstesFaelligAmDatum(this)
 
-    /** Effektive A-Tage: Liste wenn gesetzt, sonst einzelner defaultAbholungWochentag falls gültig. */
+    /** Effektive A-Tage: Liste wenn gesetzt, sonst einzelner defaultAbholungWochentag falls gültig. @Exclude: nur berechnet, nie in Firebase speichern. */
+    @get:Exclude
     val effectiveAbholungWochentage: List<Int>
         get() = if (defaultAbholungWochentage.isNotEmpty()) defaultAbholungWochentage
         else if (defaultAbholungWochentag in 0..6) listOf(defaultAbholungWochentag)
         else emptyList()
 
-    /** Effektive L-Tage: Liste wenn gesetzt, sonst einzelner defaultAuslieferungWochentag falls gültig. */
+    /** Effektive L-Tage: Liste wenn gesetzt, sonst einzelner defaultAuslieferungWochentag falls gültig. @Exclude: nur berechnet, nie in Firebase speichern. */
+    @get:Exclude
     val effectiveAuslieferungWochentage: List<Int>
         get() = if (defaultAuslieferungWochentage.isNotEmpty()) defaultAuslieferungWochentage
         else if (defaultAuslieferungWochentag in 0..6) listOf(defaultAuslieferungWochentag)
