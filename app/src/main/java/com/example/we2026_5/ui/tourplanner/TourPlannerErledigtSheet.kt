@@ -53,6 +53,13 @@ fun TourPlannerErledigtSheet(
                 color = Color.White,
                 modifier = Modifier.padding(8.dp)
             )
+            if (content.doneOhneListen.isEmpty() && content.tourListenErledigt.isEmpty()) {
+                Text(
+                    stringResource(R.string.tour_erledigt_empty),
+                    modifier = Modifier.padding(8.dp),
+                    color = Color.White
+                )
+            }
             content.doneOhneListen.forEach { customer ->
                 val isInUrlaub = viewDateMillis != null &&
                     TerminFilterUtils.istTerminInUrlaubEintraege(viewDateMillis, customer)

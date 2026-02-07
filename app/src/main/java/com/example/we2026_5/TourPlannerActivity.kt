@@ -20,6 +20,7 @@ import com.example.we2026_5.ui.tourplanner.TourPlannerScreen
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.example.we2026_5.tourplanner.ErledigungSheetState
 import com.example.we2026_5.tourplanner.TourPlannerCoordinator
+import com.example.we2026_5.util.AgentDebugLog
 import com.example.we2026_5.util.TerminBerechnungUtils
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -42,6 +43,10 @@ class TourPlannerActivity : AppCompatActivity() {
     private var erledigtSheetVisible by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // #region agent log
+        val onCreateStart = System.currentTimeMillis()
+        AgentDebugLog.log("TourPlannerActivity.kt", "onCreate_start", mapOf(), "H4")
+        // #endregion
         super.onCreate(savedInstanceState)
 
         val prefs = getSharedPreferences("tourplanner_prefs", MODE_PRIVATE)
@@ -91,6 +96,9 @@ class TourPlannerActivity : AppCompatActivity() {
             } ?: getString(R.string.tour_label_date)
 
             fun getStatusBadgeText(customer: Customer): String {
+                // #region agent log
+                AgentDebugLog.log("TourPlannerActivity.kt", "getStatusBadgeText", mapOf("customerId" to customer.id), "H3")
+                // #endregion
                 val ts = viewModel.getSelectedTimestamp() ?: return ""
                 val viewDateStart = coordinator.dateUtils.getStartOfDay(ts)
                 val heuteStart = coordinator.dateUtils.getStartOfDay(System.currentTimeMillis())
@@ -104,6 +112,10 @@ class TourPlannerActivity : AppCompatActivity() {
             }
 
             val ts = selectedTimestamp
+            // #region agent log
+            val countsT0 = System.currentTimeMillis()
+            AgentDebugLog.log("TourPlannerActivity.kt", "counts_start", mapOf("tourItemsSize" to tourItems.size), "H2")
+            // #endregion
             val counts = ts?.let { timestamp ->
                 val viewDateStart = coordinator.dateUtils.getStartOfDay(timestamp)
                 val customers = tourItems.filterIsInstance<ListItem.CustomerItem>().map { it.customer }
@@ -119,6 +131,9 @@ class TourPlannerActivity : AppCompatActivity() {
                 val lCount = termine.count { it.typ == TerminTyp.AUSLIEFERUNG }
                 aCount to lCount
             } ?: (0 to 0)
+            // #region agent log
+            AgentDebugLog.log("TourPlannerActivity.kt", "counts_end", mapOf("duration_ms" to (System.currentTimeMillis() - countsT0)), "H2")
+            // #endregion
             val isToday = ts != null &&
                 coordinator.dateUtils.getStartOfDay(ts) == coordinator.dateUtils.getStartOfDay(System.currentTimeMillis())
             TourPlannerScreen(
@@ -196,6 +211,9 @@ class TourPlannerActivity : AppCompatActivity() {
             )
         }
 
+        // #region agent log
+        AgentDebugLog.log("TourPlannerActivity.kt", "onCreate_end", mapOf("duration_ms" to (System.currentTimeMillis() - onCreateStart)), "H4")
+        // #endregion
         lifecycleScope.launch { coordinator.reloadCurrentView() }
     }
 

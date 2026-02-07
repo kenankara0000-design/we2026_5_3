@@ -51,7 +51,7 @@
     <!-- Section Header Hintergründe - Verbesserte Lesbarkeit -->
     <color name="section_overdue_bg">#FFEBEE</color>
     <color name="section_overdue_text">#C62828</color>
-    <color name="section_done_bg">#E8F5E9</color>
+    <color name="section_done_bg">#43A047</color> <!-- Material Green 600, kräftiger für Erledigt-Bereich -->
     <color name="section_done_text">#2E7D32</color>
     
     <!-- Wochentag-Farben (Mo-Fr) - Modernisiert -->

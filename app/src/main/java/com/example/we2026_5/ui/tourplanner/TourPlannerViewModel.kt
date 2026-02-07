@@ -15,11 +15,15 @@ import com.example.we2026_5.tourplanner.TourDataProcessor
 import com.example.we2026_5.tourplanner.TourProcessResult
 import com.example.we2026_5.ui.tourplanner.ErledigtSheetContent
 import com.example.we2026_5.util.CustomerTermFilter
+import com.example.we2026_5.util.AgentDebugLog
 import com.example.we2026_5.util.Result
 import com.example.we2026_5.util.TerminBerechnungUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.*
@@ -63,25 +67,34 @@ class TourPlannerViewModel(
     private val expandedSectionsFlow = MutableStateFlow<Set<SectionType>>(emptySet())
     
     // Kombiniere alle Flows: Ergebnis ohne Erledigt-Section in der Liste; Erledigt-Daten für Button/Sheet
+    // Debounce (250 ms) auf Kunden/Listen reduziert Pipeline-Läufe bei schnellen Firebase-Updates (Punkt 6.2)
     private val processResultFlow = combine(
-        customersFlow,
-        listenFlow,
+        customersFlow.debounce(250L),
+        listenFlow.debounce(250L),
         selectedTimestampFlow,
         expandedSectionsFlow
     ) { customers, listen, timestamp, expandedSections ->
         if (timestamp == null) {
             TourProcessResult(emptyList(), 0, emptyList(), emptyList())
         } else {
+            // #region agent log
+            val t0 = System.currentTimeMillis()
+            AgentDebugLog.log("TourPlannerViewModel.kt", "combine_process_start", mapOf("n" to customers.size, "ts" to timestamp), "H1")
+            // #endregion
             val activeCustomers = CustomerTermFilter.filterActiveForTerms(customers, System.currentTimeMillis())
                 .filter { !it.ohneTour }
-            dataProcessor.processTourData(activeCustomers, listen, timestamp, expandedSections)
+            val result = dataProcessor.processTourData(activeCustomers, listen, timestamp, expandedSections)
+            // #region agent log
+            AgentDebugLog.log("TourPlannerViewModel.kt", "combine_process_end", mapOf("duration_ms" to (System.currentTimeMillis() - t0), "items" to result.items.size), "H1")
+            // #endregion
+            result
         }
-    }
+    }.flowOn(Dispatchers.Default)
 
     val tourItems: LiveData<List<ListItem>> = processResultFlow.map { it.items }.asLiveData()
     val erledigtCount: LiveData<Int> = processResultFlow.map { it.erledigtCount }.asLiveData()
     val erledigtSheetContent: LiveData<ErledigtSheetContent?> = processResultFlow.map { r ->
-        if (r.erledigtCount > 0) ErledigtSheetContent(r.erledigtDoneOhneListen, r.erledigtTourListen) else null
+        ErledigtSheetContent(r.erledigtDoneOhneListen, r.erledigtTourListen)
     }.asLiveData()
     
     private val _isLoading = MutableLiveData<Boolean>()
@@ -91,6 +104,9 @@ class TourPlannerViewModel(
     val error: LiveData<String?> = _error
 
     fun loadTourData(selectedTimestamp: Long, isSectionExpanded: (SectionType) -> Boolean) {
+        // #region agent log
+        AgentDebugLog.log("TourPlannerViewModel.kt", "loadTourData", mapOf("ts" to selectedTimestamp), "H5")
+        // #endregion
         selectedTimestampFlow.value = selectedTimestamp
         expandedSectionsFlow.value = expandedSectionsFlow.value
     }

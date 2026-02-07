@@ -11,6 +11,7 @@ import com.example.we2026_5.adapter.CustomerDialogHelper
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
+import com.example.we2026_5.util.AgentDebugLog
 import com.example.we2026_5.util.Result
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -83,6 +84,9 @@ class TourPlannerCoordinator(
     fun getViewDateMillis(): Long = viewDate.timeInMillis
 
     fun reloadCurrentView() {
+        // #region agent log
+        AgentDebugLog.log("TourPlannerCoordinator.kt", "reloadCurrentView", mapOf(), "H5")
+        // #endregion
         viewModel.getSelectedTimestamp()?.let { ts ->
             viewModel.loadTourData(ts) { viewModel.isSectionExpanded(it) }
         }

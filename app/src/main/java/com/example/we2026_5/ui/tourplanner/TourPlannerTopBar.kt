@@ -165,17 +165,15 @@ fun TourPlannerTopBar(
                 Spacer(Modifier.size(8.dp))
                 Text(stringResource(R.string.tour_btn_today), color = Color.White)
             }
-            if (erledigtCount > 0) {
-                Button(
-                    onClick = onErledigtClick,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.section_done_bg))
-                ) {
-                    Text(
-                        stringResource(R.string.tour_btn_erledigte, erledigtCount),
-                        color = Color.White
-                    )
-                }
+            Button(
+                onClick = onErledigtClick,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.section_done_bg))
+            ) {
+                Text(
+                    stringResource(R.string.tour_btn_erledigte, erledigtCount),
+                    color = Color.White
+                )
             }
         }
     }

@@ -299,6 +299,7 @@
     <string name="tour_btn_map">Karte</string>
     <string name="tour_btn_today">Heute</string>
     <string name="tour_btn_erledigte">Erledigte (%d)</string>
+    <string name="tour_erledigt_empty">Keine erledigten Termine an diesem Tag.</string>
     <string name="tour_empty_title">Keine Touren für diesen Tag</string>
     <string name="tour_empty_subtitle">Für diesen Wochentag sind keine Kunden eingetragen.</string>
     <string name="tour_error_title">Fehler beim Laden</string>
@@ -474,8 +475,8 @@
     <string name="toast_customer_paused">Pause bis %1$s gespeichert</string>
     <string name="toast_customer_paused_simple">Kunde pausiert</string>
     <string name="toast_customer_resumed">Kunde fortgesetzt</string>
-    <string name="label_city_optional">Stadt (Optional)</string>
-    <string name="label_zip_optional">PLZ (Optional)</string>
+    <string name="label_city_optional">Stadt</string>
+    <string name="label_zip_optional">PLZ</string>
     <string name="label_default_pickup_day">Standard-Abholungstag (A)</string>
     <string name="label_default_delivery_day">Standard-Auslieferungstag (L)</string>
     <string name="label_a_plus_tage_l">L-Termin</string>
