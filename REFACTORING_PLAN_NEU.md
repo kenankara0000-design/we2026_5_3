@@ -62,11 +62,11 @@
 | A.5 | **WaschenErfassungScreen.kt** | ~~358~~ **112** | **Erledigt (Feb 2026):** Sub-Composables ausgelagert: WaschenErfassungTopBar, WaschenErfassungKundeSuchenContent, WaschenErfassungErfassungenListeContent, WaschenErfassungDetailContent, WaschenErfassungErfassenContent. |
 | A.6 | **CustomerStammdatenForm.kt** | 354 | Optional: „Weitere Angaben“-Block (ExpandableSection-Inhalt) in eigenes Composable. |
 | A.7 | **MainScreen.kt** | 315 | Nur bei Bedarf: Karten-/Listen-Bereich oder Aktionen-Bereich auslagern. |
-| A.8 | **ErledigungSheetContent.kt** | 299 | Inhalt in 2–3 Composables (z. B. ErledigungKopf, ErledigungListe, ErledigungAktionen). |
+| A.8 | **ErledigungSheetContent.kt** | ~~299~~ **139** | **Erledigt (Feb 2026):** Inhalt in ErledigungSheetKopf, ErledigungTabErledigungContent, ErledigungTabTerminContent, ErledigungTabDetailsContent ausgelagert. |
 | A.9 | **ListeBearbeitenScreen.kt** | 292 | Bereits IntervallRow/KundeInListeItem ausgelagert. Optional: TopBar-/Metadaten-Block trennen. |
 | A.10 | **KundenListenScreen.kt** | 290 | Optional: Filter-Chips, Listen-Karte in eigene Dateien. |
 
-**Reihenfolge:** A.1–A.5 erledigt. Als Nächstes nach Aufwand A.6–A.10.
+**Reihenfolge:** A.1–A.5, A.8 erledigt. Als Nächstes nach Aufwand A.6, A.7, A.9, A.10.
 
 ---
 
@@ -128,7 +128,8 @@
 7. **C.2, C.3** – Duplikate und doppelte Tests.
 8. **A.4** – CustomerManagerScreen verkleinern. ✓ Erledigt (Feb 2026).
 9. **A.5** – WaschenErfassungScreen verkleinern. ✓ Erledigt (Feb 2026).
-10. **A.6–A.10, D, E** – nach Bedarf.
+10. **A.8** – ErledigungSheetContent aufteilen. ✓ Erledigt (Feb 2026).
+11. **A.6, A.7, A.9, A.10, D, E** – nach Bedarf.
 
 ---
 
@@ -146,7 +147,7 @@
 | 315 | ui/main/MainScreen.kt |
 | 308 | CustomerDetailActivity.kt |
 | 306 | util/TerminBerechnungUtils.kt |
-| 299 | ui/tourplanner/ErledigungSheetContent.kt |
+| 139 | ui/tourplanner/ErledigungSheetContent.kt |
 | 292 | ui/listebearbeiten/ListeBearbeitenScreen.kt |
 | 290 | ui/kundenlisten/KundenListenScreen.kt |
 | 266 | tourplanner/TourPlannerErledigungHandler.kt |

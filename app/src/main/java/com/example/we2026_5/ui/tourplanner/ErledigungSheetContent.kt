@@ -1,23 +1,12 @@
 package com.example.we2026_5.ui.tourplanner
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -26,15 +15,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
 import com.example.we2026_5.tourplanner.ErledigungSheetState
@@ -72,9 +57,8 @@ fun ErledigungSheetContent(
     val toastAuslieferungNachAbholung = stringResource(R.string.toast_auslieferung_nur_nach_abholung)
     val toastAuslieferungNurHeute = stringResource(R.string.toast_auslieferung_nur_heute)
     val toastKwNurAbholung = stringResource(R.string.toast_kw_nur_abholung_auslieferung)
-    val legendText = stringResource(R.string.sheet_legend)
-    val sheetFixedHeightDp = 520.dp
     val hintVerschieben = stringResource(R.string.sheet_termin_verschieben_hint)
+    val sheetFixedHeightDp = 520.dp
 
     Column(
         modifier = Modifier
@@ -83,28 +67,12 @@ fun ErledigungSheetContent(
             .padding(20.dp)
             .padding(bottom = 32.dp)
     ) {
-        Text(
-            text = title,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = primaryBlueDark
+        ErledigungSheetKopf(
+            title = title,
+            primaryBlueDark = primaryBlueDark,
+            textSecondary = textSecondary,
+            divider = divider
         )
-        Text(
-            text = legendText,
-            fontSize = 11.sp,
-            color = textSecondary,
-            modifier = Modifier.padding(top = 4.dp)
-        )
-        Spacer(Modifier.height(4.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .padding(vertical = 12.dp)
-                .background(divider)
-        )
-        Spacer(Modifier.height(12.dp))
-
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = Color.Transparent,
@@ -127,172 +95,44 @@ fun ErledigungSheetContent(
                 text = { Text(stringResource(R.string.sheet_tab_details)) }
             )
         }
-
         Spacer(Modifier.height(16.dp))
-
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             when (selectedTab) {
-                0 -> Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                if (state.overdueInfoText.isNotEmpty()) {
-                    Text(
-                        text = state.overdueInfoText,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = colorResource(R.color.status_overdue),
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    )
-                }
-                if (state.completedInfoText.isNotEmpty()) {
-                    Text(
-                        text = state.completedInfoText,
-                        fontSize = 12.sp,
-                        color = textSecondary,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    )
-                }
-                if (state.showAbholung) {
-                    Button(
-                        onClick = {
-                            if (state.enableAbholung) {
-                                onAbholung(customer)
-                                onDismiss()
-                            } else {
-                                showToast(if (state.isOverdueBadge) toastUeberfaelligNurHeute else toastAbholungNurHeute)
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (state.enableAbholung) buttonAbholung else buttonAbholung.copy(alpha = 0.5f)
-                        ),
-                        enabled = true
-                    ) {
-                        Icon(painter = painterResource(R.drawable.ic_pickup), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
-                        Spacer(Modifier.size(10.dp))
-                        Text(stringResource(R.string.sheet_abholung_erledigen), color = Color.White)
-                    }
-                }
-                if (state.showAuslieferung) {
-                    Button(
-                        onClick = {
-                            if (state.enableAuslieferung) {
-                                onAuslieferung(customer)
-                                onDismiss()
-                            } else {
-                                showToast(
-                                    when {
-                                        !customer.abholungErfolgt -> toastAuslieferungNachAbholung
-                                        state.isOverdueBadge -> toastUeberfaelligNurHeute
-                                        else -> toastAuslieferungNurHeute
-                                    }
-                                )
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (state.enableAuslieferung) buttonAuslieferung else buttonAuslieferung.copy(alpha = 0.5f)
-                        ),
-                        enabled = true
-                    ) {
-                        Icon(painter = painterResource(R.drawable.ic_delivery), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
-                        Spacer(Modifier.size(10.dp))
-                        Text(stringResource(R.string.sheet_auslieferung_erledigen), color = Color.White)
-                    }
-                }
-                if (state.showRueckgaengig) {
-                    OutlinedButton(
-                        onClick = {
-                            onRueckgaengig(customer)
-                            onDismiss()
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = buttonRueckgaengig)
-                    ) {
-                        Icon(painter = painterResource(R.drawable.ic_undo), contentDescription = null, modifier = Modifier.size(22.dp), tint = buttonRueckgaengig)
-                        Spacer(Modifier.size(10.dp))
-                        Text(stringResource(R.string.sheet_rueckgaengig), color = buttonRueckgaengig)
-                    }
-                }
-            }
-            1 -> Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                if (state.showKw) {
-                    Button(
-                        onClick = {
-                            if (state.enableKw) {
-                                onKw(customer)
-                                onDismiss()
-                            } else {
-                                showToast(toastKwNurAbholung)
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.status_warning)),
-                        enabled = state.enableKw
-                    ) {
-                        Icon(painter = painterResource(R.drawable.ic_checklist), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
-                        Spacer(Modifier.size(10.dp))
-                        Text(stringResource(R.string.sheet_keine_waesche), color = Color.White)
-                    }
-                }
-                Button(
-                    onClick = {
-                        if (state.showVerschieben) {
-                            onVerschieben(customer)
-                            onDismiss()
-                        } else {
-                            showToast(hintVerschieben)
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = buttonVerschieben),
-                    enabled = state.showVerschieben
-                ) {
-                    Icon(painter = painterResource(R.drawable.ic_reschedule), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
-                    Spacer(Modifier.size(10.dp))
-                    Text(stringResource(R.string.sheet_termin_verschieben), color = Color.White)
-                }
-            }
-            2 -> Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                if (customer.telefon.isNotBlank()) {
-                    Text(stringResource(R.string.sheet_telefon), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = textSecondary)
-                    Text(
-                        text = customer.telefon,
-                        fontSize = 15.sp,
-                        color = textPrimary,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 12.dp)
-                            .clickable { onTelefonClick(customer.telefon.trim()) }
-                    )
-                }
-                Text(stringResource(R.string.sheet_naechste_tour), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = textSecondary)
-                val naechsteTour = getNaechstesTourDatum(customer)
-                Text(
-                    text = if (naechsteTour != null && naechsteTour > 0) DateFormatter.formatDate(naechsteTour) else stringResource(R.string.sheet_kein_termin),
-                    fontSize = 15.sp,
-                    color = textPrimary,
-                    modifier = Modifier
-                        .padding(bottom = 12.dp)
-                        .then(Modifier.fillMaxWidth())
+                0 -> ErledigungTabErledigungContent(
+                    customer = customer,
+                    state = state,
+                    textSecondary = textSecondary,
+                    buttonAbholung = buttonAbholung,
+                    buttonAuslieferung = buttonAuslieferung,
+                    buttonRueckgaengig = buttonRueckgaengig,
+                    toastAbholungNurHeute = toastAbholungNurHeute,
+                    toastUeberfaelligNurHeute = toastUeberfaelligNurHeute,
+                    toastAuslieferungNachAbholung = toastAuslieferungNachAbholung,
+                    toastAuslieferungNurHeute = toastAuslieferungNurHeute,
+                    onAbholung = onAbholung,
+                    onAuslieferung = onAuslieferung,
+                    onRueckgaengig = onRueckgaengig,
+                    onDismiss = onDismiss,
+                    showToast = showToast
                 )
-                if (customer.notizen.isNotBlank()) {
-                    Text(stringResource(R.string.sheet_notizen), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = textSecondary)
-                    Text(text = customer.notizen, fontSize = 15.sp, color = textPrimary, modifier = Modifier.fillMaxWidth())
-                }
-            }
+                1 -> ErledigungTabTerminContent(
+                    customer = customer,
+                    state = state,
+                    buttonVerschieben = buttonVerschieben,
+                    toastKwNurAbholung = toastKwNurAbholung,
+                    hintVerschieben = hintVerschieben,
+                    onKw = onKw,
+                    onVerschieben = onVerschieben,
+                    onDismiss = onDismiss,
+                    showToast = showToast
+                )
+                2 -> ErledigungTabDetailsContent(
+                    customer = customer,
+                    textPrimary = textPrimary,
+                    textSecondary = textSecondary,
+                    getNaechstesTourDatum = getNaechstesTourDatum,
+                    onTelefonClick = onTelefonClick
+                )
             }
         }
     }
