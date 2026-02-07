@@ -1,4 +1,4 @@
-# Refactoring-Plan (neu) – we2026_5
+﻿# Refactoring-Plan (neu) – we2026_5
 
 **Erstellt:** Februar 2026  
 **Basis:** Aktuelle Analyse der App-Dateien (Kotlin, Struktur, Abhängigkeiten).
@@ -59,14 +59,14 @@
 | A.2 | **CustomerDetailScreen.kt** | ~~575~~ **373** | **Erledigt (Feb 2026):** Sub-Composables ausgelagert: CustomerDetailTopBar, CustomerDetailStateViews, CustomerDetailActionsRow, CustomerDetailNaechsterTermin, CustomerDetailKundenTypSection, CustomerDetailTerminRegelCard, CustomerDetailFotosSection. Ziel unter 450 erreicht. |
 | A.3 | **CustomerRepository.kt** | ~~409~~ **233** | **Erledigt (Feb 2026):** Parsing/Serialisierung in CustomerSnapshotParser.kt ausgelagert; Repository nur noch Orchestrierung + Firebase-Calls + awaitWithTimeout-Helper. Ziel unter 250 erreicht. |
 | A.4 | **CustomerManagerScreen.kt** | ~~421~~ **164** | **Erledigt (Feb 2026):** Sub-Composables ausgelagert: CustomerManagerTopBar, CustomerManagerSearchAndFilter, CustomerManagerStateViews, CustomerManagerBulkBar. Ziel unter 350 erreicht. |
-| A.5 | **WaschenErfassungScreen.kt** | 358 | Große Blöcke (z. B. Erfassungsliste, Summen/Aktionen) in `ui/wasch/` auslagern. |
+| A.5 | **WaschenErfassungScreen.kt** | ~~358~~ **112** | **Erledigt (Feb 2026):** Sub-Composables ausgelagert: WaschenErfassungTopBar, WaschenErfassungKundeSuchenContent, WaschenErfassungErfassungenListeContent, WaschenErfassungDetailContent, WaschenErfassungErfassenContent. |
 | A.6 | **CustomerStammdatenForm.kt** | 354 | Optional: „Weitere Angaben“-Block (ExpandableSection-Inhalt) in eigenes Composable. |
 | A.7 | **MainScreen.kt** | 315 | Nur bei Bedarf: Karten-/Listen-Bereich oder Aktionen-Bereich auslagern. |
 | A.8 | **ErledigungSheetContent.kt** | 299 | Inhalt in 2–3 Composables (z. B. ErledigungKopf, ErledigungListe, ErledigungAktionen). |
 | A.9 | **ListeBearbeitenScreen.kt** | 292 | Bereits IntervallRow/KundeInListeItem ausgelagert. Optional: TopBar-/Metadaten-Block trennen. |
 | A.10 | **KundenListenScreen.kt** | 290 | Optional: Filter-Chips, Listen-Karte in eigene Dateien. |
 
-**Reihenfolge:** A.1–A.4 erledigt. Als Nächstes nach Aufwand A.5–A.10.
+**Reihenfolge:** A.1–A.5 erledigt. Als Nächstes nach Aufwand A.6–A.10.
 
 ---
 
@@ -127,7 +127,8 @@
 6. **B.2/B.3** – restliche Deprecated-Nutzung prüfen.
 7. **C.2, C.3** – Duplikate und doppelte Tests.
 8. **A.4** – CustomerManagerScreen verkleinern. ✓ Erledigt (Feb 2026).
-9. **A.5–A.10, D, E** – nach Bedarf.
+9. **A.5** – WaschenErfassungScreen verkleinern. ✓ Erledigt (Feb 2026).
+10. **A.6–A.10, D, E** – nach Bedarf.
 
 ---
 
@@ -140,7 +141,7 @@
 | 233 | data/repository/CustomerRepository.kt |
 | 164 | ui/customermanager/CustomerManagerScreen.kt |
 | 376 | tourplanner/TourDataProcessor.kt |
-| 358 | ui/wasch/WaschenErfassungScreen.kt |
+| 112 | ui/wasch/WaschenErfassungScreen.kt |
 | 354 | ui/addcustomer/CustomerStammdatenForm.kt |
 | 315 | ui/main/MainScreen.kt |
 | 308 | CustomerDetailActivity.kt |
