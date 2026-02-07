@@ -2,37 +2,20 @@ package com.example.we2026_5.ui.detail
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,30 +24,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import coil.compose.AsyncImage
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
-import com.example.we2026_5.CustomerStatus
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
-import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.TerminAusKundeUtils
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.DialogBaseHelper
 import com.example.we2026_5.util.intervallTageOrDefault
 import com.example.we2026_5.util.tageAzuLOrDefault
-import com.example.we2026_5.ui.detail.CustomerDetailIntervallRow
 import com.example.we2026_5.ui.detail.CustomerDetailRegelNameRow
 import com.example.we2026_5.ui.detail.CustomerDetailStatusSection
 import com.example.we2026_5.ui.common.DetailUiConstants
@@ -162,91 +136,25 @@ fun CustomerDetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth(1f)
-                    ) {
-                        Text(
-                            text = typeLetter,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier
-                                .background(typeColor, RoundedCornerShape(8.dp))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                        Spacer(Modifier.size(12.dp))
-                        Text(
-                            text = customer?.displayName ?: stringResource(R.string.label_customer_name),
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.content_desc_back),
-                            tint = Color.White
-                        )
-                    }
-                },
-                actions = {
-                    if (isInEditMode) {
-                        Box {
-                            IconButton(onClick = { overflowMenuExpanded = true }) {
-                                Icon(
-                                    Icons.Filled.MoreVert,
-                                    contentDescription = stringResource(R.string.content_desc_more_options),
-                                    tint = Color.White
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = overflowMenuExpanded,
-                                onDismissRequest = { overflowMenuExpanded = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.label_delete), color = statusOverdue) },
-                                    onClick = {
-                                        overflowMenuExpanded = false
-                                        onDelete()
-                                    }
-                                )
-                            }
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue)
+            CustomerDetailTopBar(
+                typeLetter = typeLetter,
+                typeColor = typeColor,
+                displayName = customer?.displayName ?: stringResource(R.string.label_customer_name),
+                isInEditMode = isInEditMode,
+                statusOverdue = statusOverdue,
+                onBack = onBack,
+                onDelete = onDelete,
+                overflowMenuExpanded = overflowMenuExpanded,
+                onOverflowMenuDismiss = { overflowMenuExpanded = false },
+                onOverflowMenuExpand = { overflowMenuExpanded = true }
             )
         }
     ) { paddingValues ->
+        val contentModifier = Modifier.fillMaxWidth().padding(paddingValues).padding(32.dp)
         if (isLoading) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(paddingValues)
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(stringResource(R.string.stat_loading), color = textSecondary)
-            }
+            CustomerDetailLoadingView(modifier = contentModifier, textSecondary = textSecondary)
         } else if (customer == null) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(paddingValues)
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(stringResource(R.string.error_customer_not_found), color = textSecondary)
-            }
+            CustomerDetailNotFoundView(modifier = contentModifier, textSecondary = textSecondary)
         } else {
             Column(
                 modifier = Modifier
@@ -256,30 +164,12 @@ fun CustomerDetailScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 if (!isInEditMode) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(DetailUiConstants.FieldSpacing)
-                    ) {
-                        androidx.compose.material3.Button(
-                            onClick = { customer.id?.let { onUrlaubStartActivity(it) } },
-                            modifier = Modifier.weight(1f),
-                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = colorResource(R.color.button_urlaub))
-                        ) {
-                            Text(stringResource(R.string.label_urlaub))
-                        }
-                        androidx.compose.material3.Button(
-                            onClick = onEdit,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(stringResource(R.string.label_edit))
-                        }
-                    }
-                    if (isUploading) {
-                        Spacer(Modifier.height(8.dp))
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                        Text(stringResource(R.string.label_foto_uploading), fontSize = 12.sp, color = primaryBlue)
-                    }
-                    Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+                    CustomerDetailActionsRow(
+                        primaryBlue = primaryBlue,
+                        onUrlaub = { customer.id?.let { onUrlaubStartActivity(it) } },
+                        onEdit = onEdit,
+                        isUploading = isUploading
+                    )
                 CustomerDetailStatusSection(
                     customer = customer,
                     onPauseCustomer = onPauseCustomer,
@@ -289,52 +179,18 @@ fun CustomerDetailScreen(
                 )
                 Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
                 val nextTermin = com.example.we2026_5.util.TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
-                Text(stringResource(R.string.label_next_termin), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                Text(
-                    text = if (nextTermin > 0) DateFormatter.formatDateWithWeekday(nextTermin) else stringResource(R.string.label_not_set),
-                    modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp),
-                    color = if (nextTermin > 0) textPrimary else textSecondary,
-                    fontSize = DetailUiConstants.BodySp
+                CustomerDetailNaechsterTermin(
+                    nextTerminMillis = nextTermin,
+                    textPrimary = textPrimary,
+                    textSecondary = textSecondary
                 )
-                Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(DetailUiConstants.FieldSpacing)
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(stringResource(R.string.label_customer_type), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                            Text(text = typeLabel, modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = DetailUiConstants.BodySp)
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(stringResource(R.string.label_kunden_typ), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                            Text(
-                                text = when (customer.kundenTyp) {
-                                    com.example.we2026_5.KundenTyp.REGELMAESSIG -> stringResource(R.string.label_kunden_typ_regelmaessig)
-                                    com.example.we2026_5.KundenTyp.UNREGELMAESSIG -> stringResource(R.string.label_kunden_typ_unregelmaessig)
-                                    com.example.we2026_5.KundenTyp.AUF_ABRUF -> stringResource(R.string.label_kunden_typ_auf_abruf)
-                                },
-                                modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp),
-                                color = textPrimary,
-                                fontSize = DetailUiConstants.BodySp
-                            )
-                        }
-                        if (customer.kundenTyp != com.example.we2026_5.KundenTyp.AUF_ABRUF && (customer.effectiveAbholungWochentage.isNotEmpty() || customer.effectiveAuslieferungWochentage.isNotEmpty())) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(stringResource(R.string.label_abholung_auslieferung_tag), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                                val wochen = listOf("Mo","Di","Mi","Do","Fr","Sa","So")
-                                val a = customer.effectiveAbholungWochentage.map { wochen[it] }.joinToString(", ").takeIf { it.isNotEmpty() }?.let { "$it A" } ?: ""
-                                val l = customer.effectiveAuslieferungWochentage.map { wochen[it] }.joinToString(", ").takeIf { it.isNotEmpty() }?.let { "$it L" } ?: ""
-                                Text(text = listOf(a, l).filter { it.isNotEmpty() }.joinToString(" / "), modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = DetailUiConstants.BodySp)
-                            }
-                        }
-                        if (customer.kundenTyp == com.example.we2026_5.KundenTyp.AUF_ABRUF) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(stringResource(R.string.label_abholung_auslieferung_tag), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                                Text(text = "–", modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp), color = textPrimary, fontSize = DetailUiConstants.BodySp)
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                CustomerDetailKundenTypSection(
+                    typeLabel = typeLabel,
+                    kundenTyp = customer.kundenTyp,
+                    effectiveAbholungWochentage = customer.effectiveAbholungWochentage,
+                    effectiveAuslieferungWochentage = customer.effectiveAuslieferungWochentage,
+                    textPrimary = textPrimary
+                )
                     Text(stringResource(R.string.label_address_label), fontSize = DetailUiConstants.FieldLabelSp, fontWeight = FontWeight.Bold, color = textPrimary)
                     Text(
                         text = customer.adresse.ifEmpty { stringResource(R.string.label_not_set) },
@@ -489,85 +345,27 @@ fun CustomerDetailScreen(
                 }
 
                 Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
-                Text(stringResource(R.string.label_termin_regel), fontSize = DetailUiConstants.SectionTitleSp, fontWeight = FontWeight.Bold, color = primaryBlue)
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = surfaceWhite),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(
-                            start = DetailUiConstants.IntervalCardPaddingH,
-                            top = DetailUiConstants.IntervalCardPaddingTop,
-                            end = DetailUiConstants.IntervalCardPaddingH,
-                            bottom = DetailUiConstants.IntervalCardPaddingBottom
-                        )
-                    ) {
-                        val intervalleToShow = if (isInEditMode) editIntervalle else customer.intervalle
-                        // L-Termin und Intervall existieren nur oben im Stammdaten-Formular; hier keine Duplikate.
-                        // In beiden Modi nur Termin-Regel-Namen anzeigen (keine 365 Intervall-Zeilen bei täglich)
-                        val distinctRegelIds = intervalleToShow.map { it.terminRegelId }.distinct()
-                        distinctRegelIds.forEach { regelId ->
-                            CustomerDetailRegelNameRow(
-                                regelName = if (regelId.isBlank()) stringResource(R.string.label_not_set)
-                                    else regelNameByRegelId[regelId] ?: stringResource(R.string.label_not_set),
-                                isClickable = regelId.isNotBlank(),
-                                primaryBlue = primaryBlue,
-                                textSecondary = textSecondary,
-                                onClick = { if (regelId.isNotBlank()) onRegelClick(regelId) },
-                                showDeleteButton = isInEditMode && regelId.isNotBlank(),
-                                onDeleteClick = if (isInEditMode && regelId.isNotBlank()) { { onRemoveRegel?.invoke(regelId) } } else null
-                            )
-                            Spacer(Modifier.height(DetailUiConstants.IntervalRowSpacing))
-                        }
-                        Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                        if (isInEditMode && customer?.kundenTyp == KundenTyp.REGELMAESSIG) {
-                            androidx.compose.material3.OutlinedButton(onClick = onResetToAutomatic, modifier = Modifier.fillMaxWidth()) {
-                                Text(stringResource(R.string.btn_reset_to_automatic))
-                            }
-                            Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                        }
-                        if (!isInEditMode) {
-                            androidx.compose.material3.Button(onClick = onTerminAnlegen, modifier = Modifier.fillMaxWidth()) {
-                                Text(stringResource(R.string.label_termine_anlegen))
-                            }
-                        }
-                    }
-                }
-
-                if (!isInEditMode && customer.fotoUrls.isNotEmpty()) {
-                    Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
-                    Text(stringResource(R.string.label_fotos), fontSize = DetailUiConstants.SectionTitleSp, fontWeight = FontWeight.Bold, color = textPrimary)
-                    Spacer(Modifier.height(8.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(customer.fotoUrls, key = { it }) { url ->
-                            Card(
-                                modifier = Modifier
-                                    .size(100.dp)
-                                    .clickable(onClick = { onPhotoClick(url) }),
-                                shape = RoundedCornerShape(8.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                            ) {
-                                AsyncImage(
-                                    model = url,
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop,
-                                    placeholder = painterResource(R.drawable.ic_camera),
-                                    error = painterResource(R.drawable.ic_camera)
-                                )
-                            }
-                        }
-                    }
-                }
-                if (isInEditMode) {
-                    Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
-                    androidx.compose.material3.OutlinedButton(onClick = onTakePhoto, modifier = Modifier.fillMaxWidth()) {
-                        Icon(painter = painterResource(R.drawable.ic_camera), contentDescription = null, Modifier.size(20.dp))
-                        Spacer(Modifier.size(8.dp))
-                        Text(stringResource(R.string.label_add_photo))
-                    }
-                }
+                val intervalleToShow = if (isInEditMode) editIntervalle else customer.intervalle
+                CustomerDetailTerminRegelCard(
+                    intervalleToShow = intervalleToShow,
+                    isInEditMode = isInEditMode,
+                    kundenTyp = customer.kundenTyp,
+                    regelNameByRegelId = regelNameByRegelId,
+                    primaryBlue = primaryBlue,
+                    textSecondary = textSecondary,
+                    surfaceWhite = surfaceWhite,
+                    onRegelClick = onRegelClick,
+                    onRemoveRegel = onRemoveRegel,
+                    onResetToAutomatic = onResetToAutomatic,
+                    onTerminAnlegen = onTerminAnlegen
+                )
+                CustomerDetailFotosSection(
+                    fotoUrls = customer.fotoUrls,
+                    isInEditMode = isInEditMode,
+                    textPrimary = textPrimary,
+                    onPhotoClick = onPhotoClick,
+                    onTakePhoto = onTakePhoto
+                )
             }
         }
     }
