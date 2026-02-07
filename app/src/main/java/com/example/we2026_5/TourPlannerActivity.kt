@@ -215,10 +215,17 @@ class TourPlannerActivity : AppCompatActivity() {
                         startActivity(Intent(this@TourPlannerActivity, CustomerDetailActivity::class.java).apply { putExtra("CUSTOMER_ID", customerId) })
                     }
                 },
-                onMoveTourOrder = { fromIndex, toIndex ->
+                onReorder = { fromListIndex, toListIndex ->
                     val timestamp = viewModel.getSelectedTimestamp() ?: return@TourPlannerScreen
-                    val ids = tourItems.filterIsInstance<ListItem.CustomerItem>().map { it.customer.id }
-                    viewModel.moveTourOrder(timestamp, fromIndex, toIndex, ids)
+                    if (tourItems.getOrNull(fromListIndex) is ListItem.CustomerItem &&
+                        tourItems.getOrNull(toListIndex) is ListItem.CustomerItem
+                    ) {
+                        val newList = tourItems.toMutableList().apply {
+                            add(toListIndex, removeAt(fromListIndex))
+                        }
+                        val newIds = newList.filterIsInstance<ListItem.CustomerItem>().map { it.customer.id }
+                        viewModel.setTourOrder(timestamp, newIds)
+                    }
                 }
             )
         }

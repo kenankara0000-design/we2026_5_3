@@ -70,9 +70,6 @@ fun WaschenErfassungErfassenContent(
                 fontWeight = FontWeight.Bold,
                 color = textPrimary
             )
-            IconButton(onClick = onBackFromErfassen) {
-                Text("↩", fontSize = 18.sp, color = primaryBlue)
-            }
         }
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(

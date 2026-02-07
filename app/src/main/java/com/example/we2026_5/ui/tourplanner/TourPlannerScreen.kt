@@ -1,24 +1,43 @@
 package com.example.we2026_5.ui.tourplanner
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import com.example.we2026_5.tourplanner.ErledigungSheetState
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
+import kotlin.math.abs
+import androidx.compose.ui.res.stringResource
 import androidx.activity.compose.BackHandler
 import com.example.we2026_5.Customer
 import com.example.we2026_5.ListItem
@@ -32,6 +51,47 @@ import com.example.we2026_5.ui.tourplanner.ListeHeaderRow
 import com.example.we2026_5.ui.tourplanner.SectionHeaderRow
 import com.example.we2026_5.ui.tourplanner.TourCustomerRow
 import com.example.we2026_5.ui.tourplanner.TourListeErledigtRow
+
+@Composable
+private fun rememberSwipeBetweenDaysModifier(
+    onPrevDay: () -> Unit,
+    onNextDay: () -> Unit
+): Modifier {
+    val density = LocalDensity.current
+    val commitThresholdPx = remember(density) { with(density) { 40.dp.toPx() } }
+    val triggerThresholdPx = remember(density) { with(density) { 80.dp.toPx() } }
+    var totalX by remember { mutableStateOf(0f) }
+    var totalY by remember { mutableStateOf(0f) }
+    var committedHorizontal by remember { mutableStateOf(false) }
+    return Modifier.pointerInput(onPrevDay, onNextDay) {
+        detectDragGestures(
+            onDragStart = {
+                totalX = 0f
+                totalY = 0f
+                committedHorizontal = false
+            },
+            onDrag = { change, dragAmount ->
+                totalX += dragAmount.x
+                totalY += dragAmount.y
+                if (!committedHorizontal) {
+                    val ax = abs(totalX)
+                    val ay = abs(totalY)
+                    if (ax > commitThresholdPx || ay > commitThresholdPx) {
+                        committedHorizontal = ax > ay * 1.5f
+                        if (committedHorizontal) change.consume()
+                    }
+                } else {
+                    change.consume()
+                }
+            },
+            onDragEnd = {
+                if (committedHorizontal && abs(totalX) > triggerThresholdPx) {
+                    if (totalX > 0) onPrevDay() else onNextDay()
+                }
+            }
+        )
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,7 +136,7 @@ fun TourPlannerScreen(
     erledigtSheetContent: ErledigtSheetContent? = null,
     onErledigtClick: () -> Unit = {},
     onDismissErledigtSheet: () -> Unit = {},
-    onMoveTourOrder: ((fromIndex: Int, toIndex: Int) -> Unit)? = null
+    onReorder: ((fromListIndex: Int, toListIndex: Int) -> Unit)? = null
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -151,18 +211,35 @@ fun TourPlannerScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            val swipeModifier = rememberSwipeBetweenDaysModifier(onPrevDay, onNextDay)
             when {
-                isLoading -> TourPlannerLoadingView(primaryBlue = primaryBlue)
-                errorMessage != null -> TourPlannerErrorView(
-                    errorMessage = errorMessage,
-                    textSecondary = textSecondary,
-                    onRetry = onRetry
-                )
-                tourItems.isEmpty() -> TourPlannerEmptyView(textSecondary = textSecondary)
+                isLoading -> Box(Modifier.fillMaxSize().then(swipeModifier)) {
+                    TourPlannerLoadingView(primaryBlue = primaryBlue)
+                }
+                errorMessage != null -> Box(Modifier.fillMaxSize().then(swipeModifier)) {
+                    TourPlannerErrorView(
+                        errorMessage = errorMessage,
+                        textSecondary = textSecondary,
+                        onRetry = onRetry
+                    )
+                }
+                tourItems.isEmpty() -> Box(Modifier.fillMaxSize().then(swipeModifier)) {
+                    TourPlannerEmptyView(textSecondary = textSecondary)
+                }
                 else -> {
-                    val tourCustomerCount = tourItems.count { it is ListItem.CustomerItem }
+                    val lazyListState = rememberLazyListState()
+                    val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
+                        if (tourItems.getOrNull(from.index) is ListItem.CustomerItem &&
+                            tourItems.getOrNull(to.index) is ListItem.CustomerItem
+                        ) {
+                            onReorder?.invoke(from.index, to.index)
+                        }
+                    }
+                    val hapticFeedback = LocalHapticFeedback.current
                     LazyColumn(
+                        state = lazyListState,
                         modifier = Modifier
+                            .then(swipeModifier)
                             .fillMaxSize()
                             .background(colorResource(R.color.background_light))
                             .padding(16.dp),
@@ -245,24 +322,37 @@ fun TourPlannerScreen(
                                         verschobenVonInfo = item.verschobenVonInfo?.takeIf { it.isNotEmpty() },
                                         ueberfaelligInfo = ueberfaelligInfo
                                     )
-                                    val customerIndex = tourItems.take(index).count { it is ListItem.CustomerItem }
-                                    val showReorder = tourCustomerCount >= 2 && onMoveTourOrder != null
-                                    TourCustomerRow(
-                                        customer = item.customer,
-                                        isOverdue = item.isOverdue,
-                                        isInUrlaub = isInUrlaub,
-                                        isVerschobenAmFaelligkeitstag = item.isVerschobenAmFaelligkeitstag,
-                                        verschobenInfo = item.verschobenInfo,
-                                        verschobenVonInfo = item.verschobenVonInfo,
-                                        statusBadgeText = getStatusBadgeText(item.customer),
-                                        viewDateMillis = viewDate,
-                                        onCustomerClick = { onCustomerClick(payload) },
-                                        onAktionenClick = { onAktionenClick(item.customer) },
-                                        onMoveUp = if (showReorder) {{ onMoveTourOrder?.invoke(customerIndex, customerIndex - 1) }} else null,
-                                        onMoveDown = if (showReorder) {{ onMoveTourOrder?.invoke(customerIndex, customerIndex + 1) }} else null,
-                                        canMoveUp = customerIndex > 0,
-                                        canMoveDown = customerIndex < tourCustomerCount - 1
-                                    )
+                                    val showDragHandle = tourItems.count { it is ListItem.CustomerItem } >= 2 && onReorder != null
+                                    ReorderableItem(reorderableState, key = item.customer.id) { isDragging ->
+                                        TourCustomerRow(
+                                            customer = item.customer,
+                                            isOverdue = item.isOverdue,
+                                            isInUrlaub = isInUrlaub,
+                                            isVerschobenAmFaelligkeitstag = item.isVerschobenAmFaelligkeitstag,
+                                            verschobenInfo = item.verschobenInfo,
+                                            verschobenVonInfo = item.verschobenVonInfo,
+                                            statusBadgeText = getStatusBadgeText(item.customer),
+                                            viewDateMillis = viewDate,
+                                            onCustomerClick = { onCustomerClick(payload) },
+                                            onAktionenClick = { onAktionenClick(item.customer) },
+                                            dragHandleModifier = if (showDragHandle) with(this) {
+                                                Modifier.draggableHandle(
+                                                    onDragStarted = { hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress) },
+                                                    onDragStopped = { hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress) }
+                                                )
+                                            } else null,
+                                            dragHandleContent = if (showDragHandle) { {
+                                                IconButton(onClick = {}) {
+                                                    Icon(
+                                                        Icons.Filled.Menu,
+                                                        contentDescription = stringResource(R.string.tour_reorder_drag),
+                                                        modifier = Modifier.size(24.dp),
+                                                        tint = colorResource(R.color.primary_blue)
+                                                    )
+                                                }
+                                            } } else null
+                                        )
+                                    }
                                 }
                             }
                         }

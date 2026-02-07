@@ -124,7 +124,7 @@ class SevDeskImportViewModel(
         }
     }
 
-    /** Nur zum Testen: Ruft Part (embed=partUnitPrices) und Contact (embed) ab und zeigt Roh-JSON. */
+    /** Nur zum Testen: Part, Contact, PartUnitPrice (Kundenpreise) – Roh-JSON. */
     fun runApiTest() {
         val token = _state.value.token.trim()
         if (token.isEmpty()) {
@@ -135,7 +135,25 @@ class SevDeskImportViewModel(
             _state.value = _state.value.copy(isRunningApiTest = true, testResult = null, error = null)
             val out = withContext(Dispatchers.IO) {
                 buildString {
-                    append("=== GET /Part?limit=2&embed=unity,partUnitPrices ===\n\n")
+                    append("=== GET /PartUnitPrice?limit=25 (Kundenpreise, alle) ===\n\n")
+                    try {
+                        append(SevDeskApi.testPartUnitPrice(token))
+                    } catch (e: Exception) {
+                        append("Fehler: ${e.message}")
+                    }
+                    append("\n\n=== GET /PartUnitPrice für einen Kunden (erster Kontakt) ===\n\n")
+                    try {
+                        val contactId = SevDeskApi.getFirstCustomerIdForTest(token)
+                        if (contactId != null) {
+                            append("Contact-ID: $contactId\n\n")
+                            append(SevDeskApi.testPartUnitPriceForContact(token, contactId))
+                        } else {
+                            append("Kein Kunde gefunden oder Fehler beim Lesen der Contact-ID.")
+                        }
+                    } catch (e: Exception) {
+                        append("Fehler: ${e.message}")
+                    }
+                    append("\n\n=== GET /Part?limit=2&embed=unity,partUnitPrices ===\n\n")
                     try {
                         append(SevDeskApi.testPartsWithEmbed(token))
                     } catch (e: Exception) {
@@ -155,5 +173,25 @@ class SevDeskImportViewModel(
 
     fun clearTestResult() {
         _state.value = _state.value.copy(testResult = null)
+    }
+
+    /** Discovery: Welche Endpunkte/Embeds liefern „Artikel pro Kunde“? Probiert alle sinnvollen Varianten. */
+    fun runDiscoveryTest() {
+        val token = _state.value.token.trim()
+        if (token.isEmpty()) {
+            _state.value = _state.value.copy(error = "Bitte API-Token eingeben.")
+            return
+        }
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isRunningApiTest = true, testResult = null, error = null)
+            val out = withContext(Dispatchers.IO) {
+                try {
+                    SevDeskApi.runDiscoveryTest(token)
+                } catch (e: Exception) {
+                    "Fehler: ${e.message}\n\n${e.stackTraceToString().take(500)}"
+                }
+            }
+            _state.value = _state.value.copy(isRunningApiTest = false, testResult = out)
+        }
     }
 }

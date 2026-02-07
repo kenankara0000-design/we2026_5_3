@@ -77,15 +77,7 @@ fun CustomerDetailTopBar(
                 )
             }
         },
-        navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.content_desc_back),
-                    tint = Color.White
-                )
-            }
-        },
+        navigationIcon = { },
         actions = {
             if (isInEditMode && onSave != null) {
                 TextButton(onClick = onSave) {

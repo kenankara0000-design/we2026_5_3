@@ -96,6 +96,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.compose.runtime:runtime-livedata")
     implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("sh.calvin.reorderable:reorderable:3.0.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 

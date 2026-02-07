@@ -69,6 +69,18 @@ Das Manifest ergänzt sie um Ziele und Scope; es ersetzt sie nicht.
 - **Nur Lesen:** Die App nutzt die SevDesk-API ausschließlich zum **Lesen** (GET). Es werden keine Daten in SevDesk erstellt, geändert oder gelöscht. Import = Kontakte/Artikel in die App übernehmen.
 - **SevDesk Import:** Erreichbar über **Einstellungen** (Hauptbildschirm → Einstellungen → SevDesk Import). SevDeskImportActivity mit SevDeskImportScreen.
 
+### SevDesk Kundenpreise (Artikel ↔ Kunde)
+
+In SevDesk gibt es unter **Kontakte → Kunde → Tab „Kunden Preise“** die Möglichkeit, pro Kunde kundenspezifische Preise für Artikel aus der allgemeinen Artikelliste zu hinterlegen. Andere Kunden bekommen die Standardpreise aus der Artikelliste.
+
+- **API-Modell:** **PartContactPrice** (nicht ContactPartPrice, PartUnitPrice oder PartPrice – diese liefern 400 „Model not found“).
+- **Endpunkte (my.sevdesk.de/api/v1):**
+  - **GET /PartContactPrice?limit=100&offset=0** – Liste aller Kundenpreise (Contact + Part + Preis).
+  - Optional Filter nach Kunde: `contact[id]=<Contact-ID>&contact[objectName]=Contact` (falls von der API unterstützt; sonst clientseitig filtern).
+  - POST /PartContactPrice (anlegen), PUT /PartContactPrice/{id} (ändern), DELETE /PartContactPrice/{id} (löschen) – für spätere Nutzung, falls Kundenpreise in der App genutzt werden sollen.
+- **Modellfelder:** contact, part, type, priceNet, priceGross (und _create, _update, _sev_client).
+- Quelle: Offizielle API-Doku (api.sevdesk.de), PHP-Client-Docs (Pommespanzer/sevdesk-php-client: PartContactPriceApi, ModelPartContactPrice). Stand: Feb 2026.
+
 ---
 
 ## 8. Aktivitäten und Screens (Stand Feb 2026)

@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
@@ -55,15 +57,7 @@ fun TourPlannerTopBar(
     Column(modifier = Modifier.background(primaryBlue)) {
         TopAppBar(
             title = { },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_arrow_back),
-                        contentDescription = stringResource(R.string.content_desc_back),
-                        tint = Color.White
-                    )
-                }
-            },
+            navigationIcon = { },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue, navigationIconContentColor = Color.White),
             actions = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -130,13 +124,17 @@ fun TourPlannerTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            val headerButtonHeight = 56.dp
+            val headerButtonHeight = 40.dp
+            val headerButtonShape = RoundedCornerShape(8.dp)
+            val headerContentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)
             Button(
                 onClick = onMap,
                 modifier = Modifier.weight(1f).height(headerButtonHeight),
+                shape = headerButtonShape,
+                contentPadding = headerContentPadding,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (pressedHeaderButton == "Karte") statusWarning else buttonBlue
                 )
@@ -144,15 +142,17 @@ fun TourPlannerTopBar(
                 Icon(
                     painter = painterResource(R.drawable.ic_map),
                     contentDescription = stringResource(R.string.content_desc_map),
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(18.dp),
                     tint = Color.White
                 )
-                Spacer(Modifier.size(8.dp))
-                Text(stringResource(R.string.tour_btn_map), color = Color.White)
+                Spacer(Modifier.size(6.dp))
+                Text(stringResource(R.string.tour_btn_map), color = Color.White, fontSize = 14.sp)
             }
             Button(
                 onClick = onToday,
                 modifier = Modifier.weight(1f).height(headerButtonHeight),
+                shape = headerButtonShape,
+                contentPadding = headerContentPadding,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isToday) statusWarning else buttonBlue
                 )
@@ -160,20 +160,23 @@ fun TourPlannerTopBar(
                 Icon(
                     painter = painterResource(R.drawable.ic_calendar_today),
                     contentDescription = stringResource(R.string.content_desc_today),
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(18.dp),
                     tint = Color.White
                 )
-                Spacer(Modifier.size(8.dp))
-                Text(stringResource(R.string.tour_btn_today), color = Color.White)
+                Spacer(Modifier.size(6.dp))
+                Text(stringResource(R.string.tour_btn_today), color = Color.White, fontSize = 14.sp)
             }
             Button(
                 onClick = onErledigtClick,
                 modifier = Modifier.weight(1f).height(headerButtonHeight),
+                shape = headerButtonShape,
+                contentPadding = headerContentPadding,
                 colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.section_done_bg))
             ) {
                 Text(
                     stringResource(R.string.tour_btn_erledigte, erledigtCount),
-                    color = Color.White
+                    color = Color.White,
+                    fontSize = 14.sp
                 )
             }
         }

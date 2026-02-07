@@ -30,15 +30,7 @@ fun WaschenErfassungTopBar(
                 fontWeight = FontWeight.Bold
             )
         },
-        navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.content_desc_back),
-                    tint = Color.White
-                )
-            }
-        },
+        navigationIcon = { },
         colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue)
     )
 }

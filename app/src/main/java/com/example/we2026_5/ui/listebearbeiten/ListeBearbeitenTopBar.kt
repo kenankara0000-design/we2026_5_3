@@ -45,15 +45,7 @@ fun ListeBearbeitenTopBar(
                 fontWeight = FontWeight.Bold
             )
         },
-        navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.content_desc_back),
-                    tint = Color.White
-                )
-            }
-        },
+        navigationIcon = { },
         actions = {
             IconButton(onClick = onRefresh) {
                 Icon(

@@ -76,15 +76,7 @@ class AusnahmeTerminActivity : AppCompatActivity() {
                                     fontWeight = FontWeight.Bold
                                 )
                             },
-                            navigationIcon = {
-                                IconButton(onClick = { finish() }) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = null,
-                                        tint = Color.White
-                                    )
-                                }
-                            },
+                            navigationIcon = { },
                             colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue)
                         )
                     }

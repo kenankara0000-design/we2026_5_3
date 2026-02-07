@@ -41,11 +41,7 @@ fun ErfassungMenuScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.erfassung_menu_title), fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_desc_back), tint = Color.White)
-                    }
-                },
+                navigationIcon = { },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue, titleContentColor = Color.White)
             )
         }

@@ -90,11 +90,7 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                 topBar = {
                     TopAppBar(
                         title = { Text(stringResource(R.string.dialog_termin_anlegen_title)) },
-                        navigationIcon = {
-                            IconButton(onClick = { finish() }) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                            }
-                        }
+                        navigationIcon = { }
                     )
                 }
             ) { padding ->

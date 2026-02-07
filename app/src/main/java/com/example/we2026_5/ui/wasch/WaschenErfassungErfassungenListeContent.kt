@@ -62,9 +62,6 @@ fun WaschenErfassungErfassungenListeContent(
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                 color = textPrimary
             )
-            IconButton(onClick = onBackToKundeSuchen) {
-                Text("↩", fontSize = 18.sp, color = primaryBlue)
-            }
         }
         Spacer(Modifier.height(8.dp))
         Text(

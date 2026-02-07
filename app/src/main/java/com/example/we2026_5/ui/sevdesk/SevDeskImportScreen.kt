@@ -16,6 +16,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -48,7 +50,9 @@ fun SevDeskImportScreen(
     onImportArticles: () -> Unit,
     onClearMessage: () -> Unit,
     onRunApiTest: () -> Unit,
-    onClearTestResult: () -> Unit
+    onDiscoveryTest: () -> Unit,
+    onClearTestResult: () -> Unit,
+    onExportTestResult: (String) -> Unit
 ) {
     val context = LocalContext.current
     val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
@@ -59,11 +63,7 @@ fun SevDeskImportScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.sevdesk_import_title), color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_desc_back), tint = Color.White)
-                    }
-                },
+                navigationIcon = { },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue)
             )
         }
@@ -94,8 +94,19 @@ fun SevDeskImportScreen(
                     Text(stringResource(R.string.sevdesk_save_token))
                 }
             }
+            Spacer(Modifier.height(16.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = colorResource(R.color.surface_light)),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Column(Modifier.padding(12.dp)) {
+                    Text(stringResource(R.string.sevdesk_api_overview_title), fontWeight = FontWeight.SemiBold, color = textSecondary, fontSize = 14.sp)
+                    Spacer(Modifier.height(6.dp))
+                    Text(stringResource(R.string.sevdesk_api_overview), color = textSecondary, fontSize = 12.sp)
+                }
+            }
             Spacer(Modifier.height(24.dp))
-
             Text(stringResource(R.string.sevdesk_before_reimport), fontWeight = FontWeight.SemiBold, color = textSecondary, fontSize = 14.sp)
             Spacer(Modifier.height(24.dp))
 
@@ -129,6 +140,15 @@ fun SevDeskImportScreen(
             Text(stringResource(R.string.sevdesk_test_section), fontWeight = FontWeight.SemiBold, color = textSecondary, fontSize = 14.sp)
             Spacer(Modifier.height(8.dp))
             OutlinedButton(
+                onClick = onDiscoveryTest,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isBusy,
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(if (state.isRunningApiTest) "…" else stringResource(R.string.sevdesk_discovery_btn))
+            }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(
                 onClick = onRunApiTest,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isBusy,
@@ -138,8 +158,13 @@ fun SevDeskImportScreen(
             }
             state.testResult?.let { result ->
                 Spacer(Modifier.height(8.dp))
-                OutlinedButton(onClick = onClearTestResult, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) {
-                    Text(stringResource(R.string.sevdesk_test_clear))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { onExportTestResult(result) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp)) {
+                        Text(stringResource(R.string.sevdesk_test_export))
+                    }
+                    OutlinedButton(onClick = onClearTestResult, modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp)) {
+                        Text(stringResource(R.string.sevdesk_test_clear))
+                    }
                 }
                 Spacer(Modifier.height(8.dp))
                 Column(

@@ -287,6 +287,7 @@
     <string name="content_desc_map">Kartenansicht</string>
     <string name="tour_reorder_up">Reihenfolge: nach oben</string>
     <string name="tour_reorder_down">Reihenfolge: nach unten</string>
+    <string name="tour_reorder_drag">Reihenfolge per Drag ändern</string>
     <string name="content_desc_today">Heute</string>
     <string name="content_desc_multiselect">Mehrfachauswahl</string>
     <string name="content_desc_export">Exportieren</string>
@@ -628,6 +629,8 @@
     <string name="label_customer_alias">Alias (Anzeigename in der App)</string>
 
     <!-- SevDesk Import -->
+    <string name="sevdesk_api_overview_title">SevDesk API – alle Möglichkeiten (Ja / Nein)</string>
+    <string name="sevdesk_api_overview">Basierend auf der offiziellen SevDesk OpenAPI v2.0:\n\n• Kontakte (Contact, Adressen, Kommunikation, Kundennummer, nächste Kundennummer): Ja\n• Artikel (Part, Preis, Einheit, Lagerbestand, Bestand abfragen): Ja\n• Kundenpreise / Artikel pro Kunde (PartUnitPrice o.ä.): Nein (nicht in der API)\n• Rechnungen (Liste, Einzelne, Positionen, PDF, E-Mail, buchen, Versand, Storno): Ja\n• Aufträge, Angebote, Lieferscheine (Order, Positionen, Rabatte, PDF, Lieferschein/AB aus Order): Ja\n• Gutschriften (CreditNote, Positionen, PDF, aus Rechnung erzeugen): Ja\n• Belege (Voucher, Positionen, buchen, Upload, Enthaften): Ja\n• Zahlungskonten (CheckAccount, Kontostand, File-Import-/Verrechnungskonto anlegen): Ja\n• Buchungen (CheckAccountTransaction, Enthaften): Ja\n• Private Buchungsregeln (PrivateTransactionRule): Ja\n• Buchungskontakte (AccountingContact, Debitor/Kreditor): Ja\n• Export (DATEV CSV/XML-Job, Rechnungen, Gutschriften, Belege, Kontaktliste, Transaktionen, Job-Fortschritt): Ja\n• Berichte (Rechnungs-, Auftrags-, Kontakt-, Belegliste als PDF): Ja\n• Kontaktfelder (ContactCustomField, Placeholder): Ja\n• Tags, TagRelation: Ja\n• Layout (DocServer Vorlagen/Briefpapier, Layout von Rechnung/Auftrag/Gutschrift ändern): Ja\n• Buchungshinweise (ReceiptGuidance), Tools (Buchhaltungsversion prüfen): Ja</string>
     <string name="sevdesk_import_title">SevDesk Import</string>
     <string name="sevdesk_token_hint">API-Token (SevDesk: Erweiterungen → API)</string>
     <string name="sevdesk_save_token">Token speichern</string>
@@ -639,8 +642,11 @@
     <string name="sevdesk_delete_articles">SevDesk-Artikel löschen</string>
     <string name="sevdesk_delete_articles_confirm">Nur hier in der App werden die importierten Artikel gelöscht. In SevDesk passiert nichts – die App hat nur Lesezugriff. Unwiderruflich löschen?</string>
     <string name="sevdesk_delete_confirm_ok">Löschen</string>
-    <string name="sevdesk_test_section">Nur zum Testen: API kundenspezifische Preise/Artikel</string>
-    <string name="sevdesk_test_btn">API-Test: Part + Contact (Roh-JSON)</string>
+    <string name="sevdesk_test_section">Nur zum Testen: API kundenspezifische Preise / Artikel ↔ Kunde</string>
+    <string name="sevdesk_discovery_btn">Discovery: Artikel ↔ Kunde (alle Endpunkte/Embeds testen)</string>
+    <string name="sevdesk_test_btn">API-Test: Kundenpreise (PartUnitPrice) + Part + Contact</string>
+    <string name="sevdesk_test_export">Exportieren / Teilen</string>
+    <string name="sevdesk_export_hint">Datei erstellt – wähle zum Teilen z. B. E-Mail oder Speichern.</string>
     <string name="sevdesk_test_clear">Testergebnis ausblenden</string>
     <string name="wasch_btn_sevdesk">SevDesk Import</string>
     <string name="wasch_erfassung_kunde">Kunde</string>

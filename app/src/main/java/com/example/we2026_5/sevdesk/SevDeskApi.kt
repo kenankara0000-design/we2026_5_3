@@ -213,6 +213,12 @@ object SevDeskApi {
      * Nur zum Testen, ob z. B. embed=partUnitPrices kundenspezifische Preise liefert.
      */
     fun getRawForTest(token: String, path: String, query: String): String {
+        val (_, body) = getRawForTestWithCode(token, path, query)
+        return body
+    }
+
+    /** GET ausführen und (ResponseCode, Body-String) zurückgeben. Body bei Fehler: "HTTP code" + Fehler-JSON (gekürzt). */
+    fun getRawForTestWithCode(token: String, path: String, query: String): Pair<Int, String> {
         val url = urlWithToken(path, query, token)
         val conn = url.openConnection() as HttpURLConnection
         conn.requestMethod = "GET"
@@ -227,8 +233,9 @@ object SevDeskApi {
             val err = conn.errorStream?.use { Scanner(it).useDelimiter("\\A").next() } ?: ""
             "HTTP $code\n$err"
         }
-        return if (body.length <= TEST_RAW_MAX_LEN) body
+        val truncated = if (body.length <= TEST_RAW_MAX_LEN) body
         else body.take(TEST_RAW_MAX_LEN) + "\n\n… (gekürzt, ${body.length} Zeichen gesamt)"
+        return code to truncated
     }
 
     /**
@@ -247,6 +254,144 @@ object SevDeskApi {
     fun testContactWithEmbed(token: String): String {
         val filter = "category[id]=$CATEGORY_ID_KUNDE&category[objectName]=Category&limit=1&embed=addresses"
         return getRawForTest(token, "/Contact", filter)
+    }
+
+    /**
+     * Test 3: GET /PartUnitPrice – in SevDesk UI „Kundenpreis“; Verknüpfung Part + Kontakt + Preis.
+     * Liefert die API kundenspezifische Preislisten (pro Kunde eigene Artikelpreise).
+     * Bei 400/404: kurze Meldung (Model not found). Bei 404 Fallback /PartPrice.
+     */
+    fun testPartUnitPrice(token: String): String {
+        val (code, partUnit) = getRawForTestWithCode(token, "/PartUnitPrice", "limit=25")
+        if (code != 200) {
+            val shortMsg = if (partUnit.contains("Model_PartUnitPrice not found")) "400 – Model PartUnitPrice nicht in der API."
+            else partUnit.take(300)
+            return shortMsg + (if (code == 404) "\n\n→ Fallback GET /PartPrice:\n\n" + getRawForTest(token, "/PartPrice", "limit=25") else "")
+        }
+        return partUnit
+    }
+
+    /**
+     * Test 4: GET /PartUnitPrice gefiltert nach einem Kontakt (Kunde).
+     * contactId = SevDesk Contact-ID (z. B. aus GET /Contact).
+     */
+    fun testPartUnitPriceForContact(token: String, contactId: String): String {
+        if (contactId.isBlank()) return "contactId leer"
+        val q = "limit=50&contact[id]=${contactId.trim()}&contact[objectName]=Contact"
+        val (code, body) = getRawForTestWithCode(token, "/PartUnitPrice", q)
+        if (code != 200 && body.contains("Model_PartUnitPrice not found")) return "400 – Model PartUnitPrice nicht in der API."
+        return body
+    }
+
+    /**
+     * Liefert die ID des ersten Kunden (für Test: PartUnitPrice pro Kunde).
+     * GET /Contact?limit=1, Kategorie Kunde; gibt id des ersten Objekts zurück oder null.
+     */
+    fun getFirstCustomerIdForTest(token: String): String? {
+        val json = getRawForTest(token, "/Contact", "category[id]=$CATEGORY_ID_KUNDE&category[objectName]=Category&limit=1&embed=addresses")
+        if (json.startsWith("HTTP ")) return null
+        return try {
+            val root = JSONObject(json)
+            val arr = when {
+                root.has("objects") && root.get("objects") is JSONArray -> root.getJSONArray("objects")
+                root.optJSONObject("objects")?.has("Contact") == true -> root.getJSONObject("objects").getJSONArray("Contact")
+                else -> null
+            }
+            if (arr != null && arr.length() > 0) arr.getJSONObject(0).optString("id", "").takeIf { it.isNotBlank() } else null
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private const val DISCOVERY_SNIPPET_LEN = 2500
+
+    /**
+     * Discovery-Test: Welche API liefert „welche Artikel zu welchem Kunden“?
+     * Probiert Endpunkte und Contact-Embeds durch, gibt kompakte Übersicht + bei 200 OK Ausschnitt.
+     */
+    fun runDiscoveryTest(token: String): String {
+        val contactId = getFirstCustomerIdForTest(token) ?: "—"
+        return buildString {
+            append("Ziel: Artikel ↔ Kunde (welche Artikel gehören zu welchem Kunden).\n")
+            append("Erster Kunde (Contact-ID): $contactId\n\n")
+            append("——— Endpunkte (Verknüpfung Part/Kontakt) ———\n\n")
+
+            val endpoints = listOf(
+                "/ContactPart" to "limit=25",
+                "/ContactPart" to "limit=20&contact[id]=$contactId&contact[objectName]=Contact",
+                "/PartContact" to "limit=25",
+                "/PartContact" to "limit=20&contact[id]=$contactId&contact[objectName]=Contact",
+                "/PartPrice" to "limit=25",
+                "/PartPrice" to "limit=20&contact[id]=$contactId&contact[objectName]=Contact",
+                "/ContactPartPrice" to "limit=25",
+                "/PartUnitPrice" to "limit=25",
+                "/PartUnitPrice" to "limit=20&contact[id]=$contactId&contact[objectName]=Contact",
+            )
+            for ((path, q) in endpoints) {
+                val (code, body) = getRawForTestWithCode(token, path, q)
+                val status = when (code) {
+                    200 -> "200 OK"
+                    400 -> "400 (Model/Parameter)"
+                    404 -> "404"
+                    else -> "$code"
+                }
+                append("GET $path?$q → $status\n")
+                if (code == 200) {
+                    val snippet = body.take(DISCOVERY_SNIPPET_LEN)
+                    append(if (body.length > DISCOVERY_SNIPPET_LEN) snippet + "\n… (gekürzt)\n" else snippet)
+                    append("\n")
+                } else if (body.contains("message")) {
+                    try {
+                        val start = body.indexOf("\"message\":")
+                        val end = body.indexOf("\"", start + 12)
+                        if (start >= 0 && end > start) append("  Message: ${body.substring(start + 11, end)}\n")
+                    } catch (_: Exception) {}
+                }
+                append("\n")
+            }
+
+            append("——— GET /Contact/{id} mit verschiedenen embed (Artikel pro Kunde?) ———\n\n")
+            if (contactId == "—") {
+                append("Kein Kontakt gefunden, Embed-Tests übersprungen.\n")
+                return@buildString
+            }
+            val embeds = listOf(
+                "partUnitPrices",
+                "partUnitPrice",
+                "parts",
+                "partPrices",
+                "partList",
+                "articles",
+                "part",
+                "contactParts",
+                "partPrice",
+                "partPrices",
+                "customerParts",
+                "prices"
+            ).distinct()
+            for (embed in embeds) {
+                val (code, body) = getRawForTestWithCode(token, "/Contact/$contactId", "embed=addresses,$embed")
+                val status = when (code) {
+                    200 -> "200 OK"
+                    400 -> "400"
+                    404 -> "404"
+                    else -> "$code"
+                }
+                append("GET /Contact/$contactId?embed=addresses,$embed → $status\n")
+                if (code == 200) {
+                    val snippet = body.take(DISCOVERY_SNIPPET_LEN)
+                    append(if (body.length > DISCOVERY_SNIPPET_LEN) snippet + "\n… (gekürzt)\n" else snippet)
+                    append("\n")
+                } else if (body.contains("message")) {
+                    try {
+                        val start = body.indexOf("\"message\":")
+                        val end = body.indexOf("\"", start + 12)
+                        if (start >= 0 && end > start) append("  Message: ${body.substring(start + 11, end)}\n")
+                    } catch (_: Exception) {}
+                }
+                append("\n")
+            }
+        }
     }
 }
 

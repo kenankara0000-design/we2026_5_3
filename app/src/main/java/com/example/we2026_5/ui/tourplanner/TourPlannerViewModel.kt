@@ -232,4 +232,11 @@ class TourPlannerViewModel(
         tourOrderRepository.setOrderForDate(dateKey(dateMillis), ids)
         tourOrderUpdateTrigger.value = tourOrderUpdateTrigger.value + 1
     }
+
+    /** Setzt die komplette Tour-Reihenfolge (z. B. nach Drag & Drop) und löst UI-Update aus. */
+    fun setTourOrder(dateMillis: Long, customerIds: List<String>) {
+        if (customerIds.isEmpty()) return
+        tourOrderRepository.setOrderForDate(dateKey(dateMillis), customerIds)
+        tourOrderUpdateTrigger.value = tourOrderUpdateTrigger.value + 1
+    }
 }

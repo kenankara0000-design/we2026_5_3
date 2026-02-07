@@ -14,11 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -62,10 +57,8 @@ internal fun TourCustomerRow(
     showErledigtBadge: Boolean = false,
     onCustomerClick: () -> Unit,
     onAktionenClick: () -> Unit,
-    onMoveUp: (() -> Unit)? = null,
-    onMoveDown: (() -> Unit)? = null,
-    canMoveUp: Boolean = false,
-    canMoveDown: Boolean = false
+    dragHandleModifier: Modifier? = null,
+    dragHandleContent: @Composable (() -> Unit)? = null
 ) {
     val isDeaktiviert = isVerschobenAmFaelligkeitstag
     val cardBg = when {
@@ -199,31 +192,8 @@ internal fun TourCustomerRow(
                     }
                 }
             }
-            if (onMoveUp != null && onMoveDown != null) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    IconButton(
-                        onClick = onMoveUp,
-                        enabled = canMoveUp && !isDeaktiviert,
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.KeyboardArrowUp,
-                            contentDescription = stringResource(R.string.tour_reorder_up),
-                            tint = if (canMoveUp && !isDeaktiviert) colorResource(R.color.primary_blue) else colorResource(R.color.button_inactive)
-                        )
-                    }
-                    IconButton(
-                        onClick = onMoveDown,
-                        enabled = canMoveDown && !isDeaktiviert,
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.KeyboardArrowDown,
-                            contentDescription = stringResource(R.string.tour_reorder_down),
-                            tint = if (canMoveDown && !isDeaktiviert) colorResource(R.color.primary_blue) else colorResource(R.color.button_inactive)
-                        )
-                    }
-                }
+            if (dragHandleModifier != null && dragHandleContent != null) {
+                Box(modifier = dragHandleModifier) { dragHandleContent() }
                 Spacer(Modifier.size(4.dp))
             }
             Spacer(Modifier.size(12.dp))
