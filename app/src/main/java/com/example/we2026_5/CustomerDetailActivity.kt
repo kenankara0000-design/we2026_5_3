@@ -189,7 +189,8 @@ class CustomerDetailActivity : AppCompatActivity() {
                     startActivity(Intent(this@CustomerDetailActivity, WaschenErfassungActivity::class.java).apply {
                         putExtra("CUSTOMER_ID", id)
                     })
-                }
+                },
+                onAddMonthlyIntervall = { viewModel.addMonthlyIntervall(it) }
             )
         }
 

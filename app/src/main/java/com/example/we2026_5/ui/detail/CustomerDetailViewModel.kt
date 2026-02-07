@@ -173,6 +173,11 @@ class CustomerDetailViewModel(
         _editIntervalle.value = intervalle
     }
 
+    /** Hängt ein Intervall (z. B. monatlicher Wochentag) an die Bearbeitungsliste an. */
+    fun addMonthlyIntervall(intervall: CustomerIntervall) {
+        _editIntervalle.value = _editIntervalle.value + intervall
+    }
+
     /** Entfernt ein Intervall aus der Bearbeitungsliste (Index 0-basiert). */
     fun removeIntervallAt(index: Int) {
         val list = _editIntervalle.value.toMutableList()

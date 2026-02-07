@@ -391,6 +391,13 @@
     <string name="label_list_edit">Liste bearbeiten</string>
     <string name="label_intervals">Intervalle</string>
     <string name="label_termine_anlegen">Termin Anlegen</string>
+    <string name="label_add_monthly_termin">Monatlichen Termin hinzufügen</string>
+    <string name="label_monthly_week_of_month">Woche im Monat</string>
+    <string name="label_monthly_week_1">1. Woche</string>
+    <string name="label_monthly_week_2">2. Woche</string>
+    <string name="label_monthly_week_3">3. Woche</string>
+    <string name="label_monthly_week_4">4. Woche</string>
+    <string name="label_monthly_week_last">Letzte Woche</string>
     <string name="termin_anlegen_option_regulaer">Regulärer Termin</string>
     <string name="termin_anlegen_option_ausnahme">Ausnahme-Termin</string>
     <string name="termin_anlegen_ausnahme_datum_waehlen">Datum wählen (nächste 2 Wochen)</string>

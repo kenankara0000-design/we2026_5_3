@@ -16,5 +16,9 @@ data class CustomerIntervall(
     val terminRegelId: String = "", // ID der Termin-Regel, aus der dieses Intervall erstellt wurde (optional)
     val regelTyp: TerminRegelTyp = TerminRegelTyp.WEEKLY,
     val tourSlotId: String = "",
-    val zyklusTage: Int = intervallTage
+    val zyklusTage: Int = intervallTage,
+    /** Nur bei regelTyp == MONTHLY_WEEKDAY: Woche im Monat (1=erste, 2=zweite, 3=dritte, 4=vierte, 5=letzte). */
+    val monthWeekOfMonth: Int = 0,
+    /** Nur bei regelTyp == MONTHLY_WEEKDAY: Wochentag 0=Mo .. 6=So. */
+    val monthWeekday: Int = -1
 )

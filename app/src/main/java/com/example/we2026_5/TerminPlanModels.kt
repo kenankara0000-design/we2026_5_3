@@ -8,7 +8,9 @@ package com.example.we2026_5
 enum class TerminRegelTyp {
     WEEKLY,
     FLEXIBLE_CYCLE,
-    ADHOC
+    ADHOC,
+    /** Monatlich nach Woche + Wochentag (z. B. 1. Montag, 2. Donnerstag, letzter Freitag). */
+    MONTHLY_WEEKDAY
 }
 
 /** Einfaches Zeitfenster (z. B. 09:00–13:00). */

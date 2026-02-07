@@ -75,7 +75,8 @@ fun CustomerDetailScreen(
     regelNameByRegelId: Map<String, String> = emptyMap(),
     onRegelClick: (String) -> Unit = {},
     onUrlaubStartActivity: (String) -> Unit = {},
-    onErfassungClick: () -> Unit = {}
+    onErfassungClick: () -> Unit = {},
+    onAddMonthlyIntervall: ((CustomerIntervall) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val primaryBlue = colorResource(R.color.primary_blue)
@@ -319,7 +320,12 @@ fun CustomerDetailScreen(
                                             "intervallTage" to it.intervallTage,
                                             "intervallAnzahl" to it.intervallAnzahl,
                                             "erstelltAm" to it.erstelltAm,
-                                            "terminRegelId" to it.terminRegelId
+                                            "terminRegelId" to it.terminRegelId,
+                                            "regelTyp" to it.regelTyp.name,
+                                            "tourSlotId" to it.tourSlotId,
+                                            "zyklusTage" to it.zyklusTage,
+                                            "monthWeekOfMonth" to it.monthWeekOfMonth,
+                                            "monthWeekday" to it.monthWeekday
                                         )
                                     })
                                 }
@@ -345,6 +351,7 @@ fun CustomerDetailScreen(
                 }
 
                 Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+                var showAddMonthlySheet by remember { mutableStateOf(false) }
                 val intervalleToShow = if (isInEditMode) editIntervalle else customer.intervalle
                 CustomerDetailTerminRegelCard(
                     intervalleToShow = intervalleToShow,
@@ -357,7 +364,17 @@ fun CustomerDetailScreen(
                     onRegelClick = onRegelClick,
                     onRemoveRegel = onRemoveRegel,
                     onResetToAutomatic = onResetToAutomatic,
-                    onTerminAnlegen = onTerminAnlegen
+                    onTerminAnlegen = onTerminAnlegen,
+                    onAddMonthlyClick = onAddMonthlyIntervall?.let { { showAddMonthlySheet = true } }
+                )
+                AddMonthlyIntervallSheet(
+                    visible = showAddMonthlySheet,
+                    tourSlotId = customer?.tourSlotId ?: "",
+                    onDismiss = { showAddMonthlySheet = false },
+                    onAdd = {
+                        onAddMonthlyIntervall?.invoke(it)
+                        showAddMonthlySheet = false
+                    }
                 )
                 CustomerDetailFotosSection(
                     fotoUrls = customer.fotoUrls,

@@ -33,7 +33,8 @@ fun CustomerDetailTerminRegelCard(
     onRegelClick: (String) -> Unit,
     onRemoveRegel: ((String) -> Unit)?,
     onResetToAutomatic: () -> Unit,
-    onTerminAnlegen: () -> Unit
+    onTerminAnlegen: () -> Unit,
+    onAddMonthlyClick: (() -> Unit)? = null
 ) {
     Text(
         stringResource(R.string.label_termin_regel),
@@ -74,6 +75,12 @@ fun CustomerDetailTerminRegelCard(
                     Text(stringResource(R.string.btn_reset_to_automatic))
                 }
                 Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                onAddMonthlyClick?.let { onAdd ->
+                    OutlinedButton(onClick = onAdd, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.label_add_monthly_termin))
+                    }
+                    Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                }
             }
             if (!isInEditMode) {
                 Button(onClick = onTerminAnlegen, modifier = Modifier.fillMaxWidth()) {

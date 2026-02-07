@@ -3,6 +3,7 @@ package com.example.we2026_5.util
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.KundenListe
+import com.example.we2026_5.TerminRegelTyp
 import com.example.we2026_5.util.tageAzuLOrDefault
 import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.VerschobenerTermin
@@ -45,6 +46,18 @@ object TerminBerechnungUtils {
         val termine = mutableListOf<TerminInfo>()
         val startDatumStart = getStartOfDay(startDatum)
         val endDatum = startDatumStart + TimeUnit.DAYS.toMillis(tageVoraus.toLong())
+
+        if (intervall.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY &&
+            intervall.monthWeekOfMonth in 1..5 && intervall.monthWeekday in 0..6) {
+            val monthly = berechneMonatlicheWochentagTermine(
+                intervall = intervall,
+                startDatumStart = startDatumStart,
+                endDatum = endDatum,
+                geloeschteTermine = geloeschteTermine,
+                verschobeneTermine = verschobeneTermine
+            )
+            return monthly.sortedBy { it.datum }
+        }
         
         // Abholungstermine
         if (intervall.abholungDatum > 0) {
@@ -167,6 +180,91 @@ object TerminBerechnungUtils {
         val cal = Calendar.getInstance()
         cal.timeInMillis = dayStart
         return (cal.get(Calendar.DAY_OF_WEEK) + 5) % 7
+    }
+
+    /** Calendar.DAY_OF_WEEK: 1=So, 2=Mo, ..., 7=Sa. Unser weekday 0=Mo, 6=So. */
+    private fun weekdayToCalendar(weekday: Int): Int =
+        if (weekday == 6) Calendar.SUNDAY else (weekday + 2)
+
+    /**
+     * Tag im Monat (1..31) für den n-ten Wochentag (1=erste, 2=zweite, ..., 5=letzte).
+     * Liefert 0 wenn ungültig.
+     */
+    private fun getNthWeekdayDayInMonth(cal: Calendar, year: Int, month: Int, weekOfMonth: Int, weekday: Int): Int {
+        cal.set(year, month, 1)
+        val targetDow = weekdayToCalendar(weekday)
+        val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+        var count = 0
+        var lastMatch = 0
+        for (day in 1..maxDay) {
+            cal.set(year, month, day)
+            if (cal.get(Calendar.DAY_OF_WEEK) == targetDow) {
+                count++
+                lastMatch = day
+                if (weekOfMonth in 1..4 && count == weekOfMonth) return day
+            }
+        }
+        return if (weekOfMonth == 5) lastMatch else 0
+    }
+
+    /**
+     * Termine für MONTHLY_WEEKDAY: pro Monat ein Datum (n-ter Wochentag), A und L an demselben Tag.
+     */
+    private fun berechneMonatlicheWochentagTermine(
+        intervall: CustomerIntervall,
+        startDatumStart: Long,
+        endDatum: Long,
+        geloeschteTermine: List<Long>,
+        verschobeneTermine: List<VerschobenerTermin>
+    ): List<TerminInfo> {
+        val result = mutableListOf<TerminInfo>()
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = startDatumStart
+        val startYear = cal.get(Calendar.YEAR)
+        val startMonth = cal.get(Calendar.MONTH)
+        cal.timeInMillis = endDatum
+        val endYear = cal.get(Calendar.YEAR)
+        val endMonth = cal.get(Calendar.MONTH)
+        var y = startYear
+        var m = startMonth
+        while (y < endYear || (y == endYear && m <= endMonth)) {
+            val day = getNthWeekdayDayInMonth(cal, y, m, intervall.monthWeekOfMonth, intervall.monthWeekday)
+            if (day > 0) {
+                cal.set(y, m, day, 0, 0, 0)
+                cal.set(Calendar.MILLISECOND, 0)
+                val datumStart = cal.timeInMillis
+                if (datumStart in startDatumStart..endDatum) {
+                    val verschobenA = TerminFilterUtils.istTerminVerschoben(datumStart, verschobeneTermine.filter { it.typ == TerminTyp.ABHOLUNG }, intervall.id)
+                    val finalA = verschobenA?.verschobenAufDatum ?: datumStart
+                    if (!TerminFilterUtils.istTerminGeloescht(finalA, geloeschteTermine)) {
+                        result.add(TerminInfo(
+                            datum = finalA,
+                            typ = TerminTyp.ABHOLUNG,
+                            intervallId = intervall.id,
+                            verschoben = verschobenA != null,
+                            originalDatum = verschobenA?.originalDatum
+                        ))
+                    }
+                    val verschobenL = TerminFilterUtils.istTerminVerschoben(datumStart, verschobeneTermine.filter { it.typ == TerminTyp.AUSLIEFERUNG }, intervall.id)
+                    val finalL = verschobenL?.verschobenAufDatum ?: datumStart
+                    if (!TerminFilterUtils.istTerminGeloescht(finalL, geloeschteTermine)) {
+                        result.add(TerminInfo(
+                            datum = finalL,
+                            typ = TerminTyp.AUSLIEFERUNG,
+                            intervallId = intervall.id,
+                            verschoben = verschobenL != null,
+                            originalDatum = verschobenL?.originalDatum
+                        ))
+                    }
+                }
+            }
+            m++
+            if (m > Calendar.DECEMBER) {
+                m = Calendar.JANUARY
+                y++
+            }
+        }
+        return result
     }
 
     /**
