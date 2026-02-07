@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -26,8 +25,6 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.R
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
 import com.example.we2026_5.ui.addcustomer.CustomerStammdatenForm
-import com.example.we2026_5.util.DialogBaseHelper
-import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.ui.common.DetailUiConstants
 
 /**
@@ -52,7 +49,6 @@ fun CustomerDetailStammdatenTab(
     onPhotoClick: (String) -> Unit,
     isUploading: Boolean = false
 ) {
-    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -116,20 +112,8 @@ fun CustomerDetailStammdatenTab(
             CustomerStammdatenForm(
                 state = currentFormState,
                 onUpdate = onUpdateFormState,
-                onStartDatumClick = {
-                    DialogBaseHelper.showDatePickerDialog(
-                        context = context,
-                        initialDate = currentFormState.erstelltAm.takeIf { it > 0 } ?: System.currentTimeMillis(),
-                        title = context.getString(R.string.label_startdatum_a),
-                        onDateSelected = { selected ->
-                            onUpdateFormState(
-                                currentFormState.copy(
-                                    erstelltAm = TerminBerechnungUtils.getStartOfDay(selected)
-                                )
-                            )
-                        }
-                    )
-                }
+                onStartDatumClick = { },
+                showTermineTourSection = false
             )
             Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
             Text(

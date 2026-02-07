@@ -75,7 +75,8 @@ fun TourPlannerScreen(
     erledigtSheetVisible: Boolean = false,
     erledigtSheetContent: ErledigtSheetContent? = null,
     onErledigtClick: () -> Unit = {},
-    onDismissErledigtSheet: () -> Unit = {}
+    onDismissErledigtSheet: () -> Unit = {},
+    onMoveTourOrder: ((fromIndex: Int, toIndex: Int) -> Unit)? = null
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -159,6 +160,7 @@ fun TourPlannerScreen(
                 )
                 tourItems.isEmpty() -> TourPlannerEmptyView(textSecondary = textSecondary)
                 else -> {
+                    val tourCustomerCount = tourItems.count { it is ListItem.CustomerItem }
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
@@ -166,7 +168,15 @@ fun TourPlannerScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        itemsIndexed(tourItems, key = { index, _ -> index }) { _, item ->
+                        itemsIndexed(tourItems, key = { index, listItem ->
+                            when (listItem) {
+                                is ListItem.CustomerItem -> "c-${listItem.customer.id}"
+                                is ListItem.SectionHeader -> "h-${listItem.sectionType}-$index"
+                                is ListItem.ListeHeader -> "l-${listItem.listeId}-$index"
+                                is ListItem.TourListeErledigt -> "t-${listItem.listeName}-$index"
+                                is ListItem.ErledigtSection -> "e-$index"
+                            }
+                        }) { index, item ->
                             when (item) {
                                 is ListItem.ErledigtSection -> { /* Erledigt-Bereich nur im Sheet, nicht in der Liste */ }
                                 is ListItem.SectionHeader -> SectionHeaderRow(
@@ -235,6 +245,8 @@ fun TourPlannerScreen(
                                         verschobenVonInfo = item.verschobenVonInfo?.takeIf { it.isNotEmpty() },
                                         ueberfaelligInfo = ueberfaelligInfo
                                     )
+                                    val customerIndex = tourItems.take(index).count { it is ListItem.CustomerItem }
+                                    val showReorder = tourCustomerCount >= 2 && onMoveTourOrder != null
                                     TourCustomerRow(
                                         customer = item.customer,
                                         isOverdue = item.isOverdue,
@@ -245,7 +257,11 @@ fun TourPlannerScreen(
                                         statusBadgeText = getStatusBadgeText(item.customer),
                                         viewDateMillis = viewDate,
                                         onCustomerClick = { onCustomerClick(payload) },
-                                        onAktionenClick = { onAktionenClick(item.customer) }
+                                        onAktionenClick = { onAktionenClick(item.customer) },
+                                        onMoveUp = if (showReorder) {{ onMoveTourOrder?.invoke(customerIndex, customerIndex - 1) }} else null,
+                                        onMoveDown = if (showReorder) {{ onMoveTourOrder?.invoke(customerIndex, customerIndex + 1) }} else null,
+                                        canMoveUp = customerIndex > 0,
+                                        canMoveDown = customerIndex < tourCustomerCount - 1
                                     )
                                 }
                             }

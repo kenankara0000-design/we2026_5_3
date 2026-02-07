@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
@@ -45,12 +46,14 @@ fun SevDeskImportScreen(
     onSaveToken: () -> Unit,
     onImportContacts: () -> Unit,
     onImportArticles: () -> Unit,
-    onClearMessage: () -> Unit
+    onClearMessage: () -> Unit,
+    onRunApiTest: () -> Unit,
+    onClearTestResult: () -> Unit
 ) {
     val context = LocalContext.current
     val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
     val textSecondary = colorResource(R.color.text_secondary)
-    val isBusy = state.isImportingContacts || state.isImportingArticles
+    val isBusy = state.isImportingContacts || state.isImportingArticles || state.isRunningApiTest
 
     Scaffold(
         topBar = {
@@ -120,6 +123,33 @@ fun SevDeskImportScreen(
             state.error?.let { err ->
                 Spacer(Modifier.height(16.dp))
                 Text(err, color = Color.Red, fontSize = 14.sp)
+            }
+
+            Spacer(Modifier.height(24.dp))
+            Text(stringResource(R.string.sevdesk_test_section), fontWeight = FontWeight.SemiBold, color = textSecondary, fontSize = 14.sp)
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = onRunApiTest,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isBusy,
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(if (state.isRunningApiTest) "…" else stringResource(R.string.sevdesk_test_btn))
+            }
+            state.testResult?.let { result ->
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(onClick = onClearTestResult, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) {
+                    Text(stringResource(R.string.sevdesk_test_clear))
+                }
+                Spacer(Modifier.height(8.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(400.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(result, fontSize = 11.sp, color = textSecondary)
+                }
             }
         }
     }

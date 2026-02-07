@@ -11,6 +11,7 @@ import com.example.we2026_5.ListItem
 import com.example.we2026_5.SectionType
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
+import com.example.we2026_5.data.repository.TourOrderRepository
 import com.example.we2026_5.tourplanner.TourDataProcessor
 import com.example.we2026_5.tourplanner.TourProcessResult
 import com.example.we2026_5.ui.tourplanner.ErledigtSheetContent
@@ -31,7 +32,8 @@ import java.util.concurrent.TimeUnit
 
 class TourPlannerViewModel(
     private val repository: CustomerRepository,
-    private val listeRepository: KundenListeRepository
+    private val listeRepository: KundenListeRepository,
+    private val tourOrderRepository: TourOrderRepository
 ) : ViewModel() {
     
     // Datenverarbeitungsprozessor
@@ -65,6 +67,9 @@ class TourPlannerViewModel(
 
     // StateFlow für erweiterte Sections – ERLEDIGT standardmäßig eingeklappt, bleibt so bis Nutzer aufmacht
     private val expandedSectionsFlow = MutableStateFlow<Set<SectionType>>(emptySet())
+
+    /** Trigger: bei Änderung der Tour-Reihenfolge neu kombinieren. */
+    private val tourOrderUpdateTrigger = MutableStateFlow(0)
     
     // Kombiniere alle Flows: Ergebnis ohne Erledigt-Section in der Liste; Erledigt-Daten für Button/Sheet
     // Debounce (250 ms) auf Kunden/Listen reduziert Pipeline-Läufe bei schnellen Firebase-Updates (Punkt 6.2)
@@ -72,8 +77,9 @@ class TourPlannerViewModel(
         customersFlow.debounce(250L),
         listenFlow.debounce(250L),
         selectedTimestampFlow,
-        expandedSectionsFlow
-    ) { customers, listen, timestamp, expandedSections ->
+        expandedSectionsFlow,
+        tourOrderUpdateTrigger
+    ) { customers, listen, timestamp, expandedSections, _ ->
         if (timestamp == null) {
             TourProcessResult(emptyList(), 0, emptyList(), emptyList())
         } else {
@@ -83,10 +89,12 @@ class TourPlannerViewModel(
             // #endregion
             val activeCustomers = CustomerTermFilter.filterActiveForTerms(customers, System.currentTimeMillis())
             val result = dataProcessor.processTourData(activeCustomers, listen, timestamp, expandedSections)
+            val order = tourOrderRepository.getOrderForDate(dateKey(timestamp))
+            val reorderedItems = applyTourOrder(result.items, order)
             // #region agent log
             AgentDebugLog.log("TourPlannerViewModel.kt", "combine_process_end", mapOf("duration_ms" to (System.currentTimeMillis() - t0), "items" to result.items.size), "H1")
             // #endregion
-            result
+            result.copy(items = reorderedItems)
         }
     }.flowOn(Dispatchers.Default)
 
@@ -188,5 +196,40 @@ class TourPlannerViewModel(
             remove(terminDatumStart)
         }
         return repository.updateCustomerResult(customer.id, mapOf("geloeschteTermine" to aktuelleGeloeschteTermine))
+    }
+
+    // --- Tour-Reihenfolge (Drag & Drop / Route) ---
+
+    private fun dateKey(ts: Long): String {
+        val c = Calendar.getInstance().apply { timeInMillis = ts }
+        return String.format("%04d%02d%02d", c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH))
+    }
+
+    /** Wendet gespeicherte Reihenfolge auf die Liste an (nur CustomerItems umsortiert). */
+    private fun applyTourOrder(items: List<ListItem>, order: List<String>): List<ListItem> {
+        if (order.isEmpty()) return items
+        val customerItems = items.filterIsInstance<ListItem.CustomerItem>()
+        if (customerItems.isEmpty()) return items
+        val idToItem = customerItems.associateBy { it.customer.id }
+        val orderSet = order.toSet()
+        val reordered = order.mapNotNull { idToItem[it] } +
+            customerItems.filter { it.customer.id !in orderSet }
+        var j = 0
+        return items.map { item ->
+            if (item is ListItem.CustomerItem) reordered[j++] else item
+        }
+    }
+
+    /**
+     * Verschiebt einen Kunden in der Tour-Reihenfolge (Indizes bezogen auf die flache Liste der CustomerItems).
+     * Speichert die neue Reihenfolge und löst UI-Update aus.
+     */
+    fun moveTourOrder(dateMillis: Long, fromIndex: Int, toIndex: Int, currentCustomerIds: List<String>) {
+        if (fromIndex == toIndex || fromIndex !in currentCustomerIds.indices || toIndex !in currentCustomerIds.indices) return
+        val ids = currentCustomerIds.toMutableList()
+        val id = ids.removeAt(fromIndex)
+        ids.add(toIndex.coerceIn(0, ids.size), id)
+        tourOrderRepository.setOrderForDate(dateKey(dateMillis), ids)
+        tourOrderUpdateTrigger.value = tourOrderUpdateTrigger.value + 1
     }
 }

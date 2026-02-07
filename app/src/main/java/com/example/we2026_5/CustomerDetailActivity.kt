@@ -62,7 +62,7 @@ class CustomerDetailActivity : AppCompatActivity() {
 
         viewModel.setCustomerId(id)
 
-        val showSaveAndNext = NextCustomerHelper.hasNextCustomerExtras(intent)
+        val showSaveAndNext = false
         val nextCustomerIndex = intent.getIntExtra(NextCustomerHelper.EXTRA_CURRENT_INDEX, -1)
 
         photoManager = CustomerPhotoManager(

@@ -1,0 +1,13 @@
+package com.example.we2026_5.data.repository
+
+/**
+ * Speichert die manuelle Tour-Reihenfolge (Kunden-IDs) pro Datum.
+ * Key: yyyyMMdd (Tag), Value: geordnete Liste von Customer-IDs.
+ */
+interface TourOrderRepository {
+    /** Reihenfolge für ein Datum lesen (yyyyMMdd). Leere Liste = keine gespeicherte Reihenfolge. */
+    fun getOrderForDate(dateKey: String): List<String>
+
+    /** Reihenfolge für ein Datum speichern. */
+    fun setOrderForDate(dateKey: String, customerIds: List<String>)
+}

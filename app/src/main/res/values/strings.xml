@@ -179,6 +179,8 @@
     <string name="main_btn_statistiken">📊 Statistiken</string>
     <string name="main_btn_termin_regeln">📋 Regel-Vorlagen</string>
     <string name="main_tour_btn_with_count">Tour Planner (%1$d fällig)</string>
+    <string name="main_tour_hero_faellig">%d fällig</string>
+    <string name="main_tour_hero_open">Öffnen</string>
     <string name="main_weitere">Weitere</string>
     <string name="main_btn_neu_kunde_desc">Neuen Kunden anlegen</string>
     <string name="main_btn_kunden_desc">Kunden verwalten</string>
@@ -189,7 +191,15 @@
     <string name="main_btn_berichte">📄 Berichte</string>
     <string name="main_btn_berichte_desc">Berichte anzeigen</string>
     <string name="main_slot_section_title">Ad-hoc Termin-Slots</string>
+    <string name="main_slot_section_subtitle">Vorschläge für die nächsten möglichen Termine bei Kunden mit Ad-hoc-Regel.</string>
     <string name="main_slot_section_empty">Keine Slot-Vorschläge verfügbar.</string>
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_sevdesk_import">SevDesk Import</string>
+    <string name="settings_sevdesk_readonly_hint">SevDesk API: Nur Lesen (kein Löschen/Ändern in SevDesk).</string>
+    <string name="settings_abmelden">Abmelden</string>
+    <string name="erfassung_menu_title">Erfassung</string>
+    <string name="erfassung_menu_start">Erfassung starten</string>
+    <string name="erfassung_menu_artikel">Artikel verwalten</string>
     <string name="main_slot_button_label">Slot auswählen</string>
 
     <!-- Offline / Sync -->
@@ -275,6 +285,8 @@
     <string name="content_desc_prev_day">Vorheriger Tag</string>
     <string name="content_desc_next_day">Nächster Tag</string>
     <string name="content_desc_map">Kartenansicht</string>
+    <string name="tour_reorder_up">Reihenfolge: nach oben</string>
+    <string name="tour_reorder_down">Reihenfolge: nach unten</string>
     <string name="content_desc_today">Heute</string>
     <string name="content_desc_multiselect">Mehrfachauswahl</string>
     <string name="content_desc_export">Exportieren</string>
@@ -627,6 +639,9 @@
     <string name="sevdesk_delete_articles">SevDesk-Artikel löschen</string>
     <string name="sevdesk_delete_articles_confirm">Nur hier in der App werden die importierten Artikel gelöscht. In SevDesk passiert nichts – die App hat nur Lesezugriff. Unwiderruflich löschen?</string>
     <string name="sevdesk_delete_confirm_ok">Löschen</string>
+    <string name="sevdesk_test_section">Nur zum Testen: API kundenspezifische Preise/Artikel</string>
+    <string name="sevdesk_test_btn">API-Test: Part + Contact (Roh-JSON)</string>
+    <string name="sevdesk_test_clear">Testergebnis ausblenden</string>
     <string name="wasch_btn_sevdesk">SevDesk Import</string>
     <string name="wasch_erfassung_kunde">Kunde</string>
     <string name="wasch_erfassung_datum">Datum</string>

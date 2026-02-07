@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.util.Result
+import com.example.we2026_5.sevdesk.SevDeskApi
 import com.example.we2026_5.sevdesk.SevDeskDeletedIds
 import com.example.we2026_5.sevdesk.getSevDeskToken
 import com.example.we2026_5.sevdesk.setSevDeskToken
@@ -24,7 +25,10 @@ data class SevDeskImportState(
     val isDeletingSevDeskContacts: Boolean = false,
     val isDeletingSevDeskArticles: Boolean = false,
     val message: String? = null,
-    val error: String? = null
+    val error: String? = null,
+    /** Nur zum Testen: Roh-API-Response (Part/Contact mit embed) */
+    val testResult: String? = null,
+    val isRunningApiTest: Boolean = false
 )
 
 class SevDeskImportViewModel(
@@ -118,5 +122,38 @@ class SevDeskImportViewModel(
             _state.value = _state.value.copy(isDeletingSevDeskArticles = false)
             _state.value = _state.value.copy(message = "$count SevDesk-Artikel gelöscht.")
         }
+    }
+
+    /** Nur zum Testen: Ruft Part (embed=partUnitPrices) und Contact (embed) ab und zeigt Roh-JSON. */
+    fun runApiTest() {
+        val token = _state.value.token.trim()
+        if (token.isEmpty()) {
+            _state.value = _state.value.copy(error = "Bitte API-Token eingeben.")
+            return
+        }
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isRunningApiTest = true, testResult = null, error = null)
+            val out = withContext(Dispatchers.IO) {
+                buildString {
+                    append("=== GET /Part?limit=2&embed=unity,partUnitPrices ===\n\n")
+                    try {
+                        append(SevDeskApi.testPartsWithEmbed(token))
+                    } catch (e: Exception) {
+                        append("Fehler: ${e.message}")
+                    }
+                    append("\n\n=== GET /Contact?limit=1&embed=addresses (Kunde) ===\n\n")
+                    try {
+                        append(SevDeskApi.testContactWithEmbed(token))
+                    } catch (e: Exception) {
+                        append("Fehler: ${e.message}")
+                    }
+                }
+            }
+            _state.value = _state.value.copy(isRunningApiTest = false, testResult = out)
+        }
+    }
+
+    fun clearTestResult() {
+        _state.value = _state.value.copy(testResult = null)
     }
 }

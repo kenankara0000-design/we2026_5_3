@@ -10,8 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
-import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.ui.addcustomer.AddCustomerState
 import com.example.we2026_5.ui.common.DetailUiConstants
 
 /**
@@ -23,6 +23,9 @@ fun CustomerDetailTermineTab(
     customer: Customer,
     isInEditMode: Boolean,
     intervalleToShow: List<CustomerIntervall>,
+    currentFormState: AddCustomerState,
+    onUpdateFormState: (AddCustomerState) -> Unit,
+    onStartDatumClick: () -> Unit,
     textPrimary: androidx.compose.ui.graphics.Color,
     textSecondary: androidx.compose.ui.graphics.Color,
     surfaceWhite: androidx.compose.ui.graphics.Color,
@@ -48,6 +51,14 @@ fun CustomerDetailTermineTab(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
     ) {
+        if (isInEditMode) {
+            CustomerDetailTermineTourForm(
+                state = currentFormState,
+                onUpdate = onUpdateFormState,
+                onStartDatumClick = onStartDatumClick
+            )
+            Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+        }
         CustomerDetailStatusSection(
             customer = customer,
             onPauseCustomer = onPauseCustomer,
@@ -61,13 +72,15 @@ fun CustomerDetailTermineTab(
             textPrimary = textPrimary,
             textSecondary = textSecondary
         )
-        CustomerDetailKundenTypSection(
-            typeLabel = typeLabel,
-            kundenTyp = customer.kundenTyp,
-            effectiveAbholungWochentage = customer.effectiveAbholungWochentage,
-            effectiveAuslieferungWochentage = customer.effectiveAuslieferungWochentage,
-            textPrimary = textPrimary
-        )
+        if (!isInEditMode) {
+            CustomerDetailKundenTypSection(
+                typeLabel = typeLabel,
+                kundenTyp = customer.kundenTyp,
+                effectiveAbholungWochentage = customer.effectiveAbholungWochentage,
+                effectiveAuslieferungWochentage = customer.effectiveAuslieferungWochentage,
+                textPrimary = textPrimary
+            )
+        }
         Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
         CustomerDetailTerminRegelCard(
             intervalleToShow = intervalleToShow,

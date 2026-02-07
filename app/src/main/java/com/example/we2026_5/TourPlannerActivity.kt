@@ -156,7 +156,14 @@ class TourPlannerActivity : AppCompatActivity() {
                 },
                 onMap = {
                     pressedHeaderButton = "Karte"
-                    startActivity(Intent(this@TourPlannerActivity, MapViewActivity::class.java))
+                    val addresses = tourItems.filterIsInstance<ListItem.CustomerItem>()
+                        .map { it.customer.adresse }
+                        .filter { it.isNotBlank() }
+                    val intent = Intent(this@TourPlannerActivity, MapViewActivity::class.java)
+                    if (addresses.isNotEmpty()) {
+                        intent.putStringArrayListExtra(MapViewActivity.EXTRA_ADDRESSES, ArrayList(addresses))
+                    }
+                    startActivity(intent)
                     pressedHeaderButton = null
                 },
                 onRefresh = { coordinator.reloadCurrentView() },
@@ -207,6 +214,11 @@ class TourPlannerActivity : AppCompatActivity() {
                     if (customerId.isNotBlank()) {
                         startActivity(Intent(this@TourPlannerActivity, CustomerDetailActivity::class.java).apply { putExtra("CUSTOMER_ID", customerId) })
                     }
+                },
+                onMoveTourOrder = { fromIndex, toIndex ->
+                    val timestamp = viewModel.getSelectedTimestamp() ?: return@TourPlannerScreen
+                    val ids = tourItems.filterIsInstance<ListItem.CustomerItem>().map { it.customer.id }
+                    viewModel.moveTourOrder(timestamp, fromIndex, toIndex, ids)
                 }
             )
         }

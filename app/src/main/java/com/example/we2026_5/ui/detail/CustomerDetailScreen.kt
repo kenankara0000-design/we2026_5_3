@@ -23,6 +23,7 @@ import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
 import com.example.we2026_5.util.TerminAusKundeUtils
+import com.example.we2026_5.util.DialogBaseHelper
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.intervallTageOrDefault
 import com.example.we2026_5.util.tageAzuLOrDefault
@@ -219,10 +220,21 @@ fun CustomerDetailScreen(
         } else if (customer == null) {
             CustomerDetailNotFoundView(modifier = contentModifier, textSecondary = textSecondary)
         } else {
+            val context = LocalContext.current
             var showAddMonthlySheet by remember { mutableStateOf(false) }
             val currentFormState = editFormState ?: formState
             val onUpdateFormState: (AddCustomerState) -> Unit = { newState ->
                 if (isInEditMode) onUpdateEditFormState(newState) else formState = newState
+            }
+            val onStartDatumClick: () -> Unit = {
+                DialogBaseHelper.showDatePickerDialog(
+                    context = context,
+                    initialDate = currentFormState.erstelltAm.takeIf { it > 0 } ?: System.currentTimeMillis(),
+                    title = context.getString(R.string.label_startdatum_a),
+                    onDateSelected = { selected ->
+                        onUpdateFormState(currentFormState.copy(erstelltAm = TerminBerechnungUtils.getStartOfDay(selected)))
+                    }
+                )
             }
             Column(modifier = Modifier.fillMaxWidth().padding(paddingValues).padding(16.dp)) {
                 TabRow(selectedTabIndex = selectedTabIndex) {
@@ -259,6 +271,9 @@ fun CustomerDetailScreen(
                         customer = customer,
                         isInEditMode = isInEditMode,
                         intervalleToShow = if (isInEditMode) editIntervalle else customer.intervalle,
+                        currentFormState = currentFormState,
+                        onUpdateFormState = onUpdateFormState,
+                        onStartDatumClick = onStartDatumClick,
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
                         surfaceWhite = surfaceWhite,

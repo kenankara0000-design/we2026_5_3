@@ -35,24 +35,23 @@ class SevDeskImport(
             var updated = 0
             for (c in contacts) {
                 val key = "sevdesk_${c.id}"
+                val safeName = c.name.takeIf { it.isNotBlank() && it.lowercase() != "null" } ?: ""
                 val existingCustomer = byKundennummer[key]
                 if (existingCustomer != null) {
-                    val ok = customerRepository.updateCustomer(
-                        existingCustomer.id,
-                        mapOf(
-                            "name" to c.name,
-                            "adresse" to c.adresse,
-                            "plz" to c.plz,
-                            "stadt" to c.stadt
-                        )
+                    val updates = mutableMapOf<String, Any>(
+                        "adresse" to c.adresse,
+                        "plz" to c.plz,
+                        "stadt" to c.stadt
                     )
+                    if (safeName.isNotBlank()) updates["name"] = safeName
+                    val ok = customerRepository.updateCustomer(existingCustomer.id, updates)
                     if (ok) updated++
                 } else if (c.id in deletedIds) {
                     // Vom Nutzer gelöscht – nicht wieder anlegen
-                } else {
+                } else if (safeName.isNotBlank()) {
                     val customer = Customer(
                         id = UUID.randomUUID().toString(),
-                        name = c.name,
+                        name = safeName,
                         alias = "",
                         adresse = c.adresse,
                         plz = c.plz,

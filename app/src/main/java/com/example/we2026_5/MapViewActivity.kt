@@ -17,10 +17,21 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MapViewActivity : AppCompatActivity() {
 
+    companion object {
+        /** Optionale Wegpunkte in Reihenfolge (z. B. vom Tourenplaner). Wenn gesetzt, wird keine eigene Ladung ausgeführt. */
+        const val EXTRA_ADDRESSES = "com.example.we2026_5.EXTRA_ADDRESSES"
+    }
+
     private val viewModel: MapViewViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val intentAddresses = intent.getStringArrayListExtra(EXTRA_ADDRESSES)
+        if (!intentAddresses.isNullOrEmpty()) {
+            openMapsWithAddresses(intentAddresses, filteredToToday = false)
+            finish()
+            return
+        }
         setContent {
             MaterialTheme {
                 val state by viewModel.state.observeAsState(initial = MapViewState.Loading)
@@ -34,16 +45,7 @@ class MapViewActivity : AppCompatActivity() {
                 LaunchedEffect(state) {
                     when (val s = state) {
                         is MapViewState.Success -> {
-                            val addresses = s.addresses.joinToString("|") { Uri.encode(it) }
-                            val url = "https://www.google.com/maps/dir/?api=1&waypoints=$addresses"
-                            val mapIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                                setPackage("com.google.android.apps.maps")
-                            }
-                            if (mapIntent.resolveActivity(packageManager) != null) {
-                                startActivity(mapIntent)
-                            } else {
-                                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                            }
+                            openMapsWithAddresses(s.addresses, s.filteredToToday)
                             if (s.filteredToToday) {
                                 Toast.makeText(
                                     this@MapViewActivity,
@@ -57,6 +59,20 @@ class MapViewActivity : AppCompatActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun openMapsWithAddresses(addresses: List<String>, filteredToToday: Boolean) {
+        if (addresses.isEmpty()) return
+        val waypoints = addresses.joinToString("|") { Uri.encode(it) }
+        val url = "https://www.google.com/maps/dir/?api=1&waypoints=$waypoints"
+        val mapIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+            setPackage("com.google.android.apps.maps")
+        }
+        if (mapIntent.resolveActivity(packageManager) != null) {
+            startActivity(mapIntent)
+        } else {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
     }
 }

@@ -114,9 +114,16 @@ data class Customer(
     @Exclude
     private val faelligAm: Long = 0
 ) {
-    /** Anzeigename in der App: Alias, falls gesetzt, sonst name (z. B. für Rechnung bleibt name). @Exclude: nur berechnet, nie in Firebase speichern. */
+    /** Anzeigename in der App: Alias, falls gesetzt, sonst name. Leer oder "null" → "–" (z. B. SevDesk-Personen ohne Namen). @Exclude: nur berechnet, nie in Firebase speichern. */
     @get:Exclude
-    val displayName: String get() = alias.trim().ifBlank { name }
+    val displayName: String
+        get() {
+            val a = alias.trim()
+            if (a.isNotEmpty()) return a
+            val n = name.trim()
+            if (n.isNotEmpty() && n.equals("null", ignoreCase = true).not()) return n
+            return "–"
+        }
 
     /**
      * Berechnet das nächste Fälligkeitsdatum basierend auf letzterTermin und Intervall.

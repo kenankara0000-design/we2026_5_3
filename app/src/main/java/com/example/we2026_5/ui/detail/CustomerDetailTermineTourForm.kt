@@ -1,4 +1,4 @@
-package com.example.we2026_5.ui.addcustomer
+package com.example.we2026_5.ui.detail
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,83 +25,30 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.addcustomer.AddCustomerIntervallSchnellauswahl
+import com.example.we2026_5.ui.addcustomer.AddCustomerRadioOption
+import com.example.we2026_5.ui.addcustomer.AddCustomerState
+import com.example.we2026_5.ui.addcustomer.AddCustomerTageAzuLField
+import com.example.we2026_5.ui.addcustomer.AddCustomerWeekdaySelectorMulti
 import com.example.we2026_5.ui.common.DetailUiConstants
 import com.example.we2026_5.ui.common.ExpandableSection
 
 /**
- * Gemeinsame Formular-Composable für Kunde anlegen und Kunde bearbeiten.
- * Enthält alle Stammdaten-Felder und eine eingeklappte Sektion „Weitere Angaben“.
+ * Nur der Termin- und Tour-Bereich (Kundenart, T.-Typ, Startdatum, Ohne Tour, Intervall, L-Termin, Abhol-/Auslieferungstage, Weitere Angaben).
+ * Wird im Tab „Termine & Tour“ angezeigt (Kunden-Detail Bearbeitung).
  */
 @Composable
-fun CustomerStammdatenForm(
+fun CustomerDetailTermineTourForm(
     state: AddCustomerState,
     onUpdate: (AddCustomerState) -> Unit,
-    onStartDatumClick: () -> Unit = {},
-    modifier: Modifier = Modifier,
-    /** Wenn false, werden nur reine Stammdaten (Name, Adresse, Telefon, Notizen) gezeigt; Termine/Tour-Bereich steht dann z. B. im Tab „Termine & Tour“. */
-    showTermineTourSection: Boolean = true
+    onStartDatumClick: () -> Unit
 ) {
     val context = LocalContext.current
     val textPrimary = Color(ContextCompat.getColor(context, R.color.text_primary))
     val textSecondary = Color(ContextCompat.getColor(context, R.color.text_secondary))
     val spacing = DetailUiConstants.FieldSpacing
 
-    Column(modifier = modifier) {
-        OutlinedTextField(
-            value = state.name,
-            onValueChange = { onUpdate(state.copy(name = it, errorMessage = null)) },
-            label = { Text(stringResource(R.string.hint_name_required)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            isError = state.errorMessage != null
-        )
-        Spacer(modifier = Modifier.height(spacing))
-        OutlinedTextField(
-            value = state.alias,
-            onValueChange = { onUpdate(state.copy(alias = it)) },
-            label = { Text(stringResource(R.string.label_customer_alias)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.height(spacing))
-        OutlinedTextField(
-            value = state.adresse,
-            onValueChange = { onUpdate(state.copy(adresse = it)) },
-            label = { Text(stringResource(R.string.hint_address_optional)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.height(spacing))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            OutlinedTextField(
-                value = state.plz,
-                onValueChange = { onUpdate(state.copy(plz = it)) },
-                label = { Text(stringResource(R.string.label_zip_optional)) },
-                modifier = Modifier.weight(0.35f),
-                singleLine = true
-            )
-            OutlinedTextField(
-                value = state.stadt,
-                onValueChange = { onUpdate(state.copy(stadt = it)) },
-                label = { Text(stringResource(R.string.label_city_optional)) },
-                modifier = Modifier.weight(0.65f),
-                singleLine = true
-            )
-        }
-        Spacer(modifier = Modifier.height(spacing))
-        OutlinedTextField(
-            value = state.telefon,
-            onValueChange = { onUpdate(state.copy(telefon = it)) },
-            label = { Text(stringResource(R.string.hint_phone_optional)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.height(spacing))
-
-        if (showTermineTourSection) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Start,
@@ -275,18 +222,6 @@ fun CustomerStammdatenForm(
             )
         }
 
-        } // showTermineTourSection (Kundenart bis Wochentage)
-
-        Spacer(modifier = Modifier.height(spacing))
-        OutlinedTextField(
-            value = state.notizen,
-            onValueChange = { onUpdate(state.copy(notizen = it)) },
-            label = { Text(stringResource(R.string.hint_notes)) },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3
-        )
-
-        if (showTermineTourSection) {
         Spacer(modifier = Modifier.height(DetailUiConstants.SectionSpacing))
         ExpandableSection(
             defaultExpanded = false,
@@ -356,6 +291,5 @@ fun CustomerStammdatenForm(
                 )
             }
         }
-        } // showTermineTourSection (Weitere Angaben / Tour)
     }
 }

@@ -133,9 +133,10 @@ fun TourPlannerTopBar(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            val headerButtonHeight = 56.dp
             Button(
                 onClick = onMap,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).height(headerButtonHeight),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (pressedHeaderButton == "Karte") statusWarning else buttonBlue
                 )
@@ -151,7 +152,7 @@ fun TourPlannerTopBar(
             }
             Button(
                 onClick = onToday,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).height(headerButtonHeight),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isToday) statusWarning else buttonBlue
                 )
@@ -167,7 +168,7 @@ fun TourPlannerTopBar(
             }
             Button(
                 onClick = onErledigtClick,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).height(headerButtonHeight),
                 colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.section_done_bg))
             ) {
                 Text(

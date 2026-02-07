@@ -5,6 +5,8 @@ import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.ErfassungRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
+import com.example.we2026_5.data.repository.TourOrderRepository
+import com.example.we2026_5.data.repository.TourOrderRepositoryImpl
 import com.example.we2026_5.data.repository.TourPlanRepository
 import com.example.we2026_5.ui.main.MainViewModel
 import com.example.we2026_5.ui.statistics.StatisticsViewModel
@@ -40,6 +42,7 @@ val appModule = module {
     single { CustomerRepository(get()) }
     single { KundenListeRepository(get()) }
     single { TourPlanRepository(get()) }
+    single<TourOrderRepository> { TourOrderRepositoryImpl(get()) }
     single { ArticleRepository(get()) }
     single { ErfassungRepository(get()) }
     
@@ -48,7 +51,7 @@ val appModule = module {
     viewModel { StatisticsViewModel(get()) }
     viewModel { ListeErstellenViewModel(get(), get()) }
     viewModel { CustomerManagerViewModel(get()) }
-    viewModel { TourPlannerViewModel(get(), get()) }
+    viewModel { TourPlannerViewModel(get(), get(), get()) }
     viewModel { AddCustomerViewModel() }
     viewModel { KundenListenViewModel(get<Context>(), get<KundenListeRepository>(), get<CustomerRepository>()) }
     viewModel { ListeBearbeitenViewModel(get(), get<CustomerRepository>()) }

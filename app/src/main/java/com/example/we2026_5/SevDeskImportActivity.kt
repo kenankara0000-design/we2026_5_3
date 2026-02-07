@@ -27,7 +27,9 @@ class SevDeskImportActivity : AppCompatActivity() {
                     onSaveToken = { viewModel.saveToken() },
                     onImportContacts = { viewModel.importContacts() },
                     onImportArticles = { viewModel.importArticles() },
-                    onClearMessage = { viewModel.clearMessage() }
+                    onClearMessage = { viewModel.clearMessage() },
+                    onRunApiTest = { viewModel.runApiTest() },
+                    onClearTestResult = { viewModel.clearTestResult() }
                 )
             }
         }

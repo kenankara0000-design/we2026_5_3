@@ -96,14 +96,26 @@ object SevDeskApi {
         return cat.optString("id", "").trim() == CATEGORY_ID_KUNDE
     }
 
-    /** SevDesk Contact: Firma hat "name", Person hat "familyname" + "surename". */
+    /**
+     * SevDesk Contact: Organisation hat "name", Person (Privat) hat Vorname + Nachname.
+     * API liefert teils camelCase (sureName, familyName), teils lowercase – beide lesen.
+     * Leer oder Literal "null" werden nicht als gültiger Name verwendet.
+     */
     private fun contactDisplayName(obj: JSONObject): String {
-        val name = obj.optString("name", "").trim()
-        if (name.isNotEmpty()) return name
-        val family = obj.optString("familyname", "").trim()
-        val sure = obj.optString("surename", "").trim()
-        return listOf(sure, family).filter { it.isNotEmpty() }.joinToString(" ").trim()
+        val name = optStringTrim(obj, "name")
+        if (name.isNotEmpty() && name.lowercase() != "null") return name
+        val family = optStringTrim(obj, "familyName").ifBlank { optStringTrim(obj, "familyname") }
+        val sure = optStringTrim(obj, "sureName").ifBlank { optStringTrim(obj, "surename") }
+        val vorname = optStringTrim(obj, "firstname").ifBlank { optStringTrim(obj, "firstName") }
+        val nachname = family.ifBlank { optStringTrim(obj, "lastName").ifBlank { optStringTrim(obj, "lastname") } }
+        val first = sure.ifBlank { vorname }
+        val last = family.ifBlank { nachname }
+        val combined = listOf(first, last).filter { it.isNotEmpty() && it.lowercase() != "null" }.joinToString(" ").trim()
+        return if (combined.lowercase() == "null") "" else combined
     }
+
+    private fun optStringTrim(obj: JSONObject, key: String): String =
+        obj.optString(key, "").trim()
 
     /**
      * Adresse aus Contact-Objekt: Direkt (street/zip/city) oder aus eingebettetem "addresses"-Array
@@ -190,6 +202,51 @@ object SevDeskApi {
         return unity.optString("name", "").trim()
             .ifBlank { unity.optString("code", "").trim() }
             .ifBlank { unity.optString("id", "").trim() }
+    }
+
+    // ---------- Nur zum Testen: Roh-Responses prüfen (kundenspezifische Preise/Artikel) ----------
+
+    private const val TEST_RAW_MAX_LEN = 8000
+
+    /**
+     * Führt einen GET aus und gibt die Response-Body als String zurück (gekürzt).
+     * Nur zum Testen, ob z. B. embed=partUnitPrices kundenspezifische Preise liefert.
+     */
+    fun getRawForTest(token: String, path: String, query: String): String {
+        val url = urlWithToken(path, query, token)
+        val conn = url.openConnection() as HttpURLConnection
+        conn.requestMethod = "GET"
+        conn.setRequestProperty("Accept", "application/json")
+        setTokenHeader(conn, token)
+        conn.connectTimeout = 15000
+        conn.readTimeout = 15000
+        val code = conn.responseCode
+        val body = if (code == 200) {
+            conn.inputStream.use { Scanner(it).useDelimiter("\\A").next() }
+        } else {
+            val err = conn.errorStream?.use { Scanner(it).useDelimiter("\\A").next() } ?: ""
+            "HTTP $code\n$err"
+        }
+        return if (body.length <= TEST_RAW_MAX_LEN) body
+        else body.take(TEST_RAW_MAX_LEN) + "\n\n… (gekürzt, ${body.length} Zeichen gesamt)"
+    }
+
+    /**
+     * Test 1: GET /Part mit embed=unity,partUnitPrices (limit 2).
+     * Liefert die API kundenspezifische Preise, sollten sie in partUnitPrices o. ä. erscheinen.
+     */
+    fun testPartsWithEmbed(token: String): String {
+        val q = "limit=2&embed=unity,partUnitPrices"
+        return getRawForTest(token, "/Part", q)
+    }
+
+    /**
+     * Test 2: GET /Contact für einen einzelnen Kunden (erster Treffer, limit 1) mit erweitertem embed.
+     * Prüfen, ob Kontakt kundenspezifische Artikel/Preise enthält.
+     */
+    fun testContactWithEmbed(token: String): String {
+        val filter = "category[id]=$CATEGORY_ID_KUNDE&category[objectName]=Category&limit=1&embed=addresses"
+        return getRawForTest(token, "/Contact", filter)
     }
 }
 
