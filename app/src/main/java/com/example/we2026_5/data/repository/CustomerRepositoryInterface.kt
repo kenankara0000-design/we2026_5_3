@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.Flow
 interface CustomerRepositoryInterface {
 
     fun getAllCustomersFlow(): Flow<List<Customer>>
+    /** Nur Kunden mit ohneTour == false (für TourPlanner, skaliert bei vielen Kunden). */
+    fun getCustomersForTourFlow(): Flow<List<Customer>>
     /** Echtzeit-Updates für einen einzelnen Kunden (für Detail-Screen). */
     fun getCustomerFlow(customerId: String): Flow<Customer?>
     suspend fun getAllCustomers(): List<Customer>

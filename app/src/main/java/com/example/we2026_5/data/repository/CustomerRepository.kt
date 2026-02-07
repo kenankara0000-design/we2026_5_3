@@ -18,11 +18,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import java.util.concurrent.atomic.AtomicBoolean
 
 class CustomerRepository(
     private val database: FirebaseDatabase
 ) : CustomerRepositoryInterface {
     private val customersRef: DatabaseReference = database.reference.child("customers")
+    private val customersForTourRef: DatabaseReference = database.reference.child("customers_for_tour")
+    private val tourIndexBackfillDone = AtomicBoolean(false)
 
     /** Wartet auf Task oder gibt bei Timeout (Offline) true zurück – Realtime DB speichert lokal. */
     private suspend fun awaitWithTimeout(ms: Long = 2000, block: suspend () -> Unit): Boolean {
@@ -67,6 +70,61 @@ class CustomerRepository(
     }
 
     /**
+     * Füllt customers_for_tour einmalig aus allen Kunden (Migration für bestehende DBs).
+     */
+    private suspend fun ensureTourIndexFilled() {
+        try {
+            val all = getAllCustomers()
+            for (c in all) {
+                syncTourCustomer(c)
+            }
+        } catch (_: Exception) { }
+    }
+
+    /**
+     * Lädt nur Tour-Kunden (ohneTour == false) für TourPlanner. Weniger Daten bei vielen Kunden (Punkt 5).
+     */
+    override fun getCustomersForTourFlow(): Flow<List<Customer>> = callbackFlow {
+        kotlinx.coroutines.CoroutineScope(coroutineContext).launch(Dispatchers.Default) {
+            if (tourIndexBackfillDone.compareAndSet(false, true)) {
+                ensureTourIndexFilled()
+            }
+        }
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                CoroutineScope(coroutineContext).launch(Dispatchers.Default) {
+                    val customers = mutableListOf<Customer>()
+                    snapshot.children.forEach { child ->
+                        val key = child.key ?: return@forEach
+                        CustomerSnapshotParser.parseCustomerSnapshot(child, key)?.let { customers.add(it) }
+                    }
+                    trySend(customers.sortedBy { it.name })
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {
+                close(Exception(error.message))
+            }
+        }
+        customersForTourRef.addValueEventListener(listener)
+        awaitClose { customersForTourRef.removeEventListener(listener) }
+    }
+
+    /**
+     * Synchronisiert einen Kunden in customers_for_tour: hinzufügen wenn !ohneTour, sonst entfernen.
+     */
+    private suspend fun syncTourCustomer(customer: Customer) {
+        try {
+            if (customer.ohneTour) {
+                customersForTourRef.child(customer.id).removeValue().await()
+            } else {
+                customersForTourRef.child(customer.id).setValue(customer).await()
+            }
+        } catch (_: Exception) {
+            // Offline/Fehler – Realtime DB puffert; kein Abbruch
+        }
+    }
+
+    /**
      * Echtzeit-Updates für einen einzelnen Kunden (für Detail-Screen). Parsing auf Hintergrund-Thread.
      */
     override fun getCustomerFlow(customerId: String): Flow<Customer?> = callbackFlow {
@@ -108,6 +166,7 @@ class CustomerRepository(
     override suspend fun saveCustomer(customer: Customer): Boolean {
         return try {
             awaitWithTimeout { customersRef.child(customer.id).setValue(customer).await() }
+            syncTourCustomer(customer)
             if (customer.verschobeneTermine.isNotEmpty()) {
                 updateCustomer(customer.id, mapOf("verschobeneTermine" to CustomerSnapshotParser.serializeVerschobeneTermine(customer.verschobeneTermine)))
             }
@@ -134,6 +193,10 @@ class CustomerRepository(
             val filtered = withoutDeprecatedCustomerFields(updates)
             if (filtered.isEmpty()) return true
             awaitWithTimeout { customersRef.child(customerId).updateChildren(filtered).await() }
+            if ("ohneTour" in filtered) {
+                getCustomerById(customerId)?.let { syncTourCustomer(it) }
+            }
+            true
         } catch (e: Exception) {
             // Nur echte Fehler werden als Fehler behandelt
             android.util.Log.e("CustomerRepository", "Error updating customer", e)
@@ -153,6 +216,9 @@ class CustomerRepository(
             val filtered = withoutDeprecatedCustomerFields(updates)
             if (filtered.isEmpty()) return Result.Success(true)
             awaitWithTimeout { customersRef.child(customerId).updateChildren(filtered).await() }
+            if ("ohneTour" in filtered) {
+                getCustomerById(customerId)?.let { syncTourCustomer(it) }
+            }
             Result.Success(true)
         } catch (e: Exception) {
             android.util.Log.e("CustomerRepository", "Error updating customer", e)
@@ -166,6 +232,8 @@ class CustomerRepository(
     override suspend fun deleteCustomer(customerId: String): Boolean {
         return try {
             awaitWithTimeout { customersRef.child(customerId).removeValue().await() }
+            customersForTourRef.child(customerId).removeValue().await()
+            true
         } catch (e: Exception) {
             // Nur echte Fehler werden als Fehler behandelt
             android.util.Log.e("CustomerRepository", "Error deleting customer", e)
@@ -176,6 +244,7 @@ class CustomerRepository(
     override suspend fun deleteCustomerResult(customerId: String): Result<Boolean> {
         return try {
             awaitWithTimeout { customersRef.child(customerId).removeValue().await() }
+            customersForTourRef.child(customerId).removeValue().await()
             Result.Success(true)
         } catch (e: Exception) {
             android.util.Log.e("CustomerRepository", "Error deleting customer", e)

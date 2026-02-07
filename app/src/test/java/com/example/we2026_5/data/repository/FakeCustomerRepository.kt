@@ -16,6 +16,9 @@ class FakeCustomerRepository : CustomerRepositoryInterface {
     private val _customers = MutableStateFlow<List<Customer>>(emptyList())
     override fun getAllCustomersFlow(): Flow<List<Customer>> = _customers
 
+    override fun getCustomersForTourFlow(): Flow<List<Customer>> =
+        _customers.map { list -> list.filter { !it.ohneTour } }
+
     override fun getCustomerFlow(customerId: String): Flow<Customer?> =
         _customers.map { list -> list.find { it.id == customerId } }
 

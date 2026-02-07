@@ -47,7 +47,7 @@ class TourPlannerViewModel(
     init {
         // Sammle Updates von Firebase-Flows und aktualisiere StateFlows
         viewModelScope.launch {
-            repository.getAllCustomersFlow().collect { customers ->
+            repository.getCustomersForTourFlow().collect { customers ->
                 _customersStateFlow.value = customers
             }
         }
@@ -82,7 +82,6 @@ class TourPlannerViewModel(
             AgentDebugLog.log("TourPlannerViewModel.kt", "combine_process_start", mapOf("n" to customers.size, "ts" to timestamp), "H1")
             // #endregion
             val activeCustomers = CustomerTermFilter.filterActiveForTerms(customers, System.currentTimeMillis())
-                .filter { !it.ohneTour }
             val result = dataProcessor.processTourData(activeCustomers, listen, timestamp, expandedSections)
             // #region agent log
             AgentDebugLog.log("TourPlannerViewModel.kt", "combine_process_end", mapOf("duration_ms" to (System.currentTimeMillis() - t0), "items" to result.items.size), "H1")
