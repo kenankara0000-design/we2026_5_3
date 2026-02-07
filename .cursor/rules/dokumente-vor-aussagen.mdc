@@ -1,5 +1,5 @@
 ---
-description: Vor Aussagen oder Aktionen: PROJECT_MANIFEST.md lesen – niemals nur aus Code schließen
+description: Manifest vor Aussagen; IDE/Dateigröße (Faustwerte); Performance (Algorithmen/Netzwerk/UI wichtiger als Zeilenzahl)
 globs: 
 alwaysApply: true
 ---
@@ -15,3 +15,23 @@ alwaysApply: true
 3. **Wenn das Manifest fehlt oder veraltet ist:** Das offen sagen. Nicht raten. Den Nutzer fragen oder im Manifest nachtragen.
 
 4. **Regeln einhalten.** Die Regeln in `.cursorrules` und `.cursor/rules/` gelten immer.
+
+---
+
+## IDE / Entwicklung: Dateigröße
+
+- **Faustwert:** 200–400 Zeilen pro Datei sind gut handhabbar.
+- **Bis ca. 600 Zeilen:** meist noch überschaubar.
+- **1000+ Zeilen:** Navigation und Refactoring werden schwerer; die IDE kann langsamer reagieren.
+
+**Für Android/Kotlin (Compose):**
+
+- **Sinnvoll:** etwa 300–500 Zeilen pro Screen bzw. ViewModel.
+- **Größere Screens:** in Abschnitte aufteilen (z. B. `*TopBar.kt`, `*StateViews.kt`, `*MetadatenBlock.kt`, `*Section.kt` usw.), wie beim Refactoring von ListeBearbeitenScreen, CustomerDetailScreen, TourPlannerScreen.
+
+---
+
+## Performance der App
+
+- **Wichtiger als Zeilenzahl:** Algorithmen, Speicherverbrauch, Netzwerk- und UI-Operationen.
+- Die Anzahl Zeilen pro Datei beeinflusst die **Laufzeit-Performance der App nicht**; sie betrifft vor allem Wartbarkeit und IDE-Verhalten.
