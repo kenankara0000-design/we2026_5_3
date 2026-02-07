@@ -55,7 +55,7 @@
 
 | # | Datei | Zeilen | Empfohlene Maßnahme |
 |---|--------|--------|----------------------|
-| A.1 | **TourPlannerScreen.kt** | 615 | Weitere Sub-Composables auslagern (z. B. Filter-/Datum-Bereich, leere Zustände, BottomSheet-Wrapper); ggf. ErledigungSheetContent weiter aufteilen. Ziel: unter 450 Zeilen. |
+| A.1 | **TourPlannerScreen.kt** | ~~615~~ **262** | **Erledigt (Feb 2026):** Sub-Composables ausgelagert: TourPlannerOverviewDialog, TourPlannerTopBar, TourPlannerStateViews, TourPlannerErledigtSheet. Ziel unter 450 erreicht. |
 | A.2 | **CustomerDetailScreen.kt** | 575 | Weitere Blöcke in eigene Composables (z. B. „Nächster Termin“, Kunden-Typ-Bereich, Aktionen-Leiste) in `ui/detail/` auslagern. Ziel: unter 450 Zeilen. |
 | A.3 | **CustomerRepository.kt** | 409 | Parsing/Mapping (parseCustomerSnapshot etc.) in eigene Datei (z. B. CustomerParser / CustomerMapping); Repository nur noch Orchestrierung + Firebase-Calls. Ziel: Repository unter 250 Zeilen. |
 | A.4 | **CustomerManagerScreen.kt** | 421 | Schon ausgelagert: CustomerManagerCard. Prüfen: weitere Sektionen (Filter, Suchleiste, leere Ansicht) in eigene Composables. Ziel: unter 350 Zeilen. |
@@ -66,7 +66,7 @@
 | A.9 | **ListeBearbeitenScreen.kt** | 292 | Bereits IntervallRow/KundeInListeItem ausgelagert. Optional: TopBar-/Metadaten-Block trennen. |
 | A.10 | **KundenListenScreen.kt** | 290 | Optional: Filter-Chips, Listen-Karte in eigene Dateien. |
 
-**Reihenfolge:** A.1 und A.2 zuerst (größte Dateien), dann A.3 (Repository), danach nach Aufwand A.4–A.10.
+**Reihenfolge:** A.1 erledigt. Als Nächstes A.2 (CustomerDetailScreen), dann A.3 (Repository), danach nach Aufwand A.4–A.10.
 
 ---
 
@@ -119,13 +119,14 @@
 
 **Empfohlene Reihenfolge:**
 
-1. **C.1** – Adapter-Nutzung prüfen (schnell, klärt toten Code).
-2. **B.1** – getFaelligAm() ersetzen (weniger Deprecated-Warnungen, einheitliche Fälligkeitslogik).
-3. **A.1, A.2** – TourPlannerScreen und CustomerDetailScreen verkleinern.
-4. **A.3** – CustomerRepository Parsing auslagern.
-5. **B.2/B.3** – restliche Deprecated-Nutzung prüfen.
-6. **C.2, C.3** – Duplikate und doppelte Tests.
-7. **A.4–A.10, D, E** – nach Bedarf.
+1. **C.1** – Adapter-Nutzung prüfen (schnell, klärt toten Code). ✓ Erledigt.
+2. **B.1** – getFaelligAm() ersetzen. ✓ Erledigt.
+3. **A.1** – TourPlannerScreen verkleinern. ✓ Erledigt (Feb 2026).
+4. **A.2** – CustomerDetailScreen verkleinern.
+5. **A.3** – CustomerRepository Parsing auslagern.
+6. **B.2/B.3** – restliche Deprecated-Nutzung prüfen.
+7. **C.2, C.3** – Duplikate und doppelte Tests.
+8. **A.4–A.10, D, E** – nach Bedarf.
 
 ---
 
@@ -133,7 +134,7 @@
 
 | Zeilen | Datei |
 |--------|--------|
-| 615 | ui/tourplanner/TourPlannerScreen.kt |
+| 262 | ui/tourplanner/TourPlannerScreen.kt |
 | 575 | ui/detail/CustomerDetailScreen.kt |
 | 409 | data/repository/CustomerRepository.kt |
 | 421 | ui/customermanager/CustomerManagerScreen.kt |
