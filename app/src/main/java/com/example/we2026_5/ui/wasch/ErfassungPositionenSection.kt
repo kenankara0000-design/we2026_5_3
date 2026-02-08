@@ -28,15 +28,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.R
-import com.example.we2026_5.wasch.Article
 import com.example.we2026_5.ui.wasch.ErfassungZeile
 
 @Composable
 fun ErfassungPositionenSection(
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
-    searchResults: List<Article>,
-    onArticleSelected: (Article) -> Unit,
+    searchResults: List<ArticleDisplay>,
+    onArticleSelected: (ArticleDisplay) -> Unit,
     zeilen: List<ErfassungZeile>,
     onMengeChange: (Int, Int) -> Unit,
     onRemovePosition: (Int) -> Unit,
@@ -60,20 +59,21 @@ fun ErfassungPositionenSection(
         )
         if (searchQuery.isNotBlank() && searchResults.isNotEmpty()) {
             Spacer(Modifier.height(4.dp))
-            searchResults.take(8).forEach { article ->
+            searchResults.take(8).forEach { item ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 2.dp)
-                        .clickable { onArticleSelected(article) },
+                        .clickable { onArticleSelected(item) },
                     colors = CardDefaults.cardColors(containerColor = colorResource(R.color.surface_white))
                 ) {
-                    Text(
-                        text = "${article.name}${if (article.einheit.isNotBlank()) " (${article.einheit})" else ""}",
-                        modifier = Modifier.padding(12.dp),
-                        fontSize = 14.sp,
-                        color = textPrimary
-                    )
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = "${item.name}${if (item.einheit.isNotBlank()) " (${item.einheit})" else ""}${item.priceLabel?.let { " · $it" } ?: ""}",
+                            fontSize = 14.sp,
+                            color = textPrimary
+                        )
+                    }
                 }
             }
         }

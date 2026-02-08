@@ -1,0 +1,60 @@
+package com.example.we2026_5
+
+import android.content.Intent
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.compose.setContent
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.example.we2026_5.ui.wasch.BelegeScreen
+import com.example.we2026_5.ui.wasch.BelegeUiState
+import com.example.we2026_5.ui.wasch.BelegeViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
+
+class BelegeActivity : AppCompatActivity() {
+
+    private val viewModel: BelegeViewModel by viewModel()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            MaterialTheme {
+                val state by viewModel.uiState.collectAsState()
+                val belegMonate by viewModel.belegMonate.collectAsState(initial = emptyList())
+                val articles by viewModel.articles.collectAsState(initial = emptyList())
+                BelegeScreen(
+                    state = state,
+                    belegMonate = belegMonate,
+                    articles = articles,
+                    onBack = {
+                        when (state) {
+                            is BelegeUiState.KundeSuchen -> finish()
+                            is BelegeUiState.BelegListe -> viewModel.backToKundeSuchen()
+                            is BelegeUiState.BelegDetail -> viewModel.backFromBelegDetail()
+                        }
+                    },
+                    onCustomerSearchQueryChange = { viewModel.setCustomerSearchQuery(it) },
+                    onKundeWaehlen = { viewModel.kundeGewaehlt(it) },
+                    onBackToKundeSuchen = { viewModel.backToKundeSuchen() },
+                    onBelegClick = { viewModel.openBelegDetail(it) },
+                    onBackFromBelegDetail = { viewModel.backFromBelegDetail() },
+                    onDeleteErfassung = { erfassung ->
+                        AlertDialog.Builder(this@BelegeActivity)
+                            .setTitle(R.string.dialog_erfassung_loeschen_title)
+                            .setMessage(R.string.dialog_erfassung_loeschen_message)
+                            .setPositiveButton(R.string.dialog_loeschen) { _, _ ->
+                                viewModel.deleteErfassung(erfassung) {
+                                    Toast.makeText(this@BelegeActivity, getString(R.string.wasch_erfassung_geloescht), Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                            .setNegativeButton(R.string.btn_cancel, null)
+                            .show()
+                    }
+                )
+            }
+        }
+    }
+}

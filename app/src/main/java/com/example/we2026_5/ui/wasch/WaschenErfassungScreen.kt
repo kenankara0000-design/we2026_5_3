@@ -25,13 +25,18 @@ fun WaschenErfassungScreen(
     onBackToKundeSuchen: () -> Unit,
     onErfassungClick: (com.example.we2026_5.wasch.WaschErfassung) -> Unit,
     onNeueErfassungFromListe: () -> Unit,
+    belegMonate: List<BelegMonat>,
+    onBelegClick: (BelegMonat) -> Unit,
+    onBackFromBelegDetail: () -> Unit,
     onBackFromDetail: () -> Unit,
     onMengeChangeByIndex: (index: Int, menge: Int) -> Unit,
     onNotizChange: (String) -> Unit,
     onSpeichern: () -> Unit,
     onBackFromErfassen: () -> Unit,
     onArtikelSearchQueryChange: (String) -> Unit,
-    onAddPosition: (Article) -> Unit,
+    erfassungArticles: List<ArticleDisplay>,
+    showAllgemeinePreiseHint: Boolean,
+    onAddPosition: (ArticleDisplay) -> Unit,
     onRemovePosition: (Int) -> Unit,
     onDeleteErfassung: (com.example.we2026_5.wasch.WaschErfassung) -> Unit = {}
 ) {
@@ -61,15 +66,26 @@ fun WaschenErfassungScreen(
                 )
             }
             is WaschenErfassungUiState.ErfassungenListe -> {
-                WaschenErfassungErfassungenListeContent(
+                WaschenErfassungBelegListeContent(
                     customer = state.customer,
-                    erfassungen = erfassungen,
-                    primaryBlue = primaryBlue,
+                    belege = belegMonate,
                     textPrimary = textPrimary,
                     textSecondary = textSecondary,
                     onBackToKundeSuchen = onBackToKundeSuchen,
                     onNeueErfassungFromListe = onNeueErfassungFromListe,
-                    onErfassungClick = onErfassungClick,
+                    onBelegClick = onBelegClick
+                )
+            }
+            is WaschenErfassungUiState.BelegDetail -> {
+                val articlesMap = articles.associateBy { it.id }
+                WaschenErfassungBelegDetailContent(
+                    customerName = state.customer.displayName,
+                    monthLabel = state.monthLabel,
+                    erfassungen = state.erfassungen,
+                    articlesMap = articlesMap,
+                    textPrimary = textPrimary,
+                    textSecondary = textSecondary,
+                    onBack = onBackFromBelegDetail,
                     onDeleteErfassung = onDeleteErfassung
                 )
             }
@@ -83,7 +99,7 @@ fun WaschenErfassungScreen(
                 )
             }
             is WaschenErfassungUiState.Erfassen -> {
-                val searchResults = articles.filter { it.name.contains(state.artikelSearchQuery, ignoreCase = true) }
+                val searchResults = erfassungArticles.filter { it.name.contains(state.artikelSearchQuery, ignoreCase = true) }
                 WaschenErfassungErfassenContent(
                     customer = state.customer,
                     notiz = state.notiz,
@@ -94,6 +110,7 @@ fun WaschenErfassungScreen(
                     zeilen = state.zeilen,
                     onMengeChangeByIndex = onMengeChangeByIndex,
                     onAddPosition = onAddPosition,
+                    showAllgemeinePreiseHint = showAllgemeinePreiseHint,
                     onRemovePosition = onRemovePosition,
                     errorMessage = state.errorMessage,
                     isSaving = state.isSaving,

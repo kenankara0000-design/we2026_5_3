@@ -208,6 +208,8 @@
     <string name="settings_reset_app_data_done">App-Daten zurückgesetzt.</string>
     <string name="erfassung_menu_title">Erfassung</string>
     <string name="erfassung_menu_start">Erfassung starten</string>
+    <string name="erfassung_menu_belege">Belege</string>
+    <string name="erfassung_menu_kundenpreise">Kundenpreise</string>
     <string name="erfassung_menu_artikel">Artikel verwalten</string>
     <string name="main_slot_button_label">Slot auswählen</string>
 
@@ -669,7 +671,12 @@
     <string name="wasch_erfasste_sachen">Erfasste Sachen</string>
     <string name="wasch_neue_erfassung">Neue Erfassung</string>
     <string name="wasch_x_artikel">%d Artikel</string>
+    <string name="wasch_belege">Belege</string>
+    <string name="wasch_x_erfassungen">%d Erfassungen</string>
+    <string name="wasch_beleg_monat">Beleg %s</string>
     <string name="wasch_keine_erfassungen">Noch keine Erfassungen für diesen Kunden.</string>
+    <string name="wasch_keine_kundenpreise">Keine Kundenpreise für diesen Kunden.</string>
+    <string name="wasch_allgemeine_preise_hinweis">Allgemeine Preise (keine kundenspezifischen Preise)</string>
     <string name="wasch_erfassung_loeschen">Erfassung löschen</string>
     <string name="dialog_erfassung_loeschen_title">Erfassung löschen?</string>
     <string name="dialog_erfassung_loeschen_message">Diese Erfassung unwiderruflich löschen?</string>

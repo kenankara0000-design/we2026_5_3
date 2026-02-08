@@ -60,6 +60,7 @@ Das Manifest ergänzt sie um Ziele und Scope; es ersetzt sie nicht.
 - **tourPlaene** – Tour-Slots (Wochentag, Stadt, Zeitfenster; TourSlot)
 - **articles** – Artikel (z. B. nach SevDesk-Import)
 - **waschErfassungen** – Erfassungen (Kunde, Positionen, Datum)
+- **kundenPreise** – Kundenpreise pro Kunde/Artikel (customerId → articleId → priceNet, priceGross)
 - Fotos: Firebase Storage (Pfade in Customer.fotoUrls)
 
 ---

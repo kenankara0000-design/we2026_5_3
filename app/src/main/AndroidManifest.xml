@@ -109,6 +109,16 @@
             android:theme="@style/Theme.We2026_5.LightBackground" />
 
         <activity
+            android:name=".BelegeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.We2026_5.LightBackground" />
+
+        <activity
+            android:name=".KundenpreiseActivity"
+            android:exported="false"
+            android:theme="@style/Theme.We2026_5.LightBackground" />
+
+        <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.We2026_5.LightBackground" />

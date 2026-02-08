@@ -24,7 +24,6 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.R
 import com.example.we2026_5.ui.wasch.ErfassungPositionenSection
 import com.example.we2026_5.ui.wasch.ErfassungZeile
-import com.example.we2026_5.wasch.Article
 
 @Composable
 fun WaschenErfassungErfassenContent(
@@ -33,10 +32,11 @@ fun WaschenErfassungErfassenContent(
     onNotizChange: (String) -> Unit,
     artikelSearchQuery: String,
     onArtikelSearchQueryChange: (String) -> Unit,
-    searchResults: List<Article>,
+    searchResults: List<ArticleDisplay>,
     zeilen: List<ErfassungZeile>,
     onMengeChangeByIndex: (Int, Int) -> Unit,
-    onAddPosition: (Article) -> Unit,
+    onAddPosition: (ArticleDisplay) -> Unit,
+    showAllgemeinePreiseHint: Boolean = false,
     onRemovePosition: (Int) -> Unit,
     errorMessage: String?,
     isSaving: Boolean,
@@ -80,6 +80,14 @@ fun WaschenErfassungErfassenContent(
             singleLine = true
         )
         Spacer(Modifier.height(16.dp))
+        if (showAllgemeinePreiseHint) {
+            Text(
+                stringResource(R.string.wasch_allgemeine_preise_hinweis),
+                fontSize = 12.sp,
+                color = textSecondary,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
         ErfassungPositionenSection(
             searchQuery = artikelSearchQuery,
             onSearchQueryChange = onArtikelSearchQueryChange,

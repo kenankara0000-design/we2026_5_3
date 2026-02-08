@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.data.repository.KundenPreiseRepository
 import com.example.we2026_5.util.Result
 import com.example.we2026_5.sevdesk.SevDeskDeletedIds
 import com.example.we2026_5.sevdesk.getSevDeskToken
 import com.example.we2026_5.sevdesk.setSevDeskToken
 import com.example.we2026_5.sevdesk.SevDeskImport
+import com.example.we2026_5.sevdesk.SevDeskKundenpreiseImport
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +32,8 @@ data class SevDeskImportState(
 class SevDeskImportViewModel(
     private val context: Context,
     private val customerRepository: CustomerRepository,
-    private val articleRepository: ArticleRepository
+    private val articleRepository: ArticleRepository,
+    private val kundenPreiseRepository: KundenPreiseRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SevDeskImportState(token = getSevDeskToken(context)))
@@ -59,11 +62,18 @@ class SevDeskImportViewModel(
             _state.value = _state.value.copy(isImportingContacts = false)
             result.fold(
                 onSuccess = { (created, updated) ->
+                    val kundenpreiseResult = withContext(Dispatchers.IO) {
+                        SevDeskKundenpreiseImport(customerRepository, articleRepository, kundenPreiseRepository)
+                            .importKundenpreise(token)
+                    }
                     val msg = buildString {
                         if (created > 0) append("$created neu angelegt. ")
                         if (updated > 0) append("$updated aktualisiert (nur Name/Adresse aus SevDesk). ")
-                        if (created == 0 && updated == 0) append("Keine Änderungen.")
-                        else append("Alias/Termine etc. bleiben unverändert.")
+                        if (created == 0 && updated == 0) append("Keine Änderungen. ")
+                        else append("Alias/Termine etc. bleiben unverändert. ")
+                        kundenpreiseResult.getOrNull()?.let { count ->
+                            if (count > 0) append("$count Kunden mit Kundenpreisen übernommen.")
+                        }
                     }
                     _state.value = _state.value.copy(message = msg.trim())
                 }

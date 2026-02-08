@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.ErfassungRepository
+import com.example.we2026_5.data.repository.KundenPreiseRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.data.repository.TourOrderRepository
 import com.example.we2026_5.data.repository.TourOrderRepositoryImpl
@@ -20,6 +21,8 @@ import com.example.we2026_5.ui.detail.CustomerDetailViewModel
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.example.we2026_5.ui.urlaub.UrlaubViewModel
 import com.example.we2026_5.ui.wasch.ArtikelVerwaltungViewModel
+import com.example.we2026_5.ui.wasch.BelegeViewModel
+import com.example.we2026_5.ui.wasch.KundenpreiseViewModel
 import com.example.we2026_5.ui.wasch.WaschenErfassungViewModel
 import com.example.we2026_5.ui.sevdesk.SevDeskImportViewModel
 import com.example.we2026_5.auth.AdminChecker
@@ -49,6 +52,7 @@ val appModule = module {
     single<TourOrderRepository> { TourOrderRepositoryImpl(get()) }
     single { ArticleRepository(get()) }
     single { ErfassungRepository(get()) }
+    single { KundenPreiseRepository(get()) }
     
     // ViewModels
     viewModel { MainViewModel(get(), get(), get()) }
@@ -62,7 +66,9 @@ val appModule = module {
     viewModel { MapViewViewModel(get<CustomerRepository>(), get<KundenListeRepository>()) }
     viewModel { CustomerDetailViewModel(get()) }
     viewModel { (customerId: String) -> UrlaubViewModel(get(), customerId) }
-    viewModel { WaschenErfassungViewModel(get(), get(), get()) }
+    viewModel { WaschenErfassungViewModel(get(), get(), get(), get()) }
+    viewModel { BelegeViewModel(get(), get(), get()) }
+    viewModel { KundenpreiseViewModel(get(), get(), get()) }
     viewModel { ArtikelVerwaltungViewModel(get()) }
-    viewModel { (ctx: Context) -> SevDeskImportViewModel(ctx, get(), get()) }
+    viewModel { (ctx: Context) -> SevDeskImportViewModel(ctx, get(), get(), get()) }
 }

@@ -204,6 +204,60 @@ object SevDeskApi {
             .ifBlank { unity.optString("id", "").trim() }
     }
 
+    /**
+     * Holt alle Kundenpreise (PartContactPrice: Contact + Part + Preis).
+     * API-Modell: PartContactPrice; Felder: contact, part, type, priceNet, priceGross.
+     */
+    fun getPartContactPrices(token: String): List<SevDeskPartContactPrice> {
+        val list = mutableListOf<SevDeskPartContactPrice>()
+        var offset = 0
+        val limit = 100
+        do {
+            val url = urlWithToken("/PartContactPrice", "limit=$limit&offset=$offset", token)
+            val conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "GET"
+            conn.setRequestProperty("Accept", "application/json")
+            setTokenHeader(conn, token)
+            conn.connectTimeout = 15000
+            conn.readTimeout = 15000
+            val code = conn.responseCode
+            if (code != 200) {
+                val err = conn.errorStream?.use { Scanner(it).useDelimiter("\\A").next() } ?: "HTTP $code"
+                throw SevDeskApiException("PartContactPrice: $err")
+            }
+            val json = conn.inputStream.use { Scanner(it).useDelimiter("\\A").next() }
+            val root = JSONObject(json)
+            val arr = when {
+                root.has("objects") && root.get("objects") is JSONArray -> root.getJSONArray("objects")
+                root.optJSONObject("objects")?.has("PartContactPrice") == true ->
+                    root.getJSONObject("objects").getJSONArray("PartContactPrice")
+                else -> JSONArray()
+            }
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                val contactId = obj.optJSONObject("contact")?.optString("id", "")?.trim()
+                    ?: obj.optString("contact", "").trim()
+                val partId = obj.optJSONObject("part")?.optString("id", "")?.trim()
+                    ?: obj.optString("part", "").trim()
+                val priceNet = (obj.opt("priceNet") as? Number)?.toDouble() ?: 0.0
+                val priceGross = (obj.opt("priceGross") as? Number)?.toDouble() ?: 0.0
+                if (contactId.isNotBlank() && partId.isNotBlank()) {
+                    list.add(
+                        SevDeskPartContactPrice(
+                            contactId = contactId,
+                            partId = partId,
+                            priceNet = priceNet,
+                            priceGross = priceGross
+                        )
+                    )
+                }
+            }
+            offset += limit
+            if (arr.length() < limit) break
+        } while (true)
+        return list
+    }
+
     // ---------- Nur zum Testen: Roh-Responses prüfen (kundenspezifische Preise/Artikel) ----------
 
     private const val TEST_RAW_MAX_LEN = 8000
@@ -408,6 +462,13 @@ data class SevDeskPart(
     val name: String,
     val price: Double = 0.0,
     val unit: String = ""
+)
+
+data class SevDeskPartContactPrice(
+    val contactId: String,
+    val partId: String,
+    val priceNet: Double = 0.0,
+    val priceGross: Double = 0.0
 )
 
 class SevDeskApiException(message: String) : Exception(message)

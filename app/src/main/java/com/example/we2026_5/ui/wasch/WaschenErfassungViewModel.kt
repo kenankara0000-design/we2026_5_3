@@ -6,6 +6,7 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.ErfassungRepository
+import com.example.we2026_5.data.repository.KundenPreiseRepository
 import com.example.we2026_5.wasch.Article
 import com.example.we2026_5.wasch.ErfassungPosition
 import com.example.we2026_5.wasch.WaschErfassung
@@ -17,6 +18,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -27,6 +30,14 @@ data class ErfassungZeile(
     val artikelName: String,
     val einheit: String,
     val menge: Int
+)
+
+/** Artikel-Option in der Erfassung (mit optionalem Preis-Label bei Kundenpreisen). */
+data class ArticleDisplay(
+    val id: String,
+    val name: String,
+    val einheit: String,
+    val priceLabel: String? = null
 )
 
 /** Zeile für Beleg-Detail (Artikelname, Menge, Einheit). */
@@ -42,9 +53,16 @@ sealed class WaschenErfassungUiState {
         val customerSearchQuery: String = "",
         val customers: List<Customer> = emptyList()
     ) : WaschenErfassungUiState()
-    /** Erfassungen für einen Kunden (Tag für Tag Belege). */
+    /** Erfassungen für einen Kunden – gruppiert nach Monat (Belege). */
     data class ErfassungenListe(val customer: Customer) : WaschenErfassungUiState()
-    /** Ein Beleg im Detail (nur Anzeige). */
+    /** Beleg-Detail: ein Monat, alle Erfassungen mit Datum/Uhrzeit. */
+    data class BelegDetail(
+        val customer: Customer,
+        val monthKey: String,
+        val monthLabel: String,
+        val erfassungen: List<WaschErfassung>
+    ) : WaschenErfassungUiState()
+    /** Ein Beleg im Detail (nur Anzeige – einzelne Erfassung). */
     data class ErfassungDetail(
         val erfassung: WaschErfassung,
         val positionenAnzeige: List<ErfassungPositionAnzeige>
@@ -63,7 +81,8 @@ sealed class WaschenErfassungUiState {
 class WaschenErfassungViewModel(
     private val customerRepository: CustomerRepository,
     private val articleRepository: ArticleRepository,
-    private val erfassungRepository: ErfassungRepository
+    private val erfassungRepository: ErfassungRepository,
+    private val kundenPreiseRepository: KundenPreiseRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<WaschenErfassungUiState>(WaschenErfassungUiState.KundeSuchen())
@@ -72,10 +91,42 @@ class WaschenErfassungViewModel(
     private val _erfassungenList = MutableStateFlow<List<WaschErfassung>>(emptyList())
     val erfassungenList: StateFlow<List<WaschErfassung>> = _erfassungenList.asStateFlow()
 
+    /** Belege (nach Monat gruppiert) – nur bei Änderung von erfassungenList neu berechnet. */
+    val belegMonate: StateFlow<List<BelegMonat>> = _erfassungenList
+        .map { BelegMonatGrouping.groupByMonth(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _kundenPreiseForErfassung = MutableStateFlow<List<com.example.we2026_5.wasch.KundenPreis>>(emptyList())
+    private var kundenPreiseJob: Job? = null
     private var erfassungenJob: Job? = null
 
     val articles = articleRepository.getAllArticlesFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** Artikel für Erfassung: bei Kundenpreisen nur diese mit Preis, sonst alle mit Hinweis „Allgemeine Preise“. */
+    val erfassungArticles: StateFlow<List<ArticleDisplay>> = combine(
+        articles,
+        _kundenPreiseForErfassung
+    ) { arts, preise ->
+        if (preise.isEmpty()) {
+            arts.map { ArticleDisplay(it.id, it.name, it.einheit.ifBlank { "Stk" }, null) }
+        } else {
+            val artsMap = arts.associateBy { it.id }
+            preise.map { p ->
+                val a = artsMap[p.articleId]
+                ArticleDisplay(
+                    p.articleId,
+                    a?.name ?: p.articleId,
+                    (a?.einheit).orEmpty().ifBlank { "Stk" },
+                    "%.2f €".format(p.priceGross)
+                )
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val showAllgemeinePreiseHint: StateFlow<Boolean> = _kundenPreiseForErfassung
+        .map { it.isEmpty() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     init {
         viewModelScope.launch {
@@ -117,6 +168,26 @@ class WaschenErfassungViewModel(
         }
     }
 
+    /** Von ErfassungenListe: Beleg (Monat) öffnen. */
+    fun openBelegDetail(beleg: BelegMonat) {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.ErfassungenListe) {
+            _uiState.value = WaschenErfassungUiState.BelegDetail(
+                customer = s.customer,
+                monthKey = beleg.monthKey,
+                monthLabel = beleg.monthLabel,
+                erfassungen = beleg.erfassungen
+            )
+        }
+    }
+
+    fun backFromBelegDetail() {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.BelegDetail) {
+            _uiState.value = WaschenErfassungUiState.ErfassungenListe(s.customer)
+        }
+    }
+
     fun openErfassungDetail(erfassung: WaschErfassung) {
         viewModelScope.launch {
             val articlesMap = articleRepository.getAllArticles().associateBy { it.id }
@@ -142,6 +213,13 @@ class WaschenErfassungViewModel(
 
     /** Von ErfassungenListe: Neue Erfassung für diesen Kunden. */
     fun neueErfassungClick(customer: Customer) {
+        kundenPreiseJob?.cancel()
+        _kundenPreiseForErfassung.value = emptyList()
+        kundenPreiseJob = viewModelScope.launch {
+            kundenPreiseRepository.getKundenPreiseForCustomerFlow(customer.id).collect {
+                _kundenPreiseForErfassung.value = it
+            }
+        }
         _uiState.value = WaschenErfassungUiState.Erfassen(
             customer = customer,
             zeilen = emptyList(),
@@ -168,12 +246,16 @@ class WaschenErfassungViewModel(
     }
 
     fun addPosition(article: Article) {
+        addPositionFromDisplay(ArticleDisplay(article.id, article.name, article.einheit.ifBlank { "Stk" }, null))
+    }
+
+    fun addPositionFromDisplay(display: ArticleDisplay) {
         val s = _uiState.value
         if (s is WaschenErfassungUiState.Erfassen) {
             val newZeile = ErfassungZeile(
-                articleId = article.id,
-                artikelName = article.name,
-                einheit = article.einheit.ifBlank { "Stk" },
+                articleId = display.id,
+                artikelName = display.name,
+                einheit = display.einheit,
                 menge = 0
             )
             _uiState.value = s.copy(
@@ -263,6 +345,8 @@ class WaschenErfassungViewModel(
     fun backFromErfassenToListe() {
         val s = _uiState.value
         if (s is WaschenErfassungUiState.Erfassen) {
+            kundenPreiseJob?.cancel()
+            _kundenPreiseForErfassung.value = emptyList()
             _uiState.value = WaschenErfassungUiState.ErfassungenListe(s.customer)
             erfassungenJob?.cancel()
             erfassungenJob = viewModelScope.launch {
@@ -279,16 +363,28 @@ class WaschenErfassungViewModel(
             val ok = erfassungRepository.deleteErfassung(erfassung.id)
                 if (ok) {
                 val s = _uiState.value
-                if (s is WaschenErfassungUiState.ErfassungDetail && s.erfassung.id == erfassung.id) {
-                    val customer = customerRepository.getCustomerById(erfassung.customerId)
-                    if (customer != null) {
-                        _uiState.value = WaschenErfassungUiState.ErfassungenListe(customer)
-                        erfassungenJob?.cancel()
-                        erfassungenJob = viewModelScope.launch {
-                            erfassungRepository.getErfassungenByCustomerFlow(customer.id).collect {
-                                _erfassungenList.value = it
+                val customer = customerRepository.getCustomerById(erfassung.customerId)
+                if (customer != null) {
+                    when (s) {
+                        is WaschenErfassungUiState.ErfassungDetail -> if (s.erfassung.id == erfassung.id) {
+                            _uiState.value = WaschenErfassungUiState.ErfassungenListe(customer)
+                            erfassungenJob?.cancel()
+                            erfassungenJob = viewModelScope.launch {
+                                erfassungRepository.getErfassungenByCustomerFlow(customer.id).collect {
+                                    _erfassungenList.value = it
+                                }
                             }
                         }
+                        is WaschenErfassungUiState.BelegDetail -> {
+                            _uiState.value = WaschenErfassungUiState.ErfassungenListe(customer)
+                            erfassungenJob?.cancel()
+                            erfassungenJob = viewModelScope.launch {
+                                erfassungRepository.getErfassungenByCustomerFlow(customer.id).collect {
+                                    _erfassungenList.value = it
+                                }
+                            }
+                        }
+                        else -> { }
                     }
                 }
                 onDeleted()

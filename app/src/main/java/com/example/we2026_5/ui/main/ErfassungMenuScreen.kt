@@ -33,6 +33,8 @@ import com.example.we2026_5.R
 @Composable
 fun ErfassungMenuScreen(
     onErfassungStarten: () -> Unit,
+    onBelege: () -> Unit,
+    onKundenpreise: () -> Unit,
     onArtikelVerwalten: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -41,7 +43,11 @@ fun ErfassungMenuScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.erfassung_menu_title), fontWeight = FontWeight.Bold) },
-                navigationIcon = { },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = Color.White)
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue, titleContentColor = Color.White)
             )
         }
@@ -60,6 +66,20 @@ fun ErfassungMenuScreen(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(stringResource(R.string.erfassung_menu_start), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+            OutlinedButton(
+                onClick = onBelege,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(stringResource(R.string.erfassung_menu_belege), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+            OutlinedButton(
+                onClick = onKundenpreise,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(stringResource(R.string.erfassung_menu_kundenpreise), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
             OutlinedButton(
                 onClick = onArtikelVerwalten,

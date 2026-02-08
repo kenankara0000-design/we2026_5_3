@@ -38,14 +38,21 @@ class WaschenErfassungActivity : AppCompatActivity() {
                 val state by viewModel.uiState.collectAsState()
                 val articles by viewModel.articles.collectAsState(initial = emptyList())
                 val erfassungen by viewModel.erfassungenList.collectAsState(initial = emptyList())
+                val belegMonate by viewModel.belegMonate.collectAsState(initial = emptyList())
+                val erfassungArticles by viewModel.erfassungArticles.collectAsState(initial = emptyList())
+                val showAllgemeinePreiseHint by viewModel.showAllgemeinePreiseHint.collectAsState(initial = true)
                 WaschenErfassungScreen(
                     state = state,
                     articles = articles,
                     erfassungen = erfassungen,
+                    belegMonate = belegMonate,
+                    erfassungArticles = erfassungArticles,
+                    showAllgemeinePreiseHint = showAllgemeinePreiseHint,
                     onBack = {
                         when (state) {
                             is WaschenErfassungUiState.KundeSuchen -> finish()
                             is WaschenErfassungUiState.ErfassungenListe -> viewModel.backToKundeSuchen()
+                            is WaschenErfassungUiState.BelegDetail -> viewModel.backFromBelegDetail()
                             is WaschenErfassungUiState.ErfassungDetail -> viewModel.backFromDetail()
                             is WaschenErfassungUiState.Erfassen -> viewModel.backFromErfassenToListe()
                         }
@@ -57,6 +64,8 @@ class WaschenErfassungActivity : AppCompatActivity() {
                     onNeueErfassungFromListe = {
                         (state as? WaschenErfassungUiState.ErfassungenListe)?.let { viewModel.neueErfassungClick(it.customer) }
                     },
+                    onBelegClick = { viewModel.openBelegDetail(it) },
+                    onBackFromBelegDetail = { viewModel.backFromBelegDetail() },
                     onBackFromDetail = { viewModel.backFromDetail() },
                     onMengeChangeByIndex = { index, menge -> viewModel.setMengeByIndex(index, menge) },
                     onNotizChange = { viewModel.setNotiz(it) },
@@ -67,7 +76,7 @@ class WaschenErfassungActivity : AppCompatActivity() {
                     },
                     onBackFromErfassen = { viewModel.backFromErfassenToListe() },
                     onArtikelSearchQueryChange = { viewModel.setArtikelSearchQuery(it) },
-                    onAddPosition = { viewModel.addPosition(it) },
+                    onAddPosition = { viewModel.addPositionFromDisplay(it) },
                     onRemovePosition = { viewModel.removePosition(it) },
                     onDeleteErfassung = { erfassung ->
                         AlertDialog.Builder(this@WaschenErfassungActivity)
