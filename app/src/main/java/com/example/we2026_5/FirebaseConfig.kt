@@ -20,7 +20,7 @@ class FirebaseConfig : Application() {
         // Dunkelmodus global deaktivieren
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         
-        // Firebase Realtime Database Offline-Konfiguration
+        // Firebase Realtime Database Offline-Konfiguration (Prio 4.2: Release-Checkliste „Persistence aktiv?“)
         val realtimeDb = FirebaseDatabase.getInstance()
         realtimeDb.setPersistenceEnabled(true) // Offline-Persistence aktivieren
         

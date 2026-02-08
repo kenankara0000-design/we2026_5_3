@@ -59,7 +59,7 @@ internal fun ListeBearbeitenKundeInListeItem(
                     shape = RoundedCornerShape(4.dp)
                 ) {
                     AsyncImage(
-                        model = kunde.fotoUrls.first(),
+                        model = kunde.fotoThumbUrls.firstOrNull() ?: kunde.fotoUrls.first(),
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop

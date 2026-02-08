@@ -143,7 +143,7 @@
 **4.2 Firebase-Persistence**
 
 - Nach Änderungen an App-Start oder Firebase-Init: Prüfen, dass Persistence weiterhin aktiv ist (z. B. kurzer Offline-Test wie in 1.3).
-- Checkliste: In Release-Checkliste oder Umsetzungsplan einen Punkt „Persistence aktiv?“ aufnehmen.
+- Checkliste: In Release-Checkliste oder Umsetzungsplan einen Punkt „Persistence aktiv?“ aufnehmen. (Siehe Phase-1-Abschluss oben.)
 
 ---
 
@@ -157,6 +157,34 @@
 4. Prüfung: Funktionalität unverändert; Navigation und Lesbarkeit verbessert.
 
 **Phase-5-Abschluss:** Große Screens/ViewModels aufgeteilt; Aufteilung in Doku oder Plan kurz notiert.
+
+---
+
+## Phase-1-Abschluss (Prio 1 – umgesetzt Feb 2026)
+
+| # | Thema | Status | Wo geändert / Anmerkung |
+|---|--------|--------|--------------------------|
+| 1.1 | Keine Doppelladung | ✅ Umgesetzt | **StatisticsViewModel**: Statistik nutzt nur noch Tour-Kunden (`getCustomersForTourFlow().first()` statt `getAllCustomers()`). MainViewModel nutzte bereits getCustomersForTourFlow() für Badge; Slot-Vorschläge brauchen bewusst alle Kunden (Ad-hoc auch ohne Tour). |
+| 1.2 | Listener nur bei Bedarf | ✅ Umgesetzt | **MainViewModel**: Kein Collect mehr in init; `startCollecting()` / `stopCollecting()`. **MainActivity**: `onStart()` ruft startCollecting(), `onStop()` und `onDestroy()` rufen stopCollecting(). Wenn Nutzer nur Einstellungen/andere Activities öffnet, laufen keine Kunden-/Listen-Flows. |
+| 1.3 | Firebase Offline aktiv | ✅ Bereits aktiv | **FirebaseConfig** (Application): `FirebaseDatabase.getInstance(); setPersistenceEnabled(true)` vor Koin-Start. Keine Änderung nötig. |
+| 1.4 | Offline-/Sync-Hinweis in der UI | ✅ Vorhanden | **MainScreen**: Zeigt „Offline“ und „Daten werden aktualisiert“ (isOffline, isSyncing). **MainActivity** übergibt Werte von **NetworkMonitor** (isOnline, isSyncing). TourPlannerTopBar und CustomerManagerTopBar zeigen ebenfalls Offline-Icon. |
+
+**Release-Checkliste (4.2):** Nach Änderungen an App-Start oder Firebase-Init prüfen: „Persistence aktiv?“ (FirebaseConfig.setPersistenceEnabled(true); ggf. kurzer Offline-Test).
+
+---
+
+### Phase 3 – Prio 3: Thumbnails (umgesetzt Feb 2026)
+
+| # | Thema | Status | Wo geändert |
+|---|--------|--------|-------------|
+| 3.1 | Fotos als Thumbnails | ✅ Umgesetzt | **Customer**: `fotoThumbUrls` ergänzt. **ImageUtils**: `createThumbnailFile(source, maxSizePx)` (300 px). **StorageUploadManager**: erstellt Thumbnail, lädt Vollbild + Thumb hoch, `onSuccess(fullUrl, thumbUrl)`. **CustomerPhotoManager**: speichert beide URLs. **ImageUploadWorker**: Thumbnail erstellen + hochladen, beide URLs in DB. **UI**: CustomerManagerCard, ListeBearbeitenKundeInListeItem, CustomerDetailFotosSection nutzen Thumb für Vorschau; Klick/Dialog weiterhin Vollbild-URL. Alte Kunden ohne Thumbnails: Fallback auf `fotoUrls`. |
+
+---
+
+### Phase 4 – Prio 4: Dauerhaft abgesichert (Feb 2026)
+
+- **4.1** TourPlannerViewModel: Kommentar ergänzt (flowOn(Default), Debounce 250 ms, preloadCache). Keine Verhaltensänderung.
+- **4.2** FirebaseConfig: Kommentar für Release-Checkliste „Persistence aktiv?“ ergänzt.
 
 ---
 

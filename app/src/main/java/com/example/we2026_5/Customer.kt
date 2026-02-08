@@ -107,6 +107,8 @@ data class Customer(
     val ausnahmeTermine: List<AusnahmeTermin> = emptyList(),
     
     val fotoUrls: List<String> = listOf(),
+    /** Thumbnail-URLs für Listen/Vorschau (Prio 3 PLAN_PERFORMANCE_OFFLINE); gleiche Reihenfolge wie fotoUrls; Fallback: fotoUrls. */
+    val fotoThumbUrls: List<String> = listOf(),
     val istImUrlaub: Boolean = false,
     val geloeschteTermine: List<Long> = listOf(), // Liste von gelöschten Termin-Daten (für einzelne Termin-Löschungen)
     // Dummy-Feld für Realtime Database - wird ignoriert beim Speichern/Laden

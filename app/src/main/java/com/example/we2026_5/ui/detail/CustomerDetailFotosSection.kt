@@ -29,6 +29,7 @@ import com.example.we2026_5.R
 @Composable
 fun CustomerDetailFotosSection(
     fotoUrls: List<String>,
+    fotoThumbUrls: List<String>,
     isInEditMode: Boolean,
     textPrimary: androidx.compose.ui.graphics.Color,
     onPhotoClick: (String) -> Unit,
@@ -44,16 +45,18 @@ fun CustomerDetailFotosSection(
         )
         Spacer(Modifier.height(8.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(fotoUrls, key = { it }) { url ->
+            items(fotoUrls.size, key = { fotoUrls[it] }) { index ->
+                val fullUrl = fotoUrls[index]
+                val displayUrl = fotoThumbUrls.getOrNull(index) ?: fullUrl
                 Card(
                     modifier = Modifier
                         .size(100.dp)
-                        .clickable(onClick = { onPhotoClick(url) }),
+                        .clickable(onClick = { onPhotoClick(fullUrl) }),
                     shape = RoundedCornerShape(8.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     AsyncImage(
-                        model = url,
+                        model = displayUrl,
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,

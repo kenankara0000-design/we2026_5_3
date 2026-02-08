@@ -117,8 +117,8 @@ class CustomerPhotoManager(
                 context = activity,
                 imageFile = compressedFile,
                 customerId = customerId,
-                onSuccess = { downloadUrl ->
-                    addPhotoUrlToCustomer(downloadUrl)
+                onSuccess = { fullUrl, thumbUrl ->
+                    addPhotoUrlToCustomer(fullUrl, thumbUrl)
                     onProgressVisibilityChanged(false)
                     Toast.makeText(activity, activity.getString(com.example.we2026_5.R.string.toast_bild_hochgeladen), Toast.LENGTH_SHORT).show()
                 },
@@ -143,16 +143,21 @@ class CustomerPhotoManager(
                capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
     
-    private fun addPhotoUrlToCustomer(url: String) {
+    private fun addPhotoUrlToCustomer(fullUrl: String, thumbUrl: String?) {
         CoroutineScope(Dispatchers.Main).launch {
             val customer = repository.getCustomerById(customerId)
             if (customer != null) {
                 val updatedUrls = customer.fotoUrls.toMutableList()
-                if (!updatedUrls.contains(url)) {
-                    updatedUrls.add(url)
+                val updatedThumbUrls = customer.fotoThumbUrls.toMutableList()
+                if (!updatedUrls.contains(fullUrl)) {
+                    updatedUrls.add(fullUrl)
+                    updatedThumbUrls.add(thumbUrl ?: fullUrl)
                     val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                        operation = { 
-                            repository.updateCustomer(customerId, mapOf("fotoUrls" to updatedUrls))
+                        operation = {
+                            repository.updateCustomer(customerId, mapOf(
+                                "fotoUrls" to updatedUrls,
+                                "fotoThumbUrls" to updatedThumbUrls
+                            ))
                         },
                         context = activity,
                         errorMessage = activity.getString(com.example.we2026_5.R.string.error_save_generic),

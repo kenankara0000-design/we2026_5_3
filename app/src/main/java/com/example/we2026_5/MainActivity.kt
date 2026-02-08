@@ -81,8 +81,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        viewModel.stopCollecting()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        viewModel.startCollecting()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        viewModel.stopCollecting()
         if (::networkMonitor.isInitialized) {
             networkMonitor.stopMonitoring()
         }

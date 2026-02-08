@@ -84,8 +84,8 @@ class TourPlannerViewModel(
     // #region agent log
     private val combineEmissionCount = java.util.concurrent.atomic.AtomicInteger(0)
     // #endregion
-    // Kombiniere Daten-Flows (ohne expandedSections): schwere Pipeline nur bei echten Datenänderungen
-    // Debounce (250 ms) auf Kunden/Listen reduziert Pipeline-Läufe bei schnellen Firebase-Updates (Punkt 6.2)
+    // Kombiniere Daten-Flows (ohne expandedSections): schwere Pipeline nur bei echten Datenänderungen.
+    // Prio 4.1 PLAN_PERFORMANCE_OFFLINE: Schwere Berechnung im Hintergrund (flowOn(Default)), Debounce 250ms, Caching (preloadCache).
     private val processResultFlow = combine(
         customersFlow.debounce(250L),
         listenFlow.debounce(250L),

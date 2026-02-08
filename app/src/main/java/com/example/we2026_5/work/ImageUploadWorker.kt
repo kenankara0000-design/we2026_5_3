@@ -5,6 +5,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.example.we2026_5.ImageUtils
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 import java.io.File
@@ -32,43 +33,51 @@ class ImageUploadWorker(
             }
 
             val storage = FirebaseStorage.getInstance()
-            val storageRef = storage.reference.child(storagePath)
-            val uri = Uri.fromFile(file)
 
-            // Upload
-            storageRef.putFile(uri).await()
-            
-            // Download-URL abrufen
-            val downloadUrl = storageRef.downloadUrl.await()
-            val downloadUrlString = downloadUrl.toString()
-
-            Log.d("ImageUploadWorker", "Upload successful: $downloadUrlString")
-
-            // Download-URL zu Realtime Database hinzufügen
-            val db = com.google.firebase.database.FirebaseDatabase.getInstance()
-            val customerRef = db.reference.child("customers").child(customerId)
-            
-            // Aktuellen Kunden laden
-            val customerSnapshot = customerRef.get().await()
-            val customer = customerSnapshot.getValue(com.example.we2026_5.Customer::class.java)
-            
-            if (customer != null) {
-                val updatedUrls = customer.fotoUrls.toMutableList()
-                if (!updatedUrls.contains(downloadUrlString)) {
-                    updatedUrls.add(downloadUrlString)
-                    customerRef.child("fotoUrls").setValue(updatedUrls).await()
+            // Thumbnail erstellen und hochladen (Prio 3)
+            var thumbUrl: String? = null
+            val lastSlash = storagePath.lastIndexOf('/')
+            val thumbPath = if (lastSlash >= 0)
+                storagePath.substring(0, lastSlash + 1) + "thumb_" + storagePath.substring(lastSlash + 1)
+            else
+                "thumb_$storagePath"
+            val thumbFile = ImageUtils.createThumbnailFile(file, 300)
+            if (thumbFile != null) {
+                try {
+                    val thumbRef = storage.reference.child(thumbPath)
+                    thumbRef.putFile(Uri.fromFile(thumbFile)).await()
+                    thumbUrl = thumbRef.downloadUrl.await().toString()
+                } finally {
+                    thumbFile.delete()
                 }
             }
 
-            Log.d("ImageUploadWorker", "Photo URL added to Realtime Database")
+            val storageRef = storage.reference.child(storagePath)
+            storageRef.putFile(Uri.fromFile(file)).await()
+            val fullUrl = storageRef.downloadUrl.await().toString()
 
-            // Temporäres File löschen
+            Log.d("ImageUploadWorker", "Upload successful; thumb=${thumbUrl != null}")
+
+            val db = com.google.firebase.database.FirebaseDatabase.getInstance()
+            val customerRef = db.reference.child("customers").child(customerId)
+            val customerSnapshot = customerRef.get().await()
+            val customer = customerSnapshot.getValue(com.example.we2026_5.Customer::class.java)
+
+            if (customer != null) {
+                val updatedUrls = customer.fotoUrls.toMutableList()
+                val updatedThumbUrls = customer.fotoThumbUrls.toMutableList()
+                if (!updatedUrls.contains(fullUrl)) {
+                    updatedUrls.add(fullUrl)
+                    updatedThumbUrls.add(thumbUrl ?: fullUrl)
+                    customerRef.child("fotoUrls").setValue(updatedUrls).await()
+                    customerRef.child("fotoThumbUrls").setValue(updatedThumbUrls).await()
+                }
+            }
+
             file.delete()
-
             Result.success()
         } catch (e: Exception) {
             Log.e("ImageUploadWorker", "Upload failed", e)
-            // Bei Fehler: Retry später
             Result.retry()
         }
     }

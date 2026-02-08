@@ -185,4 +185,47 @@ object ImageUtils {
             null
         }
     }
+
+    /**
+     * Erstellt eine Thumbnail-Datei aus einer Bilddatei (Prio 3 PLAN_PERFORMANCE_OFFLINE).
+     * @param source Quelldatei
+     * @param maxSizePx Maximale Kantenlänge in Pixel (Standard 300)
+     * @return Thumbnail-File oder null bei Fehler
+     */
+    fun createThumbnailFile(source: File, maxSizePx: Int = 300): File? {
+        var bitmap: Bitmap? = null
+        var out: FileOutputStream? = null
+        return try {
+            val opts = BitmapFactory.Options().apply { inJustDecodeBounds = false }
+            bitmap = BitmapFactory.decodeFile(source.absolutePath, opts) ?: return null
+            if (bitmap.isRecycled) return null
+            val w = bitmap.width
+            val h = bitmap.height
+            val scale = if (w <= maxSizePx && h <= maxSizePx) 1f
+                else maxSizePx.toFloat() / maxOf(w, h)
+            val nw = (w * scale).toInt().coerceAtLeast(1)
+            val nh = (h * scale).toInt().coerceAtLeast(1)
+            val thumb = Bitmap.createScaledBitmap(bitmap, nw, nh, true)
+            if (thumb != bitmap) bitmap.recycle()
+            bitmap = null
+            val dir = source.parentFile ?: source.absoluteFile.parentFile?.let { File(it) } ?: return null
+            val thumbFile = File.createTempFile("thumb_${System.currentTimeMillis()}_", ".jpg", dir)
+            out = FileOutputStream(thumbFile)
+            if (!thumb.compress(Bitmap.CompressFormat.JPEG, 80, out)) {
+                out.close()
+                thumbFile.delete()
+                if (!thumb.isRecycled) thumb.recycle()
+                return null
+            }
+            out.flush()
+            out.close()
+            if (!thumb.isRecycled) thumb.recycle()
+            thumbFile
+        } catch (e: Exception) {
+            android.util.Log.e("ImageUtils", "createThumbnailFile failed", e)
+            out?.close()
+            if (bitmap != null && !bitmap.isRecycled) bitmap.recycle()
+            null
+        }
+    }
 }

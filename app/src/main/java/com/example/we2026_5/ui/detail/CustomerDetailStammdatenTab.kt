@@ -166,6 +166,7 @@ fun CustomerDetailStammdatenTab(
         Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
         CustomerDetailFotosSection(
             fotoUrls = customer.fotoUrls,
+            fotoThumbUrls = customer.fotoThumbUrls,
             isInEditMode = isInEditMode,
             textPrimary = textPrimary,
             onPhotoClick = onPhotoClick,

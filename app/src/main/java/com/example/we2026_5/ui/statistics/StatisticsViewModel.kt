@@ -10,6 +10,7 @@ import com.example.we2026_5.util.AppErrorMapper
 import com.example.we2026_5.util.CustomerTermFilter
 import com.example.we2026_5.util.TerminBerechnungUtils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Calendar
@@ -50,8 +51,10 @@ class StatisticsViewModel(
         viewModelScope.launch {
             _state.value = _state.value?.copy(isLoading = true, errorMessage = null) ?: StatisticsState(isLoading = true)
             try {
+                // Nur Tour-Kunden für Statistik (Prio 1.1 PLAN_PERFORMANCE_OFFLINE – keine Doppelladung)
                 val result = withContext(Dispatchers.IO) {
-                    computeStatistics(repository.getAllCustomers())
+                    val tourCustomers = repository.getCustomersForTourFlow().first()
+                    computeStatistics(tourCustomers)
                 }
                 _state.value = result.copy(isLoading = false)
             } catch (e: Exception) {

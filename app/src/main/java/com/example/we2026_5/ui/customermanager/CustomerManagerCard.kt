@@ -78,7 +78,7 @@ internal fun CustomerManagerCard(
                             shape = RoundedCornerShape(4.dp)
                         ) {
                             AsyncImage(
-                                model = customer.fotoUrls.first(),
+                                model = customer.fotoThumbUrls.firstOrNull() ?: customer.fotoUrls.first(),
                                 contentDescription = null,
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
