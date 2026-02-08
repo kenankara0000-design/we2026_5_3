@@ -46,17 +46,19 @@ class BelegeActivity : AppCompatActivity() {
                             startActivity(Intent(this@BelegeActivity, WaschenErfassungActivity::class.java).putExtra("CUSTOMER_ID", customer.id))
                         }
                     },
-                    onDeleteErfassung = { erfassung ->
-                        AlertDialog.Builder(this@BelegeActivity)
-                            .setTitle(R.string.dialog_erfassung_loeschen_title)
-                            .setMessage(R.string.dialog_erfassung_loeschen_message)
-                            .setPositiveButton(R.string.dialog_loeschen) { _, _ ->
-                                viewModel.deleteErfassung(erfassung) {
-                                    Toast.makeText(this@BelegeActivity, getString(R.string.wasch_erfassung_geloescht), Toast.LENGTH_SHORT).show()
+                    onDeleteBeleg = {
+                        (state as? BelegeUiState.BelegDetail)?.let { detail ->
+                            AlertDialog.Builder(this@BelegeActivity)
+                                .setTitle(R.string.dialog_beleg_loeschen_title)
+                                .setMessage(getString(R.string.dialog_beleg_loeschen_message, detail.monthLabel, detail.erfassungen.size))
+                                .setPositiveButton(R.string.dialog_loeschen) { _, _ ->
+                                    viewModel.deleteBeleg(detail.erfassungen) {
+                                        Toast.makeText(this@BelegeActivity, getString(R.string.beleg_geloescht), Toast.LENGTH_SHORT).show()
+                                    }
                                 }
-                            }
-                            .setNegativeButton(R.string.btn_cancel, null)
-                            .show()
+                                .setNegativeButton(R.string.btn_cancel, null)
+                                .show()
+                        }
                     }
                 )
             }

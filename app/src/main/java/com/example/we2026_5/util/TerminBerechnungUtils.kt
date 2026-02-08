@@ -327,8 +327,9 @@ object TerminBerechnungUtils {
     }
 
     /**
-     * Berechnet alle Termine für einen Kunden (365 Tage)
-     * Unterstützt sowohl alte als auch neue Struktur. Bei gesetzten A-/L-Wochentagen werden zusätzlich Termine für alle diese Wochentage erzeugt (z. B. Di+So → A und L an Di und So).
+     * Berechnet alle Termine für einen Kunden (365 Tage).
+     * Hat der Kunde Intervalle, kommen Termine nur aus den Intervallen (Wochentag nur Anzeige).
+     * Ohne Intervalle werden bei gesetzten A-Wochentagen Termine an jedem dieser Wochentage erzeugt (L = A + tageAzuL).
      */
     fun berechneAlleTermineFuerKunde(
         customer: Customer,
@@ -353,13 +354,11 @@ object TerminBerechnungUtils {
         }
         // Kunden ohne intervalle: keine Intervall-Termine (Migration 2.1 füllt intervalle aus Liste/Legacy)
 
-        // Ergänzung: A aus A-Wochentagen + Intervall; L nur als A + tageAzuL (keine eigenen L-Tage).
-        // Unabhängig von Liste: Listen haben keinen Einfluss auf Termin-Erstellung; Kunden-Wochentage immer anwenden.
-        if (customer.effectiveAbholungWochentage.isNotEmpty()) {
-            val existingKeys = alleTermine.map { getStartOfDay(it.datum) to it.typ }.toSet()
+        // Option A: Wochentags-Termine nur, wenn der Kunde KEINE Intervalle hat.
+        // Bei Intervallen bestimmt nur das Intervall die Termine; Wochentag dient nur der Anzeige.
+        if (customer.intervalle.isEmpty() && customer.effectiveAbholungWochentage.isNotEmpty()) {
             val fromWeekdays = berechneTermineAusWochentagen(customer, startDatum, tageVoraus)
-            val toAdd = fromWeekdays.filter { (getStartOfDay(it.datum) to it.typ) !in existingKeys }
-            alleTermine.addAll(toAdd)
+            alleTermine.addAll(fromWeekdays)
         }
 
         return alleTermine.sortedBy { it.datum }

@@ -169,7 +169,7 @@ fun CustomerDetailScreen(
                         defaultAuslieferungWochentage = stateForSave.auslieferungWochentage,
                         tourSlotId = slotId
                     )
-                    val mainFromForm = TerminAusKundeUtils.erstelleIntervallAusKunde(customerForIntervall, startDatumA, stateForSave.tageAzuL, stateForSave.intervallTage)
+                    val mainFromForm = TerminAusKundeUtils.erstelleIntervallAusKunde(customerForIntervall, startDatumA, stateForSave.tageAzuL ?: 7, stateForSave.intervallTage ?: 7)
                     val fromRules = editIntervalle.filter { it.terminRegelId.isNotBlank() }
                     (mainFromForm?.let { listOf(it) } ?: emptyList()) + fromRules
                 } else editIntervalle

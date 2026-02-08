@@ -211,8 +211,8 @@ class CustomerDetailViewModel(
         val one = TerminAusKundeUtils.erstelleIntervallAusKunde(
             customerForIntervall,
             startDatum,
-            formState.tageAzuL,
-            formState.intervallTage
+            formState.tageAzuL ?: 7,
+            formState.intervallTage ?: 7
         ) ?: return
         _editIntervalle.value = listOf(one)
     }

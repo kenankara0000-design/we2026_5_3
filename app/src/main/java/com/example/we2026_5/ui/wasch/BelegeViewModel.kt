@@ -112,4 +112,27 @@ class BelegeViewModel(
             }
         }
     }
+
+    /** Alle Erfassungen des geöffneten Belegs (Monat) löschen; danach zurück zur Beleg-Liste. */
+    fun deleteBeleg(erfassungen: List<WaschErfassung>, onDeleted: () -> Unit) {
+        viewModelScope.launch {
+            var allOk = true
+            for (e in erfassungen) {
+                if (!erfassungRepository.deleteErfassung(e.id)) allOk = false
+            }
+            if (allOk && erfassungen.isNotEmpty()) {
+                val s = _uiState.value
+                if (s is BelegeUiState.BelegDetail) {
+                    _uiState.value = BelegeUiState.BelegListe(s.customer)
+                    erfassungenJob?.cancel()
+                    erfassungenJob = viewModelScope.launch {
+                        erfassungRepository.getErfassungenByCustomerFlow(s.customer.id).collect {
+                            _erfassungenList.value = it
+                        }
+                    }
+                }
+                onDeleted()
+            }
+        }
+    }
 }

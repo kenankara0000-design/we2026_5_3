@@ -89,6 +89,20 @@ class WaschenErfassungActivity : AppCompatActivity() {
                             }
                             .setNegativeButton(R.string.btn_cancel, null)
                             .show()
+                    },
+                    onDeleteBeleg = {
+                        (state as? WaschenErfassungUiState.BelegDetail)?.let { detail ->
+                            AlertDialog.Builder(this@WaschenErfassungActivity)
+                                .setTitle(R.string.dialog_beleg_loeschen_title)
+                                .setMessage(getString(R.string.dialog_beleg_loeschen_message, detail.monthLabel, detail.erfassungen.size))
+                                .setPositiveButton(R.string.dialog_loeschen) { _, _ ->
+                                    viewModel.deleteBeleg(detail.erfassungen) {
+                                        Toast.makeText(this@WaschenErfassungActivity, getString(R.string.beleg_geloescht), Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                                .setNegativeButton(R.string.btn_cancel, null)
+                                .show()
+                        }
                     }
                 )
             }

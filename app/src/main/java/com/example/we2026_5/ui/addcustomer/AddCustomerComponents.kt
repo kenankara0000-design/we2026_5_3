@@ -54,11 +54,11 @@ internal fun AddCustomerRadioOption(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AddCustomerTageAzuLField(
-    value: Int,
-    onValueChange: (Int) -> Unit,
+    value: Int?,
+    onValueChange: (Int?) -> Unit,
     textPrimary: Color
 ) {
-    val displayText = if (value in 0..365) value.toString() else ""
+    val displayText = value?.takeIf { it in 0..365 }?.toString() ?: ""
     var tfValue by remember(value) { mutableStateOf(TextFieldValue(displayText, TextRange(displayText.length))) }
     LaunchedEffect(value) {
         if (tfValue.text != displayText) tfValue = TextFieldValue(displayText, TextRange(displayText.length))
@@ -76,7 +76,7 @@ internal fun AddCustomerTageAzuLField(
             onValueChange = { newVal ->
                 tfValue = newVal
                 val digits = newVal.text.filter { it.isDigit() }
-                if (digits.isEmpty()) onValueChange(7)
+                if (digits.isEmpty()) onValueChange(null)
                 else digits.toIntOrNull()?.coerceIn(0, 365)?.let { onValueChange(it) }
             },
             modifier = Modifier
@@ -93,12 +93,12 @@ internal fun AddCustomerTageAzuLField(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AddCustomerIntervallSchnellauswahl(
-    selected: Int,
-    onSelect: (Int) -> Unit,
+    selected: Int?,
+    onSelect: (Int?) -> Unit,
     textPrimary: Color,
     labelResId: Int = R.string.label_intervall
 ) {
-    val displayText = if (selected in 1..365) selected.toString() else ""
+    val displayText = selected?.takeIf { it in 1..365 }?.toString() ?: ""
     var tfValue by remember(selected) { mutableStateOf(TextFieldValue(displayText, TextRange(displayText.length))) }
     LaunchedEffect(selected) {
         if (tfValue.text != displayText) tfValue = TextFieldValue(displayText, TextRange(displayText.length))
@@ -116,7 +116,7 @@ internal fun AddCustomerIntervallSchnellauswahl(
             onValueChange = { newVal ->
                 tfValue = newVal
                 val digits = newVal.text.filter { it.isDigit() }
-                if (digits.isEmpty()) onSelect(7)
+                if (digits.isEmpty()) onSelect(null)
                 else digits.toIntOrNull()?.coerceIn(1, 365)?.let { onSelect(it) }
             },
             modifier = Modifier

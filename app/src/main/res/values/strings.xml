@@ -691,4 +691,9 @@
     <string name="wasch_position_hinzufuegen">+ Position hinzufügen</string>
     <string name="wasch_menge_kurz">Menge</string>
     <string name="wasch_einheit">Einheit</string>
+    <string name="beleg_loeschen">Beleg löschen</string>
+    <string name="dialog_beleg_loeschen_title">Beleg löschen?</string>
+    <string name="dialog_beleg_loeschen_message">Gesamten Beleg für %1$s löschen? Alle %2$d Erfassungen werden entfernt.</string>
+    <string name="beleg_geloescht">Beleg gelöscht</string>
+    <string name="wasch_gesamt">Gesamt</string>
 </resources>

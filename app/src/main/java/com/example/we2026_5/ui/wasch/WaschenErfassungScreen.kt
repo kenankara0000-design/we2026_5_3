@@ -38,7 +38,8 @@ fun WaschenErfassungScreen(
     showAllgemeinePreiseHint: Boolean,
     onAddPosition: (ArticleDisplay) -> Unit,
     onRemovePosition: (Int) -> Unit,
-    onDeleteErfassung: (com.example.we2026_5.wasch.WaschErfassung) -> Unit = {}
+    onDeleteErfassung: (com.example.we2026_5.wasch.WaschErfassung) -> Unit = {},
+    onDeleteBeleg: () -> Unit = {}
 ) {
     val primaryBlue = colorResource(R.color.primary_blue)
     val backgroundLight = colorResource(R.color.background_light)
@@ -86,7 +87,7 @@ fun WaschenErfassungScreen(
                     textPrimary = textPrimary,
                     textSecondary = textSecondary,
                     onBack = onBackFromBelegDetail,
-                    onDeleteErfassung = onDeleteErfassung
+                    onDeleteBeleg = onDeleteBeleg
                 )
             }
             is WaschenErfassungUiState.ErfassungDetail -> {

@@ -161,9 +161,9 @@ fun CustomerDetailTermineTourForm(
             )
             Spacer(modifier = Modifier.height(4.dp))
             OutlinedTextField(
-                value = if (state.tageAzuL in 0..365) state.tageAzuL.toString() else "",
+                value = state.tageAzuL?.takeIf { it in 0..365 }?.toString() ?: "",
                 onValueChange = { s ->
-                    val v = s.filter { it.isDigit() }.toIntOrNull()?.coerceIn(0, 365) ?: 0
+                    val v = s.filter { it.isDigit() }.toIntOrNull()?.coerceIn(0, 365)
                     onUpdate(state.copy(tageAzuL = v))
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -183,14 +183,14 @@ fun CustomerDetailTermineTourForm(
                 Column(modifier = Modifier.weight(1f)) {
                     AddCustomerIntervallSchnellauswahl(
                         selected = state.intervallTage,
-                        onSelect = { onUpdate(state.copy(intervallTage = it.coerceIn(1, 365))) },
+                        onSelect = { onUpdate(state.copy(intervallTage = it?.coerceIn(1, 365))) },
                         textPrimary = textPrimary
                     )
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     AddCustomerTageAzuLField(
                         value = state.tageAzuL,
-                        onValueChange = { onUpdate(state.copy(tageAzuL = it.coerceIn(0, 365))) },
+                        onValueChange = { onUpdate(state.copy(tageAzuL = it?.coerceIn(0, 365))) },
                         textPrimary = textPrimary
                     )
                 }

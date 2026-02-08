@@ -16,8 +16,10 @@ data class AddCustomerState(
     val notizen: String = "",
     val kundenArt: String = "Gewerblich",
     val kundenTyp: KundenTyp = KundenTyp.REGELMAESSIG,
-    val tageAzuL: Int = 7,
-    val intervallTage: Int = 7,
+    /** Tage A→L; null = Feld gelöscht, beim Speichern wird 7 verwendet. */
+    val tageAzuL: Int? = 7,
+    /** Intervall-Tage; null = Feld gelöscht, beim Speichern wird 7 verwendet. */
+    val intervallTage: Int? = 7,
     val kundennummer: String = "",
     val abholungWochentage: List<Int> = emptyList(),
     val auslieferungWochentage: List<Int> = emptyList(),
@@ -78,12 +80,12 @@ class AddCustomerViewModel : ViewModel() {
         _state.value = (_state.value ?: AddCustomerState()).copy(kundenTyp = typ)
     }
 
-    fun setTageAzuL(tage: Int) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(tageAzuL = tage.coerceIn(0, 365))
+    fun setTageAzuL(tage: Int?) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(tageAzuL = tage?.coerceIn(0, 365))
     }
 
-    fun setIntervallTage(tage: Int) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(intervallTage = tage.coerceIn(1, 365))
+    fun setIntervallTage(tage: Int?) {
+        _state.value = (_state.value ?: AddCustomerState()).copy(intervallTage = tage?.coerceIn(1, 365))
     }
 
     fun setKundennummer(nummer: String) {
