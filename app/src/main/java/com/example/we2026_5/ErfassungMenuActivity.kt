@@ -17,19 +17,15 @@ class ErfassungMenuActivity : AppCompatActivity() {
             ErfassungMenuScreen(
                 onErfassungStarten = {
                     startActivity(Intent(this, WaschenErfassungActivity::class.java))
-                    finish()
                 },
                 onBelege = {
                     startActivity(Intent(this, BelegeActivity::class.java))
-                    finish()
                 },
                 onKundenpreise = {
                     startActivity(Intent(this, KundenpreiseActivity::class.java))
-                    finish()
                 },
                 onArtikelVerwalten = {
                     startActivity(Intent(this, ArtikelVerwaltungActivity::class.java))
-                    finish()
                 },
                 onBack = { finish() }
             )

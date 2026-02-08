@@ -41,6 +41,11 @@ class BelegeActivity : AppCompatActivity() {
                     onBackToKundeSuchen = { viewModel.backToKundeSuchen() },
                     onBelegClick = { viewModel.openBelegDetail(it) },
                     onBackFromBelegDetail = { viewModel.backFromBelegDetail() },
+                    onNeueErfassungFromListe = {
+                        (state as? BelegeUiState.BelegListe)?.customer?.let { customer ->
+                            startActivity(Intent(this@BelegeActivity, WaschenErfassungActivity::class.java).putExtra("CUSTOMER_ID", customer.id))
+                        }
+                    },
                     onDeleteErfassung = { erfassung ->
                         AlertDialog.Builder(this@BelegeActivity)
                             .setTitle(R.string.dialog_erfassung_loeschen_title)

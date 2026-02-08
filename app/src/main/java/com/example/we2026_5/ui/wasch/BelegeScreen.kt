@@ -25,6 +25,7 @@ fun BelegeScreen(
     onBackToKundeSuchen: () -> Unit,
     onBelegClick: (BelegMonat) -> Unit,
     onBackFromBelegDetail: () -> Unit,
+    onNeueErfassungFromListe: () -> Unit,
     onDeleteErfassung: (com.example.we2026_5.wasch.WaschErfassung) -> Unit
 ) {
     val primaryBlue = colorResource(R.color.primary_blue)
@@ -59,7 +60,7 @@ fun BelegeScreen(
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
                         onBackToKundeSuchen = onBackToKundeSuchen,
-                        onNeueErfassungFromListe = { },
+                        onNeueErfassungFromListe = onNeueErfassungFromListe,
                         onBelegClick = onBelegClick
                     )
                 }

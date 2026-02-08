@@ -208,7 +208,7 @@ object ImageUtils {
             val thumb = Bitmap.createScaledBitmap(bitmap, nw, nh, true)
             if (thumb != bitmap) bitmap.recycle()
             bitmap = null
-            val dir = source.parentFile ?: source.absoluteFile.parentFile?.let { File(it) } ?: return null
+            val dir = source.parentFile ?: source.absoluteFile.parentFile ?: return null
             val thumbFile = File.createTempFile("thumb_${System.currentTimeMillis()}_", ".jpg", dir)
             out = FileOutputStream(thumbFile)
             if (!thumb.compress(Bitmap.CompressFormat.JPEG, 80, out)) {

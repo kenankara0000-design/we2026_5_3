@@ -1,0 +1,18 @@
+---
+description: Plan-Dateinamen mit Datum und Uhrzeit für Timeline
+globs: 
+alwaysApply: true
+---
+
+# Regel: Plan-Dateinamen (Timeline)
+
+**Wenn der Nutzer einen neuen Plan erstellen möchte:**
+
+- Die Plan-Datei ist im Ordner `.cursor/plans/` abzulegen.
+- **Dateiname:** immer **aktuelles** Datum und **aktuelle** Uhrzeit, Format: `YYYY-MM-DD_HH-MM.plan.md`
+  - Beispiele: `2026-02-08_14-30.plan.md`, `2026-02-09_09-15.plan.md`
+- **Uhrzeit/Datum ermitteln:** Vor dem Anlegen der Datei die aktuelle Zeit per Terminal-Befehl abfragen (z. B. PowerShell: `Get-Date -Format "yyyy-MM-dd_HH-mm"`) und die Ausgabe für den Dateinamen verwenden. Keine geschätzte oder erfundene Uhrzeit verwenden.
+- Es sind **keine** zufälligen oder thematischen Suffixe im Dateinamen zu verwenden (z. B. keine Hash-IDs wie `plan_xyz_032f3bdd.plan.md`).
+- So entsteht eine klare **Timeline** aller Pläne nach Erstellzeitpunkt.
+
+Diese Regel gilt immer beim Anlegen einer neuen Plan-Datei.
