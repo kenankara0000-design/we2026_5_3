@@ -37,9 +37,10 @@ class MainViewModel(
     val slotVorschlaege: LiveData<List<TerminSlotVorschlag>> = _slotVorschlaege
 
     init {
+        // Tour-Count: getCustomersForTourFlow (nur Tour-Kunden, PLAN_TOURPLANNER_PERFORMANCE_3TAGE)
         viewModelScope.launch {
             combine(
-                repository.getAllCustomersFlow(),
+                repository.getCustomersForTourFlow(),
                 listeRepository.getAllListenFlow()
             ) { customers, listen ->
                 Pair(customers, listen)
@@ -53,6 +54,7 @@ class MainViewModel(
             }
         }
 
+        // Slot-Vorschläge: ADHOC-Kunden aus allen Kunden, tageVoraus 14 (PLAN)
         viewModelScope.launch {
             combine(
                 repository.getAllCustomersFlow(),
@@ -70,7 +72,7 @@ class MainViewModel(
                                 kunde = customer,
                                 tourSlots = tourSlots,
                                 startDatum = System.currentTimeMillis(),
-                                tageVoraus = 30
+                                tageVoraus = 14
                             )
                         }
                         .sortedBy { it.datum }

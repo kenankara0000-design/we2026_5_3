@@ -36,11 +36,12 @@ class TourListenProcessorImpl(
                         categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
                     val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
                     if (isDone) {
+                        // 3-Tage-Fenster (PLAN_TOURPLANNER_PERFORMANCE_3TAGE)
                         val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
                             customer = customer,
                             liste = null,
-                            startDatum = viewDateStart - TimeUnit.DAYS.toMillis(365),
-                            tageVoraus = 730
+                            startDatum = viewDateStart - TimeUnit.DAYS.toMillis(1),
+                            tageVoraus = 3
                         )
                         val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
                         val warUeberfaelligUndErledigtAmDatum = if (customer.faelligAmDatum > 0) {

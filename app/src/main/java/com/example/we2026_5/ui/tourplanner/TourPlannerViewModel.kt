@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 class TourPlannerViewModel(
@@ -59,6 +60,11 @@ class TourPlannerViewModel(
                 _listenStateFlow.value = listen
             }
         }
+        viewModelScope.launch {
+            combine(customersFlow.debounce(500L), listenFlow.debounce(500L)) { c, l -> Pair(c.size, l.size) }.collect {
+                preloadCache.clear()
+            }
+        }
     }
     
     // StateFlow für ausgewähltes Datum (Single Source of Truth für Tourenplaner-Datum)
@@ -71,36 +77,51 @@ class TourPlannerViewModel(
 
     /** Trigger: bei Änderung der Tour-Reihenfolge neu kombinieren. */
     private val tourOrderUpdateTrigger = MutableStateFlow(0)
+
+    /** Cache für vorberechnete Tour-Daten (+1/−1 Tag, PLAN_TOURPLANNER_PERFORMANCE_3TAGE). */
+    private val preloadCache = ConcurrentHashMap<String, TourProcessResult>()
     
     // #region agent log
     private val combineEmissionCount = java.util.concurrent.atomic.AtomicInteger(0)
     // #endregion
-    // Kombiniere alle Flows: Ergebnis ohne Erledigt-Section in der Liste; Erledigt-Daten für Button/Sheet
+    // Kombiniere Daten-Flows (ohne expandedSections): schwere Pipeline nur bei echten Datenänderungen
     // Debounce (250 ms) auf Kunden/Listen reduziert Pipeline-Läufe bei schnellen Firebase-Updates (Punkt 6.2)
     private val processResultFlow = combine(
         customersFlow.debounce(250L),
         listenFlow.debounce(250L),
         selectedTimestampFlow,
-        expandedSectionsFlow,
         tourOrderUpdateTrigger
-    ) { customers, listen, timestamp, expandedSections, _ ->
+    ) { customers, listen, timestamp, _ ->
         if (timestamp == null) {
             TourProcessResult(emptyList(), 0, emptyList(), emptyList())
         } else {
+            val key = dateKey(timestamp)
+            val cached = preloadCache[key]
+            if (cached != null) {
+                val order = tourOrderRepository.getOrderForDate(key)
+                return@combine cached.copy(items = applyTourOrder(cached.items, order))
+            }
             // #region agent log
             val t0 = System.currentTimeMillis()
             AgentDebugLog.log("TourPlannerViewModel.kt", "combine_process_start", mapOf("n" to customers.size, "listen" to listen.size, "ts" to timestamp), "H1")
             // #endregion
             val activeCustomers = CustomerTermFilter.filterActiveForTerms(customers, System.currentTimeMillis())
-            val result = dataProcessor.processTourData(activeCustomers, listen, timestamp, expandedSections)
-            val order = tourOrderRepository.getOrderForDate(dateKey(timestamp))
+            val result = dataProcessor.processTourData(activeCustomers, listen, timestamp, emptySet())
+            val order = tourOrderRepository.getOrderForDate(key)
             val reorderedItems = applyTourOrder(result.items, order)
+            val finalResult = result.copy(items = reorderedItems)
+            if (isToday(timestamp)) {
+                viewModelScope.launch(Dispatchers.Default) {
+                    preloadNeighbourDay(activeCustomers, listen, timestamp + TimeUnit.DAYS.toMillis(1))
+                    preloadNeighbourDay(activeCustomers, listen, timestamp - TimeUnit.DAYS.toMillis(1))
+                }
+            }
             // #region agent log
             val emitNr = combineEmissionCount.incrementAndGet()
             AgentDebugLog.log("TourPlannerViewModel.kt", "combine_process_end", mapOf("duration_ms" to (System.currentTimeMillis() - t0), "items" to result.items.size, "customers" to activeCustomers.size, "emitNr" to emitNr), "H1")
             AgentDebugLog.log("TourPlannerViewModel.kt", "combine_emit", mapOf("emitNr" to emitNr), "H5")
             // #endregion
-            result.copy(items = reorderedItems)
+            finalResult
         }
     }.distinctUntilChanged().flowOn(Dispatchers.Default)
 
@@ -209,6 +230,18 @@ class TourPlannerViewModel(
     private fun dateKey(ts: Long): String {
         val c = Calendar.getInstance().apply { timeInMillis = ts }
         return String.format("%04d%02d%02d", c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH))
+    }
+
+    private fun isToday(ts: Long): Boolean {
+        val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+        return TerminBerechnungUtils.getStartOfDay(ts) == heuteStart
+    }
+
+    private fun preloadNeighbourDay(activeCustomers: List<Customer>, listen: List<KundenListe>, dayMillis: Long) {
+        val key = dateKey(dayMillis)
+        if (preloadCache.containsKey(key)) return
+        val result = dataProcessor.processTourData(activeCustomers, listen, dayMillis, emptySet())
+        preloadCache[key] = result
     }
 
     /** Wendet gespeicherte Reihenfolge auf die Liste an (nur CustomerItems umsortiert). */

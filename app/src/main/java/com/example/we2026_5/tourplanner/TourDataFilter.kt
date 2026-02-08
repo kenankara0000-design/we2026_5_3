@@ -24,12 +24,13 @@ class TourDataFilter(
      */
     fun customerFaelligAm(c: Customer, liste: KundenListe? = null, abDatum: Long = System.currentTimeMillis()): Long {
         // Term-Daten nur aus Kunde (liste nur Gruppierung; kein getNaechstesListeDatum(liste)).
+        // Reduziertes Fenster: 3 Tage für Tour-Planner-Performance
         if (c.firstIntervallOrNull() != null || c.listeId.isNotEmpty()) {
             val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
                 customer = c,
                 liste = null,
                 startDatum = abDatum,
-                tageVoraus = 365
+                tageVoraus = 3
             )
             val naechstesTermin = termine.firstOrNull {
                 it.datum >= categorizer.getStartOfDay(abDatum)
@@ -92,11 +93,12 @@ class TourDataFilter(
                 return false
             }
             
+            // 3-Tage-Fenster + 60 Tage Überfällig (PLAN_TOURPLANNER_PERFORMANCE_3TAGE)
             val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
                 customer = customer,
                 liste = null,
-                startDatum = heuteStart - TimeUnit.DAYS.toMillis(365),
-                tageVoraus = 730
+                startDatum = heuteStart - TimeUnit.DAYS.toMillis(60),
+                tageVoraus = 63
             )
             
             return termine.any { termin ->

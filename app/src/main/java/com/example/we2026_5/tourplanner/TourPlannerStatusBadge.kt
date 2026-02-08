@@ -15,11 +15,17 @@ import java.util.concurrent.TimeUnit
 object TourPlannerStatusBadge {
 
     fun compute(customer: Customer, viewDateStart: Long, heuteStart: Long): String {
+        // 3-Tage-Fenster + 60 Tage Überfällig (PLAN_TOURPLANNER_PERFORMANCE_3TAGE)
+        val (startDatum, tageVoraus) = if (viewDateStart <= heuteStart) {
+            Pair(heuteStart - TimeUnit.DAYS.toMillis(60), 63)
+        } else {
+            Pair(viewDateStart - TimeUnit.DAYS.toMillis(1), 3)
+        }
         val alleTermine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
             customer = customer,
             liste = null,
-            startDatum = viewDateStart - TimeUnit.DAYS.toMillis(365),
-            tageVoraus = 730
+            startDatum = startDatum,
+            tageVoraus = tageVoraus
         )
         return computeWithTermine(customer, viewDateStart, heuteStart, alleTermine)
     }

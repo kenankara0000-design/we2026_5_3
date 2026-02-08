@@ -185,6 +185,13 @@ class CustomerRepository(
     private fun withoutDeprecatedCustomerFields(updates: Map<String, Any>): Map<String, Any> =
         updates.filterKeys { it !in setOf("abholungDatum", "auslieferungDatum", "wiederholen", "intervallTage", "letzterTermin") }
 
+    /** Felder, die die Tourenplaner-Ansicht beeinflussen – nach Update Index customers_for_tour mitsyncen. */
+    private val tourRelevantKeys = setOf(
+        "abholungErfolgt", "abholungErledigtAm", "auslieferungErfolgt", "auslieferungErledigtAm",
+        "keinerWäscheErfolgt", "keinerWäscheErledigtAm", "geloeschteTermine", "verschobeneTermine",
+        "urlaubVon", "urlaubBis", "ausnahmeTermine"
+    )
+
     /**
      * Aktualisiert einen Kunden
      */
@@ -193,7 +200,7 @@ class CustomerRepository(
             val filtered = withoutDeprecatedCustomerFields(updates)
             if (filtered.isEmpty()) return true
             awaitWithTimeout { customersRef.child(customerId).updateChildren(filtered).await() }
-            if ("ohneTour" in filtered) {
+            if ("ohneTour" in filtered || filtered.keys.any { it in tourRelevantKeys }) {
                 getCustomerById(customerId)?.let { syncTourCustomer(it) }
             }
             true
@@ -216,7 +223,7 @@ class CustomerRepository(
             val filtered = withoutDeprecatedCustomerFields(updates)
             if (filtered.isEmpty()) return Result.Success(true)
             awaitWithTimeout { customersRef.child(customerId).updateChildren(filtered).await() }
-            if ("ohneTour" in filtered) {
+            if ("ohneTour" in filtered || filtered.keys.any { it in tourRelevantKeys }) {
                 getCustomerById(customerId)?.let { syncTourCustomer(it) }
             }
             Result.Success(true)

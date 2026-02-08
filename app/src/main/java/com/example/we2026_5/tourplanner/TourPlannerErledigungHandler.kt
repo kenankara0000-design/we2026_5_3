@@ -240,7 +240,7 @@ internal class TourPlannerErledigungHandler(
         )
         if (success == true) {
             Toast.makeText(context, context.getString(successMessageResId), Toast.LENGTH_SHORT).show()
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ reloadCurrentView() }, 2000)
+            reloadCurrentView()
         } else {
             onError?.invoke(errorMsg)
         }

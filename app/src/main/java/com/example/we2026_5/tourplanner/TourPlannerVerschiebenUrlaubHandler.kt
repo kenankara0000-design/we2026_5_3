@@ -75,7 +75,7 @@ internal class TourPlannerVerschiebenUrlaubHandler(
                 Toast.makeText(context,
                     if (alleVerschieben) context.getString(R.string.toast_termine_verschoben) else context.getString(R.string.toast_termin_verschoben),
                     Toast.LENGTH_SHORT).show()
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ reloadCurrentView() }, 2000)
+                reloadCurrentView()
             } else {
                 onError?.invoke(context.getString(R.string.error_verschieben))
             }
@@ -94,7 +94,7 @@ internal class TourPlannerVerschiebenUrlaubHandler(
             )
             if (success == true) {
                 Toast.makeText(context, context.getString(R.string.toast_urlaub_eingetragen), Toast.LENGTH_SHORT).show()
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ reloadCurrentView() }, 2000)
+                reloadCurrentView()
             } else {
                 onError?.invoke(context.getString(R.string.error_urlaub))
             }

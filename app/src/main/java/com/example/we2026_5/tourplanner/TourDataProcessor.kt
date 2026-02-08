@@ -63,7 +63,7 @@ class TourDataProcessor {
 
             // Erledigte Kunden: Prüfe ob am Tag ein Termin vorhanden ist
             if (isDone) {
-                val termine = berechneAlleTermineFuerKunde(customer, null, viewDateStart)
+                val termine = berechneAlleTermineFuerKunde(customer, null, viewDateStart, heuteStart)
                 val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
                 
                 val warUeberfaelligUndErledigtAmDatum = warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
@@ -104,7 +104,7 @@ class TourDataProcessor {
                 return@forEach
             }
             
-            val alleTermine = berechneAlleTermineFuerKunde(customer, null, viewDateStart)
+            val alleTermine = berechneAlleTermineFuerKunde(customer, null, viewDateStart, heuteStart)
             val termineAmTag = alleTermine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
             val hatAbholungAmTag = termineAmTag.any { it.typ == TerminTyp.ABHOLUNG }
             val hatAuslieferungAmTag = termineAmTag.any { it.typ == TerminTyp.AUSLIEFERUNG }
@@ -173,7 +173,7 @@ class TourDataProcessor {
         // Ein Kunde nur einmal in Überfällig (auch wenn in mehreren Listen)
         val alleUeberfaelligeEindeutig = alleUeberfaelligeKunden.distinctBy { it.id }
         val overdueOhneListen = alleUeberfaelligeEindeutig.sortedWith(compareBy<Customer> { customer ->
-            val alleTermine = berechneAlleTermineFuerKunde(customer, null, viewDateStart)
+            val alleTermine = berechneAlleTermineFuerKunde(customer, null, viewDateStart, heuteStart)
             val ueberfaelligeDaten = alleTermine.filter { termin ->
                 if (viewDateStart > heuteStart) return@filter false
                 val terminStart = categorizer.getStartOfDay(termin.datum)
@@ -217,7 +217,7 @@ class TourDataProcessor {
                     // Erledigung nur aus Kundendaten (Liste nur Gruppierung).
 
                     val sollAlsErledigtAnzeigen = if (isDone) {
-                        val termine = berechneAlleTermineFuerKunde(customer, null, viewDateStart)
+                        val termine = berechneAlleTermineFuerKunde(customer, null, viewDateStart, heuteStart)
                         val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
                         val warUeberfaelligUndErledigtAmDatum = isDone && warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
                         val hatAbholungAmTagListe = termineAmTag.any { it.typ == TerminTyp.ABHOLUNG }
@@ -367,12 +367,23 @@ class TourDataProcessor {
         }
     }
 
-    private fun berechneAlleTermineFuerKunde(customer: Customer, liste: KundenListe? = null, viewDateStart: Long): List<TerminInfo> {
+    /**
+     * Berechnet Termine für Tour-Planner mit reduziertem Fenster (3-Tage + 60 Tage Überfällig).
+     * viewDateStart−1 bis viewDateStart+2 bei Zukunft; bei Heute/Vergangenheit +60 Tage für Überfällig.
+     */
+    private fun berechneAlleTermineFuerKunde(customer: Customer, liste: KundenListe? = null, viewDateStart: Long, heuteStart: Long): List<TerminInfo> {
+        val (startDatum, tageVoraus) = if (viewDateStart <= heuteStart) {
+            // Heute oder Vergangenheit: Überfällig-Logik braucht Vergangenheit (60 Tage)
+            Pair(heuteStart - TimeUnit.DAYS.toMillis(60), 63)
+        } else {
+            // Zukunft: nur 3 Tage
+            Pair(viewDateStart - TimeUnit.DAYS.toMillis(1), 3)
+        }
         return TerminBerechnungUtils.berechneAlleTermineFuerKunde(
             customer = customer,
             liste = liste,
-            startDatum = viewDateStart - TimeUnit.DAYS.toMillis(365),
-            tageVoraus = 730
+            startDatum = startDatum,
+            tageVoraus = tageVoraus
         )
     }
 }

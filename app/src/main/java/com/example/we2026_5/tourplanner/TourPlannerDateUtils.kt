@@ -89,11 +89,11 @@ class TourPlannerDateUtils(
     }
     
     fun getFaelligAmDatumFuerAbholung(customer: Customer, heuteStart: Long): Long {
-        // Prüfe ob Kunde überfällig ist
+        // 60 Tage Überfällig-Fenster (PLAN_TOURPLANNER_PERFORMANCE_3TAGE)
         val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
             customer = customer,
-            startDatum = heuteStart - TimeUnit.DAYS.toMillis(365),
-            tageVoraus = 730
+            startDatum = heuteStart - TimeUnit.DAYS.toMillis(60),
+            tageVoraus = 63
         )
         
         // Finde den ersten überfälligen Abholungstermin
@@ -106,11 +106,11 @@ class TourPlannerDateUtils(
     }
     
     fun getFaelligAmDatumFuerAuslieferung(customer: Customer, heuteStart: Long): Long {
-        // Prüfe ob Kunde überfällig ist
+        // 60 Tage Überfällig-Fenster (PLAN_TOURPLANNER_PERFORMANCE_3TAGE)
         val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
             customer = customer,
-            startDatum = heuteStart - TimeUnit.DAYS.toMillis(365),
-            tageVoraus = 730
+            startDatum = heuteStart - TimeUnit.DAYS.toMillis(60),
+            tageVoraus = 63
         )
         
         // Finde den ersten überfälligen Auslieferungstermin
@@ -130,11 +130,12 @@ class TourPlannerDateUtils(
     fun getNaechstesTourDatum(customer: Customer): Long {
         val heuteStart = getStartOfDay(System.currentTimeMillis())
         val geloeschte = customer.geloeschteTermine
+        // 14 Tage für "Nächste Tour" (PLAN_TOURPLANNER_PERFORMANCE_3TAGE)
         val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
             customer = customer,
             liste = null,
             startDatum = heuteStart,
-            tageVoraus = 365
+            tageVoraus = 14
         )
         val naechstes = termine.firstOrNull {
             it.datum >= heuteStart &&

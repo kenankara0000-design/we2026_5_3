@@ -53,17 +53,13 @@ class TourPlannerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         val prefs = getSharedPreferences("tourplanner_prefs", MODE_PRIVATE)
-        val savedDate = prefs.getLong("last_view_date", 0L)
-        val initialDate = if (savedDate > 0L) {
-            TerminBerechnungUtils.getStartOfDay(savedDate)
-        } else {
-            Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
-        }
+        // Beim Start immer heutiges Datum anzeigen
+        val initialDate = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
 
         coordinator = TourPlannerCoordinator(
             activity = this,
