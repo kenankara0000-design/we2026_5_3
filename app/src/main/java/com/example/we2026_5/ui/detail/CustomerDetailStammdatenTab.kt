@@ -71,14 +71,22 @@ fun CustomerDetailStammdatenTab(
                 fontWeight = FontWeight.Bold,
                 color = textPrimary
             )
+            val fullAddress = buildString {
+                if (customer.adresse.isNotBlank()) append(customer.adresse.trim())
+                val plzStadt = listOf(customer.plz.trim(), customer.stadt.trim()).filter { it.isNotEmpty() }.joinToString(" ")
+                if (plzStadt.isNotEmpty()) {
+                    if (isNotEmpty()) append(", ")
+                    append(plzStadt)
+                }
+            }.trim()
             Text(
-                text = customer.adresse.ifEmpty { stringResource(R.string.label_not_set) },
+                text = fullAddress.ifEmpty { stringResource(R.string.label_not_set) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0xFFE0E0E0))
                     .padding(12.dp)
                     .clickable(onClick = onAdresseClick),
-                color = if (customer.adresse.isNotEmpty()) textPrimary else textSecondary,
+                color = if (fullAddress.isNotEmpty()) textPrimary else textSecondary,
                 fontSize = DetailUiConstants.BodySp
             )
             Spacer(Modifier.height(DetailUiConstants.FieldSpacing))

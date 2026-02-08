@@ -11,23 +11,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -48,16 +47,19 @@ fun SevDeskImportScreen(
     onSaveToken: () -> Unit,
     onImportContacts: () -> Unit,
     onImportArticles: () -> Unit,
-    onClearMessage: () -> Unit,
-    onRunApiTest: () -> Unit,
-    onDiscoveryTest: () -> Unit,
-    onClearTestResult: () -> Unit,
-    onExportTestResult: (String) -> Unit
+    onDeleteSevDeskContacts: () -> Unit,
+    onDeleteSevDeskArticles: () -> Unit,
+    onClearReimportList: () -> Unit,
+    onClearMessage: () -> Unit
 ) {
     val context = LocalContext.current
     val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
     val textSecondary = colorResource(R.color.text_secondary)
-    val isBusy = state.isImportingContacts || state.isImportingArticles || state.isRunningApiTest
+    val isBusy = state.isImportingContacts || state.isImportingArticles
+        || state.isDeletingSevDeskContacts || state.isDeletingSevDeskArticles
+    var showDeleteContactsConfirm by remember { mutableStateOf(false) }
+    var showDeleteArticlesConfirm by remember { mutableStateOf(false) }
+    var showClearReimportConfirm by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -95,19 +97,94 @@ fun SevDeskImportScreen(
                 }
             }
             Spacer(Modifier.height(16.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = colorResource(R.color.surface_light)),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Column(Modifier.padding(12.dp)) {
-                    Text(stringResource(R.string.sevdesk_api_overview_title), fontWeight = FontWeight.SemiBold, color = textSecondary, fontSize = 14.sp)
-                    Spacer(Modifier.height(6.dp))
-                    Text(stringResource(R.string.sevdesk_api_overview), color = textSecondary, fontSize = 12.sp)
+            Text(stringResource(R.string.sevdesk_before_reimport), fontWeight = FontWeight.SemiBold, color = textSecondary, fontSize = 14.sp)
+            Spacer(Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = { showDeleteContactsConfirm = true },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isBusy,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(if (state.isDeletingSevDeskContacts) "…" else stringResource(R.string.sevdesk_delete_contacts))
+                }
+                OutlinedButton(
+                    onClick = { showDeleteArticlesConfirm = true },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isBusy,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(if (state.isDeletingSevDeskArticles) "…" else stringResource(R.string.sevdesk_delete_articles))
                 }
             }
-            Spacer(Modifier.height(24.dp))
-            Text(stringResource(R.string.sevdesk_before_reimport), fontWeight = FontWeight.SemiBold, color = textSecondary, fontSize = 14.sp)
+            OutlinedButton(
+                onClick = { showClearReimportConfirm = true },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isBusy,
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(stringResource(R.string.sevdesk_clear_reimport_list))
+            }
+            if (showDeleteContactsConfirm) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteContactsConfirm = false },
+                    title = { Text(stringResource(R.string.sevdesk_delete_contacts)) },
+                    text = { Text(stringResource(R.string.sevdesk_delete_contacts_confirm)) },
+                    confirmButton = {
+                        Button(onClick = {
+                            showDeleteContactsConfirm = false
+                            onDeleteSevDeskContacts()
+                        }, shape = RoundedCornerShape(8.dp)) {
+                            Text(stringResource(R.string.sevdesk_delete_confirm_ok))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteContactsConfirm = false }) {
+                            Text(stringResource(R.string.btn_cancel))
+                        }
+                    }
+                )
+            }
+            if (showDeleteArticlesConfirm) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteArticlesConfirm = false },
+                    title = { Text(stringResource(R.string.sevdesk_delete_articles)) },
+                    text = { Text(stringResource(R.string.sevdesk_delete_articles_confirm)) },
+                    confirmButton = {
+                        Button(onClick = {
+                            showDeleteArticlesConfirm = false
+                            onDeleteSevDeskArticles()
+                        }, shape = RoundedCornerShape(8.dp)) {
+                            Text(stringResource(R.string.sevdesk_delete_confirm_ok))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteArticlesConfirm = false }) {
+                            Text(stringResource(R.string.btn_cancel))
+                        }
+                    }
+                )
+            }
+            if (showClearReimportConfirm) {
+                AlertDialog(
+                    onDismissRequest = { showClearReimportConfirm = false },
+                    title = { Text(stringResource(R.string.sevdesk_clear_reimport_list)) },
+                    text = { Text(stringResource(R.string.sevdesk_clear_reimport_list_confirm)) },
+                    confirmButton = {
+                        Button(onClick = {
+                            showClearReimportConfirm = false
+                            onClearReimportList()
+                        }, shape = RoundedCornerShape(8.dp)) {
+                            Text(stringResource(R.string.sevdesk_clear_reimport_list))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showClearReimportConfirm = false }) {
+                            Text(stringResource(R.string.btn_cancel))
+                        }
+                    }
+                )
+            }
             Spacer(Modifier.height(24.dp))
 
             Button(
@@ -134,47 +211,6 @@ fun SevDeskImportScreen(
             state.error?.let { err ->
                 Spacer(Modifier.height(16.dp))
                 Text(err, color = Color.Red, fontSize = 14.sp)
-            }
-
-            Spacer(Modifier.height(24.dp))
-            Text(stringResource(R.string.sevdesk_test_section), fontWeight = FontWeight.SemiBold, color = textSecondary, fontSize = 14.sp)
-            Spacer(Modifier.height(8.dp))
-            OutlinedButton(
-                onClick = onDiscoveryTest,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isBusy,
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(if (state.isRunningApiTest) "…" else stringResource(R.string.sevdesk_discovery_btn))
-            }
-            Spacer(Modifier.height(8.dp))
-            OutlinedButton(
-                onClick = onRunApiTest,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isBusy,
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(if (state.isRunningApiTest) "…" else stringResource(R.string.sevdesk_test_btn))
-            }
-            state.testResult?.let { result ->
-                Spacer(Modifier.height(8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { onExportTestResult(result) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp)) {
-                        Text(stringResource(R.string.sevdesk_test_export))
-                    }
-                    OutlinedButton(onClick = onClearTestResult, modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp)) {
-                        Text(stringResource(R.string.sevdesk_test_clear))
-                    }
-                }
-                Spacer(Modifier.height(8.dp))
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(400.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text(result, fontSize = 11.sp, color = textSecondary)
-                }
             }
         }
     }

@@ -6,15 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import sh.calvin.reorderable.ReorderableItem
@@ -322,7 +317,6 @@ fun TourPlannerScreen(
                                         verschobenVonInfo = item.verschobenVonInfo?.takeIf { it.isNotEmpty() },
                                         ueberfaelligInfo = ueberfaelligInfo
                                     )
-                                    val showDragHandle = tourItems.count { it is ListItem.CustomerItem } >= 2 && onReorder != null
                                     ReorderableItem(reorderableState, key = item.customer.id) { isDragging ->
                                         TourCustomerRow(
                                             customer = item.customer,
@@ -335,22 +329,8 @@ fun TourPlannerScreen(
                                             viewDateMillis = viewDate,
                                             onCustomerClick = { onCustomerClick(payload) },
                                             onAktionenClick = { onAktionenClick(item.customer) },
-                                            dragHandleModifier = if (showDragHandle) with(this) {
-                                                Modifier.draggableHandle(
-                                                    onDragStarted = { hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress) },
-                                                    onDragStopped = { hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress) }
-                                                )
-                                            } else null,
-                                            dragHandleContent = if (showDragHandle) { {
-                                                IconButton(onClick = {}) {
-                                                    Icon(
-                                                        Icons.Filled.Menu,
-                                                        contentDescription = stringResource(R.string.tour_reorder_drag),
-                                                        modifier = Modifier.size(24.dp),
-                                                        tint = colorResource(R.color.primary_blue)
-                                                    )
-                                                }
-                                            } } else null
+                                            dragHandleModifier = null,
+                                            dragHandleContent = null
                                         )
                                     }
                                 }

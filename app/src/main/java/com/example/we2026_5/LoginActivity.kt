@@ -16,21 +16,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 
@@ -43,8 +37,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Nur bei Admin (E-Mail-Login) direkt in die App; anonyme Nutzer sehen immer das Login-Panel
-        if (auth.currentUser != null && !auth.currentUser!!.isAnonymous) {
+        if (auth.currentUser != null) {
             startMainActivity()
             return
         }
@@ -63,33 +56,12 @@ class LoginActivity : AppCompatActivity() {
                         LoginScreenContent(
                             errorMessage = loginError,
                             onDismissError = { loginError = null },
-                            onAdminLogin = { email, password -> signInAdmin(email, password) },
-                            onAnonymContinue = { signInAnonymously() }
+                            onContinue = { signInAnonymously() }
                         )
                     }
                 }
             }
         }
-    }
-
-    private fun signInAdmin(email: String, password: String) {
-        if (email.isBlank() || password.isBlank()) {
-            loginError = getString(R.string.login_error_admin)
-            return
-        }
-        isLoading = true
-        loginError = null
-        val emailTrim = email.trim()
-        val signInEmail = if (emailTrim.contains("@")) emailTrim else "$emailTrim@tourplaner.test"
-        auth.signInWithEmailAndPassword(signInEmail, password)
-            .addOnCompleteListener(this) { task ->
-                isLoading = false
-                if (task.isSuccessful) {
-                    startMainActivity()
-                } else {
-                    loginError = getString(R.string.login_error_admin)
-                }
-            }
     }
 
     private fun signInAnonymously() {
@@ -115,7 +87,7 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        if (auth.currentUser != null && !auth.currentUser!!.isAnonymous) {
+        if (auth.currentUser != null) {
             startMainActivity()
         }
     }
@@ -125,12 +97,8 @@ class LoginActivity : AppCompatActivity() {
 private fun LoginScreenContent(
     errorMessage: String?,
     onDismissError: () -> Unit,
-    onAdminLogin: (String, String) -> Unit,
-    onAnonymContinue: () -> Unit
+    onContinue: () -> Unit
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -158,36 +126,8 @@ private fun LoginScreenContent(
             Spacer(Modifier.height(16.dp))
         }
 
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text(stringResource(R.string.login_admin_email_hint)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            enabled = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text(stringResource(R.string.login_admin_password_hint)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            enabled = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done)
-        )
-        Spacer(Modifier.height(20.dp))
         Button(
-            onClick = { onAdminLogin(email, password) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(R.string.login_admin_submit))
-        }
-        Spacer(Modifier.height(24.dp))
-        OutlinedButton(
-            onClick = onAnonymContinue,
+            onClick = onContinue,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(stringResource(R.string.login_anonym_continue))

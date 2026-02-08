@@ -46,4 +46,9 @@ object SevDeskDeletedIds {
         val current = prefs(context).getString(KEY_IDS, "") ?: ""
         return current.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
     }
+
+    /** Re-Import-Ignore-Liste leeren – beim nächsten Import werden alle SevDesk-Kontakte wieder berücksichtigt. */
+    fun clear(context: Context) {
+        prefs(context).edit().remove(KEY_IDS).apply()
+    }
 }

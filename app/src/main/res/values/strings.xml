@@ -203,6 +203,9 @@
     <string name="settings_sevdesk_import">SevDesk Import</string>
     <string name="settings_sevdesk_readonly_hint">SevDesk API: Nur Lesen (kein Löschen/Ändern in SevDesk).</string>
     <string name="settings_abmelden">Abmelden</string>
+    <string name="settings_reset_app_data">App-Daten zurücksetzen</string>
+    <string name="settings_reset_app_data_confirm">Lokale Einstellungen zurücksetzen? (Re-Import-Liste, SevDesk-Token, Tourenplaner-Prefs. Firebase-Daten bleiben unverändert.)</string>
+    <string name="settings_reset_app_data_done">App-Daten zurückgesetzt.</string>
     <string name="erfassung_menu_title">Erfassung</string>
     <string name="erfassung_menu_start">Erfassung starten</string>
     <string name="erfassung_menu_artikel">Artikel verwalten</string>
@@ -648,6 +651,8 @@
     <string name="sevdesk_delete_articles">SevDesk-Artikel löschen</string>
     <string name="sevdesk_delete_articles_confirm">Nur hier in der App werden die importierten Artikel gelöscht. In SevDesk passiert nichts – die App hat nur Lesezugriff. Unwiderruflich löschen?</string>
     <string name="sevdesk_delete_confirm_ok">Löschen</string>
+    <string name="sevdesk_clear_reimport_list">Re-Import-Liste leeren</string>
+    <string name="sevdesk_clear_reimport_list_confirm">Die Liste der „beim Re-Import ignorieren“-Kontakte wird geleert. Beim nächsten Kontakte-Import werden alle SevDesk-Kontakte wieder berücksichtigt.</string>
     <string name="sevdesk_test_section">Nur zum Testen: API kundenspezifische Preise / Artikel ↔ Kunde</string>
     <string name="sevdesk_discovery_btn">Discovery: Artikel ↔ Kunde (alle Endpunkte/Embeds testen)</string>
     <string name="sevdesk_test_btn">API-Test: Kundenpreise (PartUnitPrice) + Part + Contact</string>

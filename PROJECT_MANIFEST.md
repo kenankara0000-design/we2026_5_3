@@ -45,8 +45,7 @@ Das Manifest ergänzt sie um Ziele und Scope; es ersetzt sie nicht.
 ## 5. Technik
 
 - **Datenbank:** Firebase Realtime Database (nicht Firestore)
-- **Auth:** Firebase Auth (LoginActivity als Launcher; MainActivity nach Login)
-  - **Test-Admin-Account:** Benutzer **admin**, Passwort **test23** (Firebase verlangt mind. 6 Zeichen; E-Mail in Firebase: `admin@tourplaner.test`). In Firebase Console unter Authentication → E-Mail/Passwort anlegen.
+- **Auth:** Firebase Auth (LoginActivity als Launcher; MainActivity nach Login). Nur **anonymer Login**; alle angemeldeten Nutzer haben volle Rechte (keine Admin/Anonymous-Trennung).
 - **Storage:** Firebase Storage (Fotos; ImageUploadWorker, StorageUploadManager)
 - **UI:** Jetpack Compose (Migration weitgehend abgeschlossen); schwere Screens mit ViewModel + Coordinator (siehe ARCHITEKTUR_ACTIVITY_COORDINATOR.md)
 - **DI:** Koin (appModule: Repositories, ViewModels)
