@@ -636,6 +636,7 @@
     <string name="wasch_speichern">Speichern</string>
     <string name="wasch_keine_artikel">Keine Artikel. Bitte zuerst Artikel importieren (z. B. SevDesk).</string>
     <string name="wasch_keine_kunden">Keine Kunden.</string>
+    <string name="wasch_kunde_suchen_hinweis">Kundenname eingeben, um zu suchen.</string>
     <string name="wasch_erfassung_gespeichert">Erfassung gespeichert</string>
     <string name="wasch_fehler_speichern">Fehler beim Speichern</string>
     <string name="label_customer_alias">Alias (Anzeigename in der App)</string>
@@ -673,6 +674,8 @@
     <string name="wasch_neue_erfassung">Neue Erfassung</string>
     <string name="wasch_x_artikel">%d Artikel</string>
     <string name="wasch_belege">Belege</string>
+    <string name="wasch_belege_filter_kunde">Kundenname filtern…</string>
+    <string name="wasch_keine_belege">Keine erfassten Belege.</string>
     <string name="wasch_x_erfassungen">%d Erfassungen</string>
     <string name="wasch_beleg_monat">Beleg %s</string>
     <string name="wasch_keine_erfassungen">Noch keine Erfassungen für diesen Kunden.</string>

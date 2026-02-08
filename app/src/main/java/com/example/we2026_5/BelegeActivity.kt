@@ -24,22 +24,26 @@ class BelegeActivity : AppCompatActivity() {
             MaterialTheme {
                 val state by viewModel.uiState.collectAsState()
                 val belegMonate by viewModel.belegMonate.collectAsState(initial = emptyList())
+                val alleBelegEintraege by viewModel.alleBelegEintraege.collectAsState(initial = emptyList())
                 val articles by viewModel.articles.collectAsState(initial = emptyList())
                 BelegeScreen(
                     state = state,
                     belegMonate = belegMonate,
+                    alleBelegEintraege = alleBelegEintraege,
                     articles = articles,
                     onBack = {
                         when (state) {
-                            is BelegeUiState.KundeSuchen -> finish()
-                            is BelegeUiState.BelegListe -> viewModel.backToKundeSuchen()
+                            is BelegeUiState.AlleBelege -> finish()
+                            is BelegeUiState.KundeSuchen -> viewModel.backToKundeSuchen()
+                            is BelegeUiState.BelegListe -> viewModel.backToAlleBelege()
                             is BelegeUiState.BelegDetail -> viewModel.backFromBelegDetail()
                         }
                     },
                     onCustomerSearchQueryChange = { viewModel.setCustomerSearchQuery(it) },
                     onKundeWaehlen = { viewModel.kundeGewaehlt(it) },
-                    onBackToKundeSuchen = { viewModel.backToKundeSuchen() },
+                    onBackToAlleBelege = { viewModel.backToAlleBelege() },
                     onBelegClick = { viewModel.openBelegDetail(it) },
+                    onBelegEintragClick = { viewModel.openBelegDetailFromAlle(it) },
                     onBackFromBelegDetail = { viewModel.backFromBelegDetail() },
                     onNeueErfassungFromListe = {
                         (state as? BelegeUiState.BelegListe)?.customer?.let { customer ->
@@ -59,7 +63,9 @@ class BelegeActivity : AppCompatActivity() {
                                 .setNegativeButton(R.string.btn_cancel, null)
                                 .show()
                         }
-                    }
+                    },
+                    onKundeSuchenClick = { viewModel.showKundeSuchen() },
+                    onAlleBelegeNameFilterChange = { viewModel.setAlleBelegeNameFilter(it) }
                 )
             }
         }

@@ -18,15 +18,19 @@ import com.example.we2026_5.wasch.Article
 fun BelegeScreen(
     state: BelegeUiState,
     belegMonate: List<BelegMonat>,
+    alleBelegEintraege: List<BelegEintrag>,
     articles: List<Article>,
     onBack: () -> Unit,
     onCustomerSearchQueryChange: (String) -> Unit,
     onKundeWaehlen: (com.example.we2026_5.Customer) -> Unit,
-    onBackToKundeSuchen: () -> Unit,
+    onBackToAlleBelege: () -> Unit,
     onBelegClick: (BelegMonat) -> Unit,
+    onBelegEintragClick: (BelegEintrag) -> Unit,
     onBackFromBelegDetail: () -> Unit,
     onNeueErfassungFromListe: () -> Unit,
-    onDeleteBeleg: () -> Unit
+    onDeleteBeleg: () -> Unit,
+    onKundeSuchenClick: () -> Unit,
+    onAlleBelegeNameFilterChange: (String) -> Unit
 ) {
     val primaryBlue = colorResource(R.color.primary_blue)
     val textPrimary = colorResource(R.color.text_primary)
@@ -41,16 +45,29 @@ fun BelegeScreen(
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             when (state) {
+                is BelegeUiState.AlleBelege -> {
+                    WaschenErfassungAlleBelegeContent(
+                        belegEintraege = alleBelegEintraege,
+                        nameFilter = state.nameFilter,
+                        onNameFilterChange = onAlleBelegeNameFilterChange,
+                        textPrimary = textPrimary,
+                        textSecondary = textSecondary,
+                        onBelegEintragClick = onBelegEintragClick,
+                        onKundeSuchenClick = onKundeSuchenClick
+                    )
+                }
                 is BelegeUiState.KundeSuchen -> {
-                    val filtered = state.customers.filter {
-                        state.customerSearchQuery.isBlank() || it.displayName.contains(state.customerSearchQuery, ignoreCase = true)
+                    val filtered = if (state.customerSearchQuery.isBlank()) emptyList()
+                    else state.customers.filter {
+                        it.displayName.contains(state.customerSearchQuery, ignoreCase = true)
                     }
                     WaschenErfassungKundeSuchenContent(
                         customerSearchQuery = state.customerSearchQuery,
                         onSearchQueryChange = onCustomerSearchQueryChange,
                         filteredCustomers = filtered,
                         textSecondary = textSecondary,
-                        onKundeWaehlen = onKundeWaehlen
+                        onKundeWaehlen = onKundeWaehlen,
+                        searchHintWhenEmpty = state.customerSearchQuery.isBlank()
                     )
                 }
                 is BelegeUiState.BelegListe -> {
@@ -59,7 +76,7 @@ fun BelegeScreen(
                         belege = belegMonate,
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
-                        onBackToKundeSuchen = onBackToKundeSuchen,
+                        onBackToKundeSuchen = onBackToAlleBelege,
                         onNeueErfassungFromListe = onNeueErfassungFromListe,
                         onBelegClick = onBelegClick
                     )

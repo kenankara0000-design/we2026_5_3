@@ -31,7 +31,9 @@ fun WaschenErfassungKundeSuchenContent(
     onSearchQueryChange: (String) -> Unit,
     filteredCustomers: List<Customer>,
     textSecondary: androidx.compose.ui.graphics.Color,
-    onKundeWaehlen: (Customer) -> Unit
+    onKundeWaehlen: (Customer) -> Unit,
+    /** Wenn true und Liste leer: Hinweis „Name eingeben“ statt „Keine Kunden“. */
+    searchHintWhenEmpty: Boolean = false
 ) {
     Column(
         modifier = Modifier
@@ -48,7 +50,10 @@ fun WaschenErfassungKundeSuchenContent(
         Spacer(Modifier.height(12.dp))
         if (filteredCustomers.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(stringResource(R.string.wasch_keine_kunden), color = textSecondary)
+                Text(
+                    stringResource(if (searchHintWhenEmpty) R.string.wasch_kunde_suchen_hinweis else R.string.wasch_keine_kunden),
+                    color = textSecondary
+                )
             }
         } else {
             LazyColumn(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
