@@ -232,6 +232,7 @@
     <string name="stat_auf_abruf_kunden">🔵 Auf Abruf</string>
     <string name="stat_fehler_laden">Fehler beim Laden</string>
     <string name="stat_loading">Laden…</string>
+    <string name="stat_sleep_mode">Statistik deaktiviert (Schlafmodus).</string>
     <string name="stat_erledigungsquote_heute">📊 Erledigungsquote heute</string>
 
     <!-- Validierung / Speichern -->

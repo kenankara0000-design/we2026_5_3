@@ -16,9 +16,13 @@ import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
+/** Schlafmodus: Statistik-Berechnung beim Öffnen deaktiviert (Funktion bleibt vorhanden). */
+private const val STATISTICS_SLEEP_MODE = true
+
 /** UI-State für Statistik-Bildschirm. */
 data class StatisticsState(
     val isLoading: Boolean = true,
+    val sleepMode: Boolean = false,
     val heuteCount: Int = 0,
     val wocheCount: Int = 0,
     val monatCount: Int = 0,
@@ -49,6 +53,10 @@ class StatisticsViewModel(
 
     fun loadStatistics() {
         viewModelScope.launch {
+            if (STATISTICS_SLEEP_MODE) {
+                _state.value = StatisticsState(isLoading = false, sleepMode = true)
+                return@launch
+            }
             _state.value = _state.value?.copy(isLoading = true, errorMessage = null) ?: StatisticsState(isLoading = true)
             try {
                 // Nur Tour-Kunden für Statistik (Prio 1.1 PLAN_PERFORMANCE_OFFLINE – keine Doppelladung)

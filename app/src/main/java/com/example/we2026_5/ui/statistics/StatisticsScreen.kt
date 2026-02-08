@@ -86,6 +86,20 @@ fun StatisticsScreen(
                     )
                 }
             }
+            state.sleepMode -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.stat_sleep_mode),
+                        color = textPrimary,
+                        fontSize = 16.sp
+                    )
+                }
+            }
             state.errorMessage != null -> {
                 Box(
                     modifier = Modifier

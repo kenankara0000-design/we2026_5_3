@@ -51,6 +51,23 @@
 
 ---
 
+## Stand: Erledigt / Offen (ohne Code)
+
+| Prio | Thema | Status |
+|------|--------|--------|
+| 1.1 | Keine Doppelladung | ✅ Erledigt |
+| 1.2 | Listener nur bei Bedarf | ✅ Erledigt |
+| 1.3 | Firebase Offline aktiv | ✅ Erledigt (war bereits aktiv) |
+| 1.4 | Offline-/Sync-Hinweis in der UI | ✅ Erledigt (war bereits vorhanden) |
+| 2.1 | Paging im Kundenmanager | ⏳ Offen (nur dokumentiert; bei Bedarf vor ~500 Kunden) |
+| 2.2 | Suche/Filter mit Paging | ⏳ Offen (folgt auf 2.1) |
+| 3.1 | Fotos als Thumbnails | ✅ Erledigt |
+| 4.1 | TourPlanner: schwere Berechnung | ✅ Erledigt (abgesichert, Daueraufgabe) |
+| 4.2 | Firebase-Persistence | ✅ Erledigt (aktiv + in Release-Checkliste) |
+| 5.1 | Dateigröße / Aufteilung | ⏳ Offen (auf Nutzer-Bestätigung warten) |
+
+---
+
 ## Teil 2: Umsetzungsplan (Phasen)
 
 ### Phase 0: Vorbereitung
@@ -162,29 +179,29 @@
 
 ## Phase-1-Abschluss (Prio 1 – umgesetzt Feb 2026)
 
-| # | Thema | Status | Wo geändert / Anmerkung |
-|---|--------|--------|--------------------------|
-| 1.1 | Keine Doppelladung | ✅ Umgesetzt | **StatisticsViewModel**: Statistik nutzt nur noch Tour-Kunden (`getCustomersForTourFlow().first()` statt `getAllCustomers()`). MainViewModel nutzte bereits getCustomersForTourFlow() für Badge; Slot-Vorschläge brauchen bewusst alle Kunden (Ad-hoc auch ohne Tour). |
-| 1.2 | Listener nur bei Bedarf | ✅ Umgesetzt | **MainViewModel**: Kein Collect mehr in init; `startCollecting()` / `stopCollecting()`. **MainActivity**: `onStart()` ruft startCollecting(), `onStop()` und `onDestroy()` rufen stopCollecting(). Wenn Nutzer nur Einstellungen/andere Activities öffnet, laufen keine Kunden-/Listen-Flows. |
-| 1.3 | Firebase Offline aktiv | ✅ Bereits aktiv | **FirebaseConfig** (Application): `FirebaseDatabase.getInstance(); setPersistenceEnabled(true)` vor Koin-Start. Keine Änderung nötig. |
-| 1.4 | Offline-/Sync-Hinweis in der UI | ✅ Vorhanden | **MainScreen**: Zeigt „Offline“ und „Daten werden aktualisiert“ (isOffline, isSyncing). **MainActivity** übergibt Werte von **NetworkMonitor** (isOnline, isSyncing). TourPlannerTopBar und CustomerManagerTopBar zeigen ebenfalls Offline-Icon. |
+| # | Thema | Status | Kurz (ohne Code) |
+|---|--------|--------|-------------------|
+| 1.1 | Keine Doppelladung | ✅ Erledigt | Statistik nutzt nur Tour-Kunden; Badge bereits Tour-Kunden; Slot-Vorschläge bewusst alle Kunden (Ad-hoc). |
+| 1.2 | Listener nur bei Bedarf | ✅ Erledigt | Flows werden nur bei sichtbarem Hauptbildschirm gesammelt; beim Verlassen (z. B. Einstellungen) gestoppt. |
+| 1.3 | Firebase Offline aktiv | ✅ Erledigt | Persistence war bereits in Application-Klasse aktiv. |
+| 1.4 | Offline-/Sync-Hinweis in der UI | ✅ Erledigt | Hauptbildschirm, TourPlanner- und Kundenmanager-TopBar zeigen Offline/Sync-Status. |
 
-**Release-Checkliste (4.2):** Nach Änderungen an App-Start oder Firebase-Init prüfen: „Persistence aktiv?“ (FirebaseConfig.setPersistenceEnabled(true); ggf. kurzer Offline-Test).
+**Release-Checkliste (4.2):** Nach Änderungen an App-Start oder Firebase-Init prüfen: „Persistence aktiv?“ – ggf. kurzer Offline-Test.
 
 ---
 
 ### Phase 3 – Prio 3: Thumbnails (umgesetzt Feb 2026)
 
-| # | Thema | Status | Wo geändert |
-|---|--------|--------|-------------|
-| 3.1 | Fotos als Thumbnails | ✅ Umgesetzt | **Customer**: `fotoThumbUrls` ergänzt. **ImageUtils**: `createThumbnailFile(source, maxSizePx)` (300 px). **StorageUploadManager**: erstellt Thumbnail, lädt Vollbild + Thumb hoch, `onSuccess(fullUrl, thumbUrl)`. **CustomerPhotoManager**: speichert beide URLs. **ImageUploadWorker**: Thumbnail erstellen + hochladen, beide URLs in DB. **UI**: CustomerManagerCard, ListeBearbeitenKundeInListeItem, CustomerDetailFotosSection nutzen Thumb für Vorschau; Klick/Dialog weiterhin Vollbild-URL. Alte Kunden ohne Thumbnails: Fallback auf `fotoUrls`. |
+| # | Thema | Status | Kurz (ohne Code) |
+|---|--------|--------|-------------------|
+| 3.1 | Fotos als Thumbnails | ✅ Erledigt | Kundenmodell um Thumbnail-URLs ergänzt. Upload erzeugt Thumbnail (ca. 300 px), speichert Vollbild + Thumb. Listen und Fotos-Vorschau laden Thumbnails; Großansicht weiterhin Vollbild. Alte Kunden ohne Thumbnails: Anzeige fällt auf Vollbild-URL zurück. |
 
 ---
 
 ### Phase 4 – Prio 4: Dauerhaft abgesichert (Feb 2026)
 
-- **4.1** TourPlannerViewModel: Kommentar ergänzt (flowOn(Default), Debounce 250 ms, preloadCache). Keine Verhaltensänderung.
-- **4.2** FirebaseConfig: Kommentar für Release-Checkliste „Persistence aktiv?“ ergänzt.
+- **4.1** TourPlanner: Schwere Berechnung im Hintergrund, Debounce und Caching im Plan dokumentiert und im Code abgesichert. Keine Verhaltensänderung.
+- **4.2** Firebase-Persistence: Aktiv; Release-Checkliste um Punkt „Persistence aktiv?“ ergänzt.
 
 ---
 
