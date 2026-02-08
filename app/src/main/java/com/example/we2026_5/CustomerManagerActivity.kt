@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
+import com.example.we2026_5.auth.AdminChecker
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.ui.customermanager.CustomerManagerScreen
 import com.example.we2026_5.ui.customermanager.CustomerManagerViewModel
@@ -28,6 +29,7 @@ class CustomerManagerActivity : AppCompatActivity() {
 
     private val viewModel: CustomerManagerViewModel by viewModel()
     private val repository: CustomerRepository by inject()
+    private val adminChecker: AdminChecker by inject()
     private lateinit var networkMonitor: NetworkMonitor
     private lateinit var exportHelper: CustomerExportHelper
 
@@ -90,6 +92,7 @@ class CustomerManagerActivity : AppCompatActivity() {
             }
 
             CustomerManagerScreen(
+                isAdmin = adminChecker.isAdmin(),
                 customers = displayCustomers,
                 selectedTab = selectedTab,
                 kundenTypFilter = kundenTypFilter,

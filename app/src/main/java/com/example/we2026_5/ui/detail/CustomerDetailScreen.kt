@@ -32,6 +32,7 @@ import com.example.we2026_5.ui.addcustomer.AddCustomerState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerDetailScreen(
+    isAdmin: Boolean,
     customer: Customer?,
     isInEditMode: Boolean,
     editIntervalle: List<CustomerIntervall>,
@@ -251,6 +252,7 @@ fun CustomerDetailScreen(
                 }
                 when (selectedTabIndex) {
                     0 -> CustomerDetailStammdatenTab(
+                        isAdmin = isAdmin,
                         customer = customer,
                         isInEditMode = isInEditMode,
                         currentFormState = currentFormState,
@@ -268,6 +270,7 @@ fun CustomerDetailScreen(
                         isUploading = isUploading
                     )
                     1 -> CustomerDetailTermineTab(
+                        isAdmin = isAdmin,
                         customer = customer,
                         isInEditMode = isInEditMode,
                         intervalleToShow = if (isInEditMode) editIntervalle else customer.intervalle,

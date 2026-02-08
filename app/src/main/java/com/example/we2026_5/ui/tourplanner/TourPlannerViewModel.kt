@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -71,6 +72,9 @@ class TourPlannerViewModel(
     /** Trigger: bei Änderung der Tour-Reihenfolge neu kombinieren. */
     private val tourOrderUpdateTrigger = MutableStateFlow(0)
     
+    // #region agent log
+    private val combineEmissionCount = java.util.concurrent.atomic.AtomicInteger(0)
+    // #endregion
     // Kombiniere alle Flows: Ergebnis ohne Erledigt-Section in der Liste; Erledigt-Daten für Button/Sheet
     // Debounce (250 ms) auf Kunden/Listen reduziert Pipeline-Läufe bei schnellen Firebase-Updates (Punkt 6.2)
     private val processResultFlow = combine(
@@ -85,18 +89,20 @@ class TourPlannerViewModel(
         } else {
             // #region agent log
             val t0 = System.currentTimeMillis()
-            AgentDebugLog.log("TourPlannerViewModel.kt", "combine_process_start", mapOf("n" to customers.size, "ts" to timestamp), "H1")
+            AgentDebugLog.log("TourPlannerViewModel.kt", "combine_process_start", mapOf("n" to customers.size, "listen" to listen.size, "ts" to timestamp), "H1")
             // #endregion
             val activeCustomers = CustomerTermFilter.filterActiveForTerms(customers, System.currentTimeMillis())
             val result = dataProcessor.processTourData(activeCustomers, listen, timestamp, expandedSections)
             val order = tourOrderRepository.getOrderForDate(dateKey(timestamp))
             val reorderedItems = applyTourOrder(result.items, order)
             // #region agent log
-            AgentDebugLog.log("TourPlannerViewModel.kt", "combine_process_end", mapOf("duration_ms" to (System.currentTimeMillis() - t0), "items" to result.items.size), "H1")
+            val emitNr = combineEmissionCount.incrementAndGet()
+            AgentDebugLog.log("TourPlannerViewModel.kt", "combine_process_end", mapOf("duration_ms" to (System.currentTimeMillis() - t0), "items" to result.items.size, "customers" to activeCustomers.size, "emitNr" to emitNr), "H1")
+            AgentDebugLog.log("TourPlannerViewModel.kt", "combine_emit", mapOf("emitNr" to emitNr), "H5")
             // #endregion
             result.copy(items = reorderedItems)
         }
-    }.flowOn(Dispatchers.Default)
+    }.distinctUntilChanged().flowOn(Dispatchers.Default)
 
     val tourItems: LiveData<List<ListItem>> = processResultFlow.map { it.items }.asLiveData()
     val erledigtCount: LiveData<Int> = processResultFlow.map { it.erledigtCount }.asLiveData()

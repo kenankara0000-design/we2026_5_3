@@ -20,6 +20,7 @@ import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.DialogBaseHelper
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.we2026_5.auth.AdminChecker
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.detail.CustomerPhotoManager
 import com.example.we2026_5.ui.detail.CustomerDetailScreen
@@ -37,6 +38,7 @@ class CustomerDetailActivity : AppCompatActivity() {
 
     private val viewModel: CustomerDetailViewModel by viewModel()
     private val repository: CustomerRepository by inject()
+    private val adminChecker: AdminChecker by inject()
 
     private var photoManager: CustomerPhotoManager? = null
 
@@ -85,6 +87,7 @@ class CustomerDetailActivity : AppCompatActivity() {
             val regelNameByRegelId = emptyMap<String, String>()
 
             CustomerDetailScreen(
+                isAdmin = adminChecker.isAdmin(),
                 customer = customer,
                 isInEditMode = isInEditMode,
                 editIntervalle = editIntervalle,

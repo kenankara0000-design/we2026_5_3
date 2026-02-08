@@ -44,6 +44,7 @@ import com.example.we2026_5.util.DateFormatter
  */
 @Composable
 fun MainScreen(
+    isAdmin: Boolean,
     isOffline: Boolean,
     isSyncing: Boolean,
     tourCount: Int,
@@ -183,7 +184,7 @@ fun MainScreen(
         }
         Spacer(Modifier.height(20.dp))
 
-        // Zeile: Kunden | + Neu Kunde
+        // Zeile: Kunden | + Neu Kunde (Neu Kunde nur für Admin)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -196,101 +197,105 @@ fun MainScreen(
             ) {
                 Text(stringResource(R.string.main_btn_kunden), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
-            Button(
-                onClick = onNeuKunde,
-                modifier = Modifier.weight(1f).height(72.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = primaryBlueDark),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(stringResource(R.string.main_btn_neu_kunde), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            if (isAdmin) {
+                Button(
+                    onClick = onNeuKunde,
+                    modifier = Modifier.weight(1f).height(72.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryBlueDark),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.main_btn_neu_kunde), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
         Spacer(Modifier.height(24.dp))
 
-        // Weitere – 2x2 dezent (Outlined)
-        Text(
-            stringResource(R.string.main_weitere),
-            fontSize = 14.sp,
-            color = textSecondary,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
-        )
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(
-                    onClick = onKundenListen,
-                    modifier = Modifier.fillMaxWidth().height(64.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(stringResource(R.string.main_btn_listen), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                }
-                OutlinedButton(
-                    onClick = onStatistiken,
-                    modifier = Modifier.fillMaxWidth().height(64.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(stringResource(R.string.main_btn_statistiken), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(
-                    onClick = onErfassung,
-                    modifier = Modifier.fillMaxWidth().height(64.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(stringResource(R.string.main_btn_erfassung), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                }
-                OutlinedButton(
-                    onClick = onSettings,
-                    modifier = Modifier.fillMaxWidth().height(64.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(stringResource(R.string.settings_title), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-        Spacer(Modifier.height(28.dp))
-
-        // Slot-Vorschläge (Ad-hoc: nächste mögliche Termine für unregelmäßige Kunden)
-        Text(
-            stringResource(R.string.main_slot_section_title),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = primaryBlueDark,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)
-        )
-        Text(
-            stringResource(R.string.main_slot_section_subtitle),
-            fontSize = 12.sp,
-            color = textSecondary,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
-        )
-        if (slotVorschlaege.isEmpty()) {
+        // Weitere – 2x2 (nur für Admin)
+        if (isAdmin) {
             Text(
-                stringResource(R.string.main_slot_section_empty),
-                color = textSecondary,
+                stringResource(R.string.main_weitere),
                 fontSize = 14.sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(12.dp))
-                    .padding(16.dp)
+                color = textSecondary,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
             )
-        } else {
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                slotVorschlaege.take(5).forEach { slot ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedButton(
+                        onClick = onKundenListen,
+                        modifier = Modifier.fillMaxWidth().height(64.dp),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(slot.customerName, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(4.dp))
-                            Text(DateFormatter.formatDateWithWeekday(slot.datum), fontSize = 14.sp, color = textSecondary)
-                            Spacer(Modifier.height(2.dp))
-                            Text(slot.beschreibung.ifBlank { slot.typ.name }, fontSize = 14.sp)
-                            Spacer(Modifier.height(12.dp))
-                            Button(onClick = { onSlotSelected(slot) }, colors = ButtonDefaults.buttonColors(containerColor = primaryBlue)) {
-                                Text(stringResource(R.string.main_slot_button_label))
+                        Text(stringResource(R.string.main_btn_listen), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+                    OutlinedButton(
+                        onClick = onStatistiken,
+                        modifier = Modifier.fillMaxWidth().height(64.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(stringResource(R.string.main_btn_statistiken), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedButton(
+                        onClick = onErfassung,
+                        modifier = Modifier.fillMaxWidth().height(64.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(stringResource(R.string.main_btn_erfassung), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+                    OutlinedButton(
+                        onClick = onSettings,
+                        modifier = Modifier.fillMaxWidth().height(64.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(stringResource(R.string.settings_title), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            Spacer(Modifier.height(28.dp))
+
+            // Slot-Vorschläge (Ad-hoc, nur für Admin)
+            Text(
+                stringResource(R.string.main_slot_section_title),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = primaryBlueDark,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)
+            )
+            Text(
+                stringResource(R.string.main_slot_section_subtitle),
+                fontSize = 12.sp,
+                color = textSecondary,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+            )
+            if (slotVorschlaege.isEmpty()) {
+                Text(
+                    stringResource(R.string.main_slot_section_empty),
+                    color = textSecondary,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White, RoundedCornerShape(12.dp))
+                        .padding(16.dp)
+                )
+            } else {
+                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    slotVorschlaege.take(5).forEach { slot ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(slot.customerName, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.height(4.dp))
+                                Text(DateFormatter.formatDateWithWeekday(slot.datum), fontSize = 14.sp, color = textSecondary)
+                                Spacer(Modifier.height(2.dp))
+                                Text(slot.beschreibung.ifBlank { slot.typ.name }, fontSize = 14.sp)
+                                Spacer(Modifier.height(12.dp))
+                                Button(onClick = { onSlotSelected(slot) }, colors = ButtonDefaults.buttonColors(containerColor = primaryBlue)) {
+                                    Text(stringResource(R.string.main_slot_button_label))
+                                }
                             }
                         }
                     }

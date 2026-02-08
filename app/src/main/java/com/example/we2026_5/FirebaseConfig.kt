@@ -12,7 +12,10 @@ import java.io.File
 class FirebaseConfig : Application() {
     override fun onCreate() {
         super.onCreate()
-        AgentDebugLog.setLogFile(File(filesDir, "agent_debug.ndjson"))
+        // Externes Verzeichnis für einfachen adb pull; Fallback: filesDir
+        val logFile = getExternalFilesDir(null)?.let { File(it, "agent_debug.ndjson") }
+            ?: File(filesDir, "agent_debug.ndjson")
+        AgentDebugLog.setLogFile(logFile)
         
         // Dunkelmodus global deaktivieren
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)

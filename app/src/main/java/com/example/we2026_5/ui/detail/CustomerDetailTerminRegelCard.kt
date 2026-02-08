@@ -25,6 +25,7 @@ import com.example.we2026_5.R
 fun CustomerDetailTerminRegelCard(
     intervalleToShow: List<com.example.we2026_5.CustomerIntervall>,
     isInEditMode: Boolean,
+    canTerminAnlegen: Boolean = true,
     kundenTyp: KundenTyp?,
     regelNameByRegelId: Map<String, String>,
     primaryBlue: androidx.compose.ui.graphics.Color,
@@ -82,7 +83,7 @@ fun CustomerDetailTerminRegelCard(
                     Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
                 }
             }
-            if (!isInEditMode) {
+            if (!isInEditMode && canTerminAnlegen) {
                 Button(onClick = onTerminAnlegen, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.label_termine_anlegen))
                 }

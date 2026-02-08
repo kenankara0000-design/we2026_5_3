@@ -22,6 +22,7 @@ import com.example.we2026_5.ui.urlaub.UrlaubViewModel
 import com.example.we2026_5.ui.wasch.ArtikelVerwaltungViewModel
 import com.example.we2026_5.ui.wasch.WaschenErfassungViewModel
 import com.example.we2026_5.ui.sevdesk.SevDeskImportViewModel
+import com.example.we2026_5.auth.AdminChecker
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
@@ -37,6 +38,9 @@ val appModule = module {
     
     // Firebase Auth
     single { FirebaseAuth.getInstance() }
+    
+    // Admin-Check (Test: E-Mail; später: Geräte-ID)
+    single { AdminChecker(get()) }
     
     // Repository (verwenden Realtime Database)
     single { CustomerRepository(get()) }

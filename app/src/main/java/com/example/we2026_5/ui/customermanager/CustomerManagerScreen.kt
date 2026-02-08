@@ -35,6 +35,7 @@ private const val SEARCH_DEBOUNCE_MS = 300L
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerManagerScreen(
+    isAdmin: Boolean,
     customers: List<Customer>,
     selectedTab: Int,
     kundenTypFilter: Int,
@@ -90,6 +91,7 @@ fun CustomerManagerScreen(
         containerColor = backgroundLight,
         topBar = {
             CustomerManagerTopBar(
+                isAdmin = isAdmin,
                 isOffline = isOffline,
                 isBulkMode = isBulkMode,
                 pressedHeaderButton = pressedHeaderButton,

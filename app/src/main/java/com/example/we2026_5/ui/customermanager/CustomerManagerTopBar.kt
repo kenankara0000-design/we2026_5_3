@@ -39,6 +39,7 @@ import com.example.we2026_5.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerManagerTopBar(
+    isAdmin: Boolean,
     isOffline: Boolean,
     isBulkMode: Boolean,
     pressedHeaderButton: String?,
@@ -90,44 +91,46 @@ fun CustomerManagerTopBar(
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue)
         )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(primaryBlue)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val auswaehlenOrange = isBulkMode || pressedHeaderButton == "Auswählen"
-            Button(
-                onClick = onBulkSelectClick,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = if (auswaehlenOrange) statusWarning else buttonBlue),
-                shape = RoundedCornerShape(20.dp)
+        if (isAdmin) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(primaryBlue)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(painter = painterResource(R.drawable.ic_checklist), contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.size(8.dp))
-                Text(stringResource(R.string.cm_btn_select), fontSize = 14.sp)
-            }
-            val exportOrange = pressedHeaderButton == "Exportieren"
-            Button(
-                onClick = onExportClick,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = if (exportOrange) statusWarning else buttonBlue),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.size(8.dp))
-                Text(stringResource(R.string.content_desc_export), fontSize = 14.sp)
-            }
-            val neuKundeOrange = pressedHeaderButton == "NeuerKunde"
-            FloatingActionButton(
-                onClick = onNewCustomerClick,
-                modifier = Modifier.size(48.dp),
-                containerColor = if (neuKundeOrange) statusWarning else buttonBlue,
-                contentColor = Color.White
-            ) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.content_desc_new_customer))
+                val auswaehlenOrange = isBulkMode || pressedHeaderButton == "Auswählen"
+                Button(
+                    onClick = onBulkSelectClick,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = if (auswaehlenOrange) statusWarning else buttonBlue),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Icon(painter = painterResource(R.drawable.ic_checklist), contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.size(8.dp))
+                    Text(stringResource(R.string.cm_btn_select), fontSize = 14.sp)
+                }
+                val exportOrange = pressedHeaderButton == "Exportieren"
+                Button(
+                    onClick = onExportClick,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = if (exportOrange) statusWarning else buttonBlue),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.size(8.dp))
+                    Text(stringResource(R.string.content_desc_export), fontSize = 14.sp)
+                }
+                val neuKundeOrange = pressedHeaderButton == "NeuerKunde"
+                FloatingActionButton(
+                    onClick = onNewCustomerClick,
+                    modifier = Modifier.size(48.dp),
+                    containerColor = if (neuKundeOrange) statusWarning else buttonBlue,
+                    contentColor = Color.White
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.content_desc_new_customer))
+                }
             }
         }
         TabRow(

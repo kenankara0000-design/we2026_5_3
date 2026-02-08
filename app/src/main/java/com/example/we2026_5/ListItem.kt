@@ -6,6 +6,7 @@ package com.example.we2026_5
 sealed class ListItem {
     data class CustomerItem(
         val customer: Customer,
+        val statusBadgeText: String = "",
         val isOverdue: Boolean = false,
         val isVerschobenAmFaelligkeitstag: Boolean = false,
         val verschobenInfo: String? = null,

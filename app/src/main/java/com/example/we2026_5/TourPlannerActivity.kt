@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
 import com.example.we2026_5.adapter.CustomerButtonVisibilityHelper
+import com.example.we2026_5.auth.AdminChecker
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.ui.tourplanner.CustomerOverviewPayload
 import com.example.we2026_5.ui.tourplanner.ErledigungSheetArgs
@@ -33,6 +34,7 @@ class TourPlannerActivity : AppCompatActivity() {
     private val viewModel: TourPlannerViewModel by viewModel()
     private val repository: CustomerRepository by inject()
     private val listeRepository: com.example.we2026_5.data.repository.KundenListeRepository by inject()
+    private val adminChecker: AdminChecker by inject()
     private lateinit var coordinator: TourPlannerCoordinator
     private lateinit var networkMonitor: NetworkMonitor
 
@@ -45,6 +47,7 @@ class TourPlannerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // #region agent log
         val onCreateStart = System.currentTimeMillis()
+        AgentDebugLog.resetGetStatusBadgeTextCount()
         AgentDebugLog.log("TourPlannerActivity.kt", "onCreate_start", mapOf(), "H4")
         // #endregion
         super.onCreate(savedInstanceState)
@@ -83,6 +86,7 @@ class TourPlannerActivity : AppCompatActivity() {
             val errorMessage by viewModel.error.observeAsState(initial = null)
             val isOnline by networkMonitor.isOnline.observeAsState(initial = true)
             val isOffline = !isOnline
+            val isAdmin = adminChecker.isAdmin()
 
             androidx.compose.runtime.LaunchedEffect(selectedTimestamp) {
                 selectedTimestamp?.let { ts ->
@@ -97,28 +101,26 @@ class TourPlannerActivity : AppCompatActivity() {
 
             fun getStatusBadgeText(customer: Customer): String {
                 // #region agent log
-                AgentDebugLog.log("TourPlannerActivity.kt", "getStatusBadgeText", mapOf("customerId" to customer.id), "H3")
+                val c = AgentDebugLog.incGetStatusBadgeTextCount()
+                if (c <= 3 || c % 10 == 0) AgentDebugLog.log("TourPlannerActivity.kt", "getStatusBadgeText", mapOf("customerId" to customer.id, "callCount" to c), "H3")
                 // #endregion
                 val ts = viewModel.getSelectedTimestamp() ?: return ""
                 val viewDateStart = coordinator.dateUtils.getStartOfDay(ts)
                 val heuteStart = coordinator.dateUtils.getStartOfDay(System.currentTimeMillis())
-                val getAbholungDatum: (Customer) -> Long = { c -> coordinator.dateUtils.calculateAbholungDatum(c, viewDateStart, heuteStart) }
-                val getAuslieferungDatum: (Customer) -> Long = { c -> coordinator.dateUtils.calculateAuslieferungDatum(c, viewDateStart, heuteStart) }
-                val getTermineFuerKunde = { c: Customer, start: Long, days: Int ->
-                    TerminBerechnungUtils.berechneAlleTermineFuerKunde(c, null, start, days)
-                }
-                val helper = CustomerButtonVisibilityHelper(this@TourPlannerActivity, ts, emptyMap(), getAbholungDatum, getAuslieferungDatum, getTermineFuerKunde)
-                return helper.getSheetState(customer)?.statusBadgeText ?: ""
+                return com.example.we2026_5.tourplanner.TourPlannerStatusBadge.compute(customer, viewDateStart, heuteStart)
             }
 
             val ts = selectedTimestamp
             // #region agent log
             val countsT0 = System.currentTimeMillis()
-            AgentDebugLog.log("TourPlannerActivity.kt", "counts_start", mapOf("tourItemsSize" to tourItems.size), "H2")
+            AgentDebugLog.log("TourPlannerActivity.kt", "counts_start", mapOf("tourItemsSize" to tourItems.size, "customerCount" to tourItems.filterIsInstance<ListItem.CustomerItem>().size), "H2")
             // #endregion
             val counts = ts?.let { timestamp ->
                 val viewDateStart = coordinator.dateUtils.getStartOfDay(timestamp)
                 val customers = tourItems.filterIsInstance<ListItem.CustomerItem>().map { it.customer }
+                // #region agent log
+                AgentDebugLog.log("TourPlannerActivity.kt", "counts_flatMap", mapOf("customersToProcess" to customers.size), "H2")
+                // #endregion
                 val termine = customers.flatMap { c ->
                     TerminBerechnungUtils.berechneAlleTermineFuerKunde(
                         customer = c,
@@ -216,6 +218,7 @@ class TourPlannerActivity : AppCompatActivity() {
                     }
                 },
                 onReorder = { fromListIndex, toListIndex ->
+                    if (!isAdmin) return@TourPlannerScreen
                     val timestamp = viewModel.getSelectedTimestamp() ?: return@TourPlannerScreen
                     if (tourItems.getOrNull(fromListIndex) is ListItem.CustomerItem &&
                         tourItems.getOrNull(toListIndex) is ListItem.CustomerItem

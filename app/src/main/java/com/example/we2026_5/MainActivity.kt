@@ -11,6 +11,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import com.example.we2026_5.TerminSlotVorschlag
+import com.example.we2026_5.auth.AdminChecker
 import com.example.we2026_5.ui.main.MainScreen
 import com.example.we2026_5.ui.main.MainViewModel
 import com.example.we2026_5.data.repository.CustomerRepository
@@ -30,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModel()
     private val customerRepository: CustomerRepository by inject()
     private val listeRepository: KundenListeRepository by inject()
+    private val adminChecker: AdminChecker by inject()
     private val auth = FirebaseAuth.getInstance()
     private lateinit var networkMonitor: NetworkMonitor
 
@@ -59,8 +61,10 @@ class MainActivity : AppCompatActivity() {
             val isOnline by networkMonitor.isOnline.observeAsState(true)
             val isSyncing by networkMonitor.isSyncing.observeAsState(false)
             val slotVorschlaege by viewModel.slotVorschlaege.observeAsState(emptyList())
+            val isAdmin = adminChecker.isAdmin()
 
             MainScreen(
+                isAdmin = isAdmin,
                 isOffline = !isOnline,
                 isSyncing = isSyncing,
                 tourCount = tourCount,

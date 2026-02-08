@@ -2,6 +2,12 @@
     <string name="app_name">TourPlaner 2026</string>
     <string name="error_login_failed">Anmeldung fehlgeschlagen. Bitte Internetverbindung prüfen.</string>
     <string name="login_retry">Erneut versuchen</string>
+    <string name="login_title">Anmelden</string>
+    <string name="login_admin_email_hint">Admin E-Mail</string>
+    <string name="login_admin_password_hint">Passwort</string>
+    <string name="login_admin_submit">Als Admin anmelden</string>
+    <string name="login_anonym_continue">Anonym weiter</string>
+    <string name="login_error_admin">E-Mail oder Passwort falsch.</string>
     <string name="label_wochentag">Wochentag:</string>
     <string name="label_foto_uploading">Foto wird hochgeladen…</string>
     <string name="label_fotos">Fotos</string>

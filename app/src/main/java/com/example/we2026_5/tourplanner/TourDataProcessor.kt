@@ -186,7 +186,9 @@ class TourDataProcessor {
         }.thenBy { it.name })
         
         // 1. Überfällige Kunden ganz oben – einzeln mit Überfällig-Design (kein Container)
-        overdueOhneListen.forEach { items.add(ListItem.CustomerItem(it, isOverdue = true)) }
+        overdueOhneListen.forEach { c ->
+            items.add(ListItem.CustomerItem(c, statusBadgeText = TourPlannerStatusBadge.compute(c, viewDateStart, heuteStart), isOverdue = true))
+        }
         // Ein Kunde pro Tag nur einmal: bereits in Überfällig angezeigte nicht nochmal in Listen/Normal
         val bereitsAngezeigtCustomerIds = overdueOhneListen.map { it.id }.toSet().toMutableSet()
 
@@ -240,7 +242,7 @@ class TourDataProcessor {
                         bereitsAngezeigtWochentag.add(key)
                     }
                     bereitsAngezeigtCustomerIds.add(customer.id)
-                    items.add(ListItem.CustomerItem(customer))
+                    items.add(ListItem.CustomerItem(customer, statusBadgeText = TourPlannerStatusBadge.compute(customer, viewDateStart, heuteStart)))
                 }
                 // Tour-Listen (wochentag=-1): erledigte unter Erledigt-Bereich sammeln
                 if (erledigteKundenInListe.isNotEmpty() && (liste.wochentag !in 0..6)) {
@@ -257,7 +259,7 @@ class TourDataProcessor {
             normalOhneListen.forEach { customer ->
                 if (customer.id in bereitsAngezeigtCustomerIds) return@forEach
                 bereitsAngezeigtCustomerIds.add(customer.id)
-                items.add(ListItem.CustomerItem(customer))
+                items.add(ListItem.CustomerItem(customer, statusBadgeText = TourPlannerStatusBadge.compute(customer, viewDateStart, heuteStart)))
             }
         }
         // Erledigt-Daten für Button „Erledigte (N)“ und Bottom-Sheet (nicht mehr in der Liste)

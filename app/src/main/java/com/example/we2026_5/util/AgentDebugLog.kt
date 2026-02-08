@@ -11,6 +11,11 @@ import java.io.File
 object AgentDebugLog {
     private const val TAG = "We2026Debug"
     @Volatile private var logFile: File? = null
+    private val getStatusBadgeTextCount = java.util.concurrent.atomic.AtomicInteger(0)
+
+    fun incGetStatusBadgeTextCount(): Int = getStatusBadgeTextCount.incrementAndGet()
+
+    fun resetGetStatusBadgeTextCount() { getStatusBadgeTextCount.set(0) }
 
     fun setLogFile(file: File) {
         logFile = file

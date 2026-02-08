@@ -33,6 +33,7 @@ import com.example.we2026_5.ui.common.DetailUiConstants
  */
 @Composable
 fun CustomerDetailStammdatenTab(
+    isAdmin: Boolean,
     customer: Customer,
     isInEditMode: Boolean,
     currentFormState: AddCustomerState,
@@ -55,13 +56,15 @@ fun CustomerDetailStammdatenTab(
             .verticalScroll(rememberScrollState())
     ) {
         if (!isInEditMode) {
-            CustomerDetailActionsRow(
-                primaryBlue = primaryBlue,
-                onUrlaub = onUrlaub,
-                onEdit = onEdit,
-                isUploading = isUploading
-            )
-            Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+            if (isAdmin) {
+                CustomerDetailActionsRow(
+                    primaryBlue = primaryBlue,
+                    onUrlaub = onUrlaub,
+                    onEdit = onEdit,
+                    isUploading = isUploading
+                )
+                Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+            }
             Text(
                 stringResource(R.string.label_address_label),
                 fontSize = DetailUiConstants.FieldLabelSp,
@@ -108,7 +111,7 @@ fun CustomerDetailStammdatenTab(
                 color = if (customer.notizen.isNotEmpty()) textPrimary else textSecondary,
                 fontSize = DetailUiConstants.BodySp
             )
-        } else {
+        } else if (isAdmin) {
             CustomerStammdatenForm(
                 state = currentFormState,
                 onUpdate = onUpdateFormState,

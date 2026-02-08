@@ -331,7 +331,7 @@ fun TourPlannerScreen(
                                             isVerschobenAmFaelligkeitstag = item.isVerschobenAmFaelligkeitstag,
                                             verschobenInfo = item.verschobenInfo,
                                             verschobenVonInfo = item.verschobenVonInfo,
-                                            statusBadgeText = getStatusBadgeText(item.customer),
+                                            statusBadgeText = item.statusBadgeText,
                                             viewDateMillis = viewDate,
                                             onCustomerClick = { onCustomerClick(payload) },
                                             onAktionenClick = { onAktionenClick(item.customer) },

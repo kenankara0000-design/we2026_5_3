@@ -20,6 +20,7 @@ import com.example.we2026_5.ui.common.DetailUiConstants
  */
 @Composable
 fun CustomerDetailTermineTab(
+    isAdmin: Boolean,
     customer: Customer,
     isInEditMode: Boolean,
     intervalleToShow: List<CustomerIntervall>,
@@ -61,6 +62,7 @@ fun CustomerDetailTermineTab(
         }
         CustomerDetailStatusSection(
             customer = customer,
+            canChangeStatus = isAdmin,
             onPauseCustomer = onPauseCustomer,
             onResumeCustomer = onResumeCustomer,
             textPrimary = textPrimary,
@@ -85,6 +87,7 @@ fun CustomerDetailTermineTab(
         CustomerDetailTerminRegelCard(
             intervalleToShow = intervalleToShow,
             isInEditMode = isInEditMode,
+            canTerminAnlegen = isAdmin,
             kundenTyp = customer.kundenTyp,
             regelNameByRegelId = regelNameByRegelId,
             primaryBlue = primaryBlue,

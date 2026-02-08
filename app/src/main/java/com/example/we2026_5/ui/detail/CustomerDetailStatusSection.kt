@@ -44,6 +44,7 @@ import com.example.we2026_5.ui.common.DetailUiConstants
 @Composable
 fun CustomerDetailStatusSection(
     customer: Customer,
+    canChangeStatus: Boolean = true,
     onPauseCustomer: (pauseEndeWochen: Int?) -> Unit,
     onResumeCustomer: () -> Unit,
     textPrimary: Color,
@@ -120,7 +121,7 @@ fun CustomerDetailStatusSection(
         colors = CardDefaults.cardColors(containerColor = surfaceWhite)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Row(
+                Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -133,19 +134,21 @@ fun CustomerDetailStatusSection(
                     ) {
                         Text(text = statusText, color = statusColor, fontWeight = FontWeight.Medium, fontSize = 14.sp)
                     }
-                    Spacer(Modifier.width(8.dp))
-                    Switch(
-                        checked = isActive,
-                        onCheckedChange = { newValue ->
-                            if (newValue) showResumeConfirm = true else { selectedPauseWeeks = 1; showPauseDurationDialog = true }
-                        },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = greenColor,
-                            checkedTrackColor = greenColor.copy(alpha = 0.5f),
-                            uncheckedThumbColor = redColor,
-                            uncheckedTrackColor = redColor.copy(alpha = 0.5f)
+                    if (canChangeStatus) {
+                        Spacer(Modifier.width(8.dp))
+                        Switch(
+                            checked = isActive,
+                            onCheckedChange = { newValue ->
+                                if (newValue) showResumeConfirm = true else { selectedPauseWeeks = 1; showPauseDurationDialog = true }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = greenColor,
+                                checkedTrackColor = greenColor.copy(alpha = 0.5f),
+                                uncheckedThumbColor = redColor,
+                                uncheckedTrackColor = redColor.copy(alpha = 0.5f)
+                            )
                         )
-                    )
+                    }
                     if (customer.pauseEnde > 0) {
                         Spacer(Modifier.width(8.dp))
                         Text(
