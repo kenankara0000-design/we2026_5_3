@@ -33,7 +33,9 @@ sealed class ListItem {
     /** Tour-Liste Card: Eine äußere Card mit Kunden-Karten darin. Nur Tour-Listen (wochentag !in 0..6). */
     data class TourListeCard(
         val liste: KundenListe,
-        val kunden: List<Pair<Customer, Boolean>> // Customer + isOverdue
+        val kunden: List<Pair<Customer, Boolean>>, // Customer + isOverdue
+        val aCount: Int = 0,
+        val lCount: Int = 0
     ) : ListItem()
     /** Tour-Liste mit erledigten Kunden im Erledigt-Bereich */
     data class TourListeErledigt(

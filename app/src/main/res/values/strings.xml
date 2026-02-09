@@ -134,6 +134,8 @@
     <string name="share_file_title">Datei teilen</string>
     <string name="export_format_text">Als Text exportieren</string>
     <string name="dialog_foto_add_title">Foto hinzufügen</string>
+    <string name="dialog_delete_photo_title">Foto löschen</string>
+    <string name="dialog_delete_photo_message">Dieses Foto wirklich löschen?</string>
     <string name="foto_source_camera">Kamera</string>
     <string name="foto_source_gallery">Galerie</string>
     <!-- TerminRegelManager Dialoge -->
@@ -387,6 +389,9 @@
     <string name="label_desc">Beschreibung</string>
     <string name="label_address">Adresse</string>
     <string name="label_address_label">Adresse:</string>
+    <string name="label_koordinaten">Koordinaten</string>
+    <string name="hint_koordinaten">z.B. 51.1657, 10.4515 (von Google Maps kopieren)</string>
+    <string name="label_navigation">Navigation</string>
     <string name="label_phone">Telefon</string>
     <string name="label_phone_label">Telefon:</string>
     <string name="label_notes">Notizen</string>

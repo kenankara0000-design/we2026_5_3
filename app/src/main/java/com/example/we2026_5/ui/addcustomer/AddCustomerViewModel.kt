@@ -10,6 +10,8 @@ data class AddCustomerState(
     /** Alias: Anzeigename in der App; für Rechnung wird name verwendet. */
     val alias: String = "",
     val adresse: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val stadt: String = "",
     val plz: String = "",
     val telefon: String = "",

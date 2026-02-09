@@ -225,8 +225,16 @@ class TourDataProcessor(
                     }
                     val kundenWithOverdue = nichtErledigteKunden.sortedBy { (c, _) -> c.name }
                     if (kundenWithOverdue.isNotEmpty()) {
-                        kundenWithOverdue.forEach { (c, _) -> bereitsAngezeigtCustomerIds.add(c.id) }
-                        items.add(ListItem.TourListeCard(liste, kundenWithOverdue))
+                        var aCount = 0
+                        var lCount = 0
+                        kundenWithOverdue.forEach { (c, _) ->
+                            bereitsAngezeigtCustomerIds.add(c.id)
+                            val termine = berechneAlleTermineFuerKunde(c, allListen, viewDateStart, heuteStart)
+                            val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
+                            aCount += termineAmTag.count { it.typ == TerminTyp.ABHOLUNG }
+                            lCount += termineAmTag.count { it.typ == TerminTyp.AUSLIEFERUNG }
+                        }
+                        items.add(ListItem.TourListeCard(liste, kundenWithOverdue, aCount, lCount))
                     }
                     if (erledigteKundenInListe.isNotEmpty()) {
                         tourListenErledigt.add(liste to erledigteKundenInListe.sortedBy { it.name })

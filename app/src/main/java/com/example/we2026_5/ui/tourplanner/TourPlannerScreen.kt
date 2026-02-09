@@ -78,6 +78,7 @@ fun TourPlannerScreen(
     overviewRegelNamen: String?,
     onDismissOverview: () -> Unit,
     onOpenDetails: (customerId: String) -> Unit,
+    onNavigate: (Customer) -> Unit = {},
     erledigtCount: Int = 0,
     erledigtSheetVisible: Boolean = false,
     erledigtSheetContent: ErledigtSheetContent? = null,
@@ -93,7 +94,8 @@ fun TourPlannerScreen(
             payload = overviewPayload,
             overviewRegelNamen = overviewRegelNamen,
             onDismiss = onDismissOverview,
-            onOpenDetails = onOpenDetails
+            onOpenDetails = onOpenDetails,
+            onNavigate = onNavigate
         )
     }
 
@@ -315,6 +317,8 @@ private fun TourPlannerListContent(
                 is ListItem.TourListeCard -> TourListeCardRow(
                     liste = item.liste,
                     kunden = item.kunden,
+                    aCount = item.aCount,
+                    lCount = item.lCount,
                     viewDateMillis = viewDateMillis ?: 0L,
                     getStatusBadgeText = getStatusBadgeText,
                     onCustomerClick = onCustomerClick,

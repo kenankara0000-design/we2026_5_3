@@ -31,6 +31,14 @@
         <item name="android:windowBackground">@color/background_light</item>
     </style>
 
+    <!-- Vollbild-Dialog für Foto-Großansicht -->
+    <style name="Theme.We2026_5.FullscreenDialog" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
     <!-- AppCompat-Basis für LoginActivity (AppCompatActivity benötigt Theme.AppCompat) -->
     <style name="Theme.We2026_5.AppCompat" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">@color/background_light</item>

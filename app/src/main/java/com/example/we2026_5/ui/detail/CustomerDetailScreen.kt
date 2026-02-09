@@ -57,6 +57,7 @@ fun CustomerDetailScreen(
     onAdresseClick: () -> Unit,
     onTelefonClick: () -> Unit,
     onPhotoClick: (String) -> Unit,
+    onDeletePhoto: ((String) -> Unit)? = null,
     onDatumSelected: (Int, Boolean) -> Unit,
     onDeleteIntervall: ((Int) -> Unit)? = null,
     onRemoveRegel: ((String) -> Unit)? = null,
@@ -141,6 +142,8 @@ fun CustomerDetailScreen(
                 put("name", name)
                 put("alias", stateForSave.alias.trim())
                 put("adresse", stateForSave.adresse.trim())
+                stateForSave.latitude?.let { put("latitude", it) }
+                stateForSave.longitude?.let { put("longitude", it) }
                 put("stadt", stateForSave.stadt.trim())
                 put("plz", stateForSave.plz.trim())
                 put("telefon", stateForSave.telefon.trim())
@@ -282,6 +285,7 @@ fun CustomerDetailScreen(
                         onErfassungClick = onErfassungClick,
                         onTakePhoto = onTakePhoto,
                         onPhotoClick = onPhotoClick,
+                        onDeletePhoto = onDeletePhoto,
                         isUploading = isUploading
                     )
                     1 -> CustomerDetailTermineTab(

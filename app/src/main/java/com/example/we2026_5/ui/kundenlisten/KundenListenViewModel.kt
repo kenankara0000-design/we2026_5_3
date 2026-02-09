@@ -3,9 +3,9 @@ package com.example.we2026_5.ui.kundenlisten
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.we2026_5.Customer
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ui.common.getWochentagFullResIds
-import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
@@ -14,6 +14,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -27,6 +30,10 @@ sealed class KundenListenState {
     ) : KundenListenState()
 }
 
+/**
+ * Listen (inkl. Wochentagslisten) werden per Flow aus der DB bezogen; nur bei Änderung liefert
+ * Firebase neue Daten. Kein erneutes getAllListen() bei onResume/Refresh – State wird aus Cache abgeleitet.
+ */
 class KundenListenViewModel(
     private val context: Context,
     private val listeRepository: KundenListeRepository,
@@ -36,16 +43,47 @@ class KundenListenViewModel(
     private val _state = MutableStateFlow<KundenListenState>(KundenListenState.Loading)
     val state: StateFlow<KundenListenState> = _state.asStateFlow()
 
-    fun loadListen() {
+    private val _listenCache = MutableStateFlow<List<KundenListe>>(emptyList())
+    private val _customersCache = MutableStateFlow<List<Customer>>(emptyList())
+
+    init {
         viewModelScope.launch {
-            _state.value = KundenListenState.Loading
+            listeRepository.getAllListenFlow()
+                .catch { e -> _state.value = KundenListenState.Error(R.string.error_load_lists, e.message) }
+                .flowOn(Dispatchers.IO)
+                .collect { _listenCache.value = it }
+        }
+        viewModelScope.launch {
+            customerRepository.getAllCustomersFlow()
+                .catch { e -> _state.value = KundenListenState.Error(R.string.error_load_lists, e.message) }
+                .flowOn(Dispatchers.IO)
+                .collect { _customersCache.value = it }
+        }
+        viewModelScope.launch {
+            combine(_listenCache, _customersCache) { listen, customers ->
+                Pair(listen, customers)
+            }.collect { (listen, customers) ->
+                updateStateFromCache(listen, customers)
+            }
+        }
+    }
+
+    /** Aktualisiert die Anzeige aus dem gecachten Stand (kein DB-Lesen). Bei Pull-to-Refresh / onResume. */
+    fun loadListen() {
+        _state.value = KundenListenState.Loading
+        updateStateFromCache(_listenCache.value, _customersCache.value)
+    }
+
+    private fun updateStateFromCache(listen: List<KundenListe>, allCustomers: List<Customer>) {
+        viewModelScope.launch {
             try {
-                val listen = withContext(Dispatchers.IO) { listeRepository.getAllListen() }.toMutableList()
-                val allCustomers = withContext(Dispatchers.IO) { customerRepository.getAllCustomers() }
+                val listToUse = if (listen.any { it.wochentag in 0..6 }) listen else {
+                    ensureWochentagListenAndEmit()
+                    return@launch
+                }
                 val now = System.currentTimeMillis()
                 val activeCustomers = CustomerTermFilter.filterActiveForTerms(allCustomers, now)
-                ensureWochentagListen(listen)
-                val sortedListen = sortListen(listen)
+                val sortedListen = sortListen(listToUse)
                 val kundenProListe = sortedListen.associate { liste ->
                     val count = if (liste.wochentag in 0..6) {
                         activeCustomers.count { k ->
@@ -57,20 +95,16 @@ class KundenListenViewModel(
                     }
                     liste.id to count
                 }
-                if (listen.isEmpty()) {
-                    _state.value = KundenListenState.Empty
-                } else {
-                    _state.value = KundenListenState.Success(sortedListen, kundenProListe)
-                }
+                _state.value = if (sortedListen.isEmpty()) KundenListenState.Empty
+                else KundenListenState.Success(sortedListen, kundenProListe)
             } catch (e: Exception) {
                 _state.value = KundenListenState.Error(R.string.error_load_lists, e.message)
             }
         }
     }
 
-    private suspend fun ensureWochentagListen(listen: MutableList<KundenListe>) {
-        val hasWeekday = listen.any { it.wochentag in 0..6 }
-        if (hasWeekday) return
+    /** Legt Wochentagslisten in Firebase an, wenn noch keine existieren. Kein getAllListen() – Flow liefert die neuen Daten. */
+    private suspend fun ensureWochentagListenAndEmit() {
         val weekdays = getWochentagFullResIds().map { context.getString(it) }
         val created = weekdays.mapIndexed { index, name ->
             KundenListe(
@@ -85,8 +119,6 @@ class KundenListenViewModel(
         withContext(Dispatchers.IO) {
             created.forEach { listeRepository.saveListe(it) }
         }
-        listen.clear()
-        listen.addAll(withContext(Dispatchers.IO) { listeRepository.getAllListen() })
     }
 
     private fun sortListen(listen: List<KundenListe>): List<KundenListe> {

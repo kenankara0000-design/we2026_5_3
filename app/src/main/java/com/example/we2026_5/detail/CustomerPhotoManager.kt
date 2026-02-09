@@ -12,6 +12,8 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import android.view.WindowManager
+import android.app.Dialog
 import androidx.core.content.FileProvider
 import com.bumptech.glide.Glide
 import com.example.we2026_5.FirebaseRetryHelper
@@ -105,7 +107,7 @@ class CustomerPhotoManager(
         onProgressVisibilityChanged(true)
         
         CoroutineScope(Dispatchers.Main).launch {
-            val compressedFile = ImageUtils.compressImage(activity, uri)
+            val compressedFile = ImageUtils.compressImage(activity, uri, maxWidth = 720)
             
             if (compressedFile == null) {
                 onProgressVisibilityChanged(false)
@@ -173,21 +175,22 @@ class CustomerPhotoManager(
     }
     
     fun showImageInDialog(url: String) {
-        val dialog = AlertDialog.Builder(activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
-            .create()
-        
         val inflater = LayoutInflater.from(activity)
         val dialogView = inflater.inflate(R.layout.dialog_fullscreen_image, null)
         val imageView = dialogView.findViewById<ImageView>(R.id.fullscreen_image)
-        
-        // Schließen beim Tippen auf das Bild
+
+        val dialog = Dialog(activity, com.example.we2026_5.R.style.Theme_We2026_5_FullscreenDialog).apply {
+            setContentView(dialogView)
+            window?.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        }
+
         dialogView.setOnClickListener { dialog.dismiss() }
-        
+        imageView.setOnClickListener { dialog.dismiss() }
+
         Glide.with(activity)
             .load(url)
             .into(imageView)
-        
-        dialog.setView(dialogView)
+
         dialog.show()
     }
 }
