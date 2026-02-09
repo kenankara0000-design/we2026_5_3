@@ -149,6 +149,7 @@ class AddCustomerActivity : AppCompatActivity() {
             defaultAuslieferungWochentag = state.auslieferungWochentage.firstOrNull() ?: -1,
             defaultAbholungWochentage = state.abholungWochentage,
             defaultAuslieferungWochentage = state.auslieferungWochentage,
+            tageAzuL = state.tageAzuL?.coerceIn(0, 365) ?: 7,
             defaultUhrzeit = state.defaultUhrzeit.trim(),
             defaultZeitfenster = null,
             tags = tagsList,

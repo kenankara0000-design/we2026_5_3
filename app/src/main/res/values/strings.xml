@@ -101,6 +101,10 @@
     <string name="dialog_verschieben_choose_a_or_l">A oder L verschieben?</string>
     <string name="dialog_verschieben_abholung">Abholung (A) verschieben</string>
     <string name="dialog_verschieben_auslieferung">Auslieferung (L) verschieben</string>
+    <string name="dialog_kw_confirm_title">Keine Wäsche</string>
+    <string name="dialog_kw_confirm_message">Keine Wäsche für diesen Termin registrieren?</string>
+    <string name="dialog_verschieben_confirm_title">Termin verschieben</string>
+    <string name="dialog_verschieben_confirm_message">Möchten Sie den Termin verschieben? Anschließend können Sie die Optionen wählen.</string>
     <string name="dialog_urlaub_von">Urlaub von</string>
     <string name="dialog_urlaub_bis">Urlaub bis</string>
     <string name="label_urlaub">Urlaub</string>
@@ -152,7 +156,7 @@
     <!-- Erledigungs-Bottom-Sheet -->
     <string name="sheet_aktionen">Aktionen</string>
     <string name="sheet_tab_erledigung">Erledigung</string>
-    <string name="sheet_tab_termin">Termin</string>
+    <string name="sheet_tab_termin">Termine</string>
     <string name="sheet_tab_details">Details</string>
     <string name="sheet_abholung_erledigen">Abholung erledigen</string>
     <string name="sheet_auslieferung_erledigen">Auslieferung erledigen</string>
@@ -162,6 +166,12 @@
     <string name="sheet_rueckgaengig">Rückgängig</string>
     <string name="sheet_termin_verschieben">Termin verschieben</string>
     <string name="sheet_termin_verschieben_hint">Verschieben nur möglich, wenn ein verschobener Termin vorliegt.</string>
+    <string name="sheet_abholungstermin_hinzufuegen">Abholungstermin hinzufügen</string>
+    <string name="label_neu_termin">Neu Termin</string>
+    <string name="sheet_termine_info_ausnahme_an_diesem_tag">An diesem Tag: %1$s</string>
+    <string name="sheet_termine_ausnahme_abholung_kurz">A-Abholung</string>
+    <string name="sheet_termine_ausnahme_lieferung_kurz">A-Lieferung</string>
+    <string name="toast_abholungstermin_angelegt">Abholungstermin (und Lieferung) angelegt.</string>
     <string name="sheet_urlaub_eintragen">Urlaub eintragen</string>
     <string name="sheet_urlaub_eintragen_hint">Urlaub nur möglich, wenn Urlaubszeitraum gesetzt ist und ein Termin darin fällt.</string>
     <string name="sheet_naechste_tour">Nächste Tour</string>
@@ -260,6 +270,9 @@
     <string name="label_filter_ohne_tour">Ohne Tour:</string>
     <string name="label_ohne_tour_anzeigen">Ohne Tour anzeigen</string>
     <string name="label_ohne_tour_ausblenden">Ohne Tour ausblenden</string>
+    <string name="label_filter_keine_termine">Keine Termine:</string>
+    <string name="label_keine_termine_alle">Alle</string>
+    <string name="label_keine_termine_nur">Nur ohne Termine (Tour-Kunden)</string>
     <string name="label_filter_pausierte">Pausierte:</string>
     <string name="label_pausierte_ausblenden">Pausierte ausblenden</string>
     <string name="label_pausierte_anzeigen">Pausierte anzeigen</string>
@@ -423,6 +436,12 @@
     <string name="label_list_edit">Liste bearbeiten</string>
     <string name="label_intervals">Intervalle</string>
     <string name="label_termine_anlegen">Termin Anlegen</string>
+    <string name="label_listen_termine">Listen-Termine</string>
+    <string name="label_listen_termine_hint">Gilt für alle Kunden dieser Tour-Liste. A- und L-Termine.</string>
+    <string name="label_listen_wochentag_a">Wochentag A (Abholung):</string>
+    <string name="label_l_gleich_a_plus">L = A + %d</string>
+    <string name="dialog_listen_termin_delete_title">Listen-Termin löschen?</string>
+    <string name="dialog_listen_termin_delete_message">Dieser Termin wird für alle Kunden der Liste entfernt.</string>
     <string name="label_add_monthly_termin">Monatlichen Termin hinzufügen</string>
     <string name="label_monthly_week_of_month">Woche im Monat</string>
     <string name="label_monthly_week_1">1. Woche</string>
@@ -438,6 +457,14 @@
     <string name="termin_anlegen_ausnahme_auslieferung">Auslieferung (L)</string>
     <string name="badge_ausnahme_a">A-A</string>
     <string name="badge_ausnahme_l">A-L</string>
+    <string name="label_ausnahme_termine">Ausnahme-Termine</string>
+    <string name="label_kunden_termine">Kunden-Termine</string>
+    <string name="content_desc_delete_kunden_termin">Kunden-Termin löschen</string>
+    <string name="dialog_kunden_termin_delete_title">Kunden-Termin löschen?</string>
+    <string name="dialog_kunden_termin_delete_message">Diesen Termin wirklich entfernen?</string>
+    <string name="dialog_ausnahme_termin_delete_title">Ausnahme-Termin löschen?</string>
+    <string name="dialog_ausnahme_termin_delete_message">Diesen Ausnahme-Termin wirklich entfernen?</string>
+    <string name="content_desc_delete_ausnahme_termin">Ausnahme-Termin löschen</string>
     <string name="label_customers_in_list">Kunden in dieser Liste</string>
     <string name="label_add_available_customers">Verfügbare Kunden hinzufügen</string>
     <string name="label_termin_detail">Termin-Details</string>

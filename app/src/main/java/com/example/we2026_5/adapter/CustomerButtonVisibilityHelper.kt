@@ -9,6 +9,7 @@ import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.TerminInfo
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.tourplanner.ErledigungSheetState
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 /**
@@ -37,9 +38,17 @@ class CustomerButtonVisibilityHelper(
         val hatUeberfaelligeAbholung = hasUeberfaelligeAbholung(customer, viewDateStart, heuteStart)
         val wurdeHeuteErledigt = customer.abholungErledigtAm > 0 &&
             TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) == viewDateStart
-        val sollAButtonAnzeigen = hatAbholungHeute || hatUeberfaelligeAbholung || wurdeHeuteErledigt
-        val istAmTatsaechlichenAbholungTag = hatAbholungHeute && !hatUeberfaelligeAbholung
+        val hatKundenTerminA = customer.kundenTermine.any {
+            TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart && it.typ == "A"
+        }
+        val hatKundenTerminL = customer.kundenTermine.any {
+            TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart && it.typ == "L"
+        }
+        val sollAButtonAnzeigen = hatAbholungHeute || hatUeberfaelligeAbholung || wurdeHeuteErledigt || hatKundenTerminA
+        val istAmTatsaechlichenAbholungTag = (hatAbholungHeute && !hatUeberfaelligeAbholung) || hatKundenTerminA
         val istHeute = viewDateStart == heuteStart
+        /** Robust: angezeigter Tag ist derselbe Kalendertag wie heute (vermeidet Abweichungen bei Start-of-Day). */
+        val istHeuteKalender = isSameCalendarDay(displayedDateMillis, System.currentTimeMillis())
 
         val auslieferungDatumHeute = getAuslieferungDatum?.invoke(customer) ?: 0L
         val hatAuslieferungHeute = auslieferungDatumHeute > 0 && TerminBerechnungUtils.getStartOfDay(auslieferungDatumHeute) == viewDateStart
@@ -48,9 +57,9 @@ class CustomerButtonVisibilityHelper(
             TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart
         val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
             TerminBerechnungUtils.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
-        var sollLButtonAnzeigen = hatAuslieferungHeute || hatUeberfaelligeAuslieferung || wurdeAmTagErledigtL
+        var sollLButtonAnzeigen = hatAuslieferungHeute || hatUeberfaelligeAuslieferung || wurdeAmTagErledigtL || hatKundenTerminL
         if (kwErledigtAmTag) sollLButtonAnzeigen = false
-        val istAmTatsaechlichenAuslieferungTag = hatAuslieferungHeute && !hatUeberfaelligeAuslieferung
+        val istAmTatsaechlichenAuslieferungTag = (hatAuslieferungHeute && !hatUeberfaelligeAuslieferung) || hatKundenTerminL
 
         val sollKwButtonAnzeigen = sollAButtonAnzeigen || (hatAuslieferungHeute || hatUeberfaelligeAuslieferung || wurdeAmTagErledigtL)
         val wurdeKwHeuteErledigt = kwErledigtAmTag || (istHeute && pressedButton == "KW")
@@ -94,6 +103,7 @@ class CustomerButtonVisibilityHelper(
 
         var enableA = sollAButtonAnzeigen && istHeute && !customer.abholungErfolgt && (istAmTatsaechlichenAbholungTag || hatUeberfaelligeAbholung)
         var enableL = sollLButtonAnzeigen && istHeute && customer.abholungErfolgt && !customer.auslieferungErfolgt && (istAmTatsaechlichenAuslieferungTag || hatUeberfaelligeAuslieferung)
+        if (hatKundenTerminL) enableL = sollLButtonAnzeigen && istHeute && !customer.auslieferungErfolgt && (customer.abholungErfolgt || !hatKundenTerminA)
         var enableKw = sollKwButtonAnzeigen && istHeute && !wurdeKwHeuteErledigt
         if (istImUrlaubAmTag) {
             enableA = false
@@ -117,15 +127,19 @@ class CustomerButtonVisibilityHelper(
         val showAuslieferungFinal = if (nurInfoAmFaelligkeitstag) false else sollLButtonAnzeigen
         val showKwFinal = if (nurInfoAmFaelligkeitstag) false else sollKwButtonAnzeigen
 
-        // Ausnahme-Termine (A-A / A-L) zuerst; haben keinen Einfluss auf reguläre A/L
+        // Ausnahme-Termine (A-A / A-L): nur am heutigen Tag erledigbar; „heute“ per Kalendertag für Robustheit
         val ausnahmeA = customer.ausnahmeTermine.any {
             TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart && it.typ == "A"
         }
         val ausnahmeL = customer.ausnahmeTermine.any {
             TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart && it.typ == "L"
         }
-        val enableAusnahmeAbholung = ausnahmeA && istHeute && !customer.abholungErfolgt
-        val enableAusnahmeAuslieferung = ausnahmeL && istHeute && !customer.auslieferungErfolgt && (customer.abholungErfolgt || !ausnahmeA)
+        val ausnahmeAAnTagBereitsErledigt = customer.abholungErledigtAm > 0 &&
+            TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) == viewDateStart
+        val ausnahmeLAnTagBereitsErledigt = customer.auslieferungErledigtAm > 0 &&
+            TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart
+        val enableAusnahmeAbholung = ausnahmeA && istHeuteKalender && !ausnahmeAAnTagBereitsErledigt
+        val enableAusnahmeAuslieferung = ausnahmeL && istHeuteKalender && !ausnahmeLAnTagBereitsErledigt && (customer.abholungErfolgt || !ausnahmeA)
         // Nur A und L als Badge; Ü (Überfällig), KW, U (Urlaub) nur über Karten-Hintergrund/Status
         val statusBadgeText = when {
             ausnahmeA || ausnahmeL -> when {
@@ -182,11 +196,21 @@ class CustomerButtonVisibilityHelper(
             enableAusnahmeAbholung = enableAusnahmeAbholung,
             showAusnahmeAuslieferung = ausnahmeL,
             enableAusnahmeAuslieferung = enableAusnahmeAuslieferung,
+            showKundenAbholung = hatKundenTerminA,
+            showKundenLieferung = hatKundenTerminL,
             statusBadgeText = statusBadgeText,
             isOverdueBadge = isOverdueBadge,
             overdueInfoText = overdueInfoText,
             completedInfoText = completedInfoText
         )
+    }
+
+    /** true, wenn die beiden Zeitstempel auf denselben Kalendertag (Jahr + Tag) fallen. */
+    private fun isSameCalendarDay(ms1: Long, ms2: Long): Boolean {
+        val c1 = Calendar.getInstance().apply { timeInMillis = ms1 }
+        val c2 = Calendar.getInstance().apply { timeInMillis = ms2 }
+        return c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR) &&
+            c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR)
     }
 
     /** Echt überfällig Abholung = Fälligkeit vor heute (terminStart < heuteStart), nicht erledigt. Für Badge „Ü“. */

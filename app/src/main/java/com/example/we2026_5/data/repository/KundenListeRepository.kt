@@ -1,6 +1,7 @@
 package com.example.we2026_5.data.repository
 
 import com.example.we2026_5.KundenListe
+import com.example.we2026_5.KundenTermin
 import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.VerschobenerTermin
@@ -48,6 +49,16 @@ class KundenListeRepository(
         intervallAnzahl = safeInt(s.child("intervallAnzahl").getValue()).coerceAtLeast(0)
     )
 
+    private fun parseKundenTermin(s: DataSnapshot): KundenTermin = KundenTermin(
+        datum = safeLong(s.child("datum").getValue()),
+        typ = s.child("typ").getValue(String::class.java) ?: "A"
+    )
+
+    private fun parseListenTermine(snapshot: DataSnapshot): List<KundenTermin> {
+        if (!snapshot.exists()) return emptyList()
+        return snapshot.children.map { parseKundenTermin(it) }
+    }
+
     private fun parseVerschobenerTermin(s: DataSnapshot): VerschobenerTermin {
         val typStr = s.child("typ").getValue(String::class.java)
         val typ = if (typStr == "AUSLIEFERUNG") TerminTyp.AUSLIEFERUNG else TerminTyp.ABHOLUNG
@@ -64,6 +75,10 @@ class KundenListeRepository(
         val intervalle = snapshot.child("intervalle").children.map { parseListeIntervall(it) }
         val verschobene = snapshot.child("verschobeneTermine").children.map { parseVerschobenerTermin(it) }
         val geloeschte = snapshot.child("geloeschteTermine").children.map { safeLong(it.getValue()) }
+        val listenTermine = parseListenTermine(snapshot.child("listenTermine"))
+        val wochentagASnap = snapshot.child("wochentagA")
+        val wochentagAVal = if (wochentagASnap.exists()) safeInt(wochentagASnap.getValue()).takeIf { it in 0..6 } else null
+        val tageAzuLVal = if (snapshot.child("tageAzuL").exists()) safeInt(snapshot.child("tageAzuL").getValue()).coerceIn(1, 365).takeIf { it in 1..365 } ?: 7 else 7
         return KundenListe(
             id = snapshot.child("id").getValue(String::class.java) ?: snapshot.key ?: "",
             name = snapshot.child("name").getValue(String::class.java) ?: "",
@@ -76,7 +91,10 @@ class KundenListeRepository(
             urlaubVon = safeLong(snapshot.child("urlaubVon").getValue()),
             urlaubBis = safeLong(snapshot.child("urlaubBis").getValue()),
             verschobeneTermine = verschobene,
-            geloeschteTermine = geloeschte
+            geloeschteTermine = geloeschte,
+            listenTermine = listenTermine,
+            wochentagA = wochentagAVal,
+            tageAzuL = tageAzuLVal
         )
     }
     

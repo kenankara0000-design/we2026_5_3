@@ -69,7 +69,9 @@ fun TourPlannerScreen(
     onKw: (Customer) -> Unit,
     onRueckgaengig: (Customer) -> Unit,
     onVerschieben: (Customer) -> Unit,
+    onAddAbholungTermin: (Customer, Long) -> Unit,
     getNaechstesTourDatum: (Customer) -> Long?,
+    getTerminePairs365: (Customer) -> List<Pair<Long, Long>>,
     showToast: (String) -> Unit,
     onTelefonClick: (String) -> Unit,
     overviewPayload: CustomerOverviewPayload?,
@@ -118,7 +120,9 @@ fun TourPlannerScreen(
                 onKw = onKw,
                 onRueckgaengig = onRueckgaengig,
                 onVerschieben = onVerschieben,
+                onAddAbholungTermin = onAddAbholungTermin,
                 getNaechstesTourDatum = getNaechstesTourDatum,
+                getTerminePairs365 = getTerminePairs365,
                 showToast = showToast,
                 onTelefonClick = onTelefonClick
             )
@@ -276,6 +280,7 @@ private fun TourPlannerListContent(
                     is ListItem.CustomerItem -> "c-${listItem.customer.id}"
                     is ListItem.SectionHeader -> "h-${listItem.sectionType}-$index"
                     is ListItem.ListeHeader -> "l-${listItem.listeId}-$index"
+                    is ListItem.TourListeCard -> "tc-${listItem.liste.id}-$index"
                     is ListItem.TourListeErledigt -> "t-${listItem.listeName}-$index"
                     is ListItem.ErledigtSection -> "e-$index"
                 }
@@ -306,6 +311,14 @@ private fun TourPlannerListContent(
                     sectionDoneBg = sectionDoneBg,
                     sectionDoneText = sectionDoneText,
                     onToggle = { }
+                )
+                is ListItem.TourListeCard -> TourListeCardRow(
+                    liste = item.liste,
+                    kunden = item.kunden,
+                    viewDateMillis = viewDateMillis ?: 0L,
+                    getStatusBadgeText = getStatusBadgeText,
+                    onCustomerClick = onCustomerClick,
+                    onAktionenClick = onAktionenClick
                 )
                 is ListItem.TourListeErledigt -> {
                     TourListeErledigtRow(
@@ -351,7 +364,8 @@ private fun TourPlannerListContent(
                         statusBadgeText = item.statusBadgeText,
                         viewDateMillis = viewDate,
                         onCustomerClick = { onCustomerClick(payload) },
-                        onAktionenClick = { onAktionenClick(item.customer) }
+                        onAktionenClick = { onAktionenClick(item.customer) },
+                        isDragging = index == dragState.currentIndexOfDraggedItem
                     )
                 }
             }

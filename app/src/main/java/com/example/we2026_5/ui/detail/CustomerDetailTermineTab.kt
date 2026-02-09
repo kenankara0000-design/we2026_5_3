@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.TerminRegelTyp
+import com.example.we2026_5.AusnahmeTermin
+import com.example.we2026_5.KundenTermin
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.AgentDebugLog
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
@@ -47,7 +49,10 @@ fun CustomerDetailTermineTab(
     showAddMonthlySheet: Boolean,
     onDismissAddMonthlySheet: () -> Unit,
     onConfirmAddMonthly: (CustomerIntervall) -> Unit,
-    onDeleteNextTermin: (Long) -> Unit = {}
+    onDeleteNextTermin: (Long) -> Unit = {},
+    onDeleteAusnahmeTermin: (AusnahmeTermin) -> Unit = {},
+    onAddAbholungTermin: () -> Unit = {},
+    onDeleteKundenTermin: (List<KundenTermin>) -> Unit = {}
 ) {
     val nextTermin = TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
     // #region agent log
@@ -84,6 +89,21 @@ fun CustomerDetailTermineTab(
             textSecondary = textSecondary,
             canDeleteNextTermin = canDeleteNextTermin,
             onDeleteNextTermin = { if (nextTermin > 0) onDeleteNextTermin(nextTermin) }
+        )
+        CustomerDetailKundenTermineSection(
+            kundenTermine = customer.kundenTermine,
+            textPrimary = textPrimary,
+            textSecondary = textSecondary,
+            canDeleteTermin = isInEditMode,
+            onAddAbholungTermin = onAddAbholungTermin,
+            onDeleteKundenTermin = onDeleteKundenTermin
+        )
+        CustomerDetailAusnahmeTermineSection(
+            ausnahmeTermine = customer.ausnahmeTermine,
+            textPrimary = textPrimary,
+            textSecondary = textSecondary,
+            canDeleteTermin = isInEditMode,
+            onDeleteAusnahmeTermin = onDeleteAusnahmeTermin
         )
         if (!isInEditMode) {
             CustomerDetailKundenTypSection(

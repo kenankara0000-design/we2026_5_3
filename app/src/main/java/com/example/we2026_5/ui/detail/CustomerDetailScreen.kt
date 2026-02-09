@@ -18,6 +18,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import com.example.we2026_5.AusnahmeTermin
+import com.example.we2026_5.KundenTermin
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.KundenTyp
@@ -29,6 +31,7 @@ import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.intervallTageOrDefault
 import com.example.we2026_5.util.tageAzuLOrDefault
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
+import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,9 +46,9 @@ fun CustomerDetailScreen(
     isUploading: Boolean = false,
     onBack: () -> Unit,
     onEdit: () -> Unit,
-    onSave: (Map<String, Any>, List<CustomerIntervall>) -> Unit,
+    onSave: (Map<String, Any>, List<CustomerIntervall>, Int?) -> Unit,
     showSaveAndNext: Boolean = false,
-    onSaveAndNext: ((Map<String, Any>, List<CustomerIntervall>) -> Unit)? = null,
+    onSaveAndNext: ((Map<String, Any>, List<CustomerIntervall>, Int?) -> Unit)? = null,
     onDelete: () -> Unit,
     onTerminAnlegen: () -> Unit,
     onPauseCustomer: (pauseEndeWochen: Int?) -> Unit,
@@ -63,7 +66,10 @@ fun CustomerDetailScreen(
     onUrlaubStartActivity: (String) -> Unit = {},
     onErfassungClick: () -> Unit = {},
     onAddMonthlyIntervall: ((CustomerIntervall) -> Unit)? = null,
-    onDeleteNextTermin: (Long) -> Unit = {}
+    onDeleteNextTermin: (Long) -> Unit = {},
+    onDeleteAusnahmeTermin: (AusnahmeTermin) -> Unit = {},
+    onAddAbholungTermin: (Customer) -> Unit = {},
+    onDeleteKundenTermin: (List<KundenTermin>) -> Unit = {}
 ) {
     val context = LocalContext.current
     val primaryBlue = colorResource(R.color.primary_blue)
@@ -145,6 +151,7 @@ fun CustomerDetailScreen(
                 put("defaultAuslieferungWochentag", stateForSave.auslieferungWochentage.firstOrNull() ?: -1)
                 put("defaultAbholungWochentage", stateForSave.abholungWochentage)
                 put("defaultAuslieferungWochentage", stateForSave.auslieferungWochentage)
+                put("tageAzuL", stateForSave.tageAzuL?.coerceIn(0, 365) ?: 7)
                 put("kundennummer", stateForSave.kundennummer.trim())
                 put("defaultUhrzeit", stateForSave.defaultUhrzeit.trim())
                 put("tags", stateForSave.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } })
@@ -163,7 +170,8 @@ fun CustomerDetailScreen(
                     )
                 ) else emptyMap<String, Any>())
                 val startDatumA = stateForSave.erstelltAm.takeIf { it > 0 } ?: TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-                val intervalleToSave = if (stateForSave.kundenTyp == KundenTyp.REGELMAESSIG && stateForSave.abholungWochentage.isNotEmpty()) {
+                val tageAzuLForSave = stateForSave.tageAzuL?.coerceIn(0, 365) ?: 7
+                val intervalleToSaveRaw = if (stateForSave.kundenTyp == KundenTyp.REGELMAESSIG && stateForSave.abholungWochentage.isNotEmpty()) {
                     val customerForIntervall = c.copy(
                         defaultAbholungWochentag = stateForSave.abholungWochentage.firstOrNull() ?: -1,
                         defaultAuslieferungWochentag = stateForSave.auslieferungWochentage.firstOrNull() ?: -1,
@@ -171,10 +179,15 @@ fun CustomerDetailScreen(
                         defaultAuslieferungWochentage = stateForSave.auslieferungWochentage,
                         tourSlotId = slotId
                     )
-                    val mainFromForm = TerminAusKundeUtils.erstelleIntervallAusKunde(customerForIntervall, startDatumA, stateForSave.tageAzuL ?: 7, stateForSave.intervallTage ?: 7)
+                    val mainFromForm = TerminAusKundeUtils.erstelleIntervallAusKunde(customerForIntervall, startDatumA, tageAzuLForSave, stateForSave.intervallTage ?: 7)
                     val fromRules = editIntervalle.filter { it.terminRegelId.isNotBlank() || it.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY }
                     (mainFromForm?.let { listOf(it) } ?: emptyList()) + fromRules
                 } else editIntervalle
+                val intervalleToSave = intervalleToSaveRaw.map { iv ->
+                    if (iv.abholungDatum > 0) iv.copy(
+                        auslieferungDatum = TerminBerechnungUtils.getStartOfDay(iv.abholungDatum + TimeUnit.DAYS.toMillis(tageAzuLForSave.toLong()))
+                    ) else iv
+                }
                 put("intervalle", intervalleToSave.map {
                     mapOf(
                         "id" to it.id,
@@ -193,8 +206,8 @@ fun CustomerDetailScreen(
                     )
                 })
             }
-            if (andNext && onSaveAndNext != null) onSaveAndNext(updates, editIntervalle)
-            else onSave(updates, editIntervalle)
+            if (andNext && onSaveAndNext != null) onSaveAndNext(updates, editIntervalle, stateForSave.tageAzuL)
+            else onSave(updates, editIntervalle, stateForSave.tageAzuL)
         }
     }
 
@@ -300,7 +313,10 @@ fun CustomerDetailScreen(
                             onAddMonthlyIntervall?.invoke(it)
                             showAddMonthlySheet = false
                         },
-                        onDeleteNextTermin = onDeleteNextTermin
+                        onDeleteNextTermin = onDeleteNextTermin,
+                        onDeleteAusnahmeTermin = onDeleteAusnahmeTermin,
+                        onAddAbholungTermin = { customer?.let { onAddAbholungTermin(it) } },
+                        onDeleteKundenTermin = onDeleteKundenTermin
                     )
                 }
             }

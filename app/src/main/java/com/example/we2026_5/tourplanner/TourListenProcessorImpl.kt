@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit
 class TourListenProcessorImpl(
     private val categorizer: TourDataCategorizer,
     private val filter: TourDataFilter,
+    private val termincache: TerminCache,
     private val wasCompletedOnDay: (Customer, Long, Boolean, Boolean, Boolean) -> Boolean
 ) : TourListenProcessor {
 
@@ -27,8 +28,8 @@ class TourListenProcessorImpl(
             val liste = allListen.find { it.id == listeId } ?: return@forEach
             // Liste fällig am Tag = mindestens ein Kunde der Liste hat Termin oder ist überfällig (nur Kundendaten).
             val istFaellig = kunden.any { customer ->
-                filter.hatKundeTerminAmDatum(customer, null, viewDateStart) ||
-                    filter.istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)
+                filter.hatKundeTerminAmDatum(customer, liste, viewDateStart) ||
+                    filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)
             }
             if (istFaellig) {
                 val fälligeKunden = kunden.filter { customer ->
@@ -37,11 +38,11 @@ class TourListenProcessorImpl(
                     val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
                     if (isDone) {
                         // 3-Tage-Fenster (PLAN_TOURPLANNER_PERFORMANCE_3TAGE)
-                        val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                        val termine = termincache.getTermineInRange(
                             customer = customer,
-                            liste = null,
                             startDatum = viewDateStart - TimeUnit.DAYS.toMillis(1),
-                            tageVoraus = 3
+                            tageVoraus = 3,
+                            liste = liste
                         )
                         val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
                         val effectiveFaellig = TerminBerechnungUtils.effectiveFaelligAmDatum(customer)
@@ -59,9 +60,9 @@ class TourListenProcessorImpl(
                         val wurdeAmTagErledigt = wasCompletedOnDay(customer, viewDateStart, hatAbholungAmTag, hatAuslieferungAmTag, kwErledigtAmTag)
                         if (warUeberfaelligUndErledigtAmDatum || wurdeAmTagErledigt) return@filter true
                     }
-                    val isOverdue = filter.istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)
+                    val isOverdue = filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)
                     if (isOverdue) return@filter true
-                    filter.hatKundeTerminAmDatum(customer, null, viewDateStart)
+                    filter.hatKundeTerminAmDatum(customer, liste, viewDateStart)
                 }
                 if (fälligeKunden.isNotEmpty()) {
                     listenMitKunden[listeId] = fälligeKunden.sortedBy { it.name }

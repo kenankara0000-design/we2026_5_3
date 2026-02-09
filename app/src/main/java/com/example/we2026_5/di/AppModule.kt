@@ -45,21 +45,25 @@ val appModule = module {
     // Admin-Check (Test: E-Mail; später: Geräte-ID)
     single { AdminChecker(get()) }
     
+    // Termin-Cache (pro Kunde 365 Tage, Invalidierung bei Änderung)
+    single { com.example.we2026_5.tourplanner.TerminCache() }
+
     // Repository (verwenden Realtime Database)
-    single { CustomerRepository(get()) }
+    single { CustomerRepository(get(), get()) }
     single { KundenListeRepository(get()) }
     single { TourPlanRepository(get()) }
     single<TourOrderRepository> { TourOrderRepositoryFirebaseImpl(get()) }
+    single { com.example.we2026_5.tourplanner.TourDataProcessor(get()) }
     single { ArticleRepository(get()) }
     single { ErfassungRepository(get()) }
     single { KundenPreiseRepository(get()) }
     
     // ViewModels
-    viewModel { MainViewModel(get(), get(), get()) }
+    viewModel { MainViewModel(get(), get(), get(), get()) }
     viewModel { StatisticsViewModel(get()) }
     viewModel { ListeErstellenViewModel(get(), get()) }
     viewModel { CustomerManagerViewModel(get()) }
-    viewModel { TourPlannerViewModel(get(), get(), get()) }
+    viewModel { TourPlannerViewModel(get(), get(), get(), get()) }
     viewModel { AddCustomerViewModel() }
     viewModel { KundenListenViewModel(get<Context>(), get<KundenListeRepository>(), get<CustomerRepository>()) }
     viewModel { ListeBearbeitenViewModel(get(), get<CustomerRepository>()) }

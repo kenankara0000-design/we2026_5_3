@@ -1,6 +1,7 @@
 package com.example.we2026_5.data.repository
 
 import com.example.we2026_5.Customer
+import com.example.we2026_5.tourplanner.TerminCache
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -17,7 +18,7 @@ class CustomerRepositoryTest {
     @Before
     fun setup() {
         mockDatabase = mock()
-        repository = CustomerRepository(mockDatabase)
+        repository = CustomerRepository(mockDatabase, TerminCache())
     }
     
     @Test

@@ -80,6 +80,7 @@ class CustomerManagerActivity : AppCompatActivity() {
             val selectedTab by viewModel.selectedTab.collectAsState(initial = 0)
             val kundenTypFilter by viewModel.kundenTypFilter.collectAsState(initial = 0)
             val ohneTourFilter by viewModel.ohneTourFilter.collectAsState(initial = 0)
+            val keinetermineFilter by viewModel.keinetermineFilter.collectAsState(initial = 0)
             val pausierteFilter by viewModel.pausierteFilter.collectAsState(initial = 0)
             val isBulkMode by viewModel.isBulkMode.collectAsState(initial = false)
             val selectedIds by viewModel.selectedIds.collectAsState(initial = emptySet())
@@ -97,6 +98,8 @@ class CustomerManagerActivity : AppCompatActivity() {
                 selectedTab = selectedTab,
                 kundenTypFilter = kundenTypFilter,
                 ohneTourFilter = ohneTourFilter,
+                keinetermineFilter = keinetermineFilter,
+                onKeinetermineFilterChange = { viewModel.setKeinetermineFilter(it) },
                 pausierteFilter = pausierteFilter,
                 searchQuery = "",
                 isBulkMode = isBulkMode,

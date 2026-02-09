@@ -2,6 +2,7 @@ package com.example.we2026_5.data.repository
 
 import com.example.we2026_5.AusnahmeTermin
 import com.example.we2026_5.Customer
+import com.example.we2026_5.KundenTermin
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.TerminTyp
@@ -19,6 +20,7 @@ object CustomerSnapshotParser {
         val customer = child.getValue(Customer::class.java) ?: return null
         val verschobeneTermine = parseVerschobeneTermine(child.child("verschobeneTermine"))
         val ausnahmeTermine = parseAusnahmeTermine(child.child("ausnahmeTermine"))
+        val kundenTermine = parseKundenTermine(child.child("kundenTermine"))
         val abholungWochentage = parseIntListFromSnapshot(child.child("defaultAbholungWochentage"))
         val auslieferungWochentage = parseIntListFromSnapshot(child.child("defaultAuslieferungWochentage"))
         val kundenTypNode = child.child("kundenTyp")
@@ -36,6 +38,7 @@ object CustomerSnapshotParser {
             id = id,
             verschobeneTermine = verschobeneTermine,
             ausnahmeTermine = ausnahmeTermine,
+            kundenTermine = kundenTermine,
             defaultAbholungWochentage = abholungWochentage.ifEmpty { customer.defaultAbholungWochentage },
             defaultAuslieferungWochentage = auslieferungWochentage.ifEmpty { customer.defaultAuslieferungWochentage },
             abholungDatum = optionalLong(child, "abholungDatum"),
@@ -118,6 +121,22 @@ object CustomerSnapshotParser {
         }.toMap()
 
     fun serializeAusnahmeTermine(list: List<AusnahmeTermin>): Map<String, Map<String, Any>> =
+        list.mapIndexed { index, it ->
+            index.toString() to mapOf("datum" to it.datum, "typ" to it.typ)
+        }.toMap()
+
+    fun parseKundenTermine(snapshot: DataSnapshot): List<KundenTermin> {
+        if (!snapshot.exists()) return emptyList()
+        val list = mutableListOf<KundenTermin>()
+        snapshot.children.forEach { entry ->
+            val datum = snapshotValueToLong(entry.child("datum").getValue())
+            val typ = entry.child("typ").getValue(String::class.java) ?: "A"
+            if (datum != 0L && typ in listOf("A", "L")) list.add(KundenTermin(datum = datum, typ = typ))
+        }
+        return list
+    }
+
+    fun serializeKundenTermine(list: List<KundenTermin>): Map<String, Map<String, Any>> =
         list.mapIndexed { index, it ->
             index.toString() to mapOf("datum" to it.datum, "typ" to it.typ)
         }.toMap()

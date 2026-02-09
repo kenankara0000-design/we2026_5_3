@@ -37,7 +37,9 @@ fun ErledigungSheetContent(
     onKw: (Customer) -> Unit,
     onRueckgaengig: (Customer) -> Unit,
     onVerschieben: (Customer) -> Unit,
+    onAddAbholungTermin: (Customer, Long) -> Unit,
     getNaechstesTourDatum: (Customer) -> Long?,
+    getTerminePairs365: (Customer) -> List<Pair<Long, Long>>,
     showToast: (String) -> Unit,
     onTelefonClick: (String) -> Unit
 ) {
@@ -105,26 +107,24 @@ fun ErledigungSheetContent(
                     buttonAbholung = buttonAbholung,
                     buttonAuslieferung = buttonAuslieferung,
                     buttonRueckgaengig = buttonRueckgaengig,
+                    buttonVerschieben = buttonVerschieben,
                     toastAbholungNurHeute = toastAbholungNurHeute,
                     toastUeberfaelligNurHeute = toastUeberfaelligNurHeute,
                     toastAuslieferungNachAbholung = toastAuslieferungNachAbholung,
                     toastAuslieferungNurHeute = toastAuslieferungNurHeute,
+                    toastKwNurAbholung = toastKwNurAbholung,
+                    hintVerschieben = hintVerschieben,
                     onAbholung = onAbholung,
                     onAuslieferung = onAuslieferung,
                     onRueckgaengig = onRueckgaengig,
+                    onKw = onKw,
+                    onVerschieben = onVerschieben,
                     onDismiss = onDismiss,
                     showToast = showToast
                 )
                 1 -> ErledigungTabTerminContent(
                     customer = customer,
-                    state = state,
-                    buttonVerschieben = buttonVerschieben,
-                    toastKwNurAbholung = toastKwNurAbholung,
-                    hintVerschieben = hintVerschieben,
-                    onKw = onKw,
-                    onVerschieben = onVerschieben,
-                    onDismiss = onDismiss,
-                    showToast = showToast
+                    getTerminePairs365 = getTerminePairs365
                 )
                 2 -> ErledigungTabDetailsContent(
                     customer = customer,

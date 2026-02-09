@@ -3,6 +3,7 @@ package com.example.we2026_5
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import androidx.appcompat.app.AlertDialog
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -20,10 +21,14 @@ import com.example.we2026_5.ui.tourplanner.ErledigtSheetContent
 import com.example.we2026_5.ui.tourplanner.TourPlannerScreen
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.example.we2026_5.tourplanner.ErledigungSheetState
+import com.example.we2026_5.tourplanner.TerminCache
 import com.example.we2026_5.tourplanner.TourPlannerCoordinator
 import com.example.we2026_5.util.AgentDebugLog
 import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.tageAzuLOrDefault
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.SimpleDateFormat
@@ -35,6 +40,7 @@ class TourPlannerActivity : AppCompatActivity() {
     private val repository: CustomerRepository by inject()
     private val listeRepository: com.example.we2026_5.data.repository.KundenListeRepository by inject()
     private val adminChecker: AdminChecker by inject()
+    private val termincache: TerminCache by inject()
     private lateinit var coordinator: TourPlannerCoordinator
     private lateinit var networkMonitor: NetworkMonitor
 
@@ -106,7 +112,8 @@ class TourPlannerActivity : AppCompatActivity() {
                 val ts = viewModel.getSelectedTimestamp() ?: return ""
                 val viewDateStart = coordinator.dateUtils.getStartOfDay(ts)
                 val heuteStart = coordinator.dateUtils.getStartOfDay(System.currentTimeMillis())
-                return com.example.we2026_5.tourplanner.TourPlannerStatusBadge.compute(customer, viewDateStart, heuteStart)
+                val liste = viewModel.getListen().find { it.id == customer.listeId }
+                return com.example.we2026_5.tourplanner.TourPlannerStatusBadge.compute(customer, viewDateStart, heuteStart, termincache, liste)
             }
 
             val ts = selectedTimestamp
@@ -114,19 +121,23 @@ class TourPlannerActivity : AppCompatActivity() {
             val countsT0 = System.currentTimeMillis()
             AgentDebugLog.log("TourPlannerActivity.kt", "counts_start", mapOf("tourItemsSize" to tourItems.size, "customerCount" to tourItems.filterIsInstance<ListItem.CustomerItem>().size), "H2")
             // #endregion
+            val allCustomersFromItems = tourItems.flatMap { item ->
+                when (item) {
+                    is ListItem.CustomerItem -> listOf(item.customer)
+                    is ListItem.TourListeCard -> item.kunden.map { (c, _) -> c }
+                    else -> emptyList()
+                }
+            }
             val counts = ts?.let { timestamp ->
                 val viewDateStart = coordinator.dateUtils.getStartOfDay(timestamp)
-                val customers = tourItems.filterIsInstance<ListItem.CustomerItem>().map { it.customer }
+                val customers = allCustomersFromItems
                 // #region agent log
                 AgentDebugLog.log("TourPlannerActivity.kt", "counts_flatMap", mapOf("customersToProcess" to customers.size), "H2")
                 // #endregion
                 val termine = customers.flatMap { c ->
-                    TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                        customer = c,
-                        liste = null,
-                        startDatum = viewDateStart,
-                        tageVoraus = 1
-                    ).filter { coordinator.dateUtils.getStartOfDay(it.datum) == viewDateStart }
+                    val liste = viewModel.getListen().find { it.id == c.listeId }
+                    termincache.getTermineInRange(c, viewDateStart, 1, liste)
+                        .filter { coordinator.dateUtils.getStartOfDay(it.datum) == viewDateStart }
                 }
                 val aCount = termine.count { it.typ == TerminTyp.ABHOLUNG }
                 val lCount = termine.count { it.typ == TerminTyp.AUSLIEFERUNG }
@@ -157,8 +168,8 @@ class TourPlannerActivity : AppCompatActivity() {
                 },
                 onMap = {
                     pressedHeaderButton = "Karte"
-                    val addresses = tourItems.filterIsInstance<ListItem.CustomerItem>()
-                        .map { it.customer.adresse }
+                    val addresses = allCustomersFromItems
+                        .map { it.adresse }
                         .filter { it.isNotBlank() }
                     val intent = Intent(this@TourPlannerActivity, MapViewActivity::class.java)
                     if (addresses.isNotEmpty()) {
@@ -183,7 +194,7 @@ class TourPlannerActivity : AppCompatActivity() {
                     val getAbholungDatum: (Customer) -> Long = { c -> coordinator.dateUtils.calculateAbholungDatum(c, viewDateStart, heuteStart) }
                     val getAuslieferungDatum: (Customer) -> Long = { c -> coordinator.dateUtils.calculateAuslieferungDatum(c, viewDateStart, heuteStart) }
                     val getTermineFuerKunde = { c: Customer, start: Long, days: Int ->
-                        TerminBerechnungUtils.berechneAlleTermineFuerKunde(c, null, start, days)
+                        termincache.getTermineInRange(c, start, days)
                     }
                     val helper = CustomerButtonVisibilityHelper(this@TourPlannerActivity, ts, emptyMap(), getAbholungDatum, getAuslieferungDatum, getTermineFuerKunde)
                     val state: ErledigungSheetState? = helper.getSheetState(customer)
@@ -194,10 +205,52 @@ class TourPlannerActivity : AppCompatActivity() {
                 onDismissErledigungSheet = { erledigungSheet = null },
                 onAbholung = { coordinator.callbackHandler.handleAbholungPublic(it) },
                 onAuslieferung = { coordinator.callbackHandler.handleAuslieferungPublic(it) },
-                onKw = { coordinator.callbackHandler.handleKwPublic(it) },
+                onKw = { customer ->
+                    AlertDialog.Builder(this@TourPlannerActivity)
+                        .setTitle(getString(R.string.dialog_kw_confirm_title))
+                        .setMessage(getString(R.string.dialog_kw_confirm_message))
+                        .setPositiveButton(getString(R.string.dialog_yes)) { _, _ ->
+                            coordinator.callbackHandler.handleKwPublic(customer)
+                            erledigungSheet = null
+                        }
+                        .setNegativeButton(getString(R.string.btn_cancel), null)
+                        .show()
+                },
                 onRueckgaengig = { coordinator.callbackHandler.handleRueckgaengigPublic(it) },
-                onVerschieben = { coordinator.showVerschiebenDialog(it) },
+                onVerschieben = { customer ->
+                    AlertDialog.Builder(this@TourPlannerActivity)
+                        .setTitle(getString(R.string.dialog_verschieben_confirm_title))
+                        .setMessage(getString(R.string.dialog_verschieben_confirm_message))
+                        .setPositiveButton(getString(R.string.dialog_yes)) { _, _ ->
+                            erledigungSheet = null
+                            coordinator.showVerschiebenDialog(customer)
+                        }
+                        .setNegativeButton(getString(R.string.btn_cancel), null)
+                        .show()
+                },
+                onAddAbholungTermin = { customer, viewDateMillis ->
+                    lifecycleScope.launch {
+                        val ok = withContext(Dispatchers.IO) {
+                            repository.addKundenAbholungMitLieferung(
+                                customer.id,
+                                viewDateMillis,
+                                customer.tageAzuLOrDefault(7)
+                            )
+                        }
+                        erledigungSheet = null
+                        coordinator.reloadCurrentView()
+                        if (ok) {
+                            Toast.makeText(this@TourPlannerActivity, getString(R.string.toast_abholungstermin_angelegt), Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(this@TourPlannerActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
                 getNaechstesTourDatum = { coordinator.dateUtils.getNaechstesTourDatum(it) },
+                getTerminePairs365 = { customer ->
+                    val liste = viewModel.getListen().find { it.id == customer.listeId }
+                    termincache.getTerminePairs365(customer, liste)
+                },
                 showToast = { msg -> Toast.makeText(this@TourPlannerActivity, msg, Toast.LENGTH_LONG).show() },
                 onTelefonClick = { tel -> startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$tel"))) },
                 overviewPayload = overviewPayload,

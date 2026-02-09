@@ -62,6 +62,8 @@ data class Customer(
     val defaultAbholungWochentage: List<Int> = emptyList(),
     /** Mehrere L-Tage (0=Mo..6=So). Wenn leer, zählt defaultAuslieferungWochentag. */
     val defaultAuslieferungWochentage: List<Int> = emptyList(),
+    /** Gespeicherte Tage A→L (0–365). Wenn gesetzt, wird dieser Wert überall verwendet (z. B. neuer Kunden-Termin, unregelmäßig). Sonst Ableitung aus erstem Intervall. */
+    val tageAzuL: Int? = null,
     val defaultUhrzeit: String = "",
     val defaultZeitfenster: Zeitfenster? = null,
     val adHocTemplate: AdHocTemplate? = null,
@@ -102,10 +104,14 @@ data class Customer(
     @Exclude
     val verschobeneTermine: List<VerschobenerTermin> = emptyList(), // NEUE Logik: Einzelne Termine verschieben
     
-    /** Ausnahme-Termine (einmalig A oder L), haben keinen Einfluss auf reguläre A/L. @Exclude, manuell lesen/schreiben. */
+    /** Ausnahme-Termine (einmalig A oder L), Sonderfälle ohne Bezug zu regulären Terminen. @Exclude, manuell lesen/schreiben. */
     @Exclude
     val ausnahmeTermine: List<AusnahmeTermin> = emptyList(),
-    
+
+    /** Kunden-Termine: vom Kunden vorgegebene Abholung/Lieferung (z. B. fürs Jahr). Eigenständig, getrennt von Ausnahme-Terminen. @Exclude, manuell lesen/schreiben. */
+    @Exclude
+    val kundenTermine: List<KundenTermin> = emptyList(),
+
     val fotoUrls: List<String> = listOf(),
     /** Thumbnail-URLs für Listen/Vorschau (Prio 3 PLAN_PERFORMANCE_OFFLINE); gleiche Reihenfolge wie fotoUrls; Fallback: fotoUrls. */
     val fotoThumbUrls: List<String> = listOf(),

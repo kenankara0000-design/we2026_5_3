@@ -88,4 +88,7 @@
     <color name="termin_regel_fab">#2196F3</color> <!-- Blau für FAB (wie button_blue) -->
     <color name="termin_regel_abholung">#1976D2</color> <!-- Blau für Abholung -->
     <color name="termin_regel_auslieferung">#388E3C</color> <!-- Grün für Auslieferung -->
+
+    <!-- Tour-Planner: Karte beim Ziehen (Long-Press Drag) hervorgehoben -->
+    <color name="tour_planner_dragging_bg">#E3F2FD</color>
 </resources>

@@ -34,13 +34,18 @@ fun ErledigungTabErledigungContent(
     buttonAbholung: androidx.compose.ui.graphics.Color,
     buttonAuslieferung: androidx.compose.ui.graphics.Color,
     buttonRueckgaengig: androidx.compose.ui.graphics.Color,
+    buttonVerschieben: androidx.compose.ui.graphics.Color,
     toastAbholungNurHeute: String,
     toastUeberfaelligNurHeute: String,
     toastAuslieferungNachAbholung: String,
     toastAuslieferungNurHeute: String,
+    toastKwNurAbholung: String,
+    hintVerschieben: String,
     onAbholung: (Customer) -> Unit,
     onAuslieferung: (Customer) -> Unit,
     onRueckgaengig: (Customer) -> Unit,
+    onKw: (Customer) -> Unit,
+    onVerschieben: (Customer) -> Unit,
     onDismiss: () -> Unit,
     showToast: (String) -> Unit
 ) {
@@ -146,7 +151,7 @@ fun ErledigungTabErledigungContent(
                     } else {
                         showToast(
                             when {
-                                !customer.abholungErfolgt -> toastAuslieferungNachAbholung
+                                state.showAusnahmeAbholung && !customer.abholungErfolgt -> toastAuslieferungNachAbholung
                                 else -> toastAuslieferungNurHeute
                             }
                         )
@@ -176,6 +181,50 @@ fun ErledigungTabErledigungContent(
                 Spacer(Modifier.size(10.dp))
                 Text(stringResource(R.string.sheet_rueckgaengig), color = buttonRueckgaengig)
             }
+        }
+        Spacer(Modifier.size(16.dp))
+        Text(
+            text = stringResource(R.string.sheet_aktionen),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = textSecondary,
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+        if (state.showKw) {
+            Button(
+                onClick = {
+                    if (state.enableKw) {
+                        onKw(customer)
+                        // Sheet wird nach Bestätigung im Aufrufer geschlossen
+                    } else {
+                        showToast(toastKwNurAbholung)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.status_warning)),
+                enabled = state.enableKw
+            ) {
+                Icon(painter = painterResource(R.drawable.ic_checklist), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
+                Spacer(Modifier.size(10.dp))
+                Text(stringResource(R.string.sheet_keine_waesche), color = Color.White)
+            }
+        }
+        Button(
+            onClick = {
+                if (state.showVerschieben) {
+                    onVerschieben(customer)
+                    // Sheet wird nach Bestätigung im Aufrufer geschlossen
+                } else {
+                    showToast(hintVerschieben)
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = buttonVerschieben),
+            enabled = state.showVerschieben
+        ) {
+            Icon(painter = painterResource(R.drawable.ic_reschedule), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
+            Spacer(Modifier.size(10.dp))
+            Text(stringResource(R.string.sheet_termin_verschieben), color = Color.White)
         }
     }
 }

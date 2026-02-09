@@ -1,7 +1,9 @@
 package com.example.we2026_5.ui.listebearbeiten
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -28,10 +30,12 @@ fun ListeBearbeitenScreen(
     onSave: (name: String, listeArt: String) -> Unit,
     onDelete: () -> Unit,
     onTerminAnlegen: () -> Unit,
+    onDeleteListenTermine: (List<com.example.we2026_5.KundenTermin>) -> Unit,
+    onWochentagAChange: (Int?) -> Unit,
+    onTageAzuLChange: (Int) -> Unit,
     onRemoveKunde: (Customer) -> Unit,
     onAddKunde: (Customer) -> Unit,
-    onRefresh: () -> Unit,
-    onDatumSelected: (position: Int, isAbholung: Boolean) -> Unit
+    onRefresh: () -> Unit
 ) {
     val context = LocalContext.current
     val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
@@ -98,18 +102,25 @@ fun ListeBearbeitenScreen(
                     saveButtonContainerColor = saveButtonColor
                 )
 
-                ListeBearbeitenIntervallSection(
-                    wochentag = state.liste?.wochentag,
-                    intervalle = state.intervalle,
-                    isInEditMode = state.isInEditMode,
-                    onTerminAnlegen = onTerminAnlegen,
-                    onDatumSelected = onDatumSelected,
-                    surfaceWhite = surfaceWhite,
-                    textSecondary = textSecondary,
-                    primaryBlue = primaryBlue
-                )
+                if (state.isInEditMode && state.liste != null && (state.liste!!.wochentag ?: -1) !in 0..6) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    ListeBearbeitenListenTermineSection(
+                        listenTermine = state.liste!!.listenTermine,
+                        wochentagA = state.liste!!.wochentagA,
+                        tageAzuL = state.liste!!.tageAzuL,
+                        surfaceWhite = surfaceWhite,
+                        textPrimary = textPrimary,
+                        textSecondary = textSecondary,
+                        primaryBlue = primaryBlue,
+                        onWochentagAChange = onWochentagAChange,
+                        onTageAzuLChange = onTageAzuLChange,
+                        onAddTermin = onTerminAnlegen,
+                        onDeleteTermine = onDeleteListenTermine
+                    )
+                }
 
-                ListeBearbeitenKundenSection(
+                ListeBearbeitenKundenSectionCollapsible(
+                    isTourListe = (state.liste?.wochentag ?: -1) !in 0..6,
                     wochentag = state.liste?.wochentag,
                     kundenInListe = state.kundenInListe,
                     verfuegbareKunden = state.verfuegbareKunden,

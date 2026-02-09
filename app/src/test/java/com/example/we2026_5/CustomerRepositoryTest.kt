@@ -1,6 +1,7 @@
 package com.example.we2026_5
 
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.tourplanner.TerminCache
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertNotNull
@@ -22,7 +23,7 @@ class CustomerRepositoryTest {
 
     @Before
     fun setup() {
-        repository = CustomerRepository(database)
+        repository = CustomerRepository(database, TerminCache())
     }
 
     @Test

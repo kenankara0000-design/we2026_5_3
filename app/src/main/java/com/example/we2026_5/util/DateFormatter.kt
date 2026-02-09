@@ -97,6 +97,15 @@ object DateFormatter {
         cal.timeInMillis = timeInMillis
         return formatDateShort(cal)
     }
+
+    /**
+     * Formatiert ein Datum als "09.02.26" (dd.MM.yy mit führenden Nullen)
+     */
+    fun formatDateShortWithYear(timeInMillis: Long): String {
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = timeInMillis
+        return SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(cal.time)
+    }
     
     /**
      * Formatiert ein Datum mit Wochentag als "Mo, 26.01.2026"

@@ -14,13 +14,13 @@ import java.util.concurrent.TimeUnit
 /** Erstes Intervall des Kunden; null wenn keine Intervalle. */
 fun Customer.firstIntervallOrNull(): CustomerIntervall? = intervalle.firstOrNull()
 
-/** Tage A→L aus erstem Intervall; sonst [default]. */
+/** Tage A→L: zuerst gespeicherter Wert [tageAzuL], sonst aus erstem Intervall, sonst [default]. */
 fun Customer.tageAzuLOrDefault(default: Int = 7): Int =
-    firstIntervallOrNull()?.let {
+    (tageAzuL?.takeIf { it in 0..365 } ?: firstIntervallOrNull()?.let {
         if (it.abholungDatum > 0 && it.auslieferungDatum > 0)
             TimeUnit.MILLISECONDS.toDays(it.auslieferungDatum - it.abholungDatum).toInt().coerceIn(0, 365)
         else null
-    } ?: default
+    }) ?: default
 
 /** Intervall-Tage (Zyklus) aus erstem Intervall; sonst [default]. */
 fun Customer.intervallTageOrDefault(default: Int = 7): Int =

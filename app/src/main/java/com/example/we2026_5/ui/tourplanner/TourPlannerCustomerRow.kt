@@ -64,10 +64,13 @@ internal fun TourCustomerRow(
     /** Wenn gesetzt: wird auf die Card angewendet (z. B. longPressDraggableHandle). */
     cardDragModifier: Modifier? = null,
     /** Muss mit cardDragModifier zusammen verwendet werden (gleiche Instance wie beim Handle). */
-    cardInteractionSource: MutableInteractionSource? = null
+    cardInteractionSource: MutableInteractionSource? = null,
+    /** true wenn die Karte gerade gezogen wird (Long-Press Drag) – visueller Hinweis. */
+    isDragging: Boolean = false
 ) {
     val isDeaktiviert = isVerschobenAmFaelligkeitstag
     val cardBg = when {
+        isDragging -> colorResource(R.color.tour_planner_dragging_bg)
         isOverdue -> colorResource(R.color.section_overdue_bg)
         isInUrlaub -> colorResource(R.color.customer_urlaub_bg)
         isVerschobenAmFaelligkeitstag -> colorResource(R.color.surface_light)

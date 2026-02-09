@@ -105,4 +105,25 @@ object IntervallManager {
             cal.get(Calendar.DAY_OF_MONTH)
         ).show()
     }
+
+    /**
+     * Zeigt einen DatePickerDialog für Listen-Termin (A-Datum). L wird als A + tageAzuL berechnet.
+     */
+    fun showDatePickerForListenTermin(
+        context: Context,
+        onDateSelected: (Long) -> Unit
+    ) {
+        val cal = Calendar.getInstance()
+        DatePickerDialog(
+            context,
+            DatePickerDialog.OnDateSetListener { _, year: Int, month: Int, dayOfMonth: Int ->
+                cal.set(year, month, dayOfMonth, 0, 0, 0)
+                cal.set(Calendar.MILLISECOND, 0)
+                onDateSelected(cal.timeInMillis)
+            },
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
 }

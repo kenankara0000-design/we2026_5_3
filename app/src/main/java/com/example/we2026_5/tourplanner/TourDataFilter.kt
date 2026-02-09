@@ -14,7 +14,8 @@ import java.util.concurrent.TimeUnit
  * Extrahiert alle Filter-Funktionen aus TourDataProcessor.
  */
 class TourDataFilter(
-    private val categorizer: TourDataCategorizer
+    private val categorizer: TourDataCategorizer,
+    private val termincache: TerminCache
 ) {
     /** L = A + tageAzuL. Zentrale Abstraktion (TerminAusKundeUtils). */
     private fun getTageAzuL(customer: Customer): Int = customer.tageAzuLOrDefault(7)
@@ -26,12 +27,8 @@ class TourDataFilter(
         // Term-Daten nur aus Kunde (liste nur Gruppierung; kein getNaechstesListeDatum(liste)).
         // Reduziertes Fenster: 3 Tage für Tour-Planner-Performance
         if (c.firstIntervallOrNull() != null || c.listeId.isNotEmpty()) {
-            val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                customer = c,
-                liste = null,
-                startDatum = abDatum,
-                tageVoraus = 3
-            )
+            val liste = if (liste != null && c.listeId == liste.id) liste else null
+            val termine = termincache.getTermineInRange(c, abDatum, 3, liste)
             val naechstesTermin = termine.firstOrNull {
                 it.datum >= categorizer.getStartOfDay(abDatum)
             }
@@ -52,17 +49,17 @@ class TourDataFilter(
         if (customer.ausnahmeTermine.any { TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart }) {
             return true
         }
+        // Kunden-Termine: vom Kunden vorgegebene A/L an diesem Tag
+        if (customer.kundenTermine.any { TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart }) {
+            return true
+        }
         // Term-Daten nur aus Kunde (liste nur Gruppierung).
         if (customer.firstIntervallOrNull() != null || customer.listeId.isNotEmpty()) {
+            val passendeListe = if (liste != null && customer.listeId == liste.id) liste else null
             val tageAzuL = getTageAzuL(customer)
             val startDatum = viewDateStart - TimeUnit.DAYS.toMillis(tageAzuL.toLong())
             val tageVoraus = tageAzuL + 2
-            val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-                customer = customer,
-                liste = null,
-                startDatum = startDatum,
-                tageVoraus = tageVoraus
-            )
+            val termine = termincache.getTermineInRange(customer, startDatum, tageVoraus, passendeListe)
             val alleGeloeschteTermine = customer.geloeschteTermine
             return termine.any { termin ->
                 val terminStart = TerminBerechnungUtils.getStartOfDay(termin.datum)
@@ -92,13 +89,13 @@ class TourDataFilter(
             if (viewDateStart > heuteStart) {
                 return false
             }
-            
+            val passendeListe = if (liste != null && customer.listeId == liste.id) liste else null
             // 3-Tage-Fenster + 60 Tage Überfällig (PLAN_TOURPLANNER_PERFORMANCE_3TAGE)
-            val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+            val termine = termincache.getTermineInRange(
                 customer = customer,
-                liste = null,
                 startDatum = heuteStart - TimeUnit.DAYS.toMillis(60),
-                tageVoraus = 63
+                tageVoraus = 63,
+                liste = passendeListe
             )
             
             return termine.any { termin ->

@@ -10,7 +10,7 @@ import org.junit.Test
  */
 class TourDataProcessorTest {
 
-    private val processor = TourDataProcessor()
+    private val processor = TourDataProcessor(TerminCache())
 
     @Test
     fun getFaelligCount_empty_lists_returns_zero() {

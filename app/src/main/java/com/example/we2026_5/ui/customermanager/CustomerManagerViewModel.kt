@@ -46,15 +46,19 @@ class CustomerManagerViewModel(
     private val pausierteFilterFlow = MutableStateFlow(0)
     val pausierteFilter: StateFlow<Int> = pausierteFilterFlow.asStateFlow()
 
+    // StateFlow für Keine-Termine-Filter (0=Alle, 1=Nur Kunden ohne Termine; ohne-Tour-Kunden werden ausgeschlossen)
+    private val keinetermineFilterFlow = MutableStateFlow(0)
+    val keinetermineFilter: StateFlow<Int> = keinetermineFilterFlow.asStateFlow()
+
     // Kombiniere customers, searchQuery und selectedTab für gefilterte Liste
-    // combine(6 Flows) nutzt Vararg-Überladung → Lambda erhält ein Array
     val filteredCustomers: LiveData<List<Customer>> = combine(
         customersFlow,
         searchQueryFlow,
         selectedTabFlow,
         kundenTypFilterFlow,
         ohneTourFilterFlow,
-        pausierteFilterFlow
+        pausierteFilterFlow,
+        keinetermineFilterFlow
     ) { values ->
         @Suppress("UNCHECKED_CAST")
         val customers = values[0] as List<Customer>
@@ -63,6 +67,7 @@ class CustomerManagerViewModel(
         val typFilter = values[3] as Int
         val ohneTourFilter = values[4] as Int
         val pausierteFilter = values[5] as Int
+        val keinetermineFilter = values[6] as Int
         // Zuerst nach Tab filtern
         val tabFiltered = when (selectedTab) {
             0 -> customers.filter { it.kundenArt == "Gewerblich" }
@@ -89,12 +94,17 @@ class CustomerManagerViewModel(
             1 -> ohneTourFiltered
             else -> ohneTourFiltered
         }
-        
+
+        val keinetermineFiltered = when (keinetermineFilter) {
+            1 -> pausierteFiltered.filter { !it.ohneTour && hatKeineTermine(it) }
+            else -> pausierteFiltered
+        }
+
         // Dann nach Such-Query filtern
         val queryFiltered = if (query.isEmpty()) {
-            pausierteFiltered
+            keinetermineFiltered
         } else {
-            pausierteFiltered.filter {
+            keinetermineFiltered.filter {
                 it.displayName.contains(query, ignoreCase = true) ||
                 it.name.contains(query, ignoreCase = true) ||
                 it.alias.contains(query, ignoreCase = true) ||
@@ -160,6 +170,17 @@ class CustomerManagerViewModel(
     fun setPausierteFilter(filterIndex: Int) {
         pausierteFilterFlow.value = filterIndex
     }
+
+    fun setKeinetermineFilter(filterIndex: Int) {
+        keinetermineFilterFlow.value = filterIndex
+    }
+
+    /** Kunde hat keine Termine: keine Intervalle, keine Wochentage, keine Kunden-/Ausnahme-Termine. */
+    private fun hatKeineTermine(c: Customer): Boolean =
+        c.intervalle.isEmpty() &&
+            c.effectiveAbholungWochentage.isEmpty() &&
+            c.kundenTermine.isEmpty() &&
+            c.ausnahmeTermine.isEmpty()
     
     fun deleteCustomer(customerId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {

@@ -3,7 +3,10 @@ package com.example.we2026_5.ui.tourplanner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -34,6 +37,7 @@ fun TourPlannerErledigtSheet(
 ) {
     if (!visible || content == null) return
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetFixedHeightDp = 520.dp
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -42,6 +46,8 @@ fun TourPlannerErledigtSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(sheetFixedHeightDp)
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)

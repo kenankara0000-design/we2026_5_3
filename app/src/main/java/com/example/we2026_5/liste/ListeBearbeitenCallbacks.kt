@@ -10,6 +10,8 @@ import com.example.we2026_5.ListeIntervall
 import java.util.UUID
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
+import com.example.we2026_5.data.repository.CustomerSnapshotParser
+import com.example.we2026_5.KundenTermin
 import com.example.we2026_5.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -188,6 +190,108 @@ class ListeBearbeitenCallbacks(
             .show()
     }
     
+    /**
+     * Fügt einen Listen-Termin hinzu (A + L = A + tageAzuL). Gilt für alle Kunden der Liste.
+     */
+    fun addListenTermin(liste: KundenListe, abholungDatum: Long, tageAzuL: Int, onSuccess: (KundenListe) -> Unit) {
+        CoroutineScope(Dispatchers.Main).launch {
+            val aStart = com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(abholungDatum)
+            val tage = tageAzuL.coerceIn(0, 365)
+            val lStart = com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(
+                aStart + java.util.concurrent.TimeUnit.DAYS.toMillis(tage.toLong())
+            )
+            val newTermine = liste.listenTermine + KundenTermin(datum = aStart, typ = "A") + KundenTermin(datum = lStart, typ = "L")
+            val updates = mapOf("listenTermine" to CustomerSnapshotParser.serializeKundenTermine(newTermine))
+            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
+                operation = { listeRepository.updateListe(liste.id, updates) },
+                context = activity,
+                errorMessage = activity.getString(R.string.error_save_generic),
+                maxRetries = 3
+            )
+            if (success != null) {
+                Toast.makeText(activity, activity.getString(R.string.toast_liste_gespeichert), Toast.LENGTH_SHORT).show()
+                onSuccess(liste.copy(listenTermine = newTermine))
+            }
+        }
+    }
+
+    /**
+     * Aktualisiert Tour-Listen-Einstellungen (wochentagA, tageAzuL).
+     */
+    fun updateListenTourEinstellungen(
+        liste: KundenListe,
+        wochentagA: Int?,
+        tageAzuL: Int,
+        onSuccess: (KundenListe) -> Unit
+    ) {
+        CoroutineScope(Dispatchers.Main).launch {
+            val wVal = wochentagA?.takeIf { it in 0..6 }
+            val tVal = tageAzuL.coerceIn(1, 365)
+            val updates = mutableMapOf<String, Any>("tageAzuL" to tVal)
+            updates["wochentagA"] = wVal ?: -1
+            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
+                operation = { listeRepository.updateListe(liste.id, updates) },
+                context = activity,
+                errorMessage = activity.getString(R.string.error_save_generic),
+                maxRetries = 3
+            )
+            if (success != null) {
+                onSuccess(liste.copy(wochentagA = wVal, tageAzuL = tVal))
+            }
+        }
+    }
+
+    /**
+     * Berechnet das nächste A-Datum für den gegebenen Wochentag (0=Mo..6=So) ab heute.
+     */
+    private fun naechstesADatumFuerWochentag(wochentag: Int, abDatum: Long): Long {
+        val cal = java.util.Calendar.getInstance(java.util.TimeZone.getDefault())
+        cal.timeInMillis = com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(abDatum)
+        val heuteWochentag = (cal.get(java.util.Calendar.DAY_OF_WEEK) + 5) % 7
+        var tageBis = (wochentag - heuteWochentag + 7) % 7
+        if (tageBis == 0) tageBis = 7
+        return cal.timeInMillis + java.util.concurrent.TimeUnit.DAYS.toMillis(tageBis.toLong())
+    }
+
+    /**
+     * Fügt den nächsten Listen-Termin hinzu (basierend auf wochentagA). Findet das nächste A-Datum,
+     * das noch nicht in listenTermine existiert.
+     */
+    fun addListenTerminFromWochentag(liste: KundenListe, onSuccess: (KundenListe) -> Unit) {
+        val wochentagA = liste.wochentagA ?: return
+        if (wochentagA !in 0..6) return
+        val tageAzuL = liste.tageAzuL.coerceIn(1, 365)
+        val existingADates = liste.listenTermine.filter { it.typ == "A" }.map { it.datum }.toSet()
+        var searchStart = com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+        var aDatum = naechstesADatumFuerWochentag(wochentagA, searchStart)
+        while (aDatum in existingADates) {
+            searchStart = aDatum + java.util.concurrent.TimeUnit.DAYS.toMillis(1)
+            aDatum = naechstesADatumFuerWochentag(wochentagA, searchStart)
+        }
+        addListenTermin(liste, aDatum, tageAzuL, onSuccess)
+    }
+
+    /**
+     * Entfernt Listen-Termine (A+L-Paar).
+     */
+    fun removeListenTermine(liste: KundenListe, toRemove: List<KundenTermin>, onSuccess: (KundenListe) -> Unit) {
+        CoroutineScope(Dispatchers.Main).launch {
+            val toRemoveSet = toRemove.toSet()
+            val newTermine = liste.listenTermine.filter { t -> !toRemoveSet.any { it.datum == t.datum && it.typ == t.typ } }
+            val updates = mapOf("listenTermine" to CustomerSnapshotParser.serializeKundenTermine(newTermine))
+            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
+                operation = { listeRepository.updateListe(liste.id, updates) },
+                context = activity,
+                errorMessage = activity.getString(R.string.error_delete_generic),
+                maxRetries = 3
+            )
+            if (success != null) {
+                Toast.makeText(activity, activity.getString(R.string.toast_liste_gespeichert), Toast.LENGTH_SHORT).show()
+                onSuccess(liste.copy(listenTermine = newTermine))
+            }
+        }
+    }
+
     /**
      * Löscht die Liste
      */

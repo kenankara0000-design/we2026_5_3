@@ -376,10 +376,24 @@ object TerminBerechnungUtils {
         // Kunden ohne intervalle: keine Intervall-Termine (Migration 2.1 füllt intervalle aus Liste/Legacy)
 
         // Option A: Wochentags-Termine nur, wenn der Kunde KEINE Intervalle hat.
-        // Bei Intervallen bestimmt nur das Intervall die Termine; Wochentag dient nur der Anzeige.
         if (customer.intervalle.isEmpty() && customer.effectiveAbholungWochentage.isNotEmpty()) {
             val fromWeekdays = berechneTermineAusWochentagen(customer, startDatum, tageVoraus)
             alleTermine.addAll(fromWeekdays)
+        }
+
+        // Listen-Termine: gelten für alle Kunden der Liste
+        if (liste != null && liste.listenTermine.isNotEmpty()) {
+            val tageAzuL = liste.tageAzuL.coerceIn(1, 365)
+            val start = getStartOfDay(startDatum)
+            val end = start + TimeUnit.DAYS.toMillis(tageVoraus.toLong())
+            liste.listenTermine.filter { it.typ == "A" }.forEach { a ->
+                val aStart = getStartOfDay(a.datum)
+                if (aStart in start..end) {
+                    val lDatum = getStartOfDay(aStart + TimeUnit.DAYS.toMillis(tageAzuL.toLong()))
+                    alleTermine.add(TerminInfo(datum = aStart, typ = TerminTyp.ABHOLUNG, intervallId = "liste", verschoben = false, originalDatum = null))
+                    alleTermine.add(TerminInfo(datum = lDatum, typ = TerminTyp.AUSLIEFERUNG, intervallId = "liste", verschoben = false, originalDatum = null))
+                }
+            }
         }
 
         return alleTermine.sortedBy { it.datum }

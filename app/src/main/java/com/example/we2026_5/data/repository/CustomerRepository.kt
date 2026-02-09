@@ -2,8 +2,11 @@ package com.example.we2026_5.data.repository
 
 import com.example.we2026_5.AusnahmeTermin
 import com.example.we2026_5.Customer
+import com.example.we2026_5.KundenTermin
+import com.example.we2026_5.tourplanner.TerminCache
 import com.example.we2026_5.util.AppErrorMapper
 import com.example.we2026_5.util.Result
+import com.example.we2026_5.util.TerminBerechnungUtils
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -18,10 +21,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 class CustomerRepository(
-    private val database: FirebaseDatabase
+    private val database: FirebaseDatabase,
+    private val termincache: TerminCache
 ) : CustomerRepositoryInterface {
     private val customersRef: DatabaseReference = database.reference.child("customers")
     private val customersForTourRef: DatabaseReference = database.reference.child("customers_for_tour")
@@ -173,6 +178,10 @@ class CustomerRepository(
             if (customer.ausnahmeTermine.isNotEmpty()) {
                 updateCustomer(customer.id, mapOf("ausnahmeTermine" to CustomerSnapshotParser.serializeAusnahmeTermine(customer.ausnahmeTermine)))
             }
+            if (customer.kundenTermine.isNotEmpty()) {
+                updateCustomer(customer.id, mapOf("kundenTermine" to CustomerSnapshotParser.serializeKundenTermine(customer.kundenTermine)))
+            }
+            termincache.invalidate(customer.id)
             true
         } catch (e: Exception) {
             // Nur echte Fehler werden als Fehler behandelt
@@ -189,7 +198,9 @@ class CustomerRepository(
     private val tourRelevantKeys = setOf(
         "abholungErfolgt", "abholungErledigtAm", "auslieferungErfolgt", "auslieferungErledigtAm",
         "keinerWäscheErfolgt", "keinerWäscheErledigtAm", "geloeschteTermine", "verschobeneTermine",
-        "urlaubVon", "urlaubBis", "ausnahmeTermine"
+        "urlaubVon", "urlaubBis", "ausnahmeTermine", "kundenTermine",
+        "listeId", "intervalle",
+        "defaultAbholungWochentag", "defaultAuslieferungWochentag", "defaultAbholungWochentage", "defaultAuslieferungWochentage"
     )
 
     /**
@@ -203,6 +214,7 @@ class CustomerRepository(
             if ("ohneTour" in filtered || filtered.keys.any { it in tourRelevantKeys }) {
                 getCustomerById(customerId)?.let { syncTourCustomer(it) }
             }
+            termincache.invalidate(customerId)
             true
         } catch (e: Exception) {
             // Nur echte Fehler werden als Fehler behandelt
@@ -218,6 +230,53 @@ class CustomerRepository(
         return updateCustomer(customerId, mapOf("ausnahmeTermine" to CustomerSnapshotParser.serializeAusnahmeTermine(newList)))
     }
 
+    /**
+     * Fügt Ausnahme-Termin A und L hinzu. L-Datum = A-Datum + tageAzuL.
+     */
+    suspend fun addAusnahmeAbholungMitLieferung(customerId: String, abholungDatum: Long, tageAzuL: Int): Boolean {
+        val customer = getCustomerById(customerId) ?: return false
+        val aStart = TerminBerechnungUtils.getStartOfDay(abholungDatum)
+        val tage = tageAzuL.coerceIn(0, 365)
+        val lStart = TerminBerechnungUtils.getStartOfDay(aStart + TimeUnit.DAYS.toMillis(tage.toLong()))
+        val newList = customer.ausnahmeTermine + AusnahmeTermin(datum = aStart, typ = "A") + AusnahmeTermin(datum = lStart, typ = "L")
+        return updateCustomer(customerId, mapOf("ausnahmeTermine" to CustomerSnapshotParser.serializeAusnahmeTermine(newList)))
+    }
+
+    /** Entfernt einen Ausnahme-Termin (gleiches Datum + Typ). */
+    suspend fun removeAusnahmeTermin(customerId: String, termin: AusnahmeTermin): Boolean {
+        val customer = getCustomerById(customerId) ?: return false
+        val newList = customer.ausnahmeTermine.filter { it.datum != termin.datum || it.typ != termin.typ }
+        if (newList.size == customer.ausnahmeTermine.size) return false
+        return updateCustomer(customerId, mapOf("ausnahmeTermine" to CustomerSnapshotParser.serializeAusnahmeTermine(newList)))
+    }
+
+    /**
+     * Fügt einen Kunden-Termin Abholung (A) und den zugehörigen Liefertermin (L) hinzu.
+     * L-Datum = A-Datum + tageAzuL. Pro Aufruf genau ein A und ein L.
+     */
+    suspend fun addKundenAbholungMitLieferung(customerId: String, abholungDatum: Long, tageAzuL: Int): Boolean {
+        val customer = getCustomerById(customerId) ?: return false
+        val aStart = TerminBerechnungUtils.getStartOfDay(abholungDatum)
+        val tage = tageAzuL.coerceIn(0, 365)
+        val lStart = TerminBerechnungUtils.getStartOfDay(aStart + TimeUnit.DAYS.toMillis(tage.toLong()))
+        val newList = customer.kundenTermine + KundenTermin(datum = aStart, typ = "A") + KundenTermin(datum = lStart, typ = "L")
+        return updateCustomer(customerId, mapOf("kundenTermine" to CustomerSnapshotParser.serializeKundenTermine(newList)))
+    }
+
+    /** Entfernt einen Kunden-Termin (gleiches Datum + Typ). */
+    suspend fun removeKundenTermin(customerId: String, termin: KundenTermin): Boolean =
+        removeKundenTermine(customerId, listOf(termin))
+
+    /** Entfernt mehrere Kunden-Termine in einem Schritt (z. B. A+L-Paar). */
+    suspend fun removeKundenTermine(customerId: String, termins: List<KundenTermin>): Boolean {
+        if (termins.isEmpty()) return true
+        val customer = getCustomerById(customerId) ?: return false
+        val toRemove = termins.toSet()
+        val newList = customer.kundenTermine.filter { t -> !toRemove.any { it.datum == t.datum && it.typ == t.typ } }
+        if (newList.size == customer.kundenTermine.size) return false
+        return updateCustomer(customerId, mapOf("kundenTermine" to CustomerSnapshotParser.serializeKundenTermine(newList)))
+    }
+
     override suspend fun updateCustomerResult(customerId: String, updates: Map<String, Any>): Result<Boolean> {
         return try {
             val filtered = withoutDeprecatedCustomerFields(updates)
@@ -226,6 +285,7 @@ class CustomerRepository(
             if ("ohneTour" in filtered || filtered.keys.any { it in tourRelevantKeys }) {
                 getCustomerById(customerId)?.let { syncTourCustomer(it) }
             }
+            termincache.invalidate(customerId)
             Result.Success(true)
         } catch (e: Exception) {
             android.util.Log.e("CustomerRepository", "Error updating customer", e)

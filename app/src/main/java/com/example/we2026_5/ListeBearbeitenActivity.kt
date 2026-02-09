@@ -74,7 +74,24 @@ class ListeBearbeitenActivity : AppCompatActivity() {
                         callbacks.deleteListe(liste.id) { finish() }
                     }
                 },
-                onTerminAnlegen = { },
+                onTerminAnlegen = {
+                    val liste = state.liste ?: return@ListeBearbeitenScreen
+                    val tageAzuL = liste.tageAzuL.coerceIn(1, 365)
+                    IntervallManager.showDatePickerForListenTermin(
+                        context = this@ListeBearbeitenActivity,
+                        onDateSelected = { dateMillis ->
+                            callbacks.addListenTermin(liste, dateMillis, tageAzuL) { updated ->
+                                viewModel.updateListe(updated)
+                            }
+                        }
+                    )
+                },
+                onDeleteListenTermine = { toRemove ->
+                    val liste = state.liste ?: return@ListeBearbeitenScreen
+                    callbacks.removeListenTermine(liste, toRemove) { updated ->
+                        viewModel.updateListe(updated)
+                    }
+                },
                 onRemoveKunde = { customer ->
                     val liste = state.liste ?: return@ListeBearbeitenScreen
                     callbacks.entferneKundeAusListe(customer, liste)
@@ -84,15 +101,17 @@ class ListeBearbeitenActivity : AppCompatActivity() {
                     callbacks.fuegeKundeZurListeHinzu(customer, liste)
                 },
                 onRefresh = { viewModel.loadDaten(null) },
-                onDatumSelected = { position, isAbholung ->
-                    val intervalle = state.intervalle.toMutableList()
-                    IntervallManager.showDatumPickerForListe(
-                        context = this@ListeBearbeitenActivity,
-                        intervalle = intervalle,
-                        position = position,
-                        isAbholung = isAbholung,
-                        onDatumSelected = { viewModel.updateIntervalle(intervalle) }
-                    )
+                onWochentagAChange = { wochentagA ->
+                    val liste = state.liste ?: return@ListeBearbeitenScreen
+                    callbacks.updateListenTourEinstellungen(liste, wochentagA, liste.tageAzuL) { updated ->
+                        viewModel.updateListe(updated)
+                    }
+                },
+                onTageAzuLChange = { tageAzuL ->
+                    val liste = state.liste ?: return@ListeBearbeitenScreen
+                    callbacks.updateListenTourEinstellungen(liste, liste.wochentagA, tageAzuL) { updated ->
+                        viewModel.updateListe(updated)
+                    }
                 }
             )
         }

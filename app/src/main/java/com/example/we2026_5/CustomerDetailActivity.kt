@@ -97,8 +97,8 @@ class CustomerDetailActivity : AppCompatActivity() {
                 isUploading = isUploading,
                 onBack = { finish() },
                 onEdit = { viewModel.setEditMode(true, customer) },
-                onSave = { updates, newIntervalle ->
-                    viewModel.saveCustomer(updates, newIntervalle) { success ->
+                onSave = { updates, newIntervalle, tageAzuL ->
+                    viewModel.saveCustomer(updates, newIntervalle, tageAzuL) { success ->
                         if (success) {
                             viewModel.setEditMode(false, null)
                             Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
@@ -106,8 +106,8 @@ class CustomerDetailActivity : AppCompatActivity() {
                     }
                 },
                 showSaveAndNext = showSaveAndNext,
-                onSaveAndNext = if (showSaveAndNext) { updates, newIntervalle ->
-                    viewModel.saveCustomer(updates, newIntervalle) { success ->
+                onSaveAndNext = if (showSaveAndNext) { updates, newIntervalle, tageAzuL ->
+                    viewModel.saveCustomer(updates, newIntervalle, tageAzuL) { success ->
                         if (success) {
                             setResult(NextCustomerHelper.RESULT_OPEN_NEXT, Intent().putExtra(NextCustomerHelper.RESULT_EXTRA_INDEX, nextCustomerIndex))
                             Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
@@ -197,6 +197,23 @@ class CustomerDetailActivity : AppCompatActivity() {
                 onDeleteNextTermin = { terminDatum ->
                     viewModel.deleteNaechstenTermin(terminDatum) { success ->
                         if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onDeleteAusnahmeTermin = { termin ->
+                    viewModel.deleteAusnahmeTermin(termin) { success ->
+                        if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                        else Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onAddAbholungTermin = { c ->
+                    startActivity(Intent(this, AusnahmeTerminActivity::class.java)
+                        .putExtra("CUSTOMER_ID", c.id)
+                        .putExtra(AusnahmeTerminActivity.EXTRA_ADD_ABHOLUNG_MIT_LIEFERUNG, true))
+                },
+                onDeleteKundenTermin = { termins ->
+                    viewModel.deleteKundenTermine(termins) { success ->
+                        if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                        else Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
                     }
                 }
             )

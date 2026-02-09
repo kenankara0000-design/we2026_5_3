@@ -40,6 +40,8 @@ fun CustomerManagerScreen(
     selectedTab: Int,
     kundenTypFilter: Int,
     ohneTourFilter: Int,
+    keinetermineFilter: Int,
+    onKeinetermineFilterChange: (Int) -> Unit,
     pausierteFilter: Int,
     searchQuery: String,
     isBulkMode: Boolean,
@@ -131,32 +133,37 @@ fun CustomerManagerScreen(
                     onKundenTypFilterChange = onKundenTypFilterChange,
                     ohneTourFilter = ohneTourFilter,
                     onOhneTourFilterChange = onOhneTourFilterChange,
+                    keinetermineFilter = keinetermineFilter,
+                    onKeinetermineFilterChange = onKeinetermineFilterChange,
                     pausierteFilter = pausierteFilter,
                     onPausierteFilterChange = onPausierteFilterChange,
                     textPrimary = textPrimary,
                     textSecondary = textSecondary,
                     primaryBlue = primaryBlue
                 )
-                when {
-                    isLoading -> CustomerManagerLoadingView(textSecondary = textSecondary)
-                    customers.isEmpty() -> CustomerManagerEmptyView(textSecondary = textSecondary)
-                    else -> {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(customers, key = { it.id }) { customer ->
-                                CustomerManagerCard(
-                                    customer = customer,
-                                    isBulkMode = isBulkMode,
-                                    isSelected = customer.id in selectedIds,
-                                    onClick = {
-                                        if (isBulkMode) onToggleSelection(customer.id)
-                                        else onCustomerClick(customer)
-                                    },
-                                    onToggleSelection = { onToggleSelection(customer.id) },
-                                    textPrimary = textPrimary,
-                                    textSecondary = textSecondary
-                                )
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    when {
+                        isLoading -> CustomerManagerLoadingView(textSecondary = textSecondary)
+                        customers.isEmpty() -> CustomerManagerEmptyView(textSecondary = textSecondary)
+                        else -> {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(customers, key = { it.id }) { customer ->
+                                    CustomerManagerCard(
+                                        customer = customer,
+                                        isBulkMode = isBulkMode,
+                                        isSelected = customer.id in selectedIds,
+                                        onClick = {
+                                            if (isBulkMode) onToggleSelection(customer.id)
+                                            else onCustomerClick(customer)
+                                        },
+                                        onToggleSelection = { onToggleSelection(customer.id) },
+                                        textPrimary = textPrimary,
+                                        textSecondary = textSecondary
+                                    )
+                                }
                             }
                         }
                     }

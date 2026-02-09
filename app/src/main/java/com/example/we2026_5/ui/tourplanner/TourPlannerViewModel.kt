@@ -35,11 +35,9 @@ import java.util.concurrent.TimeUnit
 class TourPlannerViewModel(
     private val repository: CustomerRepository,
     private val listeRepository: KundenListeRepository,
-    private val tourOrderRepository: TourOrderRepository
+    private val tourOrderRepository: TourOrderRepository,
+    private val dataProcessor: TourDataProcessor
 ) : ViewModel() {
-    
-    // Datenverarbeitungsprozessor
-    private val dataProcessor = TourDataProcessor()
     
     // Echtzeit-Listener: StateFlows für automatische Updates (können .value verwendet werden)
     private val _customersStateFlow = MutableStateFlow<List<Customer>>(emptyList())
@@ -63,6 +61,7 @@ class TourPlannerViewModel(
         viewModelScope.launch {
             combine(customersFlow.debounce(500L), listenFlow.debounce(500L)) { c, l -> Pair(c.size, l.size) }.collect {
                 preloadCache.clear()
+                tourOrderUpdateTrigger.value = tourOrderUpdateTrigger.value + 1
             }
         }
     }

@@ -31,6 +31,8 @@ fun CustomerManagerSearchAndFilter(
     onKundenTypFilterChange: (Int) -> Unit,
     ohneTourFilter: Int,
     onOhneTourFilterChange: (Int) -> Unit,
+    keinetermineFilter: Int,
+    onKeinetermineFilterChange: (Int) -> Unit,
     pausierteFilter: Int,
     onPausierteFilterChange: (Int) -> Unit,
     textPrimary: androidx.compose.ui.graphics.Color,
@@ -111,6 +113,26 @@ fun CustomerManagerSearchAndFilter(
                 selected = ohneTourFilter == 2,
                 onClick = { onOhneTourFilterChange(2) },
                 label = { Text(stringResource(R.string.label_ohne_tour_ausblenden)) }
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = stringResource(R.string.label_filter_keine_termine),
+            color = textPrimary,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = keinetermineFilter == 0,
+                onClick = { onKeinetermineFilterChange(0) },
+                label = { Text(stringResource(R.string.label_keine_termine_alle)) }
+            )
+            FilterChip(
+                selected = keinetermineFilter == 1,
+                onClick = { onKeinetermineFilterChange(1) },
+                label = { Text(stringResource(R.string.label_keine_termine_nur)) }
             )
         }
         Spacer(Modifier.height(6.dp))

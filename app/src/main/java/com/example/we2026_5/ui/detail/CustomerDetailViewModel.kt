@@ -2,10 +2,13 @@ package com.example.we2026_5.ui.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.we2026_5.AusnahmeTermin
+import com.example.we2026_5.KundenTermin
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.data.repository.CustomerSnapshotParser
 import com.example.we2026_5.util.TerminAusKundeUtils
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
@@ -22,6 +25,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 /**
  * ViewModel für CustomerDetailActivity.
@@ -94,15 +98,41 @@ class CustomerDetailViewModel(
      * Speichert Kunden-Updates. Fehler werden über [errorMessage] gemeldet (zentrale Fehlerbehandlung).
      * Wenn [newIntervalle] mitgegeben wird und sich Regel-Verwendungen geändert haben, wird die
      * Verwendungsanzahl der entfernten Regeln dekrementiert.
+     * [newTageAzuLFromForm] wird bei Änderung von „Tage A zu L“ im Formular mitgegeben (wichtig für
+     * unregelmäßige Kunden, da dort der Wert nicht aus den Intervallen ableitbar ist).
      * Nach Abschluss wird onComplete(success) auf dem Main-Thread aufgerufen.
      */
-    fun saveCustomer(updates: Map<String, Any>, newIntervalle: List<CustomerIntervall>? = null, onComplete: ((Boolean) -> Unit)? = null) {
+    fun saveCustomer(updates: Map<String, Any>, newIntervalle: List<CustomerIntervall>? = null, newTageAzuLFromForm: Int? = null, onComplete: ((Boolean) -> Unit)? = null) {
         val id = _customerId.value ?: return
         val oldCustomer = currentCustomer.value
+        var finalUpdates = updates
+        if (oldCustomer != null && oldCustomer.kundenTermine.isNotEmpty()) {
+            val newTageAzuL = when {
+                newTageAzuLFromForm != null -> newTageAzuLFromForm.coerceIn(0, 365)
+                newIntervalle != null -> {
+                    val firstNew = newIntervalle.firstOrNull()
+                    if (firstNew != null && firstNew.abholungDatum > 0 && firstNew.auslieferungDatum > 0)
+                        TimeUnit.MILLISECONDS.toDays(firstNew.auslieferungDatum - firstNew.abholungDatum).toInt().coerceIn(0, 365)
+                    else 7
+                }
+                else -> 7
+            }
+            val oldTageAzuL = oldCustomer.tageAzuLOrDefault(7)
+            if (newTageAzuL != oldTageAzuL) {
+                val newKundenTermine = oldCustomer.kundenTermine
+                    .filter { it.typ == "A" }
+                    .sortedBy { it.datum }
+                    .flatMap { a ->
+                        val lDatum = TerminBerechnungUtils.getStartOfDay(a.datum + TimeUnit.DAYS.toMillis(newTageAzuL.toLong()))
+                        listOf(KundenTermin(datum = a.datum, typ = "A"), KundenTermin(datum = lDatum, typ = "L"))
+                    }
+                finalUpdates = finalUpdates + ("kundenTermine" to CustomerSnapshotParser.serializeKundenTermine(newKundenTermine))
+            }
+        }
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
-            when (val result = repository.updateCustomerResult(id, updates)) {
+            when (val result = repository.updateCustomerResult(id, finalUpdates)) {
                 is Result.Success -> onComplete?.invoke(result.data)
                 is Result.Error -> _errorMessage.value = result.message
             }
@@ -212,6 +242,40 @@ class CustomerDetailViewModel(
                 }
             }
             _isLoading.value = false
+        }
+    }
+
+    /** Entfernt einen Ausnahme-Termin (A oder L an einem Datum). */
+    fun deleteAusnahmeTermin(termin: AusnahmeTermin, onComplete: (Boolean) -> Unit) {
+        val customer = currentCustomer.value ?: run {
+            onComplete(false)
+            return
+        }
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            val ok = repository.removeAusnahmeTermin(customer.id, termin)
+            _isLoading.value = false
+            onComplete(ok)
+        }
+    }
+
+    /** Entfernt einen oder mehrere Kunden-Termine (z. B. A+L-Paar zusammen). */
+    fun deleteKundenTermine(termins: List<KundenTermin>, onComplete: (Boolean) -> Unit) {
+        if (termins.isEmpty()) {
+            onComplete(true)
+            return
+        }
+        val customer = currentCustomer.value ?: run {
+            onComplete(false)
+            return
+        }
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            val ok = repository.removeKundenTermine(customer.id, termins)
+            _isLoading.value = false
+            onComplete(ok)
         }
     }
 

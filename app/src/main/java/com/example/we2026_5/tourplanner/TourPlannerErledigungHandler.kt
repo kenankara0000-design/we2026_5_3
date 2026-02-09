@@ -50,10 +50,13 @@ internal class TourPlannerErledigungHandler(
     }
 
     fun handleAbholung(customer: Customer) {
-        if (!customer.abholungErfolgt) {
+        val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+        val hatAusnahmeAbholungHeute = hatAusnahmeTerminHeute(customer, heuteStart, "A")
+        val hatKundenAbholungHeute = hatKundenTerminHeute(customer, heuteStart, "A")
+        if (!customer.abholungErfolgt || hatAusnahmeAbholungHeute || hatKundenAbholungHeute) {
             CoroutineScope(Dispatchers.Main).launch {
-                val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-                val istAbholungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.ABHOLUNG, heuteStart, null)
+                val istAbholungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.ABHOLUNG, heuteStart, null) ||
+                    hatAusnahmeTerminHeute(customer, heuteStart, "A") || hatKundenTerminHeute(customer, heuteStart, "A")
 
                 if (!istAbholungHeute) {
                     Toast.makeText(context, context.getString(R.string.toast_abholung_nur_heute), Toast.LENGTH_LONG).show()
@@ -75,12 +78,20 @@ internal class TourPlannerErledigungHandler(
 
     fun handleAuslieferung(customer: Customer) {
         if (!customer.auslieferungErfolgt) {
-            if (!customer.abholungErfolgt) {
+            val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+            val hatAusnahmeLHeute = hatAusnahmeTerminHeute(customer, heuteStart, "L")
+            val hatAusnahmeAHeute = hatAusnahmeTerminHeute(customer, heuteStart, "A")
+            val hatKundenLHeute = hatKundenTerminHeute(customer, heuteStart, "L")
+            val hatKundenAHeute = hatKundenTerminHeute(customer, heuteStart, "A")
+            val nurAusnahmeLHeute = hatAusnahmeLHeute && !hatAusnahmeAHeute
+            val nurKundenLHeute = hatKundenLHeute && !hatKundenAHeute
+            val abholungNötig = !customer.abholungErfolgt && !nurAusnahmeLHeute && !nurKundenLHeute
+            if (abholungNötig) {
                 Toast.makeText(context, context.getString(R.string.toast_auslieferung_nur_nach_abholung), Toast.LENGTH_LONG).show()
             } else {
                 CoroutineScope(Dispatchers.Main).launch {
-                    val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-                    val istAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart, null)
+                    val istAuslieferungHeute = istTerminHeuteFaellig(customer, com.example.we2026_5.TerminTyp.AUSLIEFERUNG, heuteStart, null) ||
+                        hatAusnahmeTerminHeute(customer, heuteStart, "L") || hatKundenTerminHeute(customer, heuteStart, "L")
                     if (!istAuslieferungHeute) {
                         Toast.makeText(context, context.getString(R.string.toast_auslieferung_nur_heute), Toast.LENGTH_LONG).show()
                         return@launch
@@ -245,6 +256,18 @@ internal class TourPlannerErledigungHandler(
             onError?.invoke(errorMsg)
         }
     }
+
+    /** Ausnahme-Termin (A oder L) am angegebenen Tag – unabhängig von regulären Terminen. */
+    private fun hatAusnahmeTerminHeute(customer: Customer, tagStart: Long, typ: String): Boolean =
+        customer.ausnahmeTermine.any {
+            TerminBerechnungUtils.getStartOfDay(it.datum) == tagStart && it.typ == typ
+        }
+
+    /** Kunden-Termin (A oder L) am angegebenen Tag. */
+    private fun hatKundenTerminHeute(customer: Customer, tagStart: Long, typ: String): Boolean =
+        customer.kundenTermine.any {
+            TerminBerechnungUtils.getStartOfDay(it.datum) == tagStart && it.typ == typ
+        }
 
     private fun istTerminHeuteFaellig(customer: Customer, terminTyp: com.example.we2026_5.TerminTyp, heuteStart: Long, liste: KundenListe?): Boolean {
         if (TerminBerechnungUtils.hatTerminAmDatum(customer, liste, heuteStart, terminTyp)) return true

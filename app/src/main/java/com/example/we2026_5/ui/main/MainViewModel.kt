@@ -26,10 +26,9 @@ import kotlinx.coroutines.withContext
 class MainViewModel(
     private val repository: CustomerRepository,
     private val listeRepository: KundenListeRepository,
-    private val tourPlanRepository: TourPlanRepository
+    private val tourPlanRepository: TourPlanRepository,
+    private val dataProcessor: TourDataProcessor
 ) : ViewModel() {
-
-    private val dataProcessor = TourDataProcessor()
 
     private val _tourFälligCount = MutableLiveData<Int>(0)
     /** Anzahl fälliger/überfälliger Termine für heute (für Tour-Button-Text). */

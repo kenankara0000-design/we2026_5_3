@@ -38,7 +38,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.we2026_5.util.DateFormatter
+import com.example.we2026_5.util.DialogBaseHelper
 import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.tageAzuLOrDefault
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -47,6 +49,11 @@ import androidx.lifecycle.lifecycleScope
 
 @OptIn(ExperimentalMaterial3Api::class)
 class AusnahmeTerminActivity : AppCompatActivity() {
+
+    /** Intent-Extra: Wenn true, wird bei Datumswahl ein A-Termin angelegt und L automatisch (A + tageAzuL). */
+    companion object {
+        const val EXTRA_ADD_ABHOLUNG_MIT_LIEFERUNG = "ADD_ABHOLUNG_MIT_LIEFERUNG"
+    }
 
     private val repository: com.example.we2026_5.data.repository.CustomerRepository by inject()
 
@@ -57,6 +64,9 @@ class AusnahmeTerminActivity : AppCompatActivity() {
             finish()
             return
         }
+        val addAbholungMitLieferung = intent.getBooleanExtra(EXTRA_ADD_ABHOLUNG_MIT_LIEFERUNG, false)
+        val titleStr = if (addAbholungMitLieferung) getString(R.string.label_neu_termin)
+        else getString(R.string.termin_anlegen_option_ausnahme)
         setContent {
             MaterialTheme {
                 val context = LocalContext.current
@@ -70,7 +80,7 @@ class AusnahmeTerminActivity : AppCompatActivity() {
                         TopAppBar(
                             title = {
                                 Text(
-                                    stringResource(R.string.termin_anlegen_option_ausnahme),
+                                    titleStr,
                                     color = Color.White,
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold
@@ -92,38 +102,103 @@ class AusnahmeTerminActivity : AppCompatActivity() {
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(twoWeeks) { datum ->
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
+                        if (addAbholungMitLieferung) {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                         .clickable {
-                                            AlertDialog.Builder(this@AusnahmeTerminActivity)
-                                                .setTitle(getString(R.string.termin_anlegen_ausnahme_typ_waehlen))
-                                                .setPositiveButton(getString(R.string.termin_anlegen_ausnahme_abholung)) { _, _ ->
-                                                    saveAusnahme(customerId, datum, "A")
-                                                }
-                                                .setNegativeButton(getString(R.string.termin_anlegen_ausnahme_auslieferung)) { _, _ ->
-                                                    saveAusnahme(customerId, datum, "L")
-                                                }
-                                                .setNeutralButton(getString(R.string.btn_cancel), null)
-                                                .show()
+                                            DialogBaseHelper.showDatePickerDialog(
+                                                context = context,
+                                                initialDate = startOfToday,
+                                                title = getString(R.string.termin_anlegen_ausnahme_datum_waehlen),
+                                                onDateSelected = { datum -> saveAbholungMitLieferung(customerId, datum) }
+                                            )
                                         },
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Text(
-                                        DateFormatter.formatDateWithWeekday(datum),
-                                        modifier = Modifier.padding(16.dp),
-                                        style = MaterialTheme.typography.bodyLarge
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    stringResource(R.string.termin_anlegen_ausnahme_datum_waehlen),
+                                    modifier = Modifier.padding(16.dp),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        } else {
+                            LazyColumn(
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(twoWeeks) { datum ->
+                                    val datumVal = datum
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                AlertDialog.Builder(this@AusnahmeTerminActivity)
+                                                    .setTitle(getString(R.string.termin_anlegen_ausnahme_typ_waehlen))
+                                                    .setPositiveButton(getString(R.string.termin_anlegen_ausnahme_abholung)) { _, _ ->
+                                                        saveAusnahmeAbholungMitLieferung(customerId, datumVal)
+                                                    }
+                                                    .setNegativeButton(getString(R.string.termin_anlegen_ausnahme_auslieferung)) { _, _ ->
+                                                        saveAusnahme(customerId, datumVal, "L")
+                                                    }
+                                                    .setNeutralButton(getString(R.string.btn_cancel), null)
+                                                    .show()
+                                            },
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        shape = RoundedCornerShape(12.dp),
+                                        content = {
+                                            Text(
+                                                DateFormatter.formatDateWithWeekday(datumVal),
+                                                modifier = Modifier.padding(16.dp),
+                                                style = MaterialTheme.typography.bodyLarge
+                                            )
+                                        }
                                     )
                                 }
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun saveAbholungMitLieferung(customerId: String, datum: Long) {
+        lifecycleScope.launch {
+            val customer = withContext(Dispatchers.IO) { repository.getCustomerById(customerId) }
+            if (customer == null) {
+                Toast.makeText(this@AusnahmeTerminActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            val tageAzuL = customer.tageAzuLOrDefault(7)
+            val ok = withContext(Dispatchers.IO) {
+                repository.addKundenAbholungMitLieferung(customerId, datum, tageAzuL)
+            }
+            if (ok) {
+                Toast.makeText(this@AusnahmeTerminActivity, getString(R.string.toast_abholungstermin_angelegt), Toast.LENGTH_SHORT).show()
+                finish()
+            } else {
+                Toast.makeText(this@AusnahmeTerminActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun saveAusnahmeAbholungMitLieferung(customerId: String, datum: Long) {
+        lifecycleScope.launch {
+            val customer = withContext(Dispatchers.IO) { repository.getCustomerById(customerId) }
+            if (customer == null) {
+                Toast.makeText(this@AusnahmeTerminActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            val tageAzuL = customer.tageAzuLOrDefault(7)
+            val ok = withContext(Dispatchers.IO) {
+                repository.addAusnahmeAbholungMitLieferung(customerId, datum, tageAzuL)
+            }
+            if (ok) {
+                Toast.makeText(this@AusnahmeTerminActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                finish()
+            } else {
+                Toast.makeText(this@AusnahmeTerminActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
             }
         }
     }

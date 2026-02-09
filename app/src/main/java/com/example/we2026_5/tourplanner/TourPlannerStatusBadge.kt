@@ -1,10 +1,12 @@
 package com.example.we2026_5.tourplanner
 
 import com.example.we2026_5.Customer
+import com.example.we2026_5.KundenListe
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.TerminFilterUtils
 import com.example.we2026_5.util.TerminInfo
+import com.example.we2026_5.util.tageAzuLOrDefault
 import java.util.concurrent.TimeUnit
 
 /**
@@ -14,19 +16,37 @@ import java.util.concurrent.TimeUnit
  */
 object TourPlannerStatusBadge {
 
-    fun compute(customer: Customer, viewDateStart: Long, heuteStart: Long): String {
-        // 3-Tage-Fenster + 60 Tage Überfällig (PLAN_TOURPLANNER_PERFORMANCE_3TAGE)
-        val (startDatum, tageVoraus) = if (viewDateStart <= heuteStart) {
-            Pair(heuteStart - TimeUnit.DAYS.toMillis(60), 63)
+    fun compute(customer: Customer, viewDateStart: Long, heuteStart: Long, termincache: TerminCache? = null, liste: KundenListe? = null): String {
+        val effectiveListe = if (liste != null && customer.listeId == liste.id) liste else null
+        val alleTermine = if (termincache != null) {
+            val cached = termincache.getTermine365(customer, effectiveListe)
+            val (startDatum, tageVoraus) = if (viewDateStart <= heuteStart) {
+                Pair(heuteStart - TimeUnit.DAYS.toMillis(60), 63)
+            } else {
+                val tageAzuL = customer.tageAzuLOrDefault(7).coerceIn(0, 365)
+                val start = viewDateStart - TimeUnit.DAYS.toMillis(tageAzuL.toLong())
+                val tage = tageAzuL + 3
+                Pair(start, tage)
+            }
+            val start = startDatum
+            val end = start + TimeUnit.DAYS.toMillis(tageVoraus.toLong())
+            cached.filter { it.datum in start..end }
         } else {
-            Pair(viewDateStart - TimeUnit.DAYS.toMillis(1), 3)
+            val (startDatum, tageVoraus) = if (viewDateStart <= heuteStart) {
+                Pair(heuteStart - TimeUnit.DAYS.toMillis(60), 63)
+            } else {
+                val tageAzuL = customer.tageAzuLOrDefault(7).coerceIn(0, 365)
+                val start = viewDateStart - TimeUnit.DAYS.toMillis(tageAzuL.toLong())
+                val tage = tageAzuL + 3
+                Pair(start, tage)
+            }
+            TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                customer = customer,
+                liste = effectiveListe,
+                startDatum = startDatum,
+                tageVoraus = tageVoraus
+            )
         }
-        val alleTermine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-            customer = customer,
-            liste = null,
-            startDatum = startDatum,
-            tageVoraus = tageVoraus
-        )
         return computeWithTermine(customer, viewDateStart, heuteStart, alleTermine)
     }
 
@@ -43,6 +63,18 @@ object TourPlannerStatusBadge {
             TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart && it.typ == "L"
         }
         if (ausnahmeA || ausnahmeL) return if (ausnahmeA && ausnahmeL) "A-A" else if (ausnahmeA) "A-A" else "A-L"
+
+        val kundenTerminA = customer.kundenTermine.any {
+            TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart && it.typ == "A"
+        }
+        val kundenTerminL = customer.kundenTermine.any {
+            TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart && it.typ == "L"
+        }
+        if (kundenTerminA || kundenTerminL) return when {
+            kundenTerminA && kundenTerminL -> "AL"
+            kundenTerminA -> "A"
+            else -> "L"
+        }
 
         val istImUrlaubAmTag = TerminFilterUtils.istTerminInUrlaubEintraege(viewDateStart, customer)
         if (istImUrlaubAmTag) return ""

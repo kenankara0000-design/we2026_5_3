@@ -123,16 +123,20 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                         )
                     } else {
                         val zweiWochen = customer?.kundenTyp == KundenTyp.AUF_ABRUF || customer?.kundenTyp == KundenTyp.REGELMAESSIG
-                        Text(
-                            if (zweiWochen)
-                                stringResource(R.string.termin_anlegen_auswaehlen_zwei_wochen)
-                            else
-                                stringResource(R.string.termin_anlegen_auswaehlen_acht_wochen),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(vorschlaege.size) { index ->
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Text(
+                                if (zweiWochen)
+                                    stringResource(R.string.termin_anlegen_auswaehlen_zwei_wochen)
+                                else
+                                    stringResource(R.string.termin_anlegen_auswaehlen_acht_wochen),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            LazyColumn(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(vorschlaege.size) { index ->
                                 val v = vorschlaege[index]
                                 val isSelected = index in selectedIds
                                 Card(
@@ -170,9 +174,9 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                     }
                                 }
                             }
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
                             onClick = {
                                 if (selectedIds.isEmpty()) {
                                     Toast.makeText(context, "Bitte mindestens einen Termin wählen", Toast.LENGTH_SHORT).show()
@@ -216,14 +220,14 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                             }
                                         }
                                         else -> {
-                                            val zahl = c.intervallTageOrDefault(7).coerceIn(1, 365).takeIf { it > 0 } ?: 7
+                                            val tageAzuL = c.tageAzuLOrDefault(7).coerceIn(0, 365)
                                             toAdd.map { slot ->
                                                 CustomerIntervall(
                                                     id = UUID.randomUUID().toString(),
                                                     abholungDatum = slot.datum,
-                                                    auslieferungDatum = slot.datum + TimeUnit.DAYS.toMillis(zahl.toLong()),
+                                                    auslieferungDatum = slot.datum + TimeUnit.DAYS.toMillis(tageAzuL.toLong()),
                                                     wiederholen = false,
-                                                    intervallTage = zahl,
+                                                    intervallTage = tageAzuL,
                                                     intervallAnzahl = 0
                                                 )
                                             }
@@ -247,9 +251,10 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                     }
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Gewählte Termine anlegen")
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Gewählte Termine anlegen")
+                            }
                         }
                     }
                 }

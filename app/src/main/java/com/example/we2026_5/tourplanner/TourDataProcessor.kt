@@ -21,13 +21,16 @@ data class TourProcessResult(
 /**
  * Prozessor für Tour-Datenverarbeitung.
  * Extrahiert die komplexe Datenverarbeitungslogik aus TourPlannerViewModel.
+ * Nutzt TerminCache für 365-Tage-Berechnung, filtert auf benötigtes Fenster.
  */
-class TourDataProcessor {
+class TourDataProcessor(
+    private val termincache: TerminCache
+) {
 
     private val categorizer = TourDataCategorizer()
-    private val filter = TourDataFilter(categorizer)
+    private val filter = TourDataFilter(categorizer, termincache)
     private val wochentagslistenProcessor = WochentagslistenProcessorImpl(categorizer, filter)
-    private val tourListenProcessor = TourListenProcessorImpl(categorizer, filter, this::wurdeAmTagVollstaendigErledigt)
+    private val tourListenProcessor = TourListenProcessorImpl(categorizer, filter, termincache, this::wurdeAmTagVollstaendigErledigt)
 
     fun processTourData(
         allCustomers: List<Customer>,
@@ -63,7 +66,7 @@ class TourDataProcessor {
 
             // Erledigte Kunden: Prüfe ob am Tag ein Termin vorhanden ist
             if (isDone) {
-                val termine = berechneAlleTermineFuerKunde(customer, null, viewDateStart, heuteStart)
+                val termine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
                 val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
                 
                 val warUeberfaelligUndErledigtAmDatum = warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
@@ -104,7 +107,7 @@ class TourDataProcessor {
                 return@forEach
             }
             
-            val alleTermine = berechneAlleTermineFuerKunde(customer, null, viewDateStart, heuteStart)
+            val alleTermine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
             val termineAmTag = alleTermine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
             val hatAbholungAmTag = termineAmTag.any { it.typ == TerminTyp.ABHOLUNG }
             val hatAuslieferungAmTag = termineAmTag.any { it.typ == TerminTyp.AUSLIEFERUNG }
@@ -156,24 +159,22 @@ class TourDataProcessor {
         }
         // REIHENFOLGE: 1. Überfällig (unsichtbar), 2. Listen, 3. Normal, 4. Erledigt
         
-        // 1. Überfällige Kunden (unsichtbarer Bereich, nur zur Trennung) - GANZ OBEN
-        // Sammle ALLE überfälligen Kunden (mit und ohne Liste)
+        // 1. Überfällige Kunden (unsichtbarer Bereich) - GANZ OBEN
+        // Nur Kunden OHNE Tour-Liste (listeId.isEmpty); Tour-Listen-Kunden bleiben in ihrer Tour-Liste-Card
         val alleUeberfaelligeKunden = mutableListOf<Customer>()
-        
-        // Überfällige Kunden ohne Liste
         alleUeberfaelligeKunden.addAll(overdueGewerblich)
-        
-        // Überfällige Kunden aus Listen hinzufügen
-        listenMitKunden.values.flatten().forEach { customer ->
-            val istUeberfaellig = filter.istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)
-            if (istUeberfaellig) {
-                alleUeberfaelligeKunden.add(customer)
+        // Überfällige aus Wochentagslisten (nicht Tour-Listen) – Tour-Listen-Kunden werden in TourListeCard angezeigt
+        allListen.filter { it.wochentag in 0..6 }.forEach { liste ->
+            listenMitKunden[liste.id]?.forEach { customer ->
+                if (filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)) {
+                    alleUeberfaelligeKunden.add(customer)
+                }
             }
         }
         // Ein Kunde nur einmal in Überfällig (auch wenn in mehreren Listen)
         val alleUeberfaelligeEindeutig = alleUeberfaelligeKunden.distinctBy { it.id }
         val overdueOhneListen = alleUeberfaelligeEindeutig.sortedWith(compareBy<Customer> { customer ->
-            val alleTermine = berechneAlleTermineFuerKunde(customer, null, viewDateStart, heuteStart)
+            val alleTermine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
             val ueberfaelligeDaten = alleTermine.filter { termin ->
                 if (viewDateStart > heuteStart) return@filter false
                 val terminStart = categorizer.getStartOfDay(termin.datum)
@@ -187,69 +188,84 @@ class TourDataProcessor {
         
         // 1. Überfällige Kunden ganz oben – einzeln mit Überfällig-Design (kein Container)
         overdueOhneListen.forEach { c ->
-            items.add(ListItem.CustomerItem(c, statusBadgeText = TourPlannerStatusBadge.compute(c, viewDateStart, heuteStart), isOverdue = true))
+            val liste = allListen.find { it.id == c.listeId }
+            items.add(ListItem.CustomerItem(c, statusBadgeText = TourPlannerStatusBadge.compute(c, viewDateStart, heuteStart, null, liste), isOverdue = true))
         }
         // Ein Kunde pro Tag nur einmal: bereits in Überfällig angezeigte nicht nochmal in Listen/Normal
         val bereitsAngezeigtCustomerIds = overdueOhneListen.map { it.id }.toSet().toMutableSet()
 
         val istVergangenheit = viewDateStart < heuteStart
 
-        // 2. Kunden nach Listen gruppiert – Wochentagslisten: nur nicht-erledigte; Tour-Listen: nur nicht-erledigte
+        // 2. Kunden nach Listen: zuerst Tour-Listen (unter Überfällige, oberhalb normale Kunden), dann Wochentagslisten
         // Vergangenheit: keine „normalen“ Listen-Karten (nur Überfällig/Erledigt)
-        // Pro Wochentag jeden Kunden nur einmal anzeigen (vermeidet doppelte Karten bei mehreren Listen mit gleichem Wochentag)
         val tourListenErledigt = mutableListOf<Pair<KundenListe, List<Customer>>>()
         val bereitsAngezeigtWochentag = mutableSetOf<Pair<Int, String>>()
         if (!istVergangenheit) {
-        allListen.sortedBy { it.name }.forEach { liste ->
-            val kundenInListe = listenMitKunden[liste.id] ?: return@forEach
-            if (kundenInListe.isNotEmpty()) {
-                val nichtErledigteKunden = mutableListOf<Customer>()
-                val erledigteKundenInListe = mutableListOf<Customer>()
-                val isWochentagsliste = liste.wochentag in 0..6
-
-                kundenInListe.forEach { customer ->
-                    val istUeberfaellig = filter.istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)
-                    if (istUeberfaellig) return@forEach
-                    
-                    val kwErledigtAmTagListe = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
-                        categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
-                    val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTagListe
-                    // Erledigung nur aus Kundendaten (Liste nur Gruppierung).
-
-                    val sollAlsErledigtAnzeigen = if (isDone) {
-                        val termine = berechneAlleTermineFuerKunde(customer, null, viewDateStart, heuteStart)
-                        val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
-                        val warUeberfaelligUndErledigtAmDatum = isDone && warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
-                        val hatAbholungAmTagListe = termineAmTag.any { it.typ == TerminTyp.ABHOLUNG }
-                        val hatAuslieferungAmTagListe = termineAmTag.any { it.typ == TerminTyp.AUSLIEFERUNG }
-                        val wurdeAmTagErledigt = wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTagListe, hatAuslieferungAmTagListe, kwErledigtAmTagListe)
-                        warUeberfaelligUndErledigtAmDatum || wurdeAmTagErledigt
-                    } else false
-                    
-                    if (sollAlsErledigtAnzeigen) {
-                        erledigteKundenInListe.add(customer)
-                    } else {
-                        nichtErledigteKunden.add(customer)
+            // 2a. Tour-Listen (wochentag !in 0..6) – direkt unter Überfällige
+            allListen.filter { it.wochentag !in 0..6 }.sortedBy { it.name }.forEach { liste ->
+                val kundenInListe = listenMitKunden[liste.id] ?: return@forEach
+                if (kundenInListe.isNotEmpty()) {
+                    val nichtErledigteKunden = mutableListOf<Pair<Customer, Boolean>>()
+                    val erledigteKundenInListe = mutableListOf<Customer>()
+                    kundenInListe.forEach { customer ->
+                        val istUeberfaellig = filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)
+                        val kwErledigtAmTagListe = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
+                            categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                        val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTagListe
+                        val sollAlsErledigtAnzeigen = if (isDone) {
+                            val termine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
+                            val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
+                            val warUeberfaelligUndErledigtAmDatum = isDone && warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
+                            val hatAbholungAmTagListe = termineAmTag.any { it.typ == TerminTyp.ABHOLUNG }
+                            val hatAuslieferungAmTagListe = termineAmTag.any { it.typ == TerminTyp.AUSLIEFERUNG }
+                            wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTagListe, hatAuslieferungAmTagListe, kwErledigtAmTagListe) || warUeberfaelligUndErledigtAmDatum
+                        } else false
+                        if (sollAlsErledigtAnzeigen) erledigteKundenInListe.add(customer)
+                        else nichtErledigteKunden.add(customer to istUeberfaellig)
+                    }
+                    val kundenWithOverdue = nichtErledigteKunden.sortedBy { (c, _) -> c.name }
+                    if (kundenWithOverdue.isNotEmpty()) {
+                        kundenWithOverdue.forEach { (c, _) -> bereitsAngezeigtCustomerIds.add(c.id) }
+                        items.add(ListItem.TourListeCard(liste, kundenWithOverdue))
+                    }
+                    if (erledigteKundenInListe.isNotEmpty()) {
+                        tourListenErledigt.add(liste to erledigteKundenInListe.sortedBy { it.name })
                     }
                 }
-
-                // Nur nicht-erledigte in der Liste anzeigen; jeder Kunde pro Tag nur einmal (nicht schon in Überfällig); Wochentagslisten: pro Wochentag nur einmal
-                nichtErledigteKunden.sortedBy { it.name }.forEach { customer ->
-                    if (customer.id in bereitsAngezeigtCustomerIds) return@forEach
-                    if (isWochentagsliste) {
+            }
+            // 2b. Wochentagslisten (wochentag in 0..6) – unter Tour-Listen, oberhalb normale Kunden
+            allListen.filter { it.wochentag in 0..6 }.sortedBy { it.name }.forEach { liste ->
+                val kundenInListe = listenMitKunden[liste.id] ?: return@forEach
+                if (kundenInListe.isNotEmpty()) {
+                    val nichtErledigteKunden = mutableListOf<Pair<Customer, Boolean>>()
+                    val erledigteKundenInListe = mutableListOf<Customer>()
+                    kundenInListe.forEach { customer ->
+                        val istUeberfaellig = filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)
+                        val kwErledigtAmTagListe = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
+                            categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                        val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTagListe
+                        val sollAlsErledigtAnzeigen = if (isDone) {
+                            val termine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
+                            val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
+                            val warUeberfaelligUndErledigtAmDatum = isDone && warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
+                            val hatAbholungAmTagListe = termineAmTag.any { it.typ == TerminTyp.ABHOLUNG }
+                            val hatAuslieferungAmTagListe = termineAmTag.any { it.typ == TerminTyp.AUSLIEFERUNG }
+                            wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTagListe, hatAuslieferungAmTagListe, kwErledigtAmTagListe) || warUeberfaelligUndErledigtAmDatum
+                        } else false
+                        if (sollAlsErledigtAnzeigen) erledigteKundenInListe.add(customer)
+                        else nichtErledigteKunden.add(customer to istUeberfaellig)
+                        // Überfällige aus Wochentagslisten: bereits im Überfällig-Bereich, werden per bereitsAngezeigtCustomerIds übersprungen
+                    }
+                    nichtErledigteKunden.sortedBy { (c, _) -> c.name }.forEach { (customer, _) ->
+                        if (customer.id in bereitsAngezeigtCustomerIds) return@forEach
                         val key = liste.wochentag to customer.id
                         if (key in bereitsAngezeigtWochentag) return@forEach
                         bereitsAngezeigtWochentag.add(key)
+                        bereitsAngezeigtCustomerIds.add(customer.id)
+                        items.add(ListItem.CustomerItem(customer, statusBadgeText = TourPlannerStatusBadge.compute(customer, viewDateStart, heuteStart)))
                     }
-                    bereitsAngezeigtCustomerIds.add(customer.id)
-                    items.add(ListItem.CustomerItem(customer, statusBadgeText = TourPlannerStatusBadge.compute(customer, viewDateStart, heuteStart)))
-                }
-                // Tour-Listen (wochentag=-1): erledigte unter Erledigt-Bereich sammeln
-                if (erledigteKundenInListe.isNotEmpty() && (liste.wochentag !in 0..6)) {
-                    tourListenErledigt.add(liste to erledigteKundenInListe.sortedBy { it.name })
                 }
             }
-        }
         }
 
         // 3. Normale Kunden (ohne solche, die bereits in einer Liste für diesen Tag stehen – z. B. Wochentagsliste)
@@ -284,6 +300,7 @@ class TourDataProcessor {
                 is ListItem.CustomerItem -> if (item.isErledigtAmTag) 0 else 1
                 is ListItem.SectionHeader -> if (item.sectionType == SectionType.OVERDUE) item.kunden.size else 0
                 is ListItem.ListeHeader -> item.nichtErledigteKunden.size
+                is ListItem.TourListeCard -> item.kunden.size
                 is ListItem.TourListeErledigt -> 0
                 is ListItem.ErledigtSection -> 0
             }
@@ -369,22 +386,16 @@ class TourDataProcessor {
     }
 
     /**
-     * Berechnet Termine für Tour-Planner mit reduziertem Fenster (3-Tage + 60 Tage Überfällig).
-     * viewDateStart−1 bis viewDateStart+2 bei Zukunft; bei Heute/Vergangenheit +60 Tage für Überfällig.
+     * Liefert Termine aus Cache (365 Tage) gefiltert auf das benötigte Fenster.
+     * Bei Listen-Kunden: liste mit listenTermine wird einbezogen.
      */
-    private fun berechneAlleTermineFuerKunde(customer: Customer, liste: KundenListe? = null, viewDateStart: Long, heuteStart: Long): List<TerminInfo> {
+    private fun berechneAlleTermineFuerKunde(customer: Customer, allListen: List<KundenListe>, viewDateStart: Long, heuteStart: Long): List<TerminInfo> {
         val (startDatum, tageVoraus) = if (viewDateStart <= heuteStart) {
-            // Heute oder Vergangenheit: Überfällig-Logik braucht Vergangenheit (60 Tage)
             Pair(heuteStart - TimeUnit.DAYS.toMillis(60), 63)
         } else {
-            // Zukunft: nur 3 Tage
             Pair(viewDateStart - TimeUnit.DAYS.toMillis(1), 3)
         }
-        return TerminBerechnungUtils.berechneAlleTermineFuerKunde(
-            customer = customer,
-            liste = liste,
-            startDatum = startDatum,
-            tageVoraus = tageVoraus
-        )
+        val liste = allListen.find { it.id == customer.listeId }
+        return termincache.getTermineInRange(customer, startDatum, tageVoraus, liste)
     }
 }
