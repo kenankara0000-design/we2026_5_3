@@ -46,7 +46,6 @@ import com.example.we2026_5.SectionType
 import com.example.we2026_5.ui.tourplanner.ListeHeaderRow
 import com.example.we2026_5.ui.tourplanner.SectionHeaderRow
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -57,11 +56,11 @@ import com.example.we2026_5.ui.tourplanner.TourListeErledigtRow
 @Composable
 private fun TourPlannerDragHandleContent() {
     val dragHandleDesc = stringResource(R.string.tour_drag_handle_desc)
-    IconButton(
-        onClick = {},
+    Box(
         modifier = Modifier
             .size(40.dp)
-            .semantics { contentDescription = dragHandleDesc }
+            .semantics { contentDescription = dragHandleDesc },
+        contentAlignment = Alignment.Center
     ) {
         Text(text = "⋮⋮", fontSize = 20.sp, color = colorResource(R.color.text_secondary))
     }
@@ -244,6 +243,9 @@ fun TourPlannerScreen(
                 else -> {
                     val lazyListState = rememberLazyListState()
                     val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
+                        // #region agent log
+                        com.example.we2026_5.util.AgentDebugLog.log("TourPlannerScreen.kt", "reorderable_callback", mapOf("fromIndex" to from.index, "toIndex" to to.index), "H1")
+                        // #endregion
                         if (tourItems.getOrNull(from.index) is ListItem.CustomerItem &&
                             tourItems.getOrNull(to.index) is ListItem.CustomerItem
                         ) {

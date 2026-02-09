@@ -62,7 +62,7 @@ object TerminAusKundeUtils {
             wiederholen = true,
             intervallTage = zyklus,
             intervallAnzahl = 0,
-            erstelltAm = System.currentTimeMillis(),
+            erstelltAm = start,
             terminRegelId = "",
             regelTyp = TerminRegelTyp.WEEKLY,
             tourSlotId = customer.tourSlotId,

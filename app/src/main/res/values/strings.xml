@@ -276,6 +276,7 @@
     <string name="label_zyklus_tage">Intervall (Tage):</string>
     <string name="label_kundennummer">Kundennummer (optional):</string>
     <string name="label_next_termin">Nächster Termin:</string>
+    <string name="content_desc_delete_next_termin">Nächsten Termin löschen</string>
     <string name="dialog_duplikat_title">Kunde mit ähnlichem Namen</string>
     <string name="dialog_duplikat_message">Es existiert bereits ein Kunde mit ähnlichem Namen. Trotzdem anlegen?</string>
     <string name="validation_list_name_missing">Listen-Name fehlt</string>

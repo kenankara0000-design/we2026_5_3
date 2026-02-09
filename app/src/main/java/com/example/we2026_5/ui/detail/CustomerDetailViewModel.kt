@@ -187,6 +187,34 @@ class CustomerDetailViewModel(
         }
     }
 
+    /**
+     * Löscht den nächsten Termin (fügt Datum zu geloeschteTermine hinzu).
+     * Für Kunden mit Monats-Wochentag-Intervall: „Nächster Termin“ wird löschbar; nach Löschen zeigt die Anzeige den übernächsten Termin.
+     */
+    fun deleteNaechstenTermin(terminDatum: Long, onComplete: (Boolean) -> Unit) {
+        val customer = currentCustomer.value ?: run {
+            onComplete(false)
+            return
+        }
+        val terminDatumStart = TerminBerechnungUtils.getStartOfDay(terminDatum)
+        val aktuelleGeloeschteTermine = customer.geloeschteTermine.toMutableList()
+        if (!aktuelleGeloeschteTermine.contains(terminDatumStart)) {
+            aktuelleGeloeschteTermine.add(terminDatumStart)
+        }
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            when (val result = repository.updateCustomerResult(customer.id, mapOf("geloeschteTermine" to aktuelleGeloeschteTermine))) {
+                is Result.Success -> onComplete(result.data)
+                is Result.Error -> {
+                    _errorMessage.value = result.message
+                    onComplete(false)
+                }
+            }
+            _isLoading.value = false
+        }
+    }
+
     /** Entfernt alle Intervalle mit der angegebenen Regel-ID aus der Bearbeitungsliste (z. B. ganze Regel „täglich“). */
     fun removeRegelFromEdit(regelId: String) {
         _editIntervalle.value = _editIntervalle.value.filter { it.terminRegelId != regelId }

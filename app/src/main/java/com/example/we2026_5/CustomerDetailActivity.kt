@@ -193,7 +193,12 @@ class CustomerDetailActivity : AppCompatActivity() {
                         putExtra("CUSTOMER_ID", id)
                     })
                 },
-                onAddMonthlyIntervall = { viewModel.addMonthlyIntervall(it) }
+                onAddMonthlyIntervall = { viewModel.addMonthlyIntervall(it) },
+                onDeleteNextTermin = { terminDatum ->
+                    viewModel.deleteNaechstenTermin(terminDatum) { success ->
+                        if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                    }
+                }
             )
         }
 

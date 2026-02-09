@@ -83,6 +83,9 @@ class TourPlannerActivity : AppCompatActivity() {
             val isOnline by networkMonitor.isOnline.observeAsState(initial = true)
             val isOffline = !isOnline
             val isAdmin = adminChecker.isAdmin()
+            // #region agent log
+            AgentDebugLog.log("TourPlannerActivity.kt", "setContent_isAdmin", mapOf("isAdmin" to isAdmin), "H2")
+            // #endregion
 
             androidx.compose.runtime.LaunchedEffect(selectedTimestamp) {
                 selectedTimestamp?.let { ts ->
@@ -214,7 +217,15 @@ class TourPlannerActivity : AppCompatActivity() {
                     }
                 },
                 onReorder = { fromListIndex, toListIndex ->
-                    if (!isAdmin) return@TourPlannerScreen
+                    // #region agent log
+                    AgentDebugLog.log("TourPlannerActivity.kt", "onReorder_entry", mapOf("from" to fromListIndex, "to" to toListIndex, "isAdmin" to isAdmin), "H1")
+                    // #endregion
+                    if (!isAdmin) {
+                        // #region agent log
+                        AgentDebugLog.log("TourPlannerActivity.kt", "onReorder_early_return_isAdmin", mapOf(), "H2")
+                        // #endregion
+                        return@TourPlannerScreen
+                    }
                     val timestamp = viewModel.getSelectedTimestamp() ?: return@TourPlannerScreen
                     if (tourItems.getOrNull(fromListIndex) is ListItem.CustomerItem &&
                         tourItems.getOrNull(toListIndex) is ListItem.CustomerItem
@@ -223,7 +234,14 @@ class TourPlannerActivity : AppCompatActivity() {
                             add(toListIndex, removeAt(fromListIndex))
                         }
                         val newIds = newList.filterIsInstance<ListItem.CustomerItem>().map { it.customer.id }
+                        // #region agent log
+                        AgentDebugLog.log("TourPlannerActivity.kt", "onReorder_setTourOrder", mapOf("idsCount" to newIds.size), "H3")
+                        // #endregion
                         viewModel.setTourOrder(timestamp, newIds)
+                    } else {
+                        // #region agent log
+                        AgentDebugLog.log("TourPlannerActivity.kt", "onReorder_no_customer_items", mapOf("fromItem" to (tourItems.getOrNull(fromListIndex)?.let { it::class.simpleName } ?: "null"), "toItem" to (tourItems.getOrNull(toListIndex)?.let { it::class.simpleName } ?: "null")), "H3")
+                        // #endregion
                     }
                 }
             )

@@ -274,8 +274,14 @@ class TourPlannerViewModel(
 
     /** Setzt die komplette Tour-Reihenfolge (z. B. nach Drag & Drop) und löst UI-Update aus. */
     fun setTourOrder(dateMillis: Long, customerIds: List<String>) {
+        // #region agent log
+        AgentDebugLog.log("TourPlannerViewModel.kt", "setTourOrder_entry", mapOf("dateKey" to dateKey(dateMillis), "idsSize" to customerIds.size), "H4")
+        // #endregion
         if (customerIds.isEmpty()) return
         tourOrderRepository.setOrderForDate(dateKey(dateMillis), customerIds)
         tourOrderUpdateTrigger.value = tourOrderUpdateTrigger.value + 1
+        // #region agent log
+        AgentDebugLog.log("TourPlannerViewModel.kt", "setTourOrder_done", mapOf(), "H4")
+        // #endregion
     }
 }

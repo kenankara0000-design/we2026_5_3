@@ -50,13 +50,19 @@ object CustomerSnapshotParser {
         return if (child.child("kundenTyp").exists()) base else base.migrateKundenTyp()
     }
 
-    /** Intervalle mit explizit gelesenem erstelltAm (Firebase liefert Long oft als Double). */
+    /** Intervalle mit explizit gelesenem Long-Feldern (Firebase liefert Long oft als Double). */
     private fun parseIntervalleWithErstelltAm(intervalleNode: DataSnapshot, fallback: List<CustomerIntervall>): List<CustomerIntervall> {
         if (!intervalleNode.exists()) return fallback
         return intervalleNode.children.mapNotNull { entry ->
             entry.getValue(CustomerIntervall::class.java)?.let { iv ->
                 val erstelltAmIv = optionalLong(entry, "erstelltAm").takeIf { it > 0 } ?: iv.erstelltAm
-                iv.copy(erstelltAm = erstelltAmIv)
+                val abholungDatumIv = optionalLong(entry, "abholungDatum").takeIf { it > 0 } ?: iv.abholungDatum
+                val auslieferungDatumIv = optionalLong(entry, "auslieferungDatum").takeIf { it > 0 } ?: iv.auslieferungDatum
+                iv.copy(
+                    erstelltAm = erstelltAmIv,
+                    abholungDatum = abholungDatumIv,
+                    auslieferungDatum = auslieferungDatumIv
+                )
             }
         }.ifEmpty { fallback }
     }

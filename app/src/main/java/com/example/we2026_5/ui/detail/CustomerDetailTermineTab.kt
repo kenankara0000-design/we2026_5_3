@@ -10,7 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
+import com.example.we2026_5.TerminRegelTyp
 import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.AgentDebugLog
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
 import com.example.we2026_5.ui.common.DetailUiConstants
 
@@ -44,9 +46,15 @@ fun CustomerDetailTermineTab(
     onAddMonthlyIntervall: ((CustomerIntervall) -> Unit)?,
     showAddMonthlySheet: Boolean,
     onDismissAddMonthlySheet: () -> Unit,
-    onConfirmAddMonthly: (CustomerIntervall) -> Unit
+    onConfirmAddMonthly: (CustomerIntervall) -> Unit,
+    onDeleteNextTermin: (Long) -> Unit = {}
 ) {
     val nextTermin = TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
+    // #region agent log
+    val hasMonthlyWeekday = intervalleToShow.any { it.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY }
+    AgentDebugLog.log("CustomerDetailTermineTab.kt", "nextTermin_computed", mapOf("customerId" to customer.id, "nextTermin" to nextTermin, "hasMonthlyWeekday" to hasMonthlyWeekday, "intervalleSize" to customer.intervalle.size), "H6")
+    // #endregion
+    val canDeleteNextTermin = intervalleToShow.any { it.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -73,7 +81,9 @@ fun CustomerDetailTermineTab(
         CustomerDetailNaechsterTermin(
             nextTerminMillis = nextTermin,
             textPrimary = textPrimary,
-            textSecondary = textSecondary
+            textSecondary = textSecondary,
+            canDeleteNextTermin = canDeleteNextTermin,
+            onDeleteNextTermin = { if (nextTermin > 0) onDeleteNextTermin(nextTermin) }
         )
         if (!isInEditMode) {
             CustomerDetailKundenTypSection(

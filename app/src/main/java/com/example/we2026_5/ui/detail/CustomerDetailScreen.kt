@@ -61,7 +61,8 @@ fun CustomerDetailScreen(
     onRegelClick: (String) -> Unit = {},
     onUrlaubStartActivity: (String) -> Unit = {},
     onErfassungClick: () -> Unit = {},
-    onAddMonthlyIntervall: ((CustomerIntervall) -> Unit)? = null
+    onAddMonthlyIntervall: ((CustomerIntervall) -> Unit)? = null,
+    onDeleteNextTermin: (Long) -> Unit = {}
 ) {
     val context = LocalContext.current
     val primaryBlue = colorResource(R.color.primary_blue)
@@ -297,7 +298,8 @@ fun CustomerDetailScreen(
                         onConfirmAddMonthly = {
                             onAddMonthlyIntervall?.invoke(it)
                             showAddMonthlySheet = false
-                        }
+                        },
+                        onDeleteNextTermin = onDeleteNextTermin
                     )
                 }
             }

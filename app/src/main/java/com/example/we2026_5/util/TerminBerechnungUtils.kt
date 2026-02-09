@@ -10,6 +10,7 @@ import com.example.we2026_5.VerschobenerTermin
 import com.example.we2026_5.TerminTyp
 import java.util.Calendar
 import com.example.we2026_5.util.TerminFilterUtils
+import com.example.we2026_5.util.AgentDebugLog
 import java.util.concurrent.TimeUnit
 
 /**
@@ -414,6 +415,10 @@ object TerminBerechnungUtils {
      * Berücksichtigt gelöschte Termine. Ersetzt Customer.getFaelligAm().
      */
     fun naechstesFaelligAmDatum(customer: Customer): Long {
+        // #region agent log
+        val hasMonthly = customer.intervalle.any { it.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY }
+        AgentDebugLog.log("TerminBerechnungUtils.kt", "naechstesFaelligAmDatum_entry", mapOf("customerId" to customer.id, "intervalleSize" to customer.intervalle.size, "hasMonthlyWeekday" to hasMonthly), "H7")
+        // #endregion
         if (customer.intervalle.isEmpty() && customer.effectiveAbholungWochentage.isEmpty()) return 0L
         val heute = System.currentTimeMillis()
         val heuteStart = getStartOfDay(heute)
@@ -426,7 +431,11 @@ object TerminBerechnungUtils {
         val naechstes = termine.firstOrNull {
             it.datum >= heuteStart && !TerminFilterUtils.istTerminGeloescht(it.datum, customer.geloeschteTermine)
         }
-        return naechstes?.datum ?: 0L
+        val result = naechstes?.datum ?: 0L
+        // #region agent log
+        AgentDebugLog.log("TerminBerechnungUtils.kt", "naechstesFaelligAmDatum_result", mapOf("customerId" to customer.id, "termineCount" to termine.size, "result" to result), "H7")
+        // #endregion
+        return result
     }
 
     /**
