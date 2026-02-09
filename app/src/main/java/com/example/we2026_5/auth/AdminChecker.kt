@@ -4,11 +4,11 @@ import com.google.firebase.auth.FirebaseAuth
 
 /**
  * Prüft, ob der aktuell angemeldete Nutzer volle Rechte hat.
- * Es gibt keine Admin/Anonymous-Trennung mehr: Alle angemeldeten Nutzer (nur anonym) haben volle Rechte.
+ * Admin-Prüfung deaktiviert: Alle Nutzer haben volle Rechte (u. a. Drag-and-Drop, Termine bearbeiten).
  */
 class AdminChecker(private val auth: FirebaseAuth) {
 
     fun isAdmin(): Boolean {
-        return auth.currentUser != null
+        return true
     }
 }

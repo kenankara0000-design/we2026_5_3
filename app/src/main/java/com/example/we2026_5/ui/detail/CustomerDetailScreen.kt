@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.KundenTyp
+import com.example.we2026_5.TerminRegelTyp
 import com.example.we2026_5.R
 import com.example.we2026_5.util.TerminAusKundeUtils
 import com.example.we2026_5.util.DialogBaseHelper
@@ -171,7 +172,7 @@ fun CustomerDetailScreen(
                         tourSlotId = slotId
                     )
                     val mainFromForm = TerminAusKundeUtils.erstelleIntervallAusKunde(customerForIntervall, startDatumA, stateForSave.tageAzuL ?: 7, stateForSave.intervallTage ?: 7)
-                    val fromRules = editIntervalle.filter { it.terminRegelId.isNotBlank() }
+                    val fromRules = editIntervalle.filter { it.terminRegelId.isNotBlank() || it.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY }
                     (mainFromForm?.let { listOf(it) } ?: emptyList()) + fromRules
                 } else editIntervalle
                 put("intervalle", intervalleToSave.map {

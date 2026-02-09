@@ -54,7 +54,7 @@ fun CustomerDetailTermineTab(
     val hasMonthlyWeekday = intervalleToShow.any { it.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY }
     AgentDebugLog.log("CustomerDetailTermineTab.kt", "nextTermin_computed", mapOf("customerId" to customer.id, "nextTermin" to nextTermin, "hasMonthlyWeekday" to hasMonthlyWeekday, "intervalleSize" to customer.intervalle.size), "H6")
     // #endregion
-    val canDeleteNextTermin = intervalleToShow.any { it.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY }
+    val canDeleteNextTermin = hasMonthlyWeekday
     Column(
         modifier = Modifier
             .fillMaxWidth()

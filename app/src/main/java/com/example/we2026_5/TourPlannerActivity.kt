@@ -216,32 +216,9 @@ class TourPlannerActivity : AppCompatActivity() {
                         startActivity(Intent(this@TourPlannerActivity, CustomerDetailActivity::class.java).apply { putExtra("CUSTOMER_ID", customerId) })
                     }
                 },
-                onReorder = { fromListIndex, toListIndex ->
-                    // #region agent log
-                    AgentDebugLog.log("TourPlannerActivity.kt", "onReorder_entry", mapOf("from" to fromListIndex, "to" to toListIndex, "isAdmin" to isAdmin), "H1")
-                    // #endregion
-                    if (!isAdmin) {
-                        // #region agent log
-                        AgentDebugLog.log("TourPlannerActivity.kt", "onReorder_early_return_isAdmin", mapOf(), "H2")
-                        // #endregion
-                        return@TourPlannerScreen
-                    }
-                    val timestamp = viewModel.getSelectedTimestamp() ?: return@TourPlannerScreen
-                    if (tourItems.getOrNull(fromListIndex) is ListItem.CustomerItem &&
-                        tourItems.getOrNull(toListIndex) is ListItem.CustomerItem
-                    ) {
-                        val newList = tourItems.toMutableList().apply {
-                            add(toListIndex, removeAt(fromListIndex))
-                        }
-                        val newIds = newList.filterIsInstance<ListItem.CustomerItem>().map { it.customer.id }
-                        // #region agent log
-                        AgentDebugLog.log("TourPlannerActivity.kt", "onReorder_setTourOrder", mapOf("idsCount" to newIds.size), "H3")
-                        // #endregion
-                        viewModel.setTourOrder(timestamp, newIds)
-                    } else {
-                        // #region agent log
-                        AgentDebugLog.log("TourPlannerActivity.kt", "onReorder_no_customer_items", mapOf("fromItem" to (tourItems.getOrNull(fromListIndex)?.let { it::class.simpleName } ?: "null"), "toItem" to (tourItems.getOrNull(toListIndex)?.let { it::class.simpleName } ?: "null")), "H3")
-                        // #endregion
+                onReorder = { ids ->
+                    viewModel.getSelectedTimestamp()?.let { ts ->
+                        viewModel.setTourOrder(ts, ids)
                     }
                 }
             )
