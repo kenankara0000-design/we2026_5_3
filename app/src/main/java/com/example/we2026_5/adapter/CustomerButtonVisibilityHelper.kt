@@ -124,6 +124,8 @@ class CustomerButtonVisibilityHelper(
         val ausnahmeL = customer.ausnahmeTermine.any {
             TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart && it.typ == "L"
         }
+        val enableAusnahmeAbholung = ausnahmeA && istHeute && !customer.abholungErfolgt
+        val enableAusnahmeAuslieferung = ausnahmeL && istHeute && !customer.auslieferungErfolgt && (customer.abholungErfolgt || !ausnahmeA)
         // Nur A und L als Badge; Ü (Überfällig), KW, U (Urlaub) nur über Karten-Hintergrund/Status
         val statusBadgeText = when {
             ausnahmeA || ausnahmeL -> when {
@@ -176,6 +178,10 @@ class CustomerButtonVisibilityHelper(
             showVerschieben = !isDone && vButtonAktiv && !istImUrlaubAmTag && !nurInfoAmFaelligkeitstag,
             showUrlaub = !isDone && uButtonAktiv,
             showRueckgaengig = sollRueckgaengigAnzeigen,
+            showAusnahmeAbholung = ausnahmeA,
+            enableAusnahmeAbholung = enableAusnahmeAbholung,
+            showAusnahmeAuslieferung = ausnahmeL,
+            enableAusnahmeAuslieferung = enableAusnahmeAuslieferung,
             statusBadgeText = statusBadgeText,
             isOverdueBadge = isOverdueBadge,
             overdueInfoText = overdueInfoText,

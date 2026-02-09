@@ -41,7 +41,9 @@ import com.example.we2026_5.ui.common.ExpandableSection
 fun CustomerDetailTermineTourForm(
     state: AddCustomerState,
     onUpdate: (AddCustomerState) -> Unit,
-    onStartDatumClick: () -> Unit
+    onStartDatumClick: () -> Unit,
+    /** Kundennummer (SevDesk-ID etc.) nur anzeigen, nicht bearbeitbar – grau, read-only. */
+    kundennummerReadOnly: Boolean = true
 ) {
     val context = LocalContext.current
     val textPrimary = Color(ContextCompat.getColor(context, R.color.text_primary))
@@ -239,10 +241,12 @@ fun CustomerDetailTermineTourForm(
             Spacer(modifier = Modifier.height(spacing))
             OutlinedTextField(
                 value = state.kundennummer,
-                onValueChange = { onUpdate(state.copy(kundennummer = it)) },
+                onValueChange = { if (!kundennummerReadOnly) onUpdate(state.copy(kundennummer = it)) },
                 label = { Text(stringResource(R.string.label_kundennummer)) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                enabled = !kundennummerReadOnly,
+                readOnly = kundennummerReadOnly
             )
             Spacer(modifier = Modifier.height(spacing))
             OutlinedTextField(

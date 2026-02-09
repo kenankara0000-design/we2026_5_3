@@ -4,35 +4,47 @@ import com.example.we2026_5.wasch.Article
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import java.util.concurrent.TimeUnit
 
 class ArticleRepository(
     private val database: FirebaseDatabase
 ) {
     private val articlesRef: DatabaseReference = database.reference.child("articles")
 
-    fun getAllArticlesFlow(): Flow<List<Article>> = callbackFlow {
-        val listener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val list = mutableListOf<Article>()
-                snapshot.children.forEach { child ->
-                    val id = child.key ?: return@forEach
-                    val a = parseArticle(child, id)
-                    a?.let { list.add(it) }
-                }
-                trySend(list.sortedBy { it.name })
-            }
-            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
-                close(Exception(error.message))
-            }
+    private val cacheLock = Any()
+    private var cachedArticles: List<Article> = emptyList()
+    private var lastLoadDay: Long = -1L
+
+    private fun getTodayDayKey(): Long = TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis())
+
+    /** Artikel-Liste maximal 1× pro Tag aus Firebase laden; sonst aus Cache. */
+    suspend fun getArticlesWithDailyCache(): List<Article> = withContext(Dispatchers.IO) {
+        val today = getTodayDayKey()
+        synchronized(cacheLock) {
+            if (lastLoadDay == today && cachedArticles.isNotEmpty()) return@withContext cachedArticles
         }
-        articlesRef.addValueEventListener(listener)
-        awaitClose { articlesRef.removeEventListener(listener) }
+        val list = getAllArticles()
+        synchronized(cacheLock) {
+            cachedArticles = list
+            lastLoadDay = today
+        }
+        list
+    }
+
+    /** Cache ungültig machen (z. B. nach Speichern/Import), damit beim nächsten Abruf neu geladen wird. */
+    fun invalidateArticlesCache() {
+        synchronized(cacheLock) { lastLoadDay = -1L }
+    }
+
+    /** Liefert die Artikel-Liste; lädt nur 1× pro Tag aus Firebase, sonst aus Cache. */
+    fun getAllArticlesFlow(): Flow<List<Article>> = flow {
+        emit(getArticlesWithDailyCache())
     }
 
     suspend fun getAllArticles(): List<Article> {
@@ -63,6 +75,7 @@ class ArticleRepository(
                 "einheit" to (toSave.einheit),
                 "sevDeskId" to (toSave.sevDeskId ?: "")
             )).await() }
+            invalidateArticlesCache()
             true
         } catch (e: Exception) {
             android.util.Log.e("ArticleRepository", "Save article failed", e)
@@ -73,6 +86,7 @@ class ArticleRepository(
     suspend fun deleteArticle(articleId: String): Boolean {
         return try {
             withTimeout(2000) { articlesRef.child(articleId).removeValue().await() }
+            invalidateArticlesCache()
             true
         } catch (e: Exception) {
             android.util.Log.e("ArticleRepository", "Delete article failed", e)

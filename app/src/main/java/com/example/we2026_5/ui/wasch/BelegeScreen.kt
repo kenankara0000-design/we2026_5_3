@@ -29,7 +29,6 @@ fun BelegeScreen(
     onBackFromBelegDetail: () -> Unit,
     onNeueErfassungFromListe: () -> Unit,
     onDeleteBeleg: () -> Unit,
-    onKundeSuchenClick: () -> Unit,
     onAlleBelegeNameFilterChange: (String) -> Unit
 ) {
     val primaryBlue = colorResource(R.color.primary_blue)
@@ -39,7 +38,7 @@ fun BelegeScreen(
 
     Scaffold(
         topBar = {
-            WaschenErfassungTopBar(primaryBlue = primaryBlue, onBack = onBack)
+            WaschenErfassungTopBar(primaryBlue = primaryBlue, onBack = onBack, titleResId = R.string.wasch_belege)
         },
         containerColor = backgroundLight
     ) { paddingValues ->
@@ -52,8 +51,7 @@ fun BelegeScreen(
                         onNameFilterChange = onAlleBelegeNameFilterChange,
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
-                        onBelegEintragClick = onBelegEintragClick,
-                        onKundeSuchenClick = onKundeSuchenClick
+                        onBelegEintragClick = onBelegEintragClick
                     )
                 }
                 is BelegeUiState.KundeSuchen -> {

@@ -17,6 +17,7 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,8 +45,27 @@ import com.example.we2026_5.R
 import com.example.we2026_5.SectionType
 import com.example.we2026_5.ui.tourplanner.ListeHeaderRow
 import com.example.we2026_5.ui.tourplanner.SectionHeaderRow
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.sp
 import com.example.we2026_5.ui.tourplanner.TourCustomerRow
 import com.example.we2026_5.ui.tourplanner.TourListeErledigtRow
+
+@Composable
+private fun TourPlannerDragHandleContent() {
+    val dragHandleDesc = stringResource(R.string.tour_drag_handle_desc)
+    IconButton(
+        onClick = {},
+        modifier = Modifier
+            .size(40.dp)
+            .semantics { contentDescription = dragHandleDesc }
+    ) {
+        Text(text = "⋮⋮", fontSize = 20.sp, color = colorResource(R.color.text_secondary))
+    }
+}
 
 @Composable
 private fun rememberSwipeBetweenDaysModifier(
@@ -300,10 +320,11 @@ fun TourPlannerScreen(
                                                 "${DateFormatter.formatDate(item.customer.urlaubVon)} – ${DateFormatter.formatDate(item.customer.urlaubBis)}"
                                             else ""
                                     } else null
-                                    val ueberfaelligInfo = if (item.isOverdue && item.customer.faelligAmDatum > 0) {
-                                        val faelligStr = DateFormatter.formatDate(item.customer.faelligAmDatum)
+                                    val faelligAmDisplay = TerminBerechnungUtils.effectiveFaelligAmDatum(item.customer)
+                                    val ueberfaelligInfo = if (item.isOverdue && faelligAmDisplay > 0) {
+                                        val faelligStr = DateFormatter.formatDate(faelligAmDisplay)
                                         val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-                                        val faelligStart = TerminBerechnungUtils.getStartOfDay(item.customer.faelligAmDatum)
+                                        val faelligStart = TerminBerechnungUtils.getStartOfDay(faelligAmDisplay)
                                         val tageUeberfaellig = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(heuteStart - faelligStart).toInt()
                                         buildString {
                                             append("Fällig: $faelligStr")
@@ -318,6 +339,12 @@ fun TourPlannerScreen(
                                         ueberfaelligInfo = ueberfaelligInfo
                                     )
                                     ReorderableItem(reorderableState, key = item.customer.id) { isDragging ->
+                                        val interactionSource = remember { MutableInteractionSource() }
+                                        val handleModifier = if (onReorder != null) Modifier.longPressDraggableHandle(
+                                            onDragStarted = { hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress) },
+                                            onDragStopped = { hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress) },
+                                            interactionSource = interactionSource
+                                        ) else null
                                         TourCustomerRow(
                                             customer = item.customer,
                                             isOverdue = item.isOverdue,
@@ -329,8 +356,10 @@ fun TourPlannerScreen(
                                             viewDateMillis = viewDate,
                                             onCustomerClick = { onCustomerClick(payload) },
                                             onAktionenClick = { onAktionenClick(item.customer) },
-                                            dragHandleModifier = null,
-                                            dragHandleContent = null
+                                            dragHandleModifier = handleModifier,
+                                            dragHandleContent = if (onReorder != null) { { TourPlannerDragHandleContent() } } else null,
+                                            cardDragModifier = null,
+                                            cardInteractionSource = null
                                         )
                                     }
                                 }

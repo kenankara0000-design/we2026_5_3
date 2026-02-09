@@ -124,7 +124,8 @@ fun CustomerDetailStammdatenTab(
                 state = currentFormState,
                 onUpdate = onUpdateFormState,
                 onStartDatumClick = { },
-                showTermineTourSection = false
+                showTermineTourSection = false,
+                kundennummerReadOnly = true
             )
             Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
             Text(

@@ -44,8 +44,9 @@ class TourListenProcessorImpl(
                             tageVoraus = 3
                         )
                         val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
-                        val warUeberfaelligUndErledigtAmDatum = if (customer.faelligAmDatum > 0) {
-                            val faelligAmStart = categorizer.getStartOfDay(customer.faelligAmDatum)
+                        val effectiveFaellig = TerminBerechnungUtils.effectiveFaelligAmDatum(customer)
+                        val warUeberfaelligUndErledigtAmDatum = if (effectiveFaellig > 0) {
+                            val faelligAmStart = categorizer.getStartOfDay(effectiveFaellig)
                             val erledigtAmStart = if (customer.abholungErledigtAm > 0) {
                                 categorizer.getStartOfDay(customer.abholungErledigtAm)
                             } else if (customer.auslieferungErledigtAm > 0) {

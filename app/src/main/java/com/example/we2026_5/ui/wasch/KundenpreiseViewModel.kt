@@ -33,20 +33,32 @@ class KundenpreiseViewModel(
     val kundenPreiseList: StateFlow<List<KundenPreis>> = _kundenPreiseList.asStateFlow()
 
     private var preiseJob: Job? = null
+    /** Cache für Kunde-Suche: nur bei Eingabe Treffer anzeigen, nicht alle Kunden beim Start. */
+    private var customersSearchCache: List<Customer>? = null
 
     val articles = articleRepository.getAllArticlesFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
-        viewModelScope.launch {
-            val customers = customerRepository.getAllCustomers().sortedBy { it.displayName }
-            _uiState.value = KundenpreiseUiState.KundeSuchen(customers = customers)
-        }
+        // Keine Kundenliste beim Start – nur Treffer bei Suche anzeigen
     }
 
     fun setCustomerSearchQuery(query: String) {
         val s = _uiState.value
-        if (s is KundenpreiseUiState.KundeSuchen) _uiState.value = s.copy(customerSearchQuery = query)
+        if (s !is KundenpreiseUiState.KundeSuchen) return
+        if (query.isBlank()) {
+            _uiState.value = s.copy(customerSearchQuery = query, customers = emptyList())
+            return
+        }
+        viewModelScope.launch {
+            if (customersSearchCache == null) {
+                customersSearchCache = customerRepository.getAllCustomers().sortedBy { it.displayName }
+            }
+            val filtered = customersSearchCache!!.filter {
+                it.displayName.contains(query, ignoreCase = true)
+            }
+            _uiState.value = s.copy(customerSearchQuery = query, customers = filtered)
+        }
     }
 
     fun kundeGewaehlt(customer: Customer) {
@@ -62,9 +74,7 @@ class KundenpreiseViewModel(
     fun backToKundeSuchen() {
         preiseJob?.cancel()
         _kundenPreiseList.value = emptyList()
-        viewModelScope.launch {
-            val customers = customerRepository.getAllCustomers().sortedBy { it.displayName }
-            _uiState.value = KundenpreiseUiState.KundeSuchen(customerSearchQuery = "", customers = customers)
-        }
+        customersSearchCache = null
+        _uiState.value = KundenpreiseUiState.KundeSuchen(customerSearchQuery = "", customers = emptyList())
     }
 }

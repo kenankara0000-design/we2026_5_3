@@ -114,7 +114,8 @@ fun ArtikelVerwaltungScreen(
                                 }
                                 IconButton(
                                     onClick = { onDeleteArticle(article) },
-                                    modifier = Modifier.padding(start = 8.dp)
+                                    modifier = Modifier.padding(start = 8.dp),
+                                    enabled = false
                                 ) {
                                     Icon(
                                         Icons.Filled.Delete,

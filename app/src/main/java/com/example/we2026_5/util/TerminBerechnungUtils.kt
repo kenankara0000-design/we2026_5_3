@@ -34,14 +34,16 @@ object TerminBerechnungUtils {
     // Filter-Funktionen entfernt - jetzt in TerminFilterUtils
     
     /**
-     * Berechnet alle Termine für einen Zeitraum (365 Tage) für ein CustomerIntervall
+     * Berechnet alle Termine für einen Zeitraum (365 Tage) für ein CustomerIntervall.
+     * Bei MONTHLY_WEEKDAY werden customer (für tageAzuL und erstelltAm) benötigt; sonst L = A, kein Start-Filter.
      */
     fun berechneTermineFuerIntervall(
         intervall: CustomerIntervall,
         startDatum: Long = System.currentTimeMillis(),
         tageVoraus: Int = 365,
         geloeschteTermine: List<Long> = emptyList(),
-        verschobeneTermine: List<VerschobenerTermin> = emptyList()
+        verschobeneTermine: List<VerschobenerTermin> = emptyList(),
+        customer: Customer? = null
     ): List<TerminInfo> {
         val termine = mutableListOf<TerminInfo>()
         val startDatumStart = getStartOfDay(startDatum)
@@ -49,10 +51,20 @@ object TerminBerechnungUtils {
 
         if (intervall.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY &&
             intervall.monthWeekOfMonth in 1..5 && intervall.monthWeekday in 0..6) {
+            val tageAzuL = customer?.tageAzuLOrDefault(7) ?: 0
+            val kundeStart = if (customer != null && customer.erstelltAm > 0) getStartOfDay(customer.erstelltAm) else 0L
+            val intervallStart = if (intervall.erstelltAm > 0) getStartOfDay(intervall.erstelltAm) else 0L
+            val startDatumMin = maxOf(
+                startDatumStart,
+                kundeStart,
+                intervallStart
+            )
             val monthly = berechneMonatlicheWochentagTermine(
                 intervall = intervall,
                 startDatumStart = startDatumStart,
                 endDatum = endDatum,
+                startDatumMin = startDatumMin,
+                tageAzuL = tageAzuL,
                 geloeschteTermine = geloeschteTermine,
                 verschobeneTermine = verschobeneTermine
             )
@@ -208,12 +220,15 @@ object TerminBerechnungUtils {
     }
 
     /**
-     * Termine für MONTHLY_WEEKDAY: pro Monat ein Datum (n-ter Wochentag), A und L an demselben Tag.
+     * Termine für MONTHLY_WEEKDAY: pro Monat ein A-Datum (n-ter Wochentag), L = A + tageAzuL.
+     * A und L werden nur erzeugt, wenn sie >= startDatumMin (z. B. erstelltAm des Kunden).
      */
     private fun berechneMonatlicheWochentagTermine(
         intervall: CustomerIntervall,
         startDatumStart: Long,
         endDatum: Long,
+        startDatumMin: Long,
+        tageAzuL: Int,
         geloeschteTermine: List<Long>,
         verschobeneTermine: List<VerschobenerTermin>
     ): List<TerminInfo> {
@@ -225,6 +240,7 @@ object TerminBerechnungUtils {
         cal.timeInMillis = endDatum
         val endYear = cal.get(Calendar.YEAR)
         val endMonth = cal.get(Calendar.MONTH)
+        val tageAzuLMillis = TimeUnit.DAYS.toMillis(tageAzuL.coerceIn(0, 365).toLong())
         var y = startYear
         var m = startMonth
         while (y < endYear || (y == endYear && m <= endMonth)) {
@@ -232,10 +248,10 @@ object TerminBerechnungUtils {
             if (day > 0) {
                 cal.set(y, m, day, 0, 0, 0)
                 cal.set(Calendar.MILLISECOND, 0)
-                val datumStart = cal.timeInMillis
-                if (datumStart in startDatumStart..endDatum) {
-                    val verschobenA = TerminFilterUtils.istTerminVerschoben(datumStart, verschobeneTermine.filter { it.typ == TerminTyp.ABHOLUNG }, intervall.id)
-                    val finalA = verschobenA?.verschobenAufDatum ?: datumStart
+                val aDatum = cal.timeInMillis
+                if (aDatum in startDatumStart..endDatum && aDatum >= startDatumMin) {
+                    val verschobenA = TerminFilterUtils.istTerminVerschoben(aDatum, verschobeneTermine.filter { it.typ == TerminTyp.ABHOLUNG }, intervall.id)
+                    val finalA = verschobenA?.verschobenAufDatum ?: aDatum
                     if (!TerminFilterUtils.istTerminGeloescht(finalA, geloeschteTermine)) {
                         result.add(TerminInfo(
                             datum = finalA,
@@ -245,16 +261,19 @@ object TerminBerechnungUtils {
                             originalDatum = verschobenA?.originalDatum
                         ))
                     }
-                    val verschobenL = TerminFilterUtils.istTerminVerschoben(datumStart, verschobeneTermine.filter { it.typ == TerminTyp.AUSLIEFERUNG }, intervall.id)
-                    val finalL = verschobenL?.verschobenAufDatum ?: datumStart
-                    if (!TerminFilterUtils.istTerminGeloescht(finalL, geloeschteTermine)) {
-                        result.add(TerminInfo(
-                            datum = finalL,
-                            typ = TerminTyp.AUSLIEFERUNG,
-                            intervallId = intervall.id,
-                            verschoben = verschobenL != null,
-                            originalDatum = verschobenL?.originalDatum
-                        ))
+                    val lDatum = aDatum + tageAzuLMillis
+                    if (lDatum >= startDatumMin && lDatum <= endDatum) {
+                        val verschobenL = TerminFilterUtils.istTerminVerschoben(lDatum, verschobeneTermine.filter { it.typ == TerminTyp.AUSLIEFERUNG }, intervall.id)
+                        val finalL = verschobenL?.verschobenAufDatum ?: lDatum
+                        if (!TerminFilterUtils.istTerminGeloescht(finalL, geloeschteTermine)) {
+                            result.add(TerminInfo(
+                                datum = finalL,
+                                typ = TerminTyp.AUSLIEFERUNG,
+                                intervallId = intervall.id,
+                                verschoben = verschobenL != null,
+                                originalDatum = verschobenL?.originalDatum
+                            ))
+                        }
                     }
                 }
             }
@@ -347,7 +366,8 @@ object TerminBerechnungUtils {
                     startDatum = startDatum,
                     tageVoraus = tageVoraus,
                     geloeschteTermine = customer.geloeschteTermine,
-                    verschobeneTermine = customer.verschobeneTermine
+                    verschobeneTermine = customer.verschobeneTermine,
+                    customer = customer
                 )
                 alleTermine.addAll(termine)
             }
@@ -407,6 +427,19 @@ object TerminBerechnungUtils {
             it.datum >= heuteStart && !TerminFilterUtils.istTerminGeloescht(it.datum, customer.geloeschteTermine)
         }
         return naechstes?.datum ?: 0L
+    }
+
+    /**
+     * Für Anzeige/Logik: gespeichertes faelligAmDatum, sofern nicht vor Startdatum (erstelltAm).
+     * Wenn faelligAmDatum vor erstelltAm liegt (z. B. alter Eintrag vor Startdatum-Fix), wird das
+     * berechnete nächste Fälligkeitsdatum verwendet, damit keine „Geister-Termine“ vor Start angezeigt werden.
+     */
+    fun effectiveFaelligAmDatum(customer: Customer): Long {
+        val stored = customer.faelligAmDatum
+        if (stored <= 0) return stored
+        if (customer.erstelltAm > 0 && getStartOfDay(stored) < getStartOfDay(customer.erstelltAm))
+            return naechstesFaelligAmDatum(customer)
+        return stored
     }
 
     // Filter-Funktionen entfernt - jetzt in TerminFilterUtils

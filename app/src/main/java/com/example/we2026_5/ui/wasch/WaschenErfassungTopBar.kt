@@ -19,12 +19,13 @@ import com.example.we2026_5.R
 @Composable
 fun WaschenErfassungTopBar(
     primaryBlue: androidx.compose.ui.graphics.Color,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    titleResId: Int = R.string.wasch_title
 ) {
     TopAppBar(
         title = {
             Text(
-                stringResource(R.string.wasch_title),
+                stringResource(titleResId),
                 color = Color.White,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold

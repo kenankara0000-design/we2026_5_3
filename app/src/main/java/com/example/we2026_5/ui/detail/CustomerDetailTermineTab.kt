@@ -56,7 +56,8 @@ fun CustomerDetailTermineTab(
             CustomerDetailTermineTourForm(
                 state = currentFormState,
                 onUpdate = onUpdateFormState,
-                onStartDatumClick = onStartDatumClick
+                onStartDatumClick = onStartDatumClick,
+                kundennummerReadOnly = true
             )
             Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
         }

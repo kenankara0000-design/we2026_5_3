@@ -156,6 +156,8 @@
     <string name="sheet_tab_details">Details</string>
     <string name="sheet_abholung_erledigen">Abholung erledigen</string>
     <string name="sheet_auslieferung_erledigen">Auslieferung erledigen</string>
+    <string name="sheet_ausnahme_abholung_erledigen">A-Abholung Erledigen</string>
+    <string name="sheet_ausnahme_auslieferung_erledigen">A-Lieferung Erledigen</string>
     <string name="sheet_keine_waesche">Keine Wäsche</string>
     <string name="sheet_rueckgaengig">Rückgängig</string>
     <string name="sheet_termin_verschieben">Termin verschieben</string>
@@ -324,6 +326,7 @@
 
     <!-- TourPlanner -->
     <string name="tour_label_date">Datum</string>
+    <string name="tour_drag_handle_desc">Lang drücken zum Verschieben der Reihenfolge</string>
     <string name="tour_btn_map">Karte</string>
     <string name="tour_btn_today">Heute</string>
     <string name="tour_btn_erledigte">Erledigte (%d)</string>

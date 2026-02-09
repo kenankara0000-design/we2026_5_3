@@ -329,8 +329,9 @@ class TourDataProcessor {
         categorizer.getNaechstesListeDatum(liste, abDatum, geloeschteTermine)
 
     private fun warUeberfaelligUndErledigtAmDatum(customer: Customer, viewDateStart: Long): Boolean {
-        if (customer.faelligAmDatum <= 0) return false
-        val faelligAmStart = categorizer.getStartOfDay(customer.faelligAmDatum)
+        val effectiveFaellig = TerminBerechnungUtils.effectiveFaelligAmDatum(customer)
+        if (effectiveFaellig <= 0) return false
+        val faelligAmStart = categorizer.getStartOfDay(effectiveFaellig)
         val erledigtAmStart = when {
             customer.abholungErledigtAm > 0 -> categorizer.getStartOfDay(customer.abholungErledigtAm)
             customer.auslieferungErledigtAm > 0 -> categorizer.getStartOfDay(customer.auslieferungErledigtAm)

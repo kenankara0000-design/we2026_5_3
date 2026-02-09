@@ -2,6 +2,7 @@ package com.example.we2026_5.data.repository
 
 import com.example.we2026_5.AusnahmeTermin
 import com.example.we2026_5.Customer
+import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.VerschobenerTermin
@@ -29,6 +30,8 @@ object CustomerSnapshotParser {
         val kundenTypParsed = kundenTypStr?.trim()?.let { s ->
             try { KundenTyp.valueOf(s) } catch (_: Exception) { null }
         }
+        val erstelltAm = optionalLong(child, "erstelltAm").takeIf { it > 0 } ?: customer.erstelltAm
+        val intervalle = parseIntervalleWithErstelltAm(child.child("intervalle"), customer.intervalle)
         val base = customer.copy(
             id = id,
             verschobeneTermine = verschobeneTermine,
@@ -40,9 +43,22 @@ object CustomerSnapshotParser {
             wiederholen = optionalBoolean(child, "wiederholen"),
             intervallTage = optionalInt(child, "intervallTage").coerceIn(1, 365).takeIf { it in 1..365 } ?: 7,
             letzterTermin = optionalLong(child, "letzterTermin"),
-            kundenTyp = kundenTypParsed ?: customer.kundenTyp
+            kundenTyp = kundenTypParsed ?: customer.kundenTyp,
+            erstelltAm = erstelltAm,
+            intervalle = intervalle
         )
         return if (child.child("kundenTyp").exists()) base else base.migrateKundenTyp()
+    }
+
+    /** Intervalle mit explizit gelesenem erstelltAm (Firebase liefert Long oft als Double). */
+    private fun parseIntervalleWithErstelltAm(intervalleNode: DataSnapshot, fallback: List<CustomerIntervall>): List<CustomerIntervall> {
+        if (!intervalleNode.exists()) return fallback
+        return intervalleNode.children.mapNotNull { entry ->
+            entry.getValue(CustomerIntervall::class.java)?.let { iv ->
+                val erstelltAmIv = optionalLong(entry, "erstelltAm").takeIf { it > 0 } ?: iv.erstelltAm
+                iv.copy(erstelltAm = erstelltAmIv)
+            }
+        }.ifEmpty { fallback }
     }
 
     fun parseIntListFromSnapshot(snapshot: DataSnapshot): List<Int> {

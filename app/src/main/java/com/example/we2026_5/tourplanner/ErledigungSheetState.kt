@@ -16,6 +16,12 @@ data class ErledigungSheetState(
     val showVerschieben: Boolean,
     val showUrlaub: Boolean,
     val showRueckgaengig: Boolean,
+    /** Ausnahme-Termin A an diesem Tag: Button „A-Abholung Erledigen“ anzeigen */
+    val showAusnahmeAbholung: Boolean = false,
+    val enableAusnahmeAbholung: Boolean = false,
+    /** Ausnahme-Termin L an diesem Tag: Button „L-Auslieferung Erledigen“ anzeigen */
+    val showAusnahmeAuslieferung: Boolean = false,
+    val enableAusnahmeAuslieferung: Boolean = false,
     /** Kurztext für Status-Badge auf der Karte, z. B. "A+L heute", "Überfällig", "A", "L", "" */
     val statusBadgeText: String,
     /** true = Badge rot (überfällig), false = Badge blau (heute fällig) */

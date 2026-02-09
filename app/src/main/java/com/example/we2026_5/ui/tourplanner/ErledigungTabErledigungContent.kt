@@ -115,6 +115,54 @@ fun ErledigungTabErledigungContent(
                 Text(stringResource(R.string.sheet_auslieferung_erledigen), color = Color.White)
             }
         }
+        val buttonAusnahme = colorResource(R.color.status_ausnahme)
+        if (state.showAusnahmeAbholung) {
+            Button(
+                onClick = {
+                    if (state.enableAusnahmeAbholung) {
+                        onAbholung(customer)
+                        onDismiss()
+                    } else {
+                        showToast(toastAbholungNurHeute)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (state.enableAusnahmeAbholung) buttonAusnahme else buttonAusnahme.copy(alpha = 0.5f)
+                ),
+                enabled = true
+            ) {
+                Icon(painter = painterResource(R.drawable.ic_pickup), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
+                Spacer(Modifier.size(10.dp))
+                Text(stringResource(R.string.sheet_ausnahme_abholung_erledigen), color = Color.White)
+            }
+        }
+        if (state.showAusnahmeAuslieferung) {
+            Button(
+                onClick = {
+                    if (state.enableAusnahmeAuslieferung) {
+                        onAuslieferung(customer)
+                        onDismiss()
+                    } else {
+                        showToast(
+                            when {
+                                !customer.abholungErfolgt -> toastAuslieferungNachAbholung
+                                else -> toastAuslieferungNurHeute
+                            }
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (state.enableAusnahmeAuslieferung) buttonAusnahme else buttonAusnahme.copy(alpha = 0.5f)
+                ),
+                enabled = true
+            ) {
+                Icon(painter = painterResource(R.drawable.ic_delivery), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
+                Spacer(Modifier.size(10.dp))
+                Text(stringResource(R.string.sheet_ausnahme_auslieferung_erledigen), color = Color.White)
+            }
+        }
         if (state.showRueckgaengig) {
             OutlinedButton(
                 onClick = {

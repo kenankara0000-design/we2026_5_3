@@ -7,7 +7,7 @@ import com.example.we2026_5.data.repository.ErfassungRepository
 import com.example.we2026_5.data.repository.KundenPreiseRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.data.repository.TourOrderRepository
-import com.example.we2026_5.data.repository.TourOrderRepositoryImpl
+import com.example.we2026_5.data.repository.TourOrderRepositoryFirebaseImpl
 import com.example.we2026_5.data.repository.TourPlanRepository
 import com.example.we2026_5.ui.main.MainViewModel
 import com.example.we2026_5.ui.statistics.StatisticsViewModel
@@ -49,7 +49,7 @@ val appModule = module {
     single { CustomerRepository(get()) }
     single { KundenListeRepository(get()) }
     single { TourPlanRepository(get()) }
-    single<TourOrderRepository> { TourOrderRepositoryImpl(get()) }
+    single<TourOrderRepository> { TourOrderRepositoryFirebaseImpl(get()) }
     single { ArticleRepository(get()) }
     single { ErfassungRepository(get()) }
     single { KundenPreiseRepository(get()) }

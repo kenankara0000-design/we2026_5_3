@@ -55,15 +55,13 @@ fun WaschenErfassungScreen(
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             when (state) {
             is WaschenErfassungUiState.KundeSuchen -> {
-                val filtered = state.customers.filter {
-                    state.customerSearchQuery.isBlank() || it.displayName.contains(state.customerSearchQuery, ignoreCase = true)
-                }
                 WaschenErfassungKundeSuchenContent(
                     customerSearchQuery = state.customerSearchQuery,
                     onSearchQueryChange = onCustomerSearchQueryChange,
-                    filteredCustomers = filtered,
+                    filteredCustomers = state.customers,
                     textSecondary = textSecondary,
-                    onKundeWaehlen = onKundeWaehlen
+                    onKundeWaehlen = onKundeWaehlen,
+                    searchHintWhenEmpty = state.customerSearchQuery.isBlank()
                 )
             }
             is WaschenErfassungUiState.ErfassungenListe -> {

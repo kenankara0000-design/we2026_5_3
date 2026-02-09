@@ -64,7 +64,6 @@ class BelegeActivity : AppCompatActivity() {
                                 .show()
                         }
                     },
-                    onKundeSuchenClick = { viewModel.showKundeSuchen() },
                     onAlleBelegeNameFilterChange = { viewModel.setAlleBelegeNameFilter(it) }
                 )
             }

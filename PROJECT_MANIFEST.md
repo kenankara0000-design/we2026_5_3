@@ -58,6 +58,7 @@ Das Manifest ergänzt sie um Ziele und Scope; es ersetzt sie nicht.
 - **customers_for_tour** – Index für Tourenplaner (Migration/Backfill aus customers)
 - **kundenListen** – Listen (KundenListe, mit Intervallen)
 - **tourPlaene** – Tour-Slots (Wochentag, Stadt, Zeitfenster; TourSlot)
+- **tourReihenfolge** – Manuelle Reihenfolge der Kunden pro Wochentag (Keys: wochentag_1 … wochentag_7, Value: kommagetrennte Kunden-IDs); geräteübergreifend
 - **articles** – Artikel (z. B. nach SevDesk-Import)
 - **waschErfassungen** – Erfassungen (Kunde, Positionen, Datum)
 - **kundenPreise** – Kundenpreise pro Kunde/Artikel (customerId → articleId → priceNet, priceGross)

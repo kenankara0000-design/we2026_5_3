@@ -2,6 +2,7 @@ package com.example.we2026_5.ui.tourplanner
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -58,7 +60,11 @@ internal fun TourCustomerRow(
     onCustomerClick: () -> Unit,
     onAktionenClick: () -> Unit,
     dragHandleModifier: Modifier? = null,
-    dragHandleContent: @Composable (() -> Unit)? = null
+    dragHandleContent: @Composable (() -> Unit)? = null,
+    /** Wenn gesetzt: wird auf die Card angewendet (z. B. longPressDraggableHandle). */
+    cardDragModifier: Modifier? = null,
+    /** Muss mit cardDragModifier zusammen verwendet werden (gleiche Instance wie beim Handle). */
+    cardInteractionSource: MutableInteractionSource? = null
 ) {
     val isDeaktiviert = isVerschobenAmFaelligkeitstag
     val cardBg = when {
@@ -89,12 +95,16 @@ internal fun TourCustomerRow(
         statusBadgeText == "L" -> colorResource(R.color.termin_regel_auslieferung)
         else -> colorResource(R.color.termin_regel_abholung)
     }
+    val clickModifier = if (isDeaktiviert) Modifier else Modifier.clickable(
+        onClick = onCustomerClick,
+        interactionSource = cardInteractionSource ?: remember { MutableInteractionSource() },
+        indication = null
+    )
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .then(
-                if (isDeaktiviert) Modifier else Modifier.clickable(onClick = onCustomerClick)
-            ),
+            .then(clickModifier)
+            .then(cardDragModifier ?: Modifier),
         colors = CardDefaults.cardColors(containerColor = cardBg),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)

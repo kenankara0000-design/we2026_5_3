@@ -99,6 +99,8 @@ class WaschenErfassungViewModel(
     private val _kundenPreiseForErfassung = MutableStateFlow<List<com.example.we2026_5.wasch.KundenPreis>>(emptyList())
     private var kundenPreiseJob: Job? = null
     private var erfassungenJob: Job? = null
+    /** Cache für Kunde-Suche: nur bei Eingabe Treffer anzeigen, nicht alle Kunden beim Start. */
+    private var customersSearchCache: List<Customer>? = null
 
     val articles = articleRepository.getAllArticlesFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -129,23 +131,29 @@ class WaschenErfassungViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     init {
-        viewModelScope.launch {
-            val customers = customerRepository.getAllCustomers().sortedBy { it.displayName }
-            _uiState.value = WaschenErfassungUiState.KundeSuchen(customers = customers)
-        }
+        // Keine Kundenliste beim Start – nur Treffer bei Suche anzeigen
     }
 
     fun startNeueErfassung() {
-        viewModelScope.launch {
-            val customers = customerRepository.getAllCustomers().sortedBy { it.displayName }
-            _uiState.value = WaschenErfassungUiState.KundeSuchen(customerSearchQuery = "", customers = customers)
-        }
+        customersSearchCache = null
+        _uiState.value = WaschenErfassungUiState.KundeSuchen(customerSearchQuery = "", customers = emptyList())
     }
 
     fun setCustomerSearchQuery(query: String) {
         val s = _uiState.value
-        if (s is WaschenErfassungUiState.KundeSuchen) {
-            _uiState.value = s.copy(customerSearchQuery = query)
+        if (s !is WaschenErfassungUiState.KundeSuchen) return
+        if (query.isBlank()) {
+            _uiState.value = s.copy(customerSearchQuery = query, customers = emptyList())
+            return
+        }
+        viewModelScope.launch {
+            if (customersSearchCache == null) {
+                customersSearchCache = customerRepository.getAllCustomers().sortedBy { it.displayName }
+            }
+            val filtered = customersSearchCache!!.filter {
+                it.displayName.contains(query, ignoreCase = true)
+            }
+            _uiState.value = s.copy(customerSearchQuery = query, customers = filtered)
         }
     }
 
@@ -162,10 +170,8 @@ class WaschenErfassungViewModel(
     fun backToKundeSuchen() {
         erfassungenJob?.cancel()
         _erfassungenList.value = emptyList()
-        viewModelScope.launch {
-            val customers = customerRepository.getAllCustomers().sortedBy { it.displayName }
-            _uiState.value = WaschenErfassungUiState.KundeSuchen(customerSearchQuery = "", customers = customers)
-        }
+        customersSearchCache = null
+        _uiState.value = WaschenErfassungUiState.KundeSuchen(customerSearchQuery = "", customers = emptyList())
     }
 
     /** Von ErfassungenListe: Beleg (Monat) öffnen. */
