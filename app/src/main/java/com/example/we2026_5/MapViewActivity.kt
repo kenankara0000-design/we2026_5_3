@@ -66,9 +66,7 @@ class MapViewActivity : AppCompatActivity() {
         if (addresses.isEmpty()) return
         val waypoints = addresses.joinToString("|") { Uri.encode(it) }
         val url = "https://www.google.com/maps/dir/?api=1&waypoints=$waypoints"
-        val mapIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-            setPackage("com.google.android.apps.maps")
-        }
+        val mapIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         if (mapIntent.resolveActivity(packageManager) != null) {
             startActivity(mapIntent)
         } else {

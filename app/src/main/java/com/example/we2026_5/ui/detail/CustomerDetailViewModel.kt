@@ -178,6 +178,8 @@ class CustomerDetailViewModel(
             name = c.name,
             alias = c.alias,
             adresse = c.adresse,
+            latitude = c.latitude,
+            longitude = c.longitude,
             stadt = c.stadt,
             plz = c.plz,
             telefon = c.telefon,
@@ -274,6 +276,33 @@ class CustomerDetailViewModel(
             _isLoading.value = true
             _errorMessage.value = null
             val ok = repository.removeKundenTermine(customer.id, termins)
+            _isLoading.value = false
+            onComplete(ok)
+        }
+    }
+
+    /** Entfernt ein Foto aus der Kundenliste (fotoUrls, fotoThumbUrls). */
+    fun deletePhoto(photoUrl: String, onComplete: (Boolean) -> Unit) {
+        val customer = currentCustomer.value ?: run {
+            onComplete(false)
+            return
+        }
+        val index = customer.fotoUrls.indexOf(photoUrl)
+        if (index < 0) {
+            onComplete(true)
+            return
+        }
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            val updatedUrls = customer.fotoUrls.toMutableList().apply { removeAt(index) }
+            val updatedThumbUrls = customer.fotoThumbUrls.toMutableList().apply {
+                if (index < size) removeAt(index)
+            }
+            val ok = repository.updateCustomer(customer.id, mapOf(
+                "fotoUrls" to updatedUrls,
+                "fotoThumbUrls" to updatedThumbUrls
+            ))
             _isLoading.value = false
             onComplete(ok)
         }

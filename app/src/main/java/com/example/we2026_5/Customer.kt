@@ -19,6 +19,9 @@ data class Customer(
     /** Anzeigename in der App; für Rechnung wird der offizielle Name (name) verwendet. Leer = name verwenden. */
     val alias: String = "",
     val adresse: String = "",
+    /** Optionale GPS-Koordinaten für Navigation (z. B. aus Geocoding oder manuell). */
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val telefon: String = "",
     val notizen: String = "",
     val stadt: String = "",

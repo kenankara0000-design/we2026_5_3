@@ -269,6 +269,40 @@ class TourPlannerActivity : AppCompatActivity() {
                         startActivity(Intent(this@TourPlannerActivity, CustomerDetailActivity::class.java).apply { putExtra("CUSTOMER_ID", customerId) })
                     }
                 },
+                onNavigate = { customer ->
+                    val dest = when {
+                        customer.latitude != null && customer.longitude != null ->
+                            "${customer.latitude},${customer.longitude}"
+                        customer.adresse.isNotBlank() || customer.plz.isNotBlank() || customer.stadt.isNotBlank() -> {
+                            buildString {
+                                if (customer.adresse.isNotBlank()) append(customer.adresse.trim())
+                                val plzStadt = listOf(customer.plz.trim(), customer.stadt.trim()).filter { it.isNotEmpty() }.joinToString(" ")
+                                if (plzStadt.isNotEmpty()) {
+                                    if (isNotEmpty()) append(", ")
+                                    append(plzStadt)
+                                }
+                                if (isNotEmpty()) append(", Deutschland")
+                            }.trim().takeIf { it.isNotEmpty() }
+                        }
+                        else -> null
+                    }
+                    if (dest != null) {
+                        try {
+                            val uri = if (customer.latitude != null && customer.longitude != null) {
+                                Uri.parse("google.navigation:q=${customer.latitude},${customer.longitude}")
+                            } else {
+                                Uri.parse("https://www.google.com/maps/dir/?api=1&destination=${Uri.encode(dest)}&dir_action=navigate")
+                            }
+                            startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage("com.google.android.apps.maps"))
+                        } catch (_: android.content.ActivityNotFoundException) {
+                            Toast.makeText(this@TourPlannerActivity, getString(R.string.error_maps_not_installed), Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Toast.makeText(this@TourPlannerActivity, getString(R.string.toast_keine_adresse), Toast.LENGTH_SHORT).show()
+                    }
+                    overviewPayload = null
+                    overviewRegelNamen = null
+                },
                 onReorder = { ids ->
                     viewModel.getSelectedTimestamp()?.let { ts ->
                         viewModel.setTourOrder(ts, ids)

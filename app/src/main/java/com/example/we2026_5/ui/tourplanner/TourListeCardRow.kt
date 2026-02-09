@@ -1,5 +1,6 @@
 package com.example.we2026_5.ui.tourplanner
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,11 +31,14 @@ import com.example.we2026_5.util.TerminFilterUtils
 
 /**
  * Tour-Liste Card: Äußere Card mit Listen-Name, darin jede Kunde als eigene Karte.
+ * Bei A-Terminen: A-Farbe und A-Badge; bei L-Terminen: L-Farbe und L-Badge.
  */
 @Composable
 internal fun TourListeCardRow(
     liste: KundenListe,
     kunden: List<Pair<Customer, Boolean>>,
+    aCount: Int = 0,
+    lCount: Int = 0,
     viewDateMillis: Long,
     getStatusBadgeText: (Customer) -> String,
     onCustomerClick: (com.example.we2026_5.ui.tourplanner.CustomerOverviewPayload) -> Unit,
@@ -43,6 +47,28 @@ internal fun TourListeCardRow(
     var expanded by remember { mutableStateOf(false) }
     val surfaceBg = colorResource(R.color.termin_regel_card_bg)
     val textPrimary = colorResource(R.color.text_primary)
+    val colorA = colorResource(R.color.button_abholung)
+    val colorL = colorResource(R.color.button_auslieferung)
+    val headerBg = when {
+        aCount > 0 -> colorA.copy(alpha = 0.25f)
+        lCount > 0 -> colorL.copy(alpha = 0.25f)
+        else -> surfaceBg
+    }
+    val headerText = when {
+        aCount > 0 -> colorA
+        lCount > 0 -> colorL
+        else -> textPrimary
+    }
+    val badgeText = when {
+        aCount > 0 -> "A"
+        lCount > 0 -> "L"
+        else -> null
+    }
+    val countForHeader = when {
+        aCount > 0 -> aCount
+        lCount > 0 -> lCount
+        else -> 0
+    }
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = surfaceBg),
@@ -52,25 +78,47 @@ internal fun TourListeCardRow(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { expanded = !expanded },
+                    .clickable { expanded = !expanded }
+                    .then(if (badgeText != null) Modifier.background(headerBg, RoundedCornerShape(6.dp)).padding(8.dp) else Modifier),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = liste.name,
+                    text = if (badgeText != null) {
+                        "${liste.name} $countForHeader ---"
+                    } else {
+                        liste.name
+                    },
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = textPrimary
+                    color = headerText
                 )
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = "${kunden.size} ${if (kunden.size == 1) "Kunde" else "Kunden"}",
-                    fontSize = 14.sp,
-                    color = textPrimary
-                )
+                if (badgeText != null) {
+                    Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                    Text(
+                        text = badgeText,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = androidx.compose.ui.graphics.Color.White,
+                        modifier = Modifier
+                            .background(headerText, RoundedCornerShape(4.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+                if (badgeText == null) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = "${kunden.size} ${if (kunden.size == 1) "Kunde" else "Kunden"}",
+                        fontSize = 14.sp,
+                        color = textPrimary
+                    )
+                    Spacer(modifier = Modifier.padding(start = 4.dp))
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
                 Text(
                     text = if (expanded) "▲" else "▼",
                     fontSize = 16.sp,
-                    color = textPrimary,
+                    color = headerText,
                     modifier = Modifier.padding(start = 4.dp)
                 )
             }

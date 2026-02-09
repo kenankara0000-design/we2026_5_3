@@ -128,6 +128,8 @@ class AddCustomerActivity : AppCompatActivity() {
             name = name,
             alias = state.alias.trim(),
             adresse = state.adresse.trim(),
+            latitude = state.latitude,
+            longitude = state.longitude,
             stadt = state.stadt.trim(),
             plz = state.plz.trim(),
             telefon = state.telefon.trim(),

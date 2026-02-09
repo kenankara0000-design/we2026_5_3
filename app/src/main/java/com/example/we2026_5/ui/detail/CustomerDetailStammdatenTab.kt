@@ -48,6 +48,7 @@ fun CustomerDetailStammdatenTab(
     onErfassungClick: () -> Unit,
     onTakePhoto: () -> Unit,
     onPhotoClick: (String) -> Unit,
+    onDeletePhoto: ((String) -> Unit)? = null,
     isUploading: Boolean = false
 ) {
     Column(
@@ -171,7 +172,8 @@ fun CustomerDetailStammdatenTab(
             isInEditMode = isInEditMode,
             textPrimary = textPrimary,
             onPhotoClick = onPhotoClick,
-            onTakePhoto = onTakePhoto
+            onTakePhoto = onTakePhoto,
+            onDeletePhoto = onDeletePhoto
         )
     }
 }

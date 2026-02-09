@@ -21,7 +21,8 @@ fun TourPlannerOverviewDialog(
     payload: CustomerOverviewPayload,
     overviewRegelNamen: String?,
     onDismiss: () -> Unit,
-    onOpenDetails: (customerId: String) -> Unit
+    onOpenDetails: (customerId: String) -> Unit,
+    onNavigate: (com.example.we2026_5.Customer) -> Unit = {}
 ) {
     val customer = payload.customer
     AlertDialog(
@@ -99,14 +100,25 @@ fun TourPlannerOverviewDialog(
             }
         },
         confirmButton = {
-            Button(onClick = {
-                val id = customer.id
-                if (id.isNotBlank()) {
-                    onOpenDetails(id)
+            Column {
+                if (customer.adresse.isNotBlank() || customer.plz.isNotBlank() || customer.stadt.isNotBlank() || (customer.latitude != null && customer.longitude != null)) {
+                    Button(onClick = {
+                        onNavigate(customer)
+                        onDismiss()
+                    }) {
+                        Text(stringResource(R.string.label_navigation))
+                    }
+                    Spacer(Modifier.height(8.dp))
                 }
-                onDismiss()
-            }) {
-                Text(stringResource(R.string.label_details_open))
+                Button(onClick = {
+                    val id = customer.id
+                    if (id.isNotBlank()) {
+                        onOpenDetails(id)
+                    }
+                    onDismiss()
+                }) {
+                    Text(stringResource(R.string.label_details_open))
+                }
             }
         }
     )

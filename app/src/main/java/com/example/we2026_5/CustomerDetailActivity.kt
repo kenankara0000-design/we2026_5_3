@@ -145,11 +145,32 @@ class CustomerDetailActivity : AppCompatActivity() {
                 onTakePhoto = { photoManager?.showPhotoOptionsDialog() },
                 onAdresseClick = {
                     customer?.let { c ->
-                        if (c.adresse.isNotBlank()) {
-                            val gmmUri = Uri.parse("google.navigation:q=${Uri.encode(c.adresse)}")
-                            val mapIntent = Intent(Intent.ACTION_VIEW, gmmUri).setPackage("com.google.android.apps.maps")
-                            if (mapIntent.resolveActivity(packageManager) != null) startActivity(mapIntent)
-                            else Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_maps_not_installed), Toast.LENGTH_SHORT).show()
+                        val dest = when {
+                            c.latitude != null && c.longitude != null -> "${c.latitude},${c.longitude}"
+                            c.adresse.isNotBlank() || c.plz.isNotBlank() || c.stadt.isNotBlank() -> {
+                                buildString {
+                                    if (c.adresse.isNotBlank()) append(c.adresse.trim())
+                                    val plzStadt = listOf(c.plz.trim(), c.stadt.trim()).filter { it.isNotEmpty() }.joinToString(" ")
+                                    if (plzStadt.isNotEmpty()) {
+                                        if (isNotEmpty()) append(", ")
+                                        append(plzStadt)
+                                    }
+                                    if (isNotEmpty()) append(", Deutschland")
+                                }.trim().takeIf { it.isNotEmpty() }
+                            }
+                            else -> null
+                        }
+                        if (dest != null) {
+                            try {
+                                val uri = if (c.latitude != null && c.longitude != null) {
+                                    Uri.parse("google.navigation:q=${c.latitude},${c.longitude}")
+                                } else {
+                                    Uri.parse("https://www.google.com/maps/dir/?api=1&destination=${Uri.encode(dest)}&dir_action=navigate")
+                                }
+                                startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage("com.google.android.apps.maps"))
+                            } catch (_: android.content.ActivityNotFoundException) {
+                                Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_maps_not_installed), Toast.LENGTH_SHORT).show()
+                            }
                         } else Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_keine_adresse), Toast.LENGTH_SHORT).show()
                     }
                 },
@@ -171,6 +192,19 @@ class CustomerDetailActivity : AppCompatActivity() {
                 },
                 onResetToAutomatic = { viewModel.resetToAutomaticIntervall(customer, editFormState) },
                 onPhotoClick = { url -> photoManager?.showImageInDialog(url) },
+                onDeletePhoto = { url ->
+                    AlertDialog.Builder(this@CustomerDetailActivity)
+                        .setTitle(getString(R.string.dialog_delete_photo_title))
+                        .setMessage(getString(R.string.dialog_delete_photo_message))
+                        .setPositiveButton(getString(R.string.dialog_loeschen)) { _, _ ->
+                            viewModel.deletePhoto(url) { success ->
+                                if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                                else Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        .setNegativeButton(getString(R.string.btn_cancel), null)
+                        .show()
+                },
                 onDatumSelected = { position, isAbholung ->
                     val intervalle = editIntervalle.toMutableList()
                     IntervallManager.showDatumPickerForCustomer(
