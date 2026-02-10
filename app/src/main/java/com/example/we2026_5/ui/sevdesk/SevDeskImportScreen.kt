@@ -47,6 +47,7 @@ fun SevDeskImportScreen(
     onSaveToken: () -> Unit,
     onImportContacts: () -> Unit,
     onImportArticles: () -> Unit,
+    onImportPrices: () -> Unit,
     onDeleteSevDeskContacts: () -> Unit,
     onDeleteSevDeskArticles: () -> Unit,
     onClearReimportList: () -> Unit,
@@ -55,7 +56,7 @@ fun SevDeskImportScreen(
     val context = LocalContext.current
     val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
     val textSecondary = colorResource(R.color.text_secondary)
-    val isBusy = state.isImportingContacts || state.isImportingArticles
+    val isBusy = state.isImportingContacts || state.isImportingArticles || state.isImportingPrices
         || state.isDeletingSevDeskContacts || state.isDeletingSevDeskArticles
     var showDeleteContactsConfirm by remember { mutableStateOf(false) }
     var showDeleteArticlesConfirm by remember { mutableStateOf(false) }
@@ -203,6 +204,15 @@ fun SevDeskImportScreen(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(if (state.isImportingArticles) "…" else stringResource(R.string.sevdesk_import_articles))
+            }
+            Spacer(Modifier.height(12.dp))
+            Button(
+                onClick = onImportPrices,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isBusy,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(if (state.isImportingPrices) "…" else stringResource(R.string.sevdesk_import_prices))
             }
             state.message?.let { msg ->
                 Spacer(Modifier.height(16.dp))

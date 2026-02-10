@@ -1,15 +1,16 @@
 package com.example.we2026_5.sevdesk
 
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
-import java.util.Scanner
+import java.util.concurrent.TimeUnit
 
 /**
  * Einfacher REST-Client für SevDesk API.
  * Basis: https://my.sevdesk.de/api/v1
  * Auth: Authorization-Header mit API-Token.
+ * Nutzt OkHttp (robuster bei SSL „chain validation failed“ auf einigen Android-Geräten).
  *
  * Nur Lesezugriff: Es werden ausschließlich GET-Requests ausgeführt.
  * Es werden keine Daten in SevDesk erstellt, geändert oder gelöscht.
@@ -21,19 +22,40 @@ object SevDeskApi {
 
     private const val BASE_URL = "https://my.sevdesk.de/api/v1"
 
-    /** Token in URL als Query-Parameter und im Header (SevDesk akzeptiert beides; manche Umgebungen verlangen den Header). */
-    private fun urlWithToken(path: String, query: String, token: String): URL {
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(15, TimeUnit.SECONDS)
+        .build()
+
+    /** URL-String für GET (Token in Query + Header). */
+    private fun urlStringWithToken(path: String, query: String, token: String): String {
         val t = token.trim()
         val q = if (query.isNotEmpty()) "$query&" else ""
-        val full = "$BASE_URL$path?${q}token=${java.net.URLEncoder.encode(t, "UTF-8")}"
-        return URL(full)
+        return "$BASE_URL$path?${q}token=${java.net.URLEncoder.encode(t, "UTF-8")}"
     }
 
-    /** Laut SevDesk-Doku: Authorization-Header mit dem API-Token als Wert (z. B. "Authorization": "b7794de..."). */
-    private fun setTokenHeader(conn: HttpURLConnection, token: String) {
-        val t = token.trim()
-        if (t.isNotEmpty()) {
-            conn.setRequestProperty("Authorization", t)
+    /** GET ausführen (OkHttp). Bei Code != 200 wird SevDeskApiException mit optionalem Präfix geworfen. */
+    private fun doGet(token: String, path: String, query: String, errorPrefix: String = ""): String {
+        val (code, body) = doGetWithCode(token, path, query)
+        if (code != 200) throw SevDeskApiException(errorPrefix + body.ifBlank { "HTTP $code" })
+        return body
+    }
+
+    /** GET ausführen, liefert (ResponseCode, Body). */
+    private fun doGetWithCode(token: String, path: String, query: String): Pair<Int, String> {
+        val url = urlStringWithToken(path, query, token)
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .addHeader("Accept", "application/json")
+            .apply {
+                val t = token.trim()
+                if (t.isNotEmpty()) addHeader("Authorization", t)
+            }
+            .build()
+        httpClient.newCall(request).execute().use { response ->
+            val body = response.body?.string() ?: ""
+            return response.code to body
         }
     }
 
@@ -48,19 +70,8 @@ object SevDeskApi {
         val limit = 1000
         val categoryFilter = "category[id]=$CATEGORY_ID_KUNDE&category[objectName]=Category"
         do {
-            val url = urlWithToken("/Contact", "depth=1&embed=addresses&$categoryFilter&limit=$limit&offset=$offset", token)
-            val conn = url.openConnection() as HttpURLConnection
-            conn.requestMethod = "GET"
-            conn.setRequestProperty("Accept", "application/json")
-            setTokenHeader(conn, token)
-            conn.connectTimeout = 15000
-            conn.readTimeout = 15000
-            val code = conn.responseCode
-            if (code != 200) {
-                val err = conn.errorStream?.use { Scanner(it).useDelimiter("\\A").next() } ?: "HTTP $code"
-                throw SevDeskApiException("Kontakte: $err")
-            }
-            val json = conn.inputStream.use { Scanner(it).useDelimiter("\\A").next() }
+            val query = "depth=1&embed=addresses&$categoryFilter&limit=$limit&offset=$offset"
+            val json = doGet(token, "/Contact", query, "Kontakte: ")
             val root = JSONObject(json)
             val arr = when {
                 root.has("objects") && root.get("objects") is JSONArray -> root.getJSONArray("objects")
@@ -155,19 +166,8 @@ object SevDeskApi {
         var offset = 0
         val limit = 1000
         do {
-            val url = urlWithToken("/Part", "embed=unity&limit=$limit&offset=$offset", token)
-            val conn = url.openConnection() as HttpURLConnection
-            conn.requestMethod = "GET"
-            conn.setRequestProperty("Accept", "application/json")
-            setTokenHeader(conn, token)
-            conn.connectTimeout = 15000
-            conn.readTimeout = 15000
-            val code = conn.responseCode
-            if (code != 200) {
-                val err = conn.errorStream?.use { Scanner(it).useDelimiter("\\A").next() } ?: "HTTP $code"
-                throw SevDeskApiException("Artikel: $err")
-            }
-            val json = conn.inputStream.use { Scanner(it).useDelimiter("\\A").next() }
+            val query = "embed=unity&limit=$limit&offset=$offset"
+            val json = doGet(token, "/Part", query, "Artikel: ")
             val root = JSONObject(json)
             val arr = when {
                 root.has("objects") && root.get("objects") is JSONArray -> root.getJSONArray("objects")
@@ -213,19 +213,8 @@ object SevDeskApi {
         var offset = 0
         val limit = 100
         do {
-            val url = urlWithToken("/PartContactPrice", "limit=$limit&offset=$offset", token)
-            val conn = url.openConnection() as HttpURLConnection
-            conn.requestMethod = "GET"
-            conn.setRequestProperty("Accept", "application/json")
-            setTokenHeader(conn, token)
-            conn.connectTimeout = 15000
-            conn.readTimeout = 15000
-            val code = conn.responseCode
-            if (code != 200) {
-                val err = conn.errorStream?.use { Scanner(it).useDelimiter("\\A").next() } ?: "HTTP $code"
-                throw SevDeskApiException("PartContactPrice: $err")
-            }
-            val json = conn.inputStream.use { Scanner(it).useDelimiter("\\A").next() }
+            val query = "limit=$limit&offset=$offset"
+            val json = doGet(token, "/PartContactPrice", query, "PartContactPrice: ")
             val root = JSONObject(json)
             val arr = when {
                 root.has("objects") && root.get("objects") is JSONArray -> root.getJSONArray("objects")
@@ -273,22 +262,10 @@ object SevDeskApi {
 
     /** GET ausführen und (ResponseCode, Body-String) zurückgeben. Body bei Fehler: "HTTP code" + Fehler-JSON (gekürzt). */
     fun getRawForTestWithCode(token: String, path: String, query: String): Pair<Int, String> {
-        val url = urlWithToken(path, query, token)
-        val conn = url.openConnection() as HttpURLConnection
-        conn.requestMethod = "GET"
-        conn.setRequestProperty("Accept", "application/json")
-        setTokenHeader(conn, token)
-        conn.connectTimeout = 15000
-        conn.readTimeout = 15000
-        val code = conn.responseCode
-        val body = if (code == 200) {
-            conn.inputStream.use { Scanner(it).useDelimiter("\\A").next() }
-        } else {
-            val err = conn.errorStream?.use { Scanner(it).useDelimiter("\\A").next() } ?: ""
-            "HTTP $code\n$err"
-        }
-        val truncated = if (body.length <= TEST_RAW_MAX_LEN) body
-        else body.take(TEST_RAW_MAX_LEN) + "\n\n… (gekürzt, ${body.length} Zeichen gesamt)"
+        val (code, body) = doGetWithCode(token, path, query)
+        val errBody = if (code == 200) body else "HTTP $code\n$body"
+        val truncated = if (errBody.length <= TEST_RAW_MAX_LEN) errBody
+        else errBody.take(TEST_RAW_MAX_LEN) + "\n\n… (gekürzt, ${errBody.length} Zeichen gesamt)"
         return code to truncated
     }
 

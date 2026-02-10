@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Termine vereinfachen – mehrere Beispiele</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      background: #f0f4f8;
+      color: #1a1a1a;
+      padding: 16px;
+      line-height: 1.45;
+    }
+    .page { max-width: 820px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 6px; color: #0d47a1; }
+    .intro { font-size: 14px; color: #555; margin-bottom: 28px; }
+    h2 {
+      font-size: 18px;
+      margin: 32px 0 10px;
+      padding: 8px 0 6px;
+      border-bottom: 2px solid #1976d2;
+      color: #1565c0;
+    }
+    .idea { font-size: 13px; color: #555; margin-bottom: 12px; font-style: italic; }
+    .mock {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      overflow: hidden;
+      margin-bottom: 16px;
+      max-width: 380px;
+    }
+    .mock .bar {
+      background: #1976d2;
+      color: #fff;
+      padding: 12px 16px;
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .mock .bar.gray { background: #546e7a; }
+    .mock .bar.green { background: #2e7d32; }
+    .mock .body { padding: 14px 16px; min-height: 200px; }
+    .mock .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+    .mock .row .date { font-weight: 500; }
+    .mock .row .tag {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+    .mock .row .tag.einmal { background: #e8f5e9; color: #2e7d32; }
+    .mock .row .tag.ausnahme { background: #fff3e0; color: #e65100; }
+    .mock .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: default;
+      margin-top: 10px;
+    }
+    .mock .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .mock .chip {
+      padding: 10px 16px;
+      border: 2px solid #1976d2;
+      border-radius: 20px;
+      background: #fff;
+      color: #1976d2;
+      font-size: 14px;
+      cursor: default;
+    }
+    .mock .chip.sel { background: #1976d2; color: #fff; }
+    .mock .step { font-size: 12px; color: #888; margin-bottom: 8px; }
+    .mock .two-cols { display: flex; gap: 12px; margin-top: 10px; }
+    .mock .two-cols .col { flex: 1; }
+    .mock .card-title { font-size: 12px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .section { margin-bottom: 36px; }
+    .section p { font-size: 14px; margin: 0 0 8px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Termine &amp; Intervalle – einfacher gestalten</h1>
+    <p class="intro">Mehrere Beispiele, wie man Design und Termin-Felder sowie die vielen Arten elegant und unkompliziert lösen kann. Nur Darstellung (HTML), kein App-Code.</p>
+
+    <!-- ========== Beispiel 1 ========== -->
+    <div class="section">
+      <h2>Beispiel 1: Eine Liste, ein Einstieg</h2>
+      <p class="idea">Alle Termine in einer Liste. Ein Button „Termin hinzufügen“. Beim Tippen nur eine Frage: „Wiederkehrend oder einmalig?“</p>
+      <div class="mock">
+        <div class="bar">Termine · Muster GmbH</div>
+        <div class="body">
+          <div class="row"><span class="date">Fr, 14.02.</span><span class="tag ausnahme">Einmalig</span><span>A + L</span></div>
+          <div class="row"><span class="date">Mo, 17.02.</span><span class="tag">Regel</span><span>A</span></div>
+          <div class="row"><span class="date">Di, 25.02.</span><span class="tag einmal">Einmalig</span><span>A</span></div>
+          <div class="row"><span class="date">Di, 04.03.</span><span class="tag einmal">Einmalig</span><span>L</span></div>
+          <button class="btn">+ Termin hinzufügen</button>
+        </div>
+      </div>
+      <p><strong>Dialog nach Klick:</strong> Zwei Optionen: „Wiederkehrend“ (dann: wie oft? wöchentlich / 14 Tage / monatlich) oder „Einmalig“ (dann: Datum + A oder A+L). Keine Unterscheidung Kunden-Termin vs. Ausnahme in der UI – optional ein Häkchen „Vom Kunden gewünscht“.</p>
+    </div>
+
+    <!-- ========== Beispiel 2 ========== -->
+    <div class="section">
+      <h2>Beispiel 2: Nach „Wann“ gruppieren, nicht nach Typ</h2>
+      <p class="idea">Nutzer denkt in Zeit: diese Woche, nächste Woche. Nicht in „Kunden-Termin“ vs. „Ausnahme“. Eine Liste pro Zeitraum, ein einheitliches Format.</p>
+      <div class="mock">
+        <div class="bar">Termine · Muster GmbH</div>
+        <div class="body">
+          <div class="card-title">Diese Woche</div>
+          <div class="row"><span class="date">Fr 14.02.</span><span>A + L</span></div>
+          <div class="row"><span class="date">Mo 17.02.</span><span>A</span></div>
+          <div class="card-title">Nächste Woche</div>
+          <div class="row"><span class="date">Di 25.02.</span><span>A</span></div>
+          <div class="row"><span class="date">Di 04.03.</span><span>L</span></div>
+          <button class="btn">+ Termin hinzufügen</button>
+        </div>
+      </div>
+      <p>Keine Tags „Regel“ / „Ausnahme“ nötig – nur Datum und A/L. Art (wiederkehrend/einmalig) beim Bearbeiten sichtbar, wenn man den Termin antippt.</p>
+    </div>
+
+    <!-- ========== Beispiel 3 ========== -->
+    <div class="section">
+      <h2>Beispiel 3: Nur zwei Blöcke – Regel vs. Einmalig</h2>
+      <p class="idea">Statt fünf Bereiche (Nächster Termin, Kunden-Termine, Ausnahme, Regeln, Tour) nur zwei: „Regeltermine“ und „Einmalige Termine“. Gleiche Zeilen-Optik in beiden.</p>
+      <div class="mock">
+        <div class="bar">Termine · Muster GmbH</div>
+        <div class="body">
+          <div class="card-title">Regeltermine</div>
+          <div class="row"><span class="date">Mo, 17.02.</span><span>Wöchentlich · A</span></div>
+          <div class="row"><span class="date">Mo, 24.02.</span><span>Wöchentlich · A</span></div>
+          <div class="card-title">Einmalige Termine</div>
+          <div class="row"><span class="date">Fr, 14.02.</span><span>A + L</span></div>
+          <div class="row"><span class="date">Di, 25.02.</span><span>A</span></div>
+          <div class="row"><span class="date">Di, 04.03.</span><span>L</span></div>
+          <button class="btn">+ Termin hinzufügen</button>
+        </div>
+      </div>
+      <p>„Regeltermine“ = aus Intervall/Wochentag/Liste (berechnet). „Einmalige Termine“ = Kunden-Termine + Ausnahme in einer Liste. Ein Einstieg „Termin hinzufügen“ mit Auswahl: Regel (wöchentlich/14 Tage/montag …) oder Einmalig (Datum + A/L).</p>
+    </div>
+
+    <!-- ========== Beispiel 4 ========== -->
+    <div class="section">
+      <h2>Beispiel 4: Drei Karten beim Hinzufügen</h2>
+      <p class="idea">Ein Dialog „Neuer Termin“: Nutzer wählt nur zwischen drei klaren Karten. Keine 8 Typen – nur drei Handlungen.</p>
+      <div class="mock">
+        <div class="bar gray">Neuer Termin</div>
+        <div class="body">
+          <div class="step">Schritt 1: Art wählen</div>
+          <div class="chips">
+            <span class="chip sel">Wiederkehrend</span>
+            <span class="chip">Einmalig</span>
+            <span class="chip">Ausnahme</span>
+          </div>
+          <div class="step">Wiederkehrend → Wie oft?</div>
+          <div class="chips">
+            <span class="chip">Wöchentlich</span>
+            <span class="chip">Alle 2 Wochen</span>
+            <span class="chip">Monatlich</span>
+          </div>
+          <p style="font-size:13px;color:#666;margin-top:12px;">Dann: Startdatum + A-Tag (oder A+L). Fertig.</p>
+        </div>
+      </div>
+      <p><strong>Vereinfachung der Arten:</strong> „Wöchentlich“ = bisher WEEKLY; „Alle 2 Wochen“ = intervallTage 14; „Monatlich“ = 1. Mo / 2. Di / … (MONTHLY_WEEKDAY). Ad-hoc/Unregelmäßig = „Einmalig“. Ausnahme = Sonderfall mit einem Häkchen oder eigener Karte. So hat der Nutzer nur 3 Entscheidungen, die App mappt intern auf die bestehenden Typen.</p>
+    </div>
+
+    <!-- ========== Beispiel 5 ========== -->
+    <div class="section">
+      <h2>Beispiel 5: Kalender-Tag als Einstieg</h2>
+      <p class="idea">Hauptansicht: Ein Tag (z. B. heute oder gewählt). Alle Termine an diesem Tag in einer Liste – egal ob Regel, Kunden-Termin oder Ausnahme. „Termin hinzufügen“ = „An diesem Tag einen Termin anlegen“.</p>
+      <div class="mock">
+        <div class="bar">Montag, 17.02.2026</div>
+        <div class="body">
+          <div class="row"><span>Muster GmbH</span><span>A</span></div>
+          <div class="row"><span>Andere Firma</span><span>A + L</span></div>
+          <button class="btn">+ An diesem Tag Termin anlegen</button>
+        </div>
+      </div>
+      <p>Nutzer wählt Datum (Kalender/Pfeile). Sieht nur: Wer hat wann A/L. Hinzufügen = „Für welchen Kunden?“ → dann A oder A+L. Art (wiederkehrend/einmalig) kann optional im zweiten Schritt gefragt werden.</p>
+    </div>
+
+    <!-- ========== Beispiel 6 ========== -->
+    <div class="section">
+      <h2>Beispiel 6: „Einmalige Termine“ ohne Trennung</h2>
+      <p class="idea">Kunden-Termin und Ausnahme-Termin sind technisch gleich (Datum + A/L). In der UI: eine Liste „Einmalige Termine“. Optional pro Eintrag ein kleines Icon oder Text „vom Kunden“ / „Ausnahme“ – oder ganz weglassen und nur beim Anlegen fragen: „Vom Kunden gewünscht?“ Ja/Nein.</p>
+      <div class="mock">
+        <div class="bar green">Einmalige Termine</div>
+        <div class="body">
+          <div class="row"><span class="date">Fr, 14.02.</span><span>A + L</span></div>
+          <div class="row"><span class="date">Di, 25.02.</span><span>A</span></div>
+          <div class="row"><span class="date">Di, 04.03.</span><span>L</span></div>
+          <button class="btn">+ Einmaligen Termin anlegen</button>
+        </div>
+      </div>
+      <p>Im Backend bleiben zwei Listen (kundenTermine, ausnahmeTermine) oder eine mit Feld „quelle“. In der Anzeige: eine Liste, ein Format. Weniger Begriffe für den Nutzer.</p>
+    </div>
+
+    <!-- ========== Kurzvergleich ========== -->
+    <div class="section">
+      <h2>Kurzvergleich der Beispiele</h2>
+      <table style="width:100%; border-collapse:collapse; font-size:13px; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+        <thead>
+          <tr style="background:#e3f2fd;">
+            <th style="padding:10px 12px; text-align:left;">Beispiel</th>
+            <th style="padding:10px 12px; text-align:left;">Kernidee</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding:10px 12px; border-bottom:1px solid #eee;"><strong>1</strong></td><td style="padding:10px 12px; border-bottom:1px solid #eee;">Eine Liste, ein Button; nur „Wiederkehrend / Einmalig“</td></tr>
+          <tr><td style="padding:10px 12px; border-bottom:1px solid #eee;"><strong>2</strong></td><td style="padding:10px 12px; border-bottom:1px solid #eee;">Gruppierung nach Zeit (diese / nächste Woche), keine Typ-Labels</td></tr>
+          <tr><td style="padding:10px 12px; border-bottom:1px solid #eee;"><strong>3</strong></td><td style="padding:10px 12px; border-bottom:1px solid #eee;">Zwei Blöcke: Regeltermine + Einmalige Termine, gleiche Zeilen-Optik</td></tr>
+          <tr><td style="padding:10px 12px; border-bottom:1px solid #eee;"><strong>4</strong></td><td style="padding:10px 12px; border-bottom:1px solid #eee;">Drei Karten beim Hinzufügen (Wiederkehrend / Einmalig / Ausnahme), dann „Wie oft?“</td></tr>
+          <tr><td style="padding:10px 12px; border-bottom:1px solid #eee;"><strong>5</strong></td><td style="padding:10px 12px; border-bottom:1px solid #eee;">Tag als Einstieg: alle Termine an einem Tag, hinzufügen = „An diesem Tag“</td></tr>
+          <tr><td style="padding:10px 12px; border-bottom:1px solid #eee;"><strong>6</strong></td><td style="padding:10px 12px; border-bottom:1px solid #eee;">Kunden-Termin + Ausnahme als eine Liste „Einmalige Termine“, optional Quelle verstecken</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:12px;">Alle Beispiele zielen darauf ab: weniger Begriffe, weniger Einstiege, ein einheitliches Darstellungsmuster. Die 8 technischen Arten (Regelmäßig, Monatlich, Wochentag, …) bleiben im Backend; in der UI werden sie auf 2–3 klare Handlungen reduziert.</p>
+    </div>
+
+    <p style="margin-top:32px; font-size:12px; color:#888;">Bezug: BERICHT_APP_ZUSTAND_2026_02.md · Kein App-Code, nur Darstellung.</p>
+  </div>
+</body>
+</html>

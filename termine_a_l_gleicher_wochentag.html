@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A und L gleicher Wochentag – wie erkennt das System?</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      padding: 16px;
+      line-height: 1.5;
+    }
+    .page { max-width: 480px; margin: 0 auto; }
+    h1 { font-size: 18px; margin: 0 0 12px; color: #0d47a1; }
+    .frage {
+      background: #fff3e0;
+      padding: 14px 16px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border-left: 4px solid #e65100;
+      font-size: 14px;
+    }
+    .frage strong { color: #bf360c; }
+    .fall {
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .fall h3 { margin: 0 0 6px; font-size: 15px; color: #1565c0; }
+    .fall p { margin: 0; font-size: 14px; color: #444; }
+    .fall .tech { font-size: 12px; color: #666; margin-top: 6px; }
+    .loesung {
+      background: #e8f5e9;
+      padding: 16px 18px;
+      border-radius: 10px;
+      margin-top: 20px;
+      border-left: 4px solid #2e7d32;
+    }
+    .loesung h2 { font-size: 14px; margin: 0 0 10px; color: #1b5e20; }
+    .loesung ul { margin: 0; padding-left: 20px; font-size: 14px; }
+    .loesung li { margin-bottom: 6px; }
+    .mock {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-top: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .mock .label { font-size: 11px; color: #888; margin-bottom: 6px; }
+    .mock .opt {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+    .mock .opt input { margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>A und L gleicher Wochentag (z. B. Mo, Mo) – wie soll das System das wissen?</h1>
+
+    <div class="frage">
+      <strong>Die Frage:</strong> Beim Anlegen des Kunden wählt man A-Wochentag = Mo und L-Wochentag = Mo. Das System braucht den <strong>Abstand A→L in Tagen (tageAzuL)</strong>. Zwei Fälle:
+    </div>
+
+    <div class="fall">
+      <h3>Fall 1: A und L am selben Tag</h3>
+      <p>Abholung und Auslieferung am gleichen Montag (z. B. morgens A, nachmittags L).</p>
+      <div class="tech">→ tageAzuL = <strong>0</strong></div>
+    </div>
+    <div class="fall">
+      <h3>Fall 2: A und L gleicher Wochentag, aber verschiedene Wochen</h3>
+      <p>Abholung diesen Montag, Auslieferung nächsten Montag (eine Woche später).</p>
+      <div class="tech">→ tageAzuL = <strong>7</strong></div>
+    </div>
+
+    <div class="loesung">
+      <h2>Vorschlag: Beim Anlegen explizit abfragen</h2>
+      <p style="margin-bottom:10px;">Wenn A-Wochentag = L-Wochentag (z. B. beide Mo), zeigt die App eine Zusatzfrage:</p>
+      <ul>
+        <li><strong>„A und L am selben Tag?“</strong> → Ja = tageAzuL 0, Nein = tageAzuL 7.</li>
+        <li>Oder: <strong>„Wann ist L?“</strong> → „Am selben Tag wie A“ (0) / „Eine Woche später (nächster [Mo])“ (7).</li>
+      </ul>
+      <p style="margin-top:12px; margin-bottom:6px;">So weiß das System eindeutig, ob 0 oder 7 Tage.</p>
+      <div class="mock">
+        <div class="label">Beispiel im Dialog (wenn A = Mo, L = Mo gewählt):</div>
+        <div class="opt"><input type="radio" name="same" checked> <strong>L am selben Tag wie A</strong> (Mo A, Mo L gleicher Tag)</div>
+        <div class="opt"><input type="radio" name="same"> <strong>L eine Woche später</strong> (dieser Mo A, nächster Mo L)</div>
+      </div>
+    </div>
+
+    <p style="margin-top:24px; font-size:13px; color:#666;">Kurz: Bei A = L (gleicher Wochentag) eine klare Frage „L am selben Tag oder eine Woche später?“ → System setzt tageAzuL = 0 oder 7.</p>
+  </div>
+</body>
+</html>

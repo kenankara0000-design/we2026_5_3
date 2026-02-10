@@ -1,0 +1,27 @@
+# Regel: Zweites Gerät – Kompatibilität bis zum Update
+
+**Hintergrund:** Die App läuft auf einem zweiten Handy (Hauptnutzung: Tour Planner). Bis eine Update-Funktion alle Geräte auf den gleichen Stand bringt, muss die alte App-Version dort weiter funktionieren.
+
+---
+
+## 1. Beim Entwickeln (bis zum Update)
+
+- **Alles, was wir bauen, muss mit dem zweiten Handy noch kompatibel funktionieren.**
+- **Tour-Planer-relevante Daten und Firebase:** Keine Breaking Changes. Die alte App liest/schreibt: Kunden, Termine, Listen, `customers_for_tour`, Erledigung, Urlaub, Verschieben, Listen-Termine. Diese Strukturen und Felder **nicht löschen oder umbenennen**. Neue Funktionen nur **ergänzen** (neue Felder, neue Knoten), sodass die alte App weiterläuft und Unbekanntes ignoriert.
+- **Erfassung (Waschen, Artikel, Belege):** Wird auf dem zweiten Handy kaum genutzt – Änderungen dort sind weniger kritisch, können aber zur Sicherheit ebenfalls rückwärtskompatibel gehalten werden.
+- Bei Unsicherheit: Lieber neue Pfade/Felder nutzen als bestehende umbauen.
+
+---
+
+## 2. Nach dem Update (wenn alle Geräte aktualisiert sind)
+
+- **Wenn der Nutzer ein Update ausgerollt hat** (alle relevanten Handys haben die neue Version): Dann darf der Code **auf „normal“ gesetzt** werden.
+- Konkret: Rückwärtskompatibilitäts-Layer (z. B. doppeltes Schreiben alter + neuer Struktur, Abwärts-Lesen alter Felder) können entfernt oder vereinfacht werden. Alte Strukturen können migriert und danach nicht mehr unterstützt werden – **nur nach ausdrücklicher Bestätigung des Nutzers**, dass das Update auf dem zweiten Gerät erfolgt ist.
+- Im Plan oder in Commits vermerken: „Kompatibilität für zweites Gerät entfernt nach Update-Rollout.“
+
+---
+
+## 3. Kurz
+
+- **Bis Update:** Zweites Handy (alte App) darf nicht brechen → Firebase und Tour-Planer-Daten rückwärtskompatibel.
+- **Nach Update:** Code darf normalisiert werden; Kompatibilitäts-Hacks können raus, wenn der Nutzer bestätigt hat, dass das Update gemacht wurde.

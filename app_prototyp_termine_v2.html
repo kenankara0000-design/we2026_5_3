@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Termine – App-Prototyp (V2)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; height: 100%; overflow-x: hidden; }
+    body {
+      font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #1c1c1e;
+      color: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100%;
+    }
+    .phone {
+      width: 375px;
+      height: 667px;
+      max-height: 90vh;
+      background: #fff;
+      border-radius: 36px;
+      box-shadow: 0 0 0 3px #2c2c2e, 0 24px 48px rgba(0,0,0,0.5);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .screen { display: none; flex-direction: column; height: 100%; background: #fff; }
+    .screen.active { display: flex; }
+
+    /* TopAppBar – Material 3 */
+    .topbar {
+      height: 56px;
+      min-height: 56px;
+      background: #1976d2;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 4px 0 4px;
+      flex-shrink: 0;
+    }
+    .topbar .back {
+      width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: transparent; color: #fff;
+      font-size: 24px; cursor: pointer; border-radius: 24px;
+    }
+    .topbar .back:hover { background: rgba(255,255,255,0.15); }
+    .topbar .back:active { background: rgba(255,255,255,0.25); }
+    .topbar .title { flex: 1; font-size: 20px; font-weight: 500; margin-left: 4px; }
+    .topbar .subtitle { font-size: 13px; opacity: 0.9; margin-top: 1px; }
+
+    /* Content */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      padding-bottom: 88px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .content .section-label {
+      font-size: 12px; font-weight: 600; color: #666;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin: 16px 0 8px; padding: 0 4px;
+    }
+    .content .section-label:first-of-type { margin-top: 0; }
+    .list-item {
+      min-height: 56px;
+      padding: 14px 16px;
+      background: #fafafa;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      border: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.15s;
+    }
+    .list-item:active { background: #f0f0f0; }
+    .list-item .left { flex: 1; min-width: 0; }
+    .list-item .date { font-size: 16px; font-weight: 500; color: #1a1a1a; }
+    .list-item .meta { font-size: 13px; color: #666; margin-top: 2px; }
+    .list-item .badge {
+      font-size: 13px; font-weight: 600;
+      padding: 6px 12px; border-radius: 8px;
+      margin-left: 12px; flex-shrink: 0;
+    }
+    .list-item .badge.a { background: #e3f2fd; color: #1565c0; }
+    .list-item .badge.l { background: #e8f5e9; color: #2e7d32; }
+    .list-item .badge.al { background: #fff3e0; color: #e65100; }
+
+    /* Nächster Termin Karte */
+    .next-card {
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid #90caf9;
+    }
+    .next-card .label { font-size: 12px; color: #1565c0; font-weight: 600; margin-bottom: 4px; }
+    .next-card .value { font-size: 18px; font-weight: 600; color: #0d47a1; }
+
+    /* FAB – 56dp Material */
+    .fab {
+      position: absolute;
+      right: 16px;
+      bottom: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      border: none;
+      background: #1976d2;
+      color: #fff;
+      font-size: 28px;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(25,118,210,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .fab:hover { background: #1565c0; box-shadow: 0 6px 18px rgba(25,118,210,0.5); }
+    .fab:active { transform: scale(0.96); }
+
+    /* Bottom Sheet – Material 3 (72dp top margin, drag handle 22dp) */
+    .scrim {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.32);
+      display: none;
+      z-index: 15;
+      animation: fadeIn 0.2s ease;
+    }
+    .scrim.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .sheet {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      max-height: 88%;
+      background: #fefefe;
+      border-radius: 28px 28px 0 0;
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.12);
+      display: none;
+      flex-direction: column;
+      z-index: 20;
+      animation: sheetUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .sheet.active { display: flex; }
+    @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .sheet .handle {
+      width: 36px; height: 4px;
+      background: #c4c4c4;
+      border-radius: 2px;
+      margin: 12px auto 4px;
+      flex-shrink: 0;
+    }
+    .sheet .sheet-title {
+      font-size: 22px; font-weight: 600;
+      padding: 0 24px 20px;
+      color: #1a1a1a;
+    }
+    .sheet .sheet-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 24px 24px;
+      padding-bottom: 32px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .sheet .section-label {
+      font-size: 12px; font-weight: 600; color: #666;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin: 20px 0 10px;
+    }
+    .sheet .section-label:first-child { margin-top: 0; }
+    /* Chips – min 48dp touch target */
+    .sheet .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 8px 0 4px;
+    }
+    .sheet .chip {
+      min-height: 48px;
+      min-width: 64px;
+      padding: 0 20px;
+      border-radius: 24px;
+      border: 2px solid #1976d2;
+      background: #fff;
+      color: #1976d2;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sheet .chip.selected { background: #1976d2; color: #fff; border-color: #1976d2; }
+    .sheet .chip:hover { background: #e3f2fd; }
+    .sheet .chip.selected:hover { background: #1565c0; color: #fff; border-color: #1565c0; }
+    /* Same-day block – klare Zwei-Optionen (UX best practice) */
+    .sheet .same-day-block {
+      background: #f5f5f5;
+      border-radius: 16px;
+      padding: 16px;
+      margin: 12px 0;
+      border: 2px solid #e0e0e0;
+    }
+    .sheet .same-day-block .heading { font-size: 14px; font-weight: 600; color: #424242; margin-bottom: 12px; }
+    .sheet .radio-item {
+      display: flex;
+      align-items: center;
+      min-height: 52px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      border: 2px solid #e0e0e0;
+      background: #fff;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .sheet .radio-item:last-child { margin-bottom: 0; }
+    .sheet .radio-item:hover { background: #fafafa; }
+    .sheet .radio-item.selected { border-color: #1976d2; background: #e3f2fd; }
+    .sheet .radio-item input { margin-right: 14px; width: 20px; height: 20px; accent-color: #1976d2; flex-shrink: 0; }
+    .sheet .radio-item span { font-size: 15px; color: #1a1a1a; }
+    .sheet .radio-item .sublabel { font-size: 12px; color: #666; margin-top: 2px; }
+    /* Preview – natürliche Sprache */
+    .sheet .preview {
+      background: #e8f5e9;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-top: 16px;
+      font-size: 14px;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+    }
+    .sheet .preview strong { color: #1b5e20; }
+    .sheet .hint {
+      font-size: 13px;
+      color: #666;
+      margin-top: 8px;
+      padding: 12px;
+      background: #fafafa;
+      border-radius: 10px;
+      line-height: 1.45;
+    }
+    .sheet .btn-primary {
+      width: 100%;
+      min-height: 52px;
+      margin-top: 28px;
+      border: none;
+      border-radius: 26px;
+      background: #1976d2;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .sheet .btn-primary:hover { background: #1565c0; }
+    .sheet .btn-primary:active { transform: scale(0.99); }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div class="scrim" id="scrim"></div>
+
+    <!-- Screen: Kunde · Termine -->
+    <div class="screen active" id="screen-list">
+      <div class="topbar">
+        <button type="button" class="back" aria-label="Zurück">←</button>
+        <div>
+          <div class="title">Termine</div>
+          <div class="subtitle">Muster GmbH</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="next-card">
+          <div class="label">Nächster Termin</div>
+          <div class="value">Mo 17.02. A · Do 20.02. L</div>
+        </div>
+        <div class="section-label">Alle Termine (nächste 365 Tage)</div>
+        <div class="list-item">
+          <div class="left">
+            <div class="date">Fr, 14.02.2026</div>
+            <div class="meta">Einmalig</div>
+          </div>
+          <span class="badge al">A + L</span>
+        </div>
+        <div class="list-item">
+          <div class="left">
+            <div class="date">Mo, 17.02.2026</div>
+            <div class="meta">Wöchentlich · A Mo, L Do (L = A + 3)</div>
+          </div>
+          <span class="badge a">A</span>
+        </div>
+        <div class="list-item">
+          <div class="left">
+            <div class="date">Do, 20.02.2026</div>
+            <div class="meta">Wöchentlich · A Mo, L Do</div>
+          </div>
+          <span class="badge l">L</span>
+        </div>
+        <div class="list-item">
+          <div class="left">
+            <div class="date">Di, 25.02.2026</div>
+            <div class="meta">Vom Kunden</div>
+          </div>
+          <span class="badge a">A</span>
+        </div>
+      </div>
+      <button type="button" class="fab" id="fab-add" aria-label="Termin hinzufügen">+</button>
+    </div>
+
+    <!-- Bottom Sheet: Termin hinzufügen -->
+    <div class="sheet" id="sheet-add">
+      <div class="handle"></div>
+      <div class="sheet-title">Termin hinzufügen</div>
+      <div class="sheet-body">
+        <div class="section-label">Art</div>
+        <div class="chips" id="chips-art">
+          <button type="button" class="chip selected" data-art="wiederkehrend">Wiederkehrend</button>
+          <button type="button" class="chip" data-art="einmalig">Einmalig</button>
+        </div>
+
+        <div id="block-wiederkehrend">
+          <div class="section-label">A an welchem Wochentag?</div>
+          <div class="chips" id="chips-a">
+            <button type="button" class="chip selected" data-w="0">Mo</button>
+            <button type="button" class="chip" data-w="1">Di</button>
+            <button type="button" class="chip" data-w="2">Mi</button>
+            <button type="button" class="chip" data-w="3">Do</button>
+            <button type="button" class="chip" data-w="4">Fr</button>
+            <button type="button" class="chip" data-w="5">Sa</button>
+            <button type="button" class="chip" data-w="6">So</button>
+          </div>
+          <div class="section-label">L an welchem Wochentag? (L = A + Anzahl Tage)</div>
+          <div class="chips" id="chips-l">
+            <button type="button" class="chip" data-w="0">Mo</button>
+            <button type="button" class="chip" data-w="1">Di</button>
+            <button type="button" class="chip" data-w="2">Mi</button>
+            <button type="button" class="chip selected" data-w="3">Do</button>
+            <button type="button" class="chip" data-w="4">Fr</button>
+            <button type="button" class="chip" data-w="5">Sa</button>
+            <button type="button" class="chip" data-w="6">So</button>
+          </div>
+
+          <div id="block-same-day">
+            <div class="same-day-block">
+              <div class="heading">A und L gleicher Wochentag – wann ist L?</div>
+              <label class="radio-item selected" id="radio-same">
+                <input type="radio" name="same" value="0" checked>
+                <span><strong>L am selben Tag wie A</strong><br><span class="sublabel">L = A + 0</span></span>
+              </label>
+              <label class="radio-item" id="radio-week">
+                <input type="radio" name="same" value="7">
+                <span><strong>L eine Woche später</strong><br><span class="sublabel">L = A + 7 (nächster gleicher Wochentag)</span></span>
+              </label>
+            </div>
+          </div>
+          <div class="hint" id="hint-tage">Abstand A → L: 3 Tage (Mo → Do). Nächster A: Montag, dann L Donnerstag.</div>
+
+          <div class="section-label">Wie oft abholen?</div>
+          <div class="chips" id="chips-intervall">
+            <button type="button" class="chip selected" data-days="7">Jede Woche</button>
+            <button type="button" class="chip" data-days="14">Alle 2 Wochen</button>
+            <button type="button" class="chip" data-days="21">Alle 3 Wochen</button>
+            <button type="button" class="chip" data-days="28">Alle 4 Wochen</button>
+            <button type="button" class="chip" data-days="35">Alle 5 Wochen</button>
+            <button type="button" class="chip" data-days="42">Alle 6 Wo</button>
+            <button type="button" class="chip" data-days="56">Alle 8 Wochen</button>
+          </div>
+          <div class="preview" id="preview-text">Nächster Termin: <strong>Mo 17.02. A</strong>, <strong>Do 20.02. L</strong> (jede Woche).</div>
+        </div>
+
+        <div id="block-einmalig" style="display:none;">
+          <div class="hint">Einmaliger Termin: In der App würden Sie hier ein Datum wählen und A oder A+L anlegen. Demo ohne DatePicker.</div>
+        </div>
+
+        <button type="button" class="btn-primary" id="btn-save">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+(function() {
+  var WOCHE = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+  var scrim = document.getElementById('scrim');
+  var sheet = document.getElementById('sheet-add');
+  var fab = document.getElementById('fab-add');
+  var chipsArt = document.getElementById('chips-art');
+  var blockW = document.getElementById('block-wiederkehrend');
+  var blockE = document.getElementById('block-einmalig');
+  var blockSame = document.getElementById('block-same-day');
+  var chipsA = document.getElementById('chips-a');
+  var chipsL = document.getElementById('chips-l');
+  var hintTage = document.getElementById('hint-tage');
+  var previewText = document.getElementById('preview-text');
+  var chipsIntervall = document.getElementById('chips-intervall');
+  var radioSame = document.getElementById('radio-same');
+  var radioWeek = document.getElementById('radio-week');
+  var btnSave = document.getElementById('btn-save');
+
+  var state = { art: 'wiederkehrend', a: 0, l: 3, tageAzuL: 3, sameDay: '0', intervallDays: 7 };
+
+  function tageAzuL() {
+    if (state.a === state.l) return state.sameDay === '7' ? 7 : 0;
+    var d = (state.l - state.a + 7) % 7;
+    return d === 0 ? 7 : d;
+  }
+
+  function updateUI() {
+    state.tageAzuL = tageAzuL();
+    var same = state.a === state.l;
+    blockSame.style.display = same ? 'block' : 'none';
+    if (same) {
+      hintTage.textContent = 'Abstand A → L: ' + (state.tageAzuL === 0 ? '0 (selber Tag)' : '7 Tage (eine Woche später)') + '.';
+    } else {
+      hintTage.textContent = 'Abstand A → L: ' + state.tageAzuL + ' Tage (' + WOCHE[state.a] + ' → ' + WOCHE[state.l] + '). Nächster A: ' + WOCHE[state.a] + ', dann L ' + WOCHE[state.l] + '.';
+    }
+    // Preview (nächster Mo ab heute – vereinfacht 17.02.)
+    var nextA = 'Mo 17.02.';
+    var nextL = state.tageAzuL === 0 ? 'Mo 17.02.' : (state.tageAzuL === 7 ? 'Mo 24.02.' : 'Do 20.02.');
+    var intervallLabel = state.intervallDays === 7 ? 'jede Woche' : 'alle ' + (state.intervallDays / 7) + ' Wochen';
+    previewText.innerHTML = 'Nächster Termin: <strong>' + nextA + ' A</strong>, <strong>' + nextL + ' L</strong> (' + intervallLabel + ').';
+  }
+
+  function updateSameDaySelection() {
+    var r = document.querySelector('input[name="same"]:checked');
+    if (r) state.sameDay = r.value;
+    radioSame.classList.toggle('selected', state.sameDay === '0');
+    radioWeek.classList.toggle('selected', state.sameDay === '7');
+  }
+
+  fab.addEventListener('click', function() {
+    scrim.classList.add('active');
+    sheet.classList.add('active');
+  });
+  scrim.addEventListener('click', function() {
+    scrim.classList.remove('active');
+    sheet.classList.remove('active');
+  });
+
+  chipsArt.querySelectorAll('.chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      chipsArt.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('selected'); });
+      chip.classList.add('selected');
+      state.art = chip.getAttribute('data-art');
+      blockW.style.display = state.art === 'wiederkehrend' ? 'block' : 'none';
+      blockE.style.display = state.art === 'einmalig' ? 'block' : 'none';
+    });
+  });
+
+  chipsA.querySelectorAll('.chip').forEach(function(c) {
+    c.addEventListener('click', function() {
+      state.a = parseInt(c.getAttribute('data-w'), 10);
+      chipsA.querySelectorAll('.chip').forEach(function(x) { x.classList.remove('selected'); });
+      c.classList.add('selected');
+      updateUI();
+    });
+  });
+  chipsL.querySelectorAll('.chip').forEach(function(c) {
+    c.addEventListener('click', function() {
+      state.l = parseInt(c.getAttribute('data-w'), 10);
+      chipsL.querySelectorAll('.chip').forEach(function(x) { x.classList.remove('selected'); });
+      c.classList.add('selected');
+      updateUI();
+    });
+  });
+
+  radioSame.addEventListener('click', function() {
+    state.sameDay = '0';
+    document.querySelector('input[name="same"][value="0"]').checked = true;
+    updateSameDaySelection();
+    updateUI();
+  });
+  radioWeek.addEventListener('click', function() {
+    state.sameDay = '7';
+    document.querySelector('input[name="same"][value="7"]').checked = true;
+    updateSameDaySelection();
+    updateUI();
+  });
+
+  chipsIntervall.querySelectorAll('.chip').forEach(function(c) {
+    c.addEventListener('click', function() {
+      state.intervallDays = parseInt(c.getAttribute('data-days'), 10);
+      chipsIntervall.querySelectorAll('.chip').forEach(function(x) { x.classList.remove('selected'); });
+      c.classList.add('selected');
+      updateUI();
+    });
+  });
+
+  btnSave.addEventListener('click', function() {
+    var msg = 'Gespeichert (Demo).\n\n';
+    msg += 'Art: ' + (state.art === 'wiederkehrend' ? 'Wiederkehrend' : 'Einmalig') + '\n';
+    msg += 'A: ' + WOCHE[state.a] + ', L: ' + WOCHE[state.l] + '\n';
+    msg += 'L = A + ' + state.tageAzuL + ' Tage\n';
+    msg += 'Intervall: alle ' + (state.intervallDays / 7) + ' Wochen';
+    alert(msg);
+    scrim.classList.remove('active');
+    sheet.classList.remove('active');
+  });
+
+  updateSameDaySelection();
+  updateUI();
+})();
+  </script>
+</body>
+</html>

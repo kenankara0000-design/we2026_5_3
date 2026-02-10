@@ -23,6 +23,7 @@ data class SevDeskImportState(
     val token: String = "",
     val isImportingContacts: Boolean = false,
     val isImportingArticles: Boolean = false,
+    val isImportingPrices: Boolean = false,
     val isDeletingSevDeskContacts: Boolean = false,
     val isDeletingSevDeskArticles: Boolean = false,
     val message: String? = null,
@@ -48,6 +49,7 @@ class SevDeskImportViewModel(
         _state.value = _state.value.copy(message = "Token gespeichert")
     }
 
+    /** Nur Kontakte importieren (keine Kundenpreise). Preise separat über „Preise importieren“. */
     fun importContacts() {
         val token = _state.value.token.trim()
         if (token.isEmpty()) {
@@ -62,22 +64,43 @@ class SevDeskImportViewModel(
             _state.value = _state.value.copy(isImportingContacts = false)
             result.fold(
                 onSuccess = { (created, updated) ->
-                    val kundenpreiseResult = withContext(Dispatchers.IO) {
-                        SevDeskKundenpreiseImport(customerRepository, articleRepository, kundenPreiseRepository)
-                            .importKundenpreise(token)
-                    }
                     val msg = buildString {
                         if (created > 0) append("$created neu angelegt. ")
                         if (updated > 0) append("$updated aktualisiert (nur Name/Adresse aus SevDesk). ")
                         if (created == 0 && updated == 0) append("Keine Änderungen. ")
-                        else append("Alias/Termine etc. bleiben unverändert. ")
-                        kundenpreiseResult.getOrNull()?.let { count ->
-                            if (count > 0) append("$count Kunden mit Kundenpreisen übernommen.")
-                        }
+                        else append("Alias/Termine etc. bleiben unverändert.")
                     }
                     _state.value = _state.value.copy(message = msg.trim())
                 }
             ) { e -> _state.value = _state.value.copy(error = e.message ?: "Fehler beim Import.") }
+        }
+    }
+
+    /** Kundenpreise (PartContactPrice) von SevDesk importieren. Kontakte und Artikel sollten bereits importiert sein. */
+    fun importKundenpreise() {
+        val token = _state.value.token.trim()
+        if (token.isEmpty()) {
+            _state.value = _state.value.copy(error = "Bitte API-Token eingeben.")
+            return
+        }
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isImportingPrices = true, error = null, message = null)
+            val result = withContext(Dispatchers.IO) {
+                SevDeskKundenpreiseImport(customerRepository, articleRepository, kundenPreiseRepository)
+                    .importKundenpreise(token)
+            }
+            _state.value = _state.value.copy(isImportingPrices = false)
+            result.fold(
+                onSuccess = { count ->
+                    _state.value = _state.value.copy(
+                        message = if (count > 0) "$count Kunden mit Kundenpreisen übernommen."
+                        else "Keine Kundenpreise zugeordnet. Zuerst Kontakte und Artikel importieren."
+                    )
+                },
+                onFailure = { e ->
+                    _state.value = _state.value.copy(error = e.message ?: "Fehler beim Preise-Import.")
+                }
+            )
         }
     }
 

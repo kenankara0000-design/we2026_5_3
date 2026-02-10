@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Termine – Aktuell vs. Vorschlag (Beispiel)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      background: #f0f0f0;
+      color: #1a1a1a;
+      padding: 12px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: #666;
+    }
+    .toggle-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .toggle-btn {
+      padding: 10px 20px;
+      border: 1px solid #1976d2;
+      background: #fff;
+      color: #1976d2;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .toggle-btn.active {
+      background: #1976d2;
+      color: #fff;
+    }
+    .panel {
+      display: none;
+      max-width: 400px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      overflow: hidden;
+      min-height: 520px;
+    }
+    .panel.active { display: block; }
+    .app-bar {
+      background: #1976d2;
+      color: #fff;
+      padding: 14px 16px;
+      font-weight: 600;
+      font-size: 18px;
+    }
+    .app-bar.sub { background: #1565c0; font-size: 14px; }
+    .scroll {
+      padding: 12px 16px 24px;
+      padding-bottom: 80px;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      padding-left: 4px;
+    }
+    .card {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      border: 1px solid #eee;
+    }
+    .card .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 15px;
+    }
+    .card .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+    .card .badge.ausnahme { background: #fff3e0; color: #e65100; }
+    .card .badge.kunde { background: #e8f5e9; color: #2e7d32; }
+    .card .badge.intervall { background: #f3e5f5; color: #6a1b9a; }
+    .card .badge.liste { background: #fce4ec; color: #c2185b; }
+    .btn-add {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .btn-add.secondary { background: #666; }
+    .btn-add:active { opacity: 0.9; }
+    .hinweis {
+      font-size: 12px;
+      color: #888;
+      margin-top: 8px;
+      padding: 8px;
+      background: #fafafa;
+      border-radius: 6px;
+    }
+    /* Vorschlag: eine Liste */
+    .termin-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      margin-bottom: 6px;
+      border: 1px solid #eee;
+    }
+    .termin-row .date { font-weight: 500; font-size: 15px; }
+    .termin-row .meta { font-size: 12px; color: #666; }
+    .termin-row .typ {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1565c0;
+    }
+    .termin-row .quelle { font-size: 11px; color: #888; }
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 50%;
+      transform: translate(50%, 0);
+      width: 56px;
+      height: 56px;
+      border-radius: 28px;
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 10;
+    }
+    .fab span { line-height: 56px; }
+    .panel-vorschlag .fab { display: block; }
+    .panel-aktuell .fab { display: none; }
+    /* Modal Vorschlag */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 20;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .overlay.show { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 340px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .modal-title {
+      padding: 16px;
+      font-weight: 600;
+      font-size: 18px;
+      border-bottom: 1px solid #eee;
+    }
+    .modal-option {
+      display: block;
+      width: 100%;
+      padding: 14px 16px;
+      border: none;
+      background: #fff;
+      text-align: left;
+      font-size: 15px;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .modal-option:hover { background: #f5f5f5; }
+    .modal-option:last-child { border-bottom: none; }
+    .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #eee;
+    }
+    .modal-footer button {
+      padding: 10px 16px;
+      border: none;
+      background: #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">Beispiel: Termine in der App – nur Darstellung, keine App-Logik</div>
+  <div class="toggle-row">
+    <button type="button" class="toggle-btn active" data-panel="aktuell">Aktuell (vorhanden)</button>
+    <button type="button" class="toggle-btn" data-panel="vorschlag">Vorschlag (neu)</button>
+  </div>
+
+  <!-- ========== AKTUELL (vorhanden) ========== -->
+  <div id="panel-aktuell" class="panel panel-aktuell active">
+    <div class="app-bar">Kunde: Muster GmbH</div>
+    <div class="app-bar sub">Tab: Termine &amp; Tour</div>
+    <div class="scroll">
+      <div class="section">
+        <div class="section-title">Nächster Termin</div>
+        <div class="card">
+          <div class="row"><span>Mo, 17.02.2026</span><span class="badge">Abholung</span></div>
+          <div class="meta" style="font-size:12px;color:#666;margin-top:4px;">aus Intervall (wöchentlich)</div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Kunden-Termine</div>
+        <div class="card">
+          <div class="row"><span>Di, 25.02.2026</span><span class="badge kunde">A</span></div>
+          <div class="row" style="margin-top:6px;"><span>Di, 04.03.2026</span><span class="badge kunde">L</span></div>
+        </div>
+        <button type="button" class="btn-add">+ Abholungstermin hinzufügen</button>
+        <div class="hinweis">Einstieg: Kunde → Termine → „Abholungstermin hinzufügen“ (Kunden-Termin)</div>
+      </div>
+      <div class="section">
+        <div class="section-title">Ausnahme-Termine</div>
+        <div class="card">
+          <div class="row"><span>Fr, 14.02.2026</span><span class="badge ausnahme">A+L</span></div>
+        </div>
+        <button type="button" class="btn-add secondary">+ Ausnahme-Termin</button>
+        <div class="hinweis">Einstieg: eigener Button oder AusnahmeTerminActivity (separater Screen)</div>
+      </div>
+      <div class="section">
+        <div class="section-title">Termin-Regeln / Intervalle</div>
+        <div class="card">
+          <div class="row"><span>Wöchentlich</span><span class="badge intervall">Intervall 7 Tage</span></div>
+          <div class="meta" style="font-size:12px;color:#666;margin-top:4px;">A: Mo, L: Mo + 7 Tage</div>
+        </div>
+        <button type="button" class="btn-add secondary">Termin anlegen (unregelmäßig)</button>
+        <div class="hinweis">Einstieg: TerminAnlegenUnregelmaessigActivity (eigener Screen)</div>
+      </div>
+      <div class="section">
+        <div class="section-title">Tour</div>
+        <div class="card">
+          <div class="row"><span>Montag</span><span>Leipzig, 09:00–12:00</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== VORSCHLAG (neu) ========== -->
+  <div id="panel-vorschlag" class="panel panel-vorschlag">
+    <div class="app-bar">Kunde: Muster GmbH</div>
+    <div class="app-bar sub">Alle Termine</div>
+    <div class="scroll">
+      <div class="section">
+        <div class="section-title">Nächste 365 Tage (eine Liste, alle Quellen)</div>
+        <div class="termin-row">
+          <div><div class="date">Fr, 14.02.2026</div><div class="quelle">Ausnahme</div></div>
+          <div class="typ">A + L</div>
+        </div>
+        <div class="termin-row">
+          <div><div class="date">Mo, 17.02.2026</div><div class="quelle">Intervall (wöchentlich)</div></div>
+          <div class="typ">A</div>
+        </div>
+        <div class="termin-row">
+          <div><div class="date">Mo, 24.02.2026</div><div class="quelle">Intervall (wöchentlich)</div></div>
+          <div class="typ">A</div>
+        </div>
+        <div class="termin-row">
+          <div><div class="date">Di, 25.02.2026</div><div class="quelle">Kunden-Termin</div></div>
+          <div class="typ">A</div>
+        </div>
+        <div class="termin-row">
+          <div><div class="date">Di, 04.03.2026</div><div class="quelle">Kunden-Termin</div></div>
+          <div class="typ">L</div>
+        </div>
+      </div>
+      <div class="hinweis" style="margin-top:12px;">
+        <strong>Vorschlag:</strong> Ein Einstieg „+ Termin hinzufügen“. Beim Tippen öffnet sich die Art-Auswahl (nächster Schritt).
+      </div>
+    </div>
+    <button type="button" class="fab" id="fab-add" title="Termin hinzufügen"><span>+</span></button>
+  </div>
+
+  <!-- Modal: Termin hinzufügen (Vorschlag) -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-title">Termin hinzufügen – Art wählen</div>
+      <button type="button" class="modal-option">Regelmäßig (Intervall)</button>
+      <button type="button" class="modal-option">Einmalig – Kunden-Termin (vom Kunden vorgegeben)</button>
+      <button type="button" class="modal-option">Einmalig – Ausnahme (Sonderfall)</button>
+      <div class="modal-footer">
+        <button type="button" id="modal-cancel">Schließen</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.toggle-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var panel = this.getAttribute('data-panel');
+        document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+        document.querySelectorAll('.toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.getElementById('panel-' + panel).classList.add('active');
+        this.classList.add('active');
+      });
+    });
+    document.getElementById('fab-add').addEventListener('click', function() {
+      document.getElementById('overlay').classList.add('show');
+    });
+    document.getElementById('modal-cancel').addEventListener('click', function() {
+      document.getElementById('overlay').classList.remove('show');
+    });
+    document.getElementById('overlay').addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('show');
+    });
+  </script>
+</body>
+</html>

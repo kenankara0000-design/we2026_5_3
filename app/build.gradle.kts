@@ -54,6 +54,8 @@ dependencies {
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     
+    // OkHttp für SevDesk API (robuster bei SSL „chain validation failed“ auf einigen Geräten)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     // Kotlin Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")

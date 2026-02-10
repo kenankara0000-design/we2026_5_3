@@ -685,6 +685,7 @@
     <string name="sevdesk_save_token">Token speichern</string>
     <string name="sevdesk_import_contacts">Kontakte importieren</string>
     <string name="sevdesk_import_articles">Artikel importieren</string>
+    <string name="sevdesk_import_prices">Preise importieren</string>
     <string name="sevdesk_before_reimport">Vor Re-Import (alle aus SevDesk gelöschten Einträge entfernen)</string>
     <string name="sevdesk_delete_contacts">SevDesk-Kontakte löschen</string>
     <string name="sevdesk_delete_contacts_confirm">Nur hier in der App werden die importierten Kontakte gelöscht. In SevDesk passiert nichts – die App hat nur Lesezugriff. Unwiderruflich löschen?</string>

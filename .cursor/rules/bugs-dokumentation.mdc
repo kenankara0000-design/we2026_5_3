@@ -1,0 +1,13 @@
+---
+description: Bekannte Bugs in BEKANNTE_FEHLER.md; Agent trägt neue Bugs dort automatisch ein.
+alwaysApply: true
+---
+
+# Regel: Bug-Dokumentation
+
+**Alle bekannten Fehler (Bugs) der App werden in der Datei `BEKANNTE_FEHLER.md` im Projektroot geführt.**
+
+- **Automatisch:** Sobald im Chat ein Bug identifiziert, bestätigt oder besprochen wird, den Eintrag **automatisch** in `BEKANNTE_FEHLER.md` unter „Offen“ anlegen bzw. ergänzen (Symptom, Ursache, relevante Code-Stellen). Keine Rückfrage nötig – die Datei ist die zentrale Bug-Liste.
+- **Behobene Bugs:** Eintrag unter „Offen“ entfernen oder in „Behoben“ verschieben mit kurzem Hinweis (z. B. „Behoben [Datum]: …“).
+- **Keine doppelte Bug-Liste:** Ausführliche Bug-Beschreibungen nur in `BEKANNTE_FEHLER.md`; elsewhere nur Verweis auf diese Datei.
+- **Änderung am Verhalten (Fix):** Nur mit ausdrücklicher Freigabe; siehe Regel „Nichts kaputt machen“.

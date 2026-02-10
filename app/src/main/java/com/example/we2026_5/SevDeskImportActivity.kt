@@ -27,6 +27,7 @@ class SevDeskImportActivity : AppCompatActivity() {
                     onSaveToken = { viewModel.saveToken() },
                     onImportContacts = { viewModel.importContacts() },
                     onImportArticles = { viewModel.importArticles() },
+                    onImportPrices = { viewModel.importKundenpreise() },
                     onDeleteSevDeskContacts = { viewModel.deleteAllSevDeskContacts() },
                     onDeleteSevDeskArticles = { viewModel.deleteAllSevDeskArticles() },
                     onClearReimportList = { viewModel.clearReimportIgnoreList() },

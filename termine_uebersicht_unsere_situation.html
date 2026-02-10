@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unsere Termin-Situation – Übersicht</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      background: #f0f4f8;
+      color: #1a1a1a;
+      padding: 16px;
+      line-height: 1.5;
+    }
+    .page { max-width: 640px; margin: 0 auto; }
+    h1 { font-size: 20px; margin: 0 0 8px; color: #0d47a1; }
+    .subtitle { font-size: 14px; color: #555; margin-bottom: 24px; }
+    h2 {
+      font-size: 16px;
+      margin: 24px 0 10px;
+      padding: 6px 0 4px;
+      border-bottom: 2px solid #1976d2;
+      color: #1565c0;
+    }
+    .rule {
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border-left: 4px solid #1976d2;
+    }
+    .rule .head { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+    .rule .detail { font-size: 14px; color: #444; }
+    .rule .example { font-size: 13px; color: #1976d2; margin-top: 6px; }
+    .highlight {
+      background: #e3f2fd;
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+    .highlight strong { color: #0d47a1; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin: 12px 0;
+    }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #e3f2fd; color: #1565c0; font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    .tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #e8f5e9; color: #2e7d32; }
+    .tag.list { background: #fff3e0; color: #e65100; }
+    .tag.kunde { background: #f3e5f5; color: #6a1b9a; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Unsere Termin-Situation – Übersicht</h1>
+    <p class="subtitle">A- und L-Wochentage sind immer die gleichen (z. B. A Mo, L Do). Tour-Listen und Kunden-Termine bleiben berücksichtigt.</p>
+
+    <div class="highlight">
+      <strong>Grundregel:</strong> A-Tag = immer gleicher Wochentag (z. B. Mo). L-Tag = immer gleicher Wochentag (z. B. Do). Was sich ändert, ist nur das <strong>Abhol-Intervall</strong> (jede Woche, alle 2 Wochen, 3–8 Wochen, oder auf Anruf).
+    </div>
+
+    <h2>1. Wiederkehrende Kunden (Intervall)</h2>
+    <div class="rule">
+      <div class="head">Beispiel: A immer Mo, L immer Do</div>
+      <div class="detail">Abstand A → L = 3 Tage (Mo → Do). Intervall = wie oft abgeholt wird.</div>
+      <div class="example">Jede Woche: intervallTage 7 · Alle 2 Wochen: 14 · Alle 3 Wo: 21 · Alle 4 Wo: 28 · … bis 8 Wochen (56 Tage)</div>
+    </div>
+    <table>
+      <thead><tr><th>Intervall</th><th>A (immer Mo)</th><th>L (immer Do)</th></tr></thead>
+      <tbody>
+        <tr><td>Jede Woche</td><td>jeden Mo</td><td>jeden Do (Mo + 3 Tage)</td></tr>
+        <tr><td>Alle 2 Wochen</td><td>jeden 2. Mo</td><td>jeden 2. Do</td></tr>
+        <tr><td>Alle 3–8 Wochen</td><td>Mo alle 3/4/5/6/8 Wo</td><td>Do jeweils 3 Tage nach A</td></tr>
+      </tbody>
+    </table>
+
+    <h2>2. Auf Abruf (gleiche Wochentage)</h2>
+    <div class="rule">
+      <div class="head">Abruf-Kunden: A und L trotzdem feste Wochentage</div>
+      <div class="detail">Wenn sie anrufen, kommt A an „ihrem“ Tag (z. B. Mo), L an „ihrem“ Tag (z. B. Do). Oder A und L am selben Tag (z. B. Mi A, Mi L).</div>
+      <div class="example">Kein fester Turnus – aber A-Wochentag und L-Wochentag (oder A+L gleicher Tag) sind fest.</div>
+    </div>
+
+    <h2>3. Tour-Listen <span class="tag list">nicht vergessen</span></h2>
+    <div class="rule">
+      <div class="head">Listen mit festem Wochentag (z. B. „Montag Leipzig“)</div>
+      <div class="detail">Alle Kunden der Liste haben A am gleichen Wochentag (z. B. Mo), L = A + tageAzuL. Listen-Termine (listenTermine) gelten für die ganze Liste.</div>
+      <div class="example">A immer Mo, L immer Do → wochentagA = Mo, tageAzuL = 3. Zusätzlich können konkrete Listen-Termine (Daten) gepflegt werden.</div>
+    </div>
+
+    <h2>4. Kunden mit eigener Terminliste <span class="tag kunde">nicht vergessen</span></h2>
+    <div class="rule">
+      <div class="head">Kunden geben ihre eigenen Termine vor</div>
+      <div class="detail">A und L haben weiterhin immer die gleichen Wochentage – aber die konkreten Daten sind vom Kunden vorgegeben und übers Jahr unterschiedlich (nicht jeden Mo, sondern nur bestimmte Mo/Do).</div>
+      <div class="example">Speicherung in <strong>kundenTermine</strong>: Liste mit A- und L-Daten. In der Anzeige und Tourenplaner werden diese Termine genauso berücksichtigt wie Intervall-Termine.</div>
+    </div>
+
+    <h2>Kurz: Was die App abdeckt</h2>
+    <table>
+      <thead><tr><th>Was</th><th>In der App</th></tr></thead>
+      <tbody>
+        <tr><td>A-Wochentag (z. B. Mo)</td><td>Fest pro Kunde/Intervall/Liste</td></tr>
+        <tr><td>L-Wochentag (z. B. Do)</td><td>Fest als A + tageAzuL (Mo→Do = 3)</td></tr>
+        <tr><td>Abhol-Intervall</td><td>7, 14, 21, 28, 35, 42, 56 Tage oder Auf Abruf</td></tr>
+        <tr><td>Tour-Listen</td><td>Listen mit wochentagA, tageAzuL, ggf. listenTermine</td></tr>
+        <tr><td>Kunden eigene Termine</td><td>kundenTermine (Liste A/L-Daten), gleiche Wochentage logisch</td></tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:24px; font-size:13px; color:#666;">Bezug: eure Erklärungen · A und L Wochentage immer gleich (z. B. A Mo, L Do). Tour-Listen und Kunden-Termine einbezogen.</p>
+  </div>
+</body>
+</html>

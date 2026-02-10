@@ -192,4 +192,43 @@ Hinweis: Strings für „Regel-Vorlagen“ (main_btn_termin_regeln) existieren; 
 
 ---
 
+## 15. Bekannte Fehler (Bug-Punkte)
+
+**Alle bekannten Bugs stehen in `BEKANNTE_FEHLER.md`.**  
+Dort werden Symptom, Ursache und relevante Code-Stellen geführt. Keine Änderung am Verhalten (Fix) ohne Freigabe. Vgl. `.cursor/rules/bugs-dokumentation.mdc`.
+
+---
+
+## 16. Drucker für Belege (Klebestreifen / Etiketten)
+
+*Ziel: Beleg drucken = Klebestreifen mit Kunden-Alias und Endpreis (keine Rechnungen). Rechnungen kommen später.*
+
+### Gut geeignet für die Aufgabe (Klebestreifen, Alias + Endpreis, Android)
+
+**1. Thermo-Etikettendrucker (Bluetooth, schmal)**
+
+- **58 mm oder 40 mm Breite** – typisch für Belege/Tickets/Etiketten.
+- **Bluetooth** – direkt vom Android-Handy ohne Kabel.
+- **ESC/POS** – viele dieser Drucker verstehen den ESC/POS-Befehlssatz; dann könnt ihr aus der App Text (Alias, Preise, Endpreis) direkt senden.
+
+**2. Konkrete Typen (Beispiele, ohne Kaufempfehlung)**
+
+- **58-mm-Thermo-Drucker** für „Ticket/Beleg“ (wie im Gastronomie-/Takeaway-Bereich): oft Bluetooth, Android-tauglich, Kleberrolle oder Endlos-Papier.
+- **Schmale Etiketten-Drucker** (z. B. 40 mm, 58 mm) mit selbstklebenden Rollen – für Klebestreifen mit Kundenname + Preis.
+- **Marken**, die oft mit Android-Apps genutzt werden: z. B. Epson (TM-Serie), Star Micronics, Bixolon, Sunmi (wenn POS-Geräte genutzt werden), sowie viele No-Name/ODM-Geräte mit ESC/POS über Bluetooth.
+
+**3. Worauf ihr achten solltet**
+
+- **ESC/POS-Unterstützung** – dann könnt ihr mit einer Library (z. B. DantSu ESC/POS-ThermalPrinter-Android oder ähnlich) aus der App drucken, ohne Hersteller-App.
+- **Bluetooth** – für Nutzung am Handy ohne Kabel.
+- **Papier/Etiketten:** Rolle in der gewünschten Breite (z. B. 58 mm), ob Endlos oder mit Klebestreifen – je nachdem, was ihr physisch haben wollt.
+
+### Für die App
+
+- Drucker mit **ESC/POS** und **Bluetooth** wählen.
+- In der App eine **ESC/POS-Library** einbinden und Text (Kunden-Alias, Zeilen/Summen, Endpreis) als einfachen Beleg/Etikett-Text an den Drucker senden.
+- **58 mm (oder 40 mm)** reicht für kurze Belege/Klebestreifen mit Alias und Endpreis gut aus.
+
+---
+
 **Letzte Aktualisierung:** Feb 2026
