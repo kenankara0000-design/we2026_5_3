@@ -67,6 +67,8 @@ data class Customer(
     val defaultAuslieferungWochentage: List<Int> = emptyList(),
     /** Gespeicherte Tage A→L (0–365). Wenn gesetzt, wird dieser Wert überall verwendet (z. B. neuer Kunden-Termin, unregelmäßig). Sonst Ableitung aus erstem Intervall. */
     val tageAzuL: Int? = null,
+    /** Wenn A- und L-Wochentage gleich: 0 = L am selben Tag (L=A+0), 7 = L eine Woche später (L=A+7). null = Fallback 0. Nur relevant wenn effectiveAbholungWochentage == effectiveAuslieferungWochentage. */
+    val sameDayLStrategy: Int? = null,
     val defaultUhrzeit: String = "",
     val defaultZeitfenster: Zeitfenster? = null,
     val adHocTemplate: AdHocTemplate? = null,

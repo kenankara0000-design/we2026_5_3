@@ -155,6 +155,7 @@ fun CustomerDetailScreen(
                 put("defaultAbholungWochentage", stateForSave.abholungWochentage)
                 put("defaultAuslieferungWochentage", stateForSave.auslieferungWochentage)
                 put("tageAzuL", stateForSave.tageAzuL?.coerceIn(0, 365) ?: 7)
+                stateForSave.sameDayLStrategy?.let { put("sameDayLStrategy", it) }
                 put("kundennummer", stateForSave.kundennummer.trim())
                 put("defaultUhrzeit", stateForSave.defaultUhrzeit.trim())
                 put("tags", stateForSave.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } })
@@ -180,6 +181,7 @@ fun CustomerDetailScreen(
                         defaultAuslieferungWochentag = stateForSave.auslieferungWochentage.firstOrNull() ?: -1,
                         defaultAbholungWochentage = stateForSave.abholungWochentage,
                         defaultAuslieferungWochentage = stateForSave.auslieferungWochentage,
+                        sameDayLStrategy = stateForSave.sameDayLStrategy,
                         tourSlotId = slotId
                     )
                     val mainFromForm = TerminAusKundeUtils.erstelleIntervalleAusKunde(customerForIntervall, startDatumA, tageAzuLForSave, stateForSave.intervallTage ?: 7)
@@ -187,7 +189,8 @@ fun CustomerDetailScreen(
                     mainFromForm + fromRules
                 } else editIntervalle
                 val intervalleToSave = intervalleToSaveRaw.map { iv ->
-                    if (iv.abholungDatum > 0) iv.copy(
+                    if (iv.regelTyp == TerminRegelTyp.WEEKLY && iv.abholungDatum > 0) iv
+                    else if (iv.abholungDatum > 0) iv.copy(
                         auslieferungDatum = TerminBerechnungUtils.getStartOfDay(iv.abholungDatum + TimeUnit.DAYS.toMillis(tageAzuLForSave.toLong()))
                     ) else iv
                 }

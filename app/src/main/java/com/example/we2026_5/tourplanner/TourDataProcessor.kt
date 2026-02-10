@@ -315,9 +315,15 @@ class TourDataProcessor(
                 items.add(ListItem.CustomerItem(customer, statusBadgeText = TourPlannerStatusBadge.compute(customer, viewDateStart, heuteStart)))
             }
         }
-        // Erledigt-Daten für Button „Erledigte (N)“ und Bottom-Sheet (nicht mehr in der Liste)
-        val doneOhneListen = doneGewerblich.sortedBy { it.name }
-        val tourListenPairs = tourListenErledigt.map { (liste, kunden) -> liste.name to kunden.sortedBy { it.name } }
+        // Erledigt-Daten für Button „Erledigte (N)“ und Bottom-Sheet: Sortierung neueste zuerst (zuletzt erledigt oben)
+        val doneOhneListen = doneGewerblich.sortedWith(
+            compareByDescending<Customer> { erledigtZeitstempelAmTag(it, viewDateStart) }.thenBy { it.name }
+        )
+        val tourListenPairs = tourListenErledigt.map { (liste, kunden) ->
+            liste.name to kunden.sortedWith(
+                compareByDescending<Customer> { erledigtZeitstempelAmTag(it, viewDateStart) }.thenBy { it.name }
+            )
+        }
         val erledigtGesamtCount = doneOhneListen.size + tourListenPairs.sumOf { it.second.size }
         return TourProcessResult(items, erledigtGesamtCount, doneOhneListen, tourListenPairs)
     }
@@ -366,8 +372,23 @@ class TourDataProcessor(
             else -> kwErledigtAmTag
         }
     }
-    
-    // Öffentliche Methoden für Zugriff auf Helper-Klassen (für TourPlannerWeekDataProcessor)
+
+    /** Liefert den spätesten Erledigungszeitstempel am viewDateStart (für Sortierung „neueste zuerst“). */
+    private fun erledigtZeitstempelAmTag(customer: Customer, viewDateStart: Long): Long {
+        var maxTs = 0L
+        if (customer.abholungErledigtAm > 0 && getStartOfDay(customer.abholungErledigtAm) == viewDateStart) {
+            maxTs = maxOf(maxTs, if (customer.abholungZeitstempel > 0) customer.abholungZeitstempel else customer.abholungErledigtAm)
+        }
+        if (customer.auslieferungErledigtAm > 0 && getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart) {
+            maxTs = maxOf(maxTs, if (customer.auslieferungZeitstempel > 0) customer.auslieferungZeitstempel else customer.auslieferungErledigtAm)
+        }
+        if (customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 && getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart) {
+            maxTs = maxOf(maxTs, customer.keinerWäscheErledigtAm)
+        }
+        return maxTs
+    }
+
+    // Öffentliche Methoden für Zugriff auf Helper-Klassen (für TourPlannerWeekDataProcessor) (für TourPlannerWeekDataProcessor)
     fun getStartOfDay(ts: Long): Long = categorizer.getStartOfDay(ts)
     fun customerFaelligAm(c: Customer, liste: KundenListe? = null, abDatum: Long = System.currentTimeMillis()): Long = 
         filter.customerFaelligAm(c, liste, abDatum)

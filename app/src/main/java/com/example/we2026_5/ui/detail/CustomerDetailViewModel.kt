@@ -197,7 +197,8 @@ class CustomerDetailViewModel(
             tourZeitStart = c.tourSlot?.zeitfenster?.start ?: "",
             tourZeitEnde = c.tourSlot?.zeitfenster?.ende ?: "",
             ohneTour = c.ohneTour,
-            erstelltAm = c.erstelltAm
+            erstelltAm = c.erstelltAm,
+            sameDayLStrategy = c.sameDayLStrategy
         )
     }
 

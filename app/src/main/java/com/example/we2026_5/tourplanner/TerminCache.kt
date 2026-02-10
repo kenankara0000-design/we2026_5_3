@@ -47,6 +47,7 @@ class TerminCache {
     /**
      * Liefert Termine gefiltert auf den angegebenen Zeitraum.
      * liste: optional, für Listen-Kunden (listenTermine werden einbezogen).
+     * Bei startDatum in der Vergangenheit werden Termine ab startDatum berechnet (getTermine365 liefert nur ab heute).
      */
     fun getTermineInRange(
         customer: Customer,
@@ -54,8 +55,19 @@ class TerminCache {
         tageVoraus: Int,
         liste: KundenListe? = null
     ): List<TerminInfo> {
-        val termine = getTermine365(customer, liste)
         val start = TerminBerechnungUtils.getStartOfDay(startDatum)
+        val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+        val termine = if (start < heuteStart) {
+            // Vergangenheit: Cache deckt nur ab heute ab → direkt berechnen für den gewünschten Bereich
+            TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+                customer = customer,
+                liste = if (liste != null && customer.listeId == liste.id) liste else null,
+                startDatum = start,
+                tageVoraus = tageVoraus
+            )
+        } else {
+            getTermine365(customer, liste)
+        }
         val end = start + TimeUnit.DAYS.toMillis(tageVoraus.toLong())
         return termine.filter { it.datum in start..end }
     }

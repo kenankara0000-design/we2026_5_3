@@ -222,6 +222,30 @@ fun CustomerDetailTermineTourForm(
                     onUpdate(state.copy(auslieferungWochentage = list))
                 }
             )
+            val sameSet = state.abholungWochentage.sorted() == state.auslieferungWochentage.sorted() &&
+                state.abholungWochentage.isNotEmpty() && state.auslieferungWochentage.isNotEmpty()
+            if (sameSet) {
+                Spacer(modifier = Modifier.height(spacing))
+                Text(
+                    text = stringResource(R.string.label_same_day_heading),
+                    fontSize = DetailUiConstants.FieldLabelSp,
+                    fontWeight = FontWeight.Bold,
+                    color = textPrimary
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                AddCustomerRadioOption(
+                    text = stringResource(R.string.label_same_day_option_same),
+                    selected = (state.sameDayLStrategy ?: 0) == 0,
+                    onSelect = { onUpdate(state.copy(sameDayLStrategy = 0)) },
+                    textPrimary = textPrimary
+                )
+                AddCustomerRadioOption(
+                    text = stringResource(R.string.label_same_day_option_week),
+                    selected = state.sameDayLStrategy == 7,
+                    onSelect = { onUpdate(state.copy(sameDayLStrategy = 7)) },
+                    textPrimary = textPrimary
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(DetailUiConstants.SectionSpacing))

@@ -25,4 +25,4 @@ Keine Änderung am Verhalten (Bug-Fix) ohne ausdrückliche Freigabe (vgl. `.curs
 
 ### Erledigte-Liste bei vergangenem Datum leer (z. B. gestern)
 
-- **Behoben Feb 2026:** `TourDataProcessor` befüllt `tourListenErledigt` jetzt auch bei Vergangenheit – Hilfsfunktion `sammleErledigteInListen()` wird im else-Zweig für `istVergangenheit` aufgerufen. Erledigt-Sheet zeigt Listen-Kunden auch bei Datumswechsel auf gestern.
+- **Behoben Feb 2026:** Zwei Ursachen: (1) `TourDataProcessor` ruft bei Vergangenheit `sammleErledigteInListen()` auf. (2) **Entscheidend:** `TerminCache.getTermineInRange()` nutzte immer `getTermine365()` (Termine nur ab heute). Bei viewDate = gestern lieferte das keine Termine → `hatKundeTerminAmDatum` false → `listenMitKunden` blieb leer → Erledigte-Sheet leer. Fix: In `TerminCache.getTermineInRange()` wird bei `startDatum` in der Vergangenheit nun direkt `TerminBerechnungUtils.berechneAlleTermineFuerKunde(…, startDatum, tageVoraus)` aufgerufen, sodass Listen für gestern befüllt werden und das Erledigt-Sheet die Listen-Kunden anzeigt.

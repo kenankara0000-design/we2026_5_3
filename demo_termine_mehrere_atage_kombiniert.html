@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Termine – Demo: Mehrere A-Tage kombiniert</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; min-height: 100%; font-family: "Roboto", sans-serif; background: #1c1c1e; color: #1a1a1a; }
+    .phone { width: 375px; min-height: 600px; max-width: 100%; margin: 0 auto; background: #fff; border-radius: 36px; box-shadow: 0 0 0 3px #2c2c2e, 0 24px 48px rgba(0,0,0,0.5); overflow: hidden; position: relative; }
+    .topbar { height: 56px; background: #1976d2; color: #fff; display: flex; align-items: center; padding: 0 4px; flex-shrink: 0; }
+    .topbar .back { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: none; background: transparent; color: #fff; font-size: 24px; cursor: pointer; border-radius: 24px; }
+    .topbar .back:hover { background: rgba(255,255,255,0.15); }
+    .topbar .title { flex: 1; font-size: 20px; font-weight: 500; margin-left: 4px; }
+    .topbar .subtitle { font-size: 13px; opacity: 0.9; display: block; }
+    .content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 88px; min-height: 400px; }
+    .section-label { font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 8px; }
+    .section-label:first-of-type { margin-top: 0; }
+    .next-card { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-radius: 16px; padding: 16px; margin-bottom: 16px; border: 1px solid #90caf9; }
+    .next-card .label { font-size: 12px; color: #1565c0; font-weight: 600; margin-bottom: 4px; }
+    .next-card .value { font-size: 18px; font-weight: 600; color: #0d47a1; }
+    .list-item { min-height: 56px; padding: 14px 16px; background: #fafafa; border-radius: 12px; margin-bottom: 8px; border: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+    .list-item .left { flex: 1; min-width: 0; }
+    .list-item .date { font-size: 16px; font-weight: 500; }
+    .list-item .meta { font-size: 13px; color: #666; margin-top: 2px; }
+    .list-item .badge { font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 8px; margin-left: 12px; flex-shrink: 0; }
+    .list-item .badge.a { background: #e3f2fd; color: #1565c0; }
+    .list-item .badge.l { background: #e8f5e9; color: #2e7d32; }
+    .list-item .badge.al { background: #fff3e0; color: #e65100; }
+    .fab { position: absolute; right: 16px; bottom: 24px; width: 56px; height: 56px; border-radius: 16px; border: none; background: #1976d2; color: #fff; font-size: 28px; cursor: pointer; box-shadow: 0 4px 14px rgba(25,118,210,0.45); display: flex; align-items: center; justify-content: center; z-index: 10; }
+    .fab:hover { background: #1565c0; }
+    .fab:active { transform: scale(0.96); }
+    .scrim { position: fixed; inset: 0; background: rgba(0,0,0,0.32); display: none; z-index: 100; }
+    .scrim.active { display: block; }
+    .sheet { position: fixed; left: 0; right: 0; bottom: 0; max-height: 90%; background: #fff; border-radius: 28px 28px 0 0; box-shadow: 0 -8px 32px rgba(0,0,0,0.12); display: none; flex-direction: column; z-index: 101; overflow: hidden; }
+    .sheet.active { display: flex; animation: sheetUp 0.3s ease; }
+    @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .sheet .handle { width: 36px; height: 4px; background: #c4c4c4; border-radius: 2px; margin: 12px auto 4px; }
+    .sheet .sheet-title { font-size: 22px; font-weight: 600; padding: 0 24px 16px; }
+    .sheet .sheet-body { flex: 1; overflow-y: auto; padding: 0 24px 24px 32px; }
+    .sheet .section-label { font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 10px; }
+    .sheet .section-label:first-child { margin-top: 0; }
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; }
+    .chip { min-height: 48px; min-width: 56px; padding: 0 18px; border-radius: 24px; border: 2px solid #1976d2; background: #fff; color: #1976d2; font-size: 15px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+    .chip.selected { background: #1976d2; color: #fff; }
+    .chip:hover { background: #e3f2fd; }
+    .same-day-block { background: #f5f5f5; border-radius: 16px; padding: 16px; margin: 12px 0; border: 2px solid #e0e0e0; }
+    .same-day-block .heading { font-size: 14px; font-weight: 600; color: #424242; margin-bottom: 12px; }
+    .radio-item { display: flex; align-items: center; min-height: 52px; padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; border: 2px solid #e0e0e0; background: #fff; }
+    .radio-item:last-child { margin-bottom: 0; }
+    .radio-item:hover { background: #fafafa; }
+    .radio-item.selected { border-color: #1976d2; background: #e3f2fd; }
+    .radio-item input { margin-right: 14px; width: 20px; height: 20px; accent-color: #1976d2; flex-shrink: 0; }
+    .radio-item span { font-size: 15px; }
+    .radio-item .sublabel { font-size: 12px; color: #666; margin-top: 2px; display: block; }
+    .preview-box { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-radius: 12px; padding: 14px 16px; margin-top: 16px; font-size: 14px; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .preview-box strong { color: #1b5e20; }
+    .preview-box .tag { display: inline-block; padding: 2px 8px; border-radius: 6px; margin-right: 4px; font-size: 12px; font-weight: 600; }
+    .preview-box .tag.a { background: #bbdefb; color: #1565c0; }
+    .preview-box .tag.l { background: #c8e6c9; color: #2e7d32; }
+    .preview-box .tag.al { background: #ffe0b2; color: #e65100; }
+    .hint { font-size: 13px; color: #666; padding: 12px; background: #fafafa; margin: 8px 0; border-radius: 10px; }
+    .btn-primary { width: 100%; min-height: 52px; margin-top: 24px; border: none; border-radius: 26px; background: #1976d2; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { background: #1565c0; }
+    .modal-options { padding: 8px 0; }
+    .modal-option { display: block; width: 100%; padding: 14px 16px; border: none; background: #fff; text-align: left; font-size: 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+    .modal-option:hover { background: #f5f5f5; }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div class="topbar">
+      <button type="button" class="back" aria-label="Zurück">←</button>
+      <div>
+        <span class="title">Termine</span>
+        <span class="subtitle">Muster GmbH</span>
+      </div>
+    </div>
+    <div class="content">
+      <div class="next-card">
+        <div class="label">Nächster Termin</div>
+        <div class="value" id="next-termin">Mo 17.02. A · Do 20.02. L</div>
+      </div>
+      <div class="section-label">Alle Termine (nächste 365 Tage) – alle Quellen</div>
+      <div id="termin-list">
+        <div class="list-item">
+          <div class="left"><div class="date">Fr, 14.02.2026</div><div class="meta">Ausnahme</div></div>
+          <span class="badge al">A + L</span>
+        </div>
+        <div class="list-item">
+          <div class="left"><div class="date">Mo, 17.02.2026</div><div class="meta">Intervall · A Mo, L Do</div></div>
+          <span class="badge a">A</span>
+        </div>
+        <div class="list-item">
+          <div class="left"><div class="date">Do, 20.02.2026</div><div class="meta">Intervall · A Mo, L Do</div></div>
+          <span class="badge l">L</span>
+        </div>
+        <div class="list-item">
+          <div class="left"><div class="date">Di, 25.02.2026</div><div class="meta">Kunden-Termin</div></div>
+          <span class="badge a">A</span>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="fab" id="fab-add" aria-label="Termin hinzufügen">+</button>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+
+  <!-- Sheet 1: Art wählen (wie beispiel_termine_ui) -->
+  <div class="sheet" id="sheet-art">
+    <div class="handle"></div>
+    <div class="sheet-title">Termin hinzufügen – Art wählen</div>
+    <div class="sheet-body">
+      <div class="modal-options">
+        <button type="button" class="modal-option" id="opt-regelmaessig">Regelmäßig (Intervall)</button>
+        <button type="button" class="modal-option" id="opt-einmalig-kunde">Einmalig – Kunden-Termin</button>
+        <button type="button" class="modal-option" id="opt-einmalig-ausnahme">Einmalig – Ausnahme</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sheet 2: Regelmäßig – mehrere A/L-Tage (wie mehrere_atage + v2) -->
+  <div class="sheet" id="sheet-regelmaessig">
+    <div class="handle"></div>
+    <div class="sheet-title">Termin – regelmäßig (mehrere A/L-Tage möglich)</div>
+    <div class="sheet-body">
+      <div class="section-label">A an welchen Wochentagen? (mehrere möglich)</div>
+      <div class="chips" id="chips-a">
+        <button type="button" class="chip selected" data-w="0">Mo</button>
+        <button type="button" class="chip" data-w="1">Di</button>
+        <button type="button" class="chip" data-w="2">Mi</button>
+        <button type="button" class="chip" data-w="3">Do</button>
+        <button type="button" class="chip" data-w="4">Fr</button>
+        <button type="button" class="chip" data-w="5">Sa</button>
+        <button type="button" class="chip" data-w="6">So</button>
+      </div>
+
+      <div class="section-label">L an welchen Wochentagen? (mehrere möglich)</div>
+      <div class="chips" id="chips-l">
+        <button type="button" class="chip" data-w="0">Mo</button>
+        <button type="button" class="chip" data-w="1">Di</button>
+        <button type="button" class="chip" data-w="2">Mi</button>
+        <button type="button" class="chip selected" data-w="3">Do</button>
+        <button type="button" class="chip" data-w="4">Fr</button>
+        <button type="button" class="chip" data-w="5">Sa</button>
+        <button type="button" class="chip" data-w="6">So</button>
+      </div>
+
+      <div id="block-same-day" style="display:none;">
+        <div class="same-day-block">
+          <div class="heading">A und L gleicher Wochentag – wann ist L?</div>
+          <label class="radio-item selected" id="radio-same">
+            <input type="radio" name="same" value="0" checked>
+            <span><strong>L am selben Tag wie A</strong><span class="sublabel">Di: A+L. So: A+L. …</span></span>
+          </label>
+          <label class="radio-item" id="radio-week">
+            <input type="radio" name="same" value="7">
+            <span><strong>L eine Woche später</strong><span class="sublabel">L = A + 7</span></span>
+          </label>
+        </div>
+      </div>
+
+      <div id="block-tage-azu-l" style="display:none;" class="hint">
+        Zuordnung 1:1 (1. A → 1. L, 2. A → 2. L).
+      </div>
+
+      <div class="section-label">Wie oft? (Intervall)</div>
+      <div class="chips" id="chips-intervall">
+        <button type="button" class="chip selected" data-days="7">Jede Woche</button>
+        <button type="button" class="chip" data-days="14">Alle 2 Wo</button>
+        <button type="button" class="chip" data-days="21">Alle 3 Wo</button>
+        <button type="button" class="chip" data-days="28">Alle 4 Wo</button>
+        <button type="button" class="chip" data-days="35">Alle 5 Wo</button>
+        <button type="button" class="chip" data-days="42">Alle 6 Wo</button>
+        <button type="button" class="chip" data-days="56">Alle 8 Wo</button>
+      </div>
+
+      <div class="preview-box" id="preview-box">
+        <span id="preview-text">Nächster Termin: <strong>Mo 17.02. A</strong>, <strong>Do 20.02. L</strong> (jede Woche).</span>
+      </div>
+
+      <button type="button" class="btn-primary" id="btn-save">Speichern</button>
+    </div>
+  </div>
+
+  <!-- Sheet: Einmalig (kurz) -->
+  <div class="sheet" id="sheet-einmalig">
+    <div class="handle"></div>
+    <div class="sheet-title">Einmaliger Termin</div>
+    <div class="sheet-body">
+      <div class="hint">In der App: Datum wählen, A oder A+L. Demo: nur Hinweis.</div>
+      <button type="button" class="btn-primary" id="btn-einmalig-close">Schließen</button>
+    </div>
+  </div>
+
+  <script>
+(function() {
+  var WOCHE = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+  var fab = document.getElementById('fab-add');
+  var scrim = document.getElementById('scrim');
+  var sheetArt = document.getElementById('sheet-art');
+  var sheetRegel = document.getElementById('sheet-regelmaessig');
+  var sheetEinmalig = document.getElementById('sheet-einmalig');
+  var nextTermin = document.getElementById('next-termin');
+  var terminList = document.getElementById('termin-list');
+
+  var state = { aDays: [], lDays: [], sameDay: '0', intervallDays: 7 };
+
+  function closeAll() {
+    scrim.classList.remove('active');
+    sheetArt.classList.remove('active');
+    sheetRegel.classList.remove('active');
+    sheetEinmalig.classList.remove('active');
+  }
+
+  fab.addEventListener('click', function() {
+    scrim.classList.add('active');
+    sheetArt.classList.add('active');
+  });
+
+  scrim.addEventListener('click', closeAll);
+
+  document.getElementById('opt-regelmaessig').addEventListener('click', function() {
+    sheetArt.classList.remove('active');
+    sheetRegel.classList.add('active');
+  });
+
+  document.getElementById('opt-einmalig-kunde').addEventListener('click', function() {
+    sheetArt.classList.remove('active');
+    sheetEinmalig.classList.add('active');
+  });
+
+  document.getElementById('opt-einmalig-ausnahme').addEventListener('click', function() {
+    sheetArt.classList.remove('active');
+    sheetEinmalig.classList.add('active');
+  });
+
+  document.getElementById('btn-einmalig-close').addEventListener('click', closeAll);
+
+  function getSelected(container) {
+    var out = [];
+    container.querySelectorAll('.chip.selected').forEach(function(c) {
+      out.push(parseInt(c.getAttribute('data-w'), 10));
+    });
+    return out.sort(function(a,b) { return a - b; });
+  }
+
+  function setsEqual(a, b) {
+    if (a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  }
+
+  function tageAzuL(aTag, lTag) {
+    if (aTag === lTag) return state.sameDay === '7' ? 7 : 0;
+    var d = (lTag - aTag + 7) % 7;
+    return d === 0 ? 7 : d;
+  }
+
+  function getStartOfDay(ms) {
+    var d = new Date(ms);
+    d.setHours(0,0,0,0);
+    return d.getTime();
+  }
+
+  function getWeekday(ms) {
+    var d = new Date(ms);
+    return (d.getDay() + 6) % 7;
+  }
+
+  function nextWeekdayFrom(startMs, targetWeekday) {
+    var start = getStartOfDay(startMs);
+    var w = getWeekday(start);
+    var diff = (targetWeekday - w + 7) % 7;
+    if (diff === 0) diff = 7;
+    return start + diff * 24 * 60 * 60 * 1000;
+  }
+
+  function formatShort(dateMs) {
+    var d = new Date(dateMs);
+    var day = d.getDate();
+    var month = d.getMonth() + 1;
+    return WOCHE[getWeekday(dateMs)] + ' ' + (day < 10 ? '0' : '') + day + '.' + (month < 10 ? '0' : '') + month + '.';
+  }
+
+  function buildPreview() {
+    state.aDays = getSelected(document.getElementById('chips-a'));
+    state.lDays = getSelected(document.getElementById('chips-l'));
+    var blockSame = document.getElementById('block-same-day');
+    var blockTage = document.getElementById('block-tage-azu-l');
+    var preview = document.getElementById('preview-text');
+
+    if (state.aDays.length === 0 || state.lDays.length === 0) {
+      preview.innerHTML = 'Wähle mindestens einen <strong>A</strong>- und einen <strong>L</strong>-Tag.';
+      blockSame.style.display = 'none';
+      blockTage.style.display = 'none';
+      return;
+    }
+
+    var sameSet = setsEqual(state.aDays, state.lDays);
+    blockSame.style.display = sameSet ? 'block' : 'none';
+    blockTage.style.display = sameSet ? 'none' : 'block';
+
+    var today = getStartOfDay(Date.now());
+    var parts = [];
+    var nextParts = [];
+
+    if (sameSet && state.sameDay === '0') {
+      state.aDays.forEach(function(w) {
+        parts.push(WOCHE[w] + ': <span class="tag al">A+L</span>');
+        nextParts.push(WOCHE[w] + ' ' + formatShort(nextWeekdayFrom(today, w)) + ' A+L');
+      });
+      preview.innerHTML = parts.join(' · ') + ' · …';
+      nextTermin.textContent = nextParts.slice(0, 2).join(' · ');
+    } else if (sameSet && state.sameDay === '7') {
+      state.aDays.forEach(function(w) {
+        parts.push(WOCHE[w] + ': <span class="tag a">A</span> → nächste ' + WOCHE[w] + ': <span class="tag l">L</span>');
+        var aD = nextWeekdayFrom(today, w);
+        var lD = aD + 7 * 24 * 60 * 60 * 1000;
+        nextParts.push(formatShort(aD) + ' A, ' + formatShort(lD) + ' L');
+      });
+      preview.innerHTML = parts.join(' · ');
+      nextTermin.textContent = nextParts.slice(0, 2).join(' · ');
+    } else {
+      var n = Math.min(state.aDays.length, state.lDays.length);
+      for (var i = 0; i < n; i++) {
+        parts.push(WOCHE[state.aDays[i]] + ' <span class="tag a">A</span>, ' + WOCHE[state.lDays[i]] + ' <span class="tag l">L</span>');
+        var aD = nextWeekdayFrom(today, state.aDays[i]);
+        var tAL = tageAzuL(state.aDays[i], state.lDays[i]);
+        var lD = aD + tAL * 24 * 60 * 60 * 1000;
+        nextParts.push(formatShort(aD) + ' A, ' + formatShort(lD) + ' L');
+      }
+      preview.innerHTML = parts.join(' · ') + ' · …';
+      nextTermin.textContent = nextParts.slice(0, 2).join(' · ');
+    }
+
+    var intervallLabel = state.intervallDays === 7 ? 'jede Woche' : 'alle ' + (state.intervallDays/7) + ' Wo';
+    preview.innerHTML += ' <span style="font-size:12px;color:#388e3c;">(' + intervallLabel + ')</span>';
+  }
+
+  function updateSameDayUI() {
+    var r = document.querySelector('input[name="same"]:checked');
+    if (r) state.sameDay = r.value;
+    document.getElementById('radio-same').classList.toggle('selected', state.sameDay === '0');
+    document.getElementById('radio-week').classList.toggle('selected', state.sameDay === '7');
+  }
+
+  document.getElementById('chips-a').querySelectorAll('.chip').forEach(function(c) {
+    c.addEventListener('click', function() {
+      c.classList.toggle('selected');
+      buildPreview();
+    });
+  });
+  document.getElementById('chips-l').querySelectorAll('.chip').forEach(function(c) {
+    c.addEventListener('click', function() {
+      c.classList.toggle('selected');
+      buildPreview();
+    });
+  });
+
+  document.getElementById('radio-same').addEventListener('click', function() {
+    state.sameDay = '0';
+    document.querySelector('input[name="same"][value="0"]').checked = true;
+    updateSameDayUI();
+    buildPreview();
+  });
+  document.getElementById('radio-week').addEventListener('click', function() {
+    state.sameDay = '7';
+    document.querySelector('input[name="same"][value="7"]').checked = true;
+    updateSameDayUI();
+    buildPreview();
+  });
+
+  document.getElementById('chips-intervall').querySelectorAll('.chip').forEach(function(c) {
+    c.addEventListener('click', function() {
+      state.intervallDays = parseInt(c.getAttribute('data-days'), 10);
+      document.getElementById('chips-intervall').querySelectorAll('.chip').forEach(function(x) { x.classList.remove('selected'); });
+      c.classList.add('selected');
+      buildPreview();
+    });
+  });
+
+  document.getElementById('btn-save').addEventListener('click', function() {
+    state.aDays = getSelected(document.getElementById('chips-a'));
+    state.lDays = getSelected(document.getElementById('chips-l'));
+    var msg = 'Gespeichert (Demo).\n\nA-Tage: ' + (state.aDays.length ? state.aDays.map(function(w){ return WOCHE[w]; }).join(', ') : '–') + '\n';
+    msg += 'L-Tage: ' + (state.lDays.length ? state.lDays.map(function(w){ return WOCHE[w]; }).join(', ') : '–') + '\n';
+    msg += 'Intervall: alle ' + (state.intervallDays/7) + ' Wochen';
+    alert(msg);
+    buildPreview();
+    closeAll();
+  });
+
+  updateSameDayUI();
+  buildPreview();
+})();
+  </script>
+</body>
+</html>

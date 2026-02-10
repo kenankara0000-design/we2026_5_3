@@ -36,27 +36,60 @@ object TerminAusKundeUtils {
      * Erstellt CustomerIntervalle aus den Kundendaten – ein Intervall pro A-Wochentag.
      * Regelmäßig: L = A + tageAzuL, Zyklus = intervallTage (Tage bis zum nächsten A).
      * Mehrere A-Tage (z. B. Mo + Mi): je ein Intervall, damit alle Termine in der 365-Tage-Berechnung erscheinen.
-     * @param customer Kunde mit defaultAbholungWochentag, intervallTage (Zyklus)
+     * Bei gleichen A/L-Tagen: sameDayLStrategy (0 = L am selben Tag, 7 = L eine Woche später).
+     * Bei unterschiedlichen A/L-Tagen: Zuordnung 1:1 (1. A → 1. L usw.).
+     * @param customer Kunde mit defaultAbholungWochentage, defaultAuslieferungWochentage, sameDayLStrategy, intervallTage
      * @param startDatum Startdatum (z.B. heute)
-     * @param tageAzuL Tage zwischen Abholung und Auslieferung (nur bei REGELMAESSIG)
+     * @param tageAzuLOverride Tage A→L; nur verwendet wenn A- und L-Tage unterschiedlich und single. Sonst aus sameDayLStrategy oder 1:1 berechnet.
      * @param intervallTageOverride Wenn gesetzt, wird dieser Zyklus verwendet (z. B. beim Bearbeiten ohne bestehende Intervalle).
      * @return Liste von CustomerIntervall (ein Eintrag pro A-Tag), leer wenn keine gültigen A-Tage
      */
     fun erstelleIntervalleAusKunde(
         customer: Customer,
         startDatum: Long = System.currentTimeMillis(),
-        tageAzuL: Int = 7,
+        tageAzuLOverride: Int = 7,
         intervallTageOverride: Int? = null
     ): List<CustomerIntervall> {
         val aTage = customer.effectiveAbholungWochentage.filter { WochentagBerechnung.isValidWeekday(it) }
         if (aTage.isEmpty()) return emptyList()
+        val lTage = customer.effectiveAuslieferungWochentage.filter { WochentagBerechnung.isValidWeekday(it) }
+        val useFallbackTageAzuL = lTage.isEmpty()
+        if (useFallbackTageAzuL && aTage.isNotEmpty()) {
+            val tageAL = tageAzuLOverride.coerceIn(0, 365)
+            val zyklus = intervallTageOverride?.coerceIn(1, 365) ?: customer.intervallTageOrDefault(7)
+            val start = TerminBerechnungUtils.getStartOfDay(startDatum)
+            return aTage.map { abholTag ->
+                val abholungDatum = WochentagBerechnung.naechsterWochentagAb(start, abholTag)
+                CustomerIntervall(
+                    id = UUID.randomUUID().toString(),
+                    abholungDatum = abholungDatum,
+                    auslieferungDatum = abholungDatum + TimeUnit.DAYS.toMillis(tageAL.toLong()),
+                    wiederholen = true,
+                    intervallTage = zyklus,
+                    intervallAnzahl = 0,
+                    erstelltAm = start,
+                    terminRegelId = "",
+                    regelTyp = TerminRegelTyp.WEEKLY,
+                    tourSlotId = customer.tourSlotId,
+                    zyklusTage = zyklus
+                )
+            }
+        }
         val zyklus = intervallTageOverride?.coerceIn(1, 365) ?: customer.intervallTageOrDefault(7)
-        val tageAL = tageAzuL.coerceIn(0, 365)
         val start = TerminBerechnungUtils.getStartOfDay(startDatum)
+        val sameSet = aTage == lTage
+        val sameDayStrategy = (customer.sameDayLStrategy ?: 0).let { if (it == 7) 7 else 0 }
 
-        return aTage.map { abholTag ->
+        return aTage.mapIndexed { index, abholTag ->
+            val tageAL = when {
+                sameSet -> sameDayStrategy
+                else -> {
+                    val lTag = lTage.getOrElse(index) { lTage.lastOrNull() ?: abholTag }
+                    tageAzuLBetween(abholTag, lTag)
+                }
+            }
             val abholungDatum = WochentagBerechnung.naechsterWochentagAb(start, abholTag)
-            val auslieferungDatum = abholungDatum + TimeUnit.DAYS.toMillis(tageAL.toLong())
+            val auslieferungDatum = abholungDatum + TimeUnit.DAYS.toMillis(tageAL.coerceIn(0, 365).toLong())
             CustomerIntervall(
                 id = UUID.randomUUID().toString(),
                 abholungDatum = abholungDatum,
@@ -71,6 +104,13 @@ object TerminAusKundeUtils {
                 zyklusTage = zyklus
             )
         }
+    }
+
+    /** Tage von A-Wochentag bis L-Wochentag (0–7). Bei gleichem Tag: 0. */
+    private fun tageAzuLBetween(aTag: Int, lTag: Int): Int {
+        if (aTag == lTag) return 0
+        val d = (lTag - aTag + 7) % 7
+        return if (d == 0) 7 else d
     }
 
     /**

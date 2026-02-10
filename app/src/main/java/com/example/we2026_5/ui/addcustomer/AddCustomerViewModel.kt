@@ -34,6 +34,8 @@ data class AddCustomerState(
     val ohneTour: Boolean = false,
     /** A-Termin Startdatum (Tagesanfang). 0 = beim Speichern „heute“ verwenden. */
     val erstelltAm: Long = 0L,
+    /** Wenn A- und L-Tage gleich: 0 = L am selben Tag, 7 = L eine Woche später. null = 0. */
+    val sameDayLStrategy: Int? = null,
     val isSaving: Boolean = false,
     val errorMessage: String? = null,
     val success: Boolean = false

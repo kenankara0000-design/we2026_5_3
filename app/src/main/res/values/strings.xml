@@ -550,6 +550,9 @@
     <string name="label_zip_optional">PLZ</string>
     <string name="label_default_pickup_day">Standard-Abholungstag (A)</string>
     <string name="label_default_delivery_day">Standard-Auslieferungstag (L)</string>
+    <string name="label_same_day_heading">A und L gleicher Wochentag – wann ist L?</string>
+    <string name="label_same_day_option_same">L am selben Tag wie A (L = A + 0)</string>
+    <string name="label_same_day_option_week">L eine Woche später (L = A + 7)</string>
     <string name="label_a_plus_tage_l">L-Termin</string>
     <string name="hint_a_plus_tage">Tage zwischen A und L (z. B. 7)</string>
     <string name="label_default_time_optional">Bevorzugte Uhrzeit (Optional)</string>
