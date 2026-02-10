@@ -36,9 +36,10 @@ import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.wasch.Article
 import com.example.we2026_5.wasch.WaschErfassung
+import java.util.Locale
 
 /** Aggregierte Position für Gesamtblock: Artikel + summierte Menge + Einheit. */
-private data class GesamtZeile(val articleId: String, val artikelName: String, val menge: Int, val einheit: String)
+private data class GesamtZeile(val articleId: String, val artikelName: String, val menge: Double, val einheit: String)
 
 @Composable
 fun WaschenErfassungBelegDetailContent(
@@ -46,6 +47,8 @@ fun WaschenErfassungBelegDetailContent(
     monthLabel: String,
     erfassungen: List<WaschErfassung>,
     articlesMap: Map<String, Article>,
+    /** Brutto-Preis pro articleId für Gesamtpreis-Berechnung (Tour- oder Kundenpreise). */
+    preiseGross: Map<String, Double>,
     textPrimary: androidx.compose.ui.graphics.Color,
     textSecondary: androidx.compose.ui.graphics.Color,
     onBack: () -> Unit,
@@ -68,6 +71,12 @@ fun WaschenErfassungBelegDetailContent(
                 )
             }
             .sortedBy { it.artikelName }
+    }
+
+    val gesamtPreisBrutto: Double = remember(erfassungen, preiseGross) {
+        erfassungen.flatMap { it.positionen }.sumOf { pos ->
+            (pos.menge * (preiseGross[pos.articleId] ?: 0.0))
+        }
     }
 
     Column(
@@ -144,7 +153,7 @@ fun WaschenErfassungBelegDetailContent(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(pos.artikelName, fontSize = 14.sp, color = textPrimary, modifier = Modifier.weight(1f))
-                            Text("${pos.menge} ${pos.einheit}", fontSize = 14.sp, color = textSecondary)
+                            Text("${formatMenge(pos.menge)} ${pos.einheit}", fontSize = 14.sp, color = textSecondary)
                         }
                     }
                 }
@@ -172,7 +181,17 @@ fun WaschenErfassungBelegDetailContent(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(z.artikelName, fontSize = 14.sp, color = textPrimary, modifier = Modifier.weight(1f))
-                            Text("${z.menge} ${z.einheit}", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
+                            Text("${formatMenge(z.menge)} ${z.einheit}", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
+                        }
+                    }
+                    if (gesamtPreisBrutto > 0.0) {
+                        Spacer(Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(stringResource(R.string.wasch_gesamtpreis_brutto), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                            Text("%.2f €".format(Locale.GERMAN, gesamtPreisBrutto), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
                         }
                     }
                 }
@@ -180,3 +199,7 @@ fun WaschenErfassungBelegDetailContent(
         }
     }
 }
+
+private fun formatMenge(value: Double): String =
+    if (value == value.toLong().toDouble()) "%.0f".format(Locale.GERMAN, value)
+    else "%.2f".format(Locale.GERMAN, value).trimEnd('0').trimEnd(',')

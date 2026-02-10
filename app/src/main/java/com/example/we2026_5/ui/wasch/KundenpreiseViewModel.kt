@@ -46,10 +46,12 @@ class KundenpreiseViewModel(
     fun setCustomerSearchQuery(query: String) {
         val s = _uiState.value
         if (s !is KundenpreiseUiState.KundeSuchen) return
+        // Sofort Query aktualisieren, damit der Cursor nicht zurückspringt (Recomposition)
         if (query.isBlank()) {
             _uiState.value = s.copy(customerSearchQuery = query, customers = emptyList())
             return
         }
+        _uiState.value = s.copy(customerSearchQuery = query)
         viewModelScope.launch {
             if (customersSearchCache == null) {
                 customersSearchCache = customerRepository.getAllCustomers().sortedBy { it.displayName }
@@ -57,7 +59,10 @@ class KundenpreiseViewModel(
             val filtered = customersSearchCache!!.filter {
                 it.displayName.contains(query, ignoreCase = true)
             }
-            _uiState.value = s.copy(customerSearchQuery = query, customers = filtered)
+            val now = _uiState.value
+            if (now is KundenpreiseUiState.KundeSuchen && now.customerSearchQuery == query) {
+                _uiState.value = now.copy(customers = filtered)
+            }
         }
     }
 

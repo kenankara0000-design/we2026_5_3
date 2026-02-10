@@ -6,6 +6,7 @@ import com.example.we2026_5.AusnahmeTermin
 import com.example.we2026_5.KundenTermin
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
+import com.example.we2026_5.KundenListe
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.CustomerSnapshotParser
@@ -179,7 +180,17 @@ class CustomerDetailViewModel(
         _isInEditMode.value = editing
         if (editing && customer != null) {
             _editIntervalle.value = customer.intervalle
-            _editFormState.value = buildFormStateFromCustomer(customer)
+            _editFormState.value = buildFormStateFromCustomer(customer, null)
+            viewModelScope.launch {
+                val liste = if (customer.listeId.isNotEmpty()) {
+                    withContext(Dispatchers.IO) { listeRepository.getListeById(customer.listeId) }
+                } else null
+                val tourListe = if (liste != null && liste.wochentag !in 0..6) liste else null
+                if (tourListe != null) {
+                    _editFormState.value = buildFormStateFromCustomer(customer, tourListe)
+                    syncTourKundeFromListe(customer, tourListe)
+                }
+            }
         } else {
             _editFormState.value = null
         }
@@ -189,8 +200,45 @@ class CustomerDetailViewModel(
         _editFormState.value = state
     }
 
-    private fun buildFormStateFromCustomer(c: Customer): AddCustomerState {
-        val tageAzuL = c.tageAzuLOrDefault(7)
+    /**
+     * Setzt bei Tour-Kunden kundenTyp=UNREGELMAESSIG sowie Wochentag A, Wochentag L und tageAzuL von der Liste,
+     * damit die Chips in der Kundenbearbeitung ausgewählt sind und die Daten persistent sind.
+     */
+    private suspend fun syncTourKundeFromListe(customer: Customer, liste: KundenListe) {
+        val wochentagA = liste.wochentagA?.takeIf { it in 0..6 } ?: -1
+        val tageAzuL = liste.tageAzuL.coerceIn(1, 365)
+        val wochentagL = if (wochentagA in 0..6) (wochentagA + tageAzuL) % 7 else -1
+        val updates = mutableMapOf<String, Any>(
+            "kundenTyp" to KundenTyp.UNREGELMAESSIG.name,
+            "tageAzuL" to tageAzuL,
+            "defaultAbholungWochentag" to wochentagA,
+            "defaultAuslieferungWochentag" to wochentagL
+        )
+        if (wochentagA in 0..6) updates["defaultAbholungWochentage"] = listOf(wochentagA)
+        if (wochentagL in 0..6) updates["defaultAuslieferungWochentage"] = listOf(wochentagL)
+        withContext(Dispatchers.IO) {
+            repository.updateCustomerResult(customer.id, updates)
+        }
+    }
+
+    private fun buildFormStateFromCustomer(c: Customer, tourListe: KundenListe? = null): AddCustomerState {
+        val kundenTyp: KundenTyp
+        val tageAzuL: Int
+        val abholungWochentage: List<Int>
+        val auslieferungWochentage: List<Int>
+        if (tourListe != null) {
+            kundenTyp = KundenTyp.UNREGELMAESSIG
+            tageAzuL = tourListe.tageAzuL.coerceIn(1, 365)
+            val wochentagA = tourListe.wochentagA?.takeIf { it in 0..6 }
+            val wochentagL = if (wochentagA != null) (wochentagA + tageAzuL) % 7 else -1
+            abholungWochentage = if (wochentagA != null) listOf(wochentagA) else c.effectiveAbholungWochentage
+            auslieferungWochentage = if (wochentagL in 0..6) listOf(wochentagL) else c.effectiveAuslieferungWochentage
+        } else {
+            kundenTyp = c.kundenTyp
+            tageAzuL = c.tageAzuLOrDefault(7)
+            abholungWochentage = c.effectiveAbholungWochentage
+            auslieferungWochentage = c.effectiveAuslieferungWochentage
+        }
         val intervallTage = c.intervallTageOrDefault(7)
         return AddCustomerState(
             name = c.name,
@@ -203,12 +251,12 @@ class CustomerDetailViewModel(
             telefon = c.telefon,
             notizen = c.notizen,
             kundenArt = c.kundenArt,
-            kundenTyp = c.kundenTyp,
+            kundenTyp = kundenTyp,
             tageAzuL = tageAzuL,
             intervallTage = intervallTage,
             kundennummer = c.kundennummer,
-            abholungWochentage = c.effectiveAbholungWochentage,
-            auslieferungWochentage = c.effectiveAuslieferungWochentage,
+            abholungWochentage = abholungWochentage,
+            auslieferungWochentage = auslieferungWochentage,
             defaultUhrzeit = c.defaultUhrzeit,
             tagsInput = c.tags.joinToString(", "),
             tourStadt = c.tourSlot?.stadt ?: "",

@@ -17,6 +17,7 @@ data class TourPreislisteUiState(
     val tourPreise: List<TourPreis> = emptyList(),
     val addDialogOpen: Boolean = false,
     val selectedArticleForAdd: Article? = null,
+    val addArticleSearchQuery: String = "",
     val addPriceNet: String = "",
     val addPriceGross: String = "",
     val isSaving: Boolean = false,
@@ -46,6 +47,7 @@ class TourPreislisteViewModel(
         _uiState.value = _uiState.value.copy(
             addDialogOpen = true,
             selectedArticleForAdd = null,
+            addArticleSearchQuery = "",
             addPriceNet = "",
             addPriceGross = "",
             message = null
@@ -56,6 +58,7 @@ class TourPreislisteViewModel(
         _uiState.value = _uiState.value.copy(
             addDialogOpen = false,
             selectedArticleForAdd = null,
+            addArticleSearchQuery = "",
             addPriceNet = "",
             addPriceGross = "",
             message = null
@@ -63,7 +66,14 @@ class TourPreislisteViewModel(
     }
 
     fun setSelectedArticleForAdd(article: Article?) {
-        _uiState.value = _uiState.value.copy(selectedArticleForAdd = article)
+        _uiState.value = _uiState.value.copy(
+            selectedArticleForAdd = article,
+            addArticleSearchQuery = if (article != null) "" else _uiState.value.addArticleSearchQuery
+        )
+    }
+
+    fun setAddArticleSearchQuery(query: String) {
+        _uiState.value = _uiState.value.copy(addArticleSearchQuery = query)
     }
 
     fun setAddPriceNet(value: String) {

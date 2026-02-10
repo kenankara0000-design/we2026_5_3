@@ -59,7 +59,7 @@ class ErfassungRepository(
         val positionen = mutableListOf<ErfassungPosition>()
         posSnap.children.forEach { child ->
             val articleId = child.child("articleId").getValue(String::class.java) ?: ""
-            val menge = (child.child("menge").getValue(Any::class.java) as? Number)?.toInt() ?: 0
+            val menge = (child.child("menge").getValue(Any::class.java) as? Number)?.toDouble() ?: 0.0
             val einheit = child.child("einheit").getValue(String::class.java) ?: ""
             if (articleId.isNotBlank()) positionen.add(ErfassungPosition(articleId = articleId, menge = menge, einheit = einheit))
         }

@@ -28,6 +28,7 @@ import com.example.we2026_5.R
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.wasch.WaschErfassung
 import androidx.compose.foundation.layout.size
+import java.util.Locale
 import androidx.compose.foundation.layout.widthIn
 
 @Composable
@@ -77,8 +78,12 @@ fun WaschenErfassungDetailContent(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(pos.artikelName, modifier = Modifier.fillMaxWidth(), fontSize = 14.sp, color = textPrimary)
-                Text("${pos.menge} ${pos.einheit}", fontSize = 14.sp, color = textSecondary)
+                Text("${formatMenge(pos.menge)} ${pos.einheit}", fontSize = 14.sp, color = textSecondary)
             }
         }
     }
 }
+
+private fun formatMenge(value: Double): String =
+    if (value == value.toLong().toDouble()) "%.0f".format(Locale.GERMAN, value)
+    else "%.2f".format(Locale.GERMAN, value).trimEnd('0').trimEnd(',')

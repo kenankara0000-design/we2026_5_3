@@ -18,19 +18,21 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/** Einzelne Zeile in der Erfassung (Artikel + Menge + Einheit) für die UI. */
+/** Einzelne Zeile in der Erfassung (Artikel + Menge + Einheit) für die UI. Menge als Double für kg (z. B. 5,5). */
 data class ErfassungZeile(
     val articleId: String,
     val artikelName: String,
     val einheit: String,
-    val menge: Int
+    val menge: Double
 )
 
 /** Artikel-Option in der Erfassung (mit optionalem Preis-Label bei Kundenpreisen). */
@@ -44,7 +46,7 @@ data class ArticleDisplay(
 /** Zeile für Beleg-Detail (Artikelname, Menge, Einheit). */
 data class ErfassungPositionAnzeige(
     val artikelName: String,
-    val menge: Int,
+    val menge: Double,
     val einheit: String
 )
 
@@ -99,6 +101,9 @@ class WaschenErfassungViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _kundenPreiseForErfassung = MutableStateFlow<List<com.example.we2026_5.wasch.KundenPreis>>(emptyList())
+    /** Brutto-Preise pro Artikel für Beleg-Detail (Tour- oder Kundenpreise), für Gesamtpreis-Anzeige. */
+    private val _belegPreiseGross = MutableStateFlow<Map<String, Double>>(emptyMap())
+    val belegPreiseGross: StateFlow<Map<String, Double>> = _belegPreiseGross.asStateFlow()
     private var kundenPreiseJob: Job? = null
     private var erfassungenJob: Job? = null
     /** Cache für Kunde-Suche: nur bei Eingabe Treffer anzeigen, nicht alle Kunden beim Start. */
@@ -144,10 +149,12 @@ class WaschenErfassungViewModel(
     fun setCustomerSearchQuery(query: String) {
         val s = _uiState.value
         if (s !is WaschenErfassungUiState.KundeSuchen) return
+        // Sofort Query aktualisieren, damit der Cursor nicht zurückspringt (Recomposition)
         if (query.isBlank()) {
             _uiState.value = s.copy(customerSearchQuery = query, customers = emptyList())
             return
         }
+        _uiState.value = s.copy(customerSearchQuery = query)
         viewModelScope.launch {
             if (customersSearchCache == null) {
                 customersSearchCache = customerRepository.getAllCustomers().sortedBy { it.displayName }
@@ -155,7 +162,10 @@ class WaschenErfassungViewModel(
             val filtered = customersSearchCache!!.filter {
                 it.displayName.contains(query, ignoreCase = true)
             }
-            _uiState.value = s.copy(customerSearchQuery = query, customers = filtered)
+            val now = _uiState.value
+            if (now is WaschenErfassungUiState.KundeSuchen && now.customerSearchQuery == query) {
+                _uiState.value = now.copy(customers = filtered)
+            }
         }
     }
 
@@ -176,7 +186,7 @@ class WaschenErfassungViewModel(
         _uiState.value = WaschenErfassungUiState.KundeSuchen(customerSearchQuery = "", customers = emptyList())
     }
 
-    /** Von ErfassungenListe: Beleg (Monat) öffnen. */
+    /** Von ErfassungenListe: Beleg (Monat) öffnen. Lädt Brutto-Preise für Gesamtpreis-Anzeige (Tour- oder Kundenpreise). */
     fun openBelegDetail(beleg: BelegMonat) {
         val s = _uiState.value
         if (s is WaschenErfassungUiState.ErfassungenListe) {
@@ -186,12 +196,25 @@ class WaschenErfassungViewModel(
                 monthLabel = beleg.monthLabel,
                 erfassungen = beleg.erfassungen
             )
+            viewModelScope.launch {
+                val customer = s.customer
+                val isTourKunde = customer.tourSlotId.isNotEmpty() && !customer.ohneTour
+                val map = withContext(Dispatchers.IO) {
+                    if (isTourKunde) {
+                        tourPreiseRepository.getTourPreise().associate { it.articleId to it.priceGross }
+                    } else {
+                        kundenPreiseRepository.getKundenPreiseForCustomer(customer.id).associate { it.articleId to it.priceGross }
+                    }
+                }
+                _belegPreiseGross.value = map
+            }
         }
     }
 
     fun backFromBelegDetail() {
         val s = _uiState.value
         if (s is WaschenErfassungUiState.BelegDetail) {
+            _belegPreiseGross.value = emptyMap()
             _uiState.value = WaschenErfassungUiState.ErfassungenListe(s.customer)
         }
     }
@@ -279,7 +302,7 @@ class WaschenErfassungViewModel(
                 articleId = display.id,
                 artikelName = display.name,
                 einheit = display.einheit,
-                menge = 0
+                menge = 0.0
             )
             _uiState.value = s.copy(
                 zeilen = s.zeilen + newZeile,
@@ -295,21 +318,21 @@ class WaschenErfassungViewModel(
         }
     }
 
-    fun setMenge(articleId: String, menge: Int) {
+    fun setMenge(articleId: String, menge: Double) {
         val s = _uiState.value
         if (s is WaschenErfassungUiState.Erfassen) {
             val updated = s.zeilen.map { z ->
-                if (z.articleId == articleId) z.copy(menge = menge.coerceAtLeast(0)) else z
+                if (z.articleId == articleId) z.copy(menge = menge.coerceAtLeast(0.0)) else z
             }
             _uiState.value = s.copy(zeilen = updated)
         }
     }
 
-    fun setMengeByIndex(index: Int, menge: Int) {
+    fun setMengeByIndex(index: Int, menge: Double) {
         val s = _uiState.value
         if (s is WaschenErfassungUiState.Erfassen && index in s.zeilen.indices) {
             val list = s.zeilen.toMutableList()
-            list[index] = list[index].copy(menge = menge.coerceAtLeast(0))
+            list[index] = list[index].copy(menge = menge.coerceAtLeast(0.0))
             _uiState.value = s.copy(zeilen = list)
         }
     }
@@ -324,7 +347,7 @@ class WaschenErfassungViewModel(
     fun speichern(onSaved: () -> Unit) {
         val s = _uiState.value
         if (s !is WaschenErfassungUiState.Erfassen) return
-        val positionen = s.zeilen.filter { it.menge > 0 }.map { z ->
+        val positionen = s.zeilen.filter { it.menge > 0.0 }.map { z ->
             ErfassungPosition(articleId = z.articleId, menge = z.menge, einheit = z.einheit)
         }
         if (positionen.isEmpty()) {

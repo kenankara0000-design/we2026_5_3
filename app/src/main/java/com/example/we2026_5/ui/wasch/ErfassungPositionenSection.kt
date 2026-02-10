@@ -29,6 +29,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.R
 import com.example.we2026_5.ui.wasch.ErfassungZeile
+import java.util.Locale
+
+/** Erlaubt Ziffern und höchstens ein Dezimaltrennzeichen (Komma oder Punkt). Deutscher Standard: 5,5 kg. */
+private fun filterDecimalInput(s: String): String {
+    val allowed = s.filter { it.isDigit() || it == ',' || it == '.' }
+    val comma = allowed.count { it == ',' }
+    val period = allowed.count { it == '.' }
+    if (comma <= 1 && period <= 1 && comma + period <= 1) return allowed
+    return allowed.dropLast(1)
+}
+
+/** Parst Menge aus Eingabe (5,5 oder 5.5 → 5.5). */
+private fun parseMengeFromInput(s: String): Double = s.replace(',', '.').toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
+
+/** Formatiert Menge für Anzeige (5.5 → "5,5"; 5.0 → "5"). */
+private fun formatMengeForDisplay(value: Double): String {
+    if (value <= 0.0) return ""
+    return if (value == value.toLong().toDouble()) "%.0f".format(Locale.GERMAN, value)
+    else "%.2f".format(Locale.GERMAN, value).trimEnd('0').trimEnd(',')
+}
 
 @Composable
 fun ErfassungPositionenSection(
@@ -37,7 +57,7 @@ fun ErfassungPositionenSection(
     searchResults: List<ArticleDisplay>,
     onArticleSelected: (ArticleDisplay) -> Unit,
     zeilen: List<ErfassungZeile>,
-    onMengeChange: (Int, Int) -> Unit,
+    onMengeChange: (Int, Double) -> Unit,
     onRemovePosition: (Int) -> Unit,
     textPrimary: androidx.compose.ui.graphics.Color,
     textSecondary: androidx.compose.ui.graphics.Color
@@ -105,12 +125,13 @@ fun ErfassungPositionenSection(
                     modifier = Modifier.width(32.dp)
                 )
                 OutlinedTextField(
-                    value = if (zeile.menge == 0) "" else zeile.menge.toString(),
+                    value = formatMengeForDisplay(zeile.menge),
                     onValueChange = { s ->
-                        onMengeChange(index, s.filter { it.isDigit() }.toIntOrNull() ?: 0)
+                        val filtered = filterDecimalInput(s)
+                        onMengeChange(index, parseMengeFromInput(filtered))
                     },
-                    modifier = Modifier.width(72.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.width(88.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true
                 )
                 IconButton(onClick = { onRemovePosition(index) }) {

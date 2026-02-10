@@ -2,11 +2,11 @@ package com.example.we2026_5.wasch
 
 import com.google.firebase.database.IgnoreExtraProperties
 
-/** Eine Position in einer Wäsche-Erfassung (Artikel + Menge + Einheit). */
+/** Eine Position in einer Wäsche-Erfassung (Artikel + Menge + Einheit). Menge als Double für kg (z. B. 5,5). */
 @IgnoreExtraProperties
 data class ErfassungPosition(
     val articleId: String = "",
-    val menge: Int = 0,
+    val menge: Double = 0.0,
     /** Einheit (z. B. Stk, kg) – von Artikel übernommen oder überschrieben. */
     val einheit: String = ""
 )

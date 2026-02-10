@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -51,6 +52,7 @@ fun TourPreislisteScreen(
     onAddClick: () -> Unit,
     onCloseAddDialog: () -> Unit,
     onSelectArticle: (Article?) -> Unit,
+    onArticleSearchQueryChange: (String) -> Unit,
     onPriceNetChange: (String) -> Unit,
     onPriceGrossChange: (String) -> Unit,
     onSaveTourPreis: () -> Unit,
@@ -63,6 +65,9 @@ fun TourPreislisteScreen(
     val articlesMap = articles.associateBy { it.id }
     val articleIdsWithPreis = state.tourPreise.map { it.articleId }.toSet()
     val articlesWithoutPreis = articles.filter { it.id !in articleIdsWithPreis }
+    val articleSearchQuery = state.addArticleSearchQuery.trim()
+    val filteredArticles = if (articleSearchQuery.isBlank()) emptyList()
+        else articlesWithoutPreis.filter { it.name.contains(articleSearchQuery, ignoreCase = true) }
 
     Scaffold(
         topBar = {
@@ -144,12 +149,6 @@ fun TourPreislisteScreen(
             title = { Text(stringResource(R.string.tour_preis_add)) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    Text(
-                        stringResource(R.string.tour_preis_article),
-                        fontSize = 12.sp,
-                        color = textSecondary,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
                     state.selectedArticleForAdd?.let { a ->
                         Card(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -169,52 +168,75 @@ fun TourPreislisteScreen(
                             }
                         }
                     } ?: run {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 200.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            articlesWithoutPreis.forEach { article ->
-                                Card(
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = state.addArticleSearchQuery,
+                                onValueChange = onArticleSearchQueryChange,
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text(stringResource(R.string.wasch_artikel_suchen), color = textSecondary) },
+                                singleLine = true
+                            )
+                            if (articleSearchQuery.isNotBlank()) {
+                                Spacer(Modifier.height(8.dp))
+                                Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clickable(onClick = { onSelectArticle(article) }),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                                        .heightIn(max = 200.dp)
                                 ) {
-                                    Text(
-                                        article.name,
-                                        modifier = Modifier.padding(12.dp),
-                                        color = textPrimary
-                                    )
+                                    if (filteredArticles.isEmpty()) {
+                                        Text(
+                                            stringResource(R.string.tour_preis_keine_treffer),
+                                            fontSize = 12.sp,
+                                            color = textSecondary,
+                                            modifier = Modifier.padding(8.dp)
+                                        )
+                                    } else {
+                                        LazyColumn(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(180.dp),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            itemsIndexed(filteredArticles) { _, article ->
+                                                Card(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .clickable(onClick = { onSelectArticle(article) }),
+                                                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                                                ) {
+                                                    Text(
+                                                        article.name,
+                                                        modifier = Modifier.padding(12.dp),
+                                                        color = textPrimary
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
-                            }
-                            if (articlesWithoutPreis.isEmpty()) {
-                                Text(
-                                    stringResource(R.string.tour_preis_keine_artikel),
-                                    fontSize = 12.sp,
-                                    color = textSecondary,
-                                    modifier = Modifier.padding(8.dp)
-                                )
                             }
                         }
                     }
                     Spacer(Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = state.addPriceNet,
-                        onValueChange = onPriceNetChange,
-                        label = { Text("Netto (€)") },
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = state.addPriceGross,
-                        onValueChange = onPriceGrossChange,
-                        label = { Text("Brutto (€)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = state.addPriceNet,
+                            onValueChange = onPriceNetChange,
+                            label = { Text("Netto (€)") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = state.addPriceGross,
+                            onValueChange = onPriceGrossChange,
+                            label = { Text("Brutto (€)") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
+                    }
                     state.message?.let { msg ->
                         Spacer(Modifier.height(8.dp))
                         Text(msg, fontSize = 12.sp, color = Color.Red)

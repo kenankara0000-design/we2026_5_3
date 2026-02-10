@@ -41,6 +41,7 @@ class WaschenErfassungActivity : AppCompatActivity() {
                 val belegMonate by viewModel.belegMonate.collectAsState(initial = emptyList())
                 val erfassungArticles by viewModel.erfassungArticles.collectAsState(initial = emptyList())
                 val showAllgemeinePreiseHint by viewModel.showAllgemeinePreiseHint.collectAsState(initial = true)
+                val belegPreiseGross by viewModel.belegPreiseGross.collectAsState(initial = emptyMap())
                 WaschenErfassungScreen(
                     state = state,
                     articles = articles,
@@ -78,6 +79,7 @@ class WaschenErfassungActivity : AppCompatActivity() {
                     onArtikelSearchQueryChange = { viewModel.setArtikelSearchQuery(it) },
                     onAddPosition = { viewModel.addPositionFromDisplay(it) },
                     onRemovePosition = { viewModel.removePosition(it) },
+                    belegPreiseGross = belegPreiseGross,
                     onDeleteErfassung = { erfassung ->
                         AlertDialog.Builder(this@WaschenErfassungActivity)
                             .setTitle(R.string.dialog_erfassung_loeschen_title)

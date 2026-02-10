@@ -231,6 +231,7 @@
     <string name="tour_preis_add">Preis hinzufügen</string>
     <string name="tour_preis_article">Artikel wählen</string>
     <string name="tour_preis_keine_artikel">Alle Artikel haben bereits einen Tour-Preis.</string>
+    <string name="tour_preis_keine_treffer">Keine passenden Artikel.</string>
     <string name="main_slot_button_label">Slot auswählen</string>
 
     <!-- Offline / Sync -->
@@ -771,4 +772,5 @@
     <string name="dialog_beleg_loeschen_message">Gesamten Beleg für %1$s löschen? Alle %2$d Erfassungen werden entfernt.</string>
     <string name="beleg_geloescht">Beleg gelöscht</string>
     <string name="wasch_gesamt">Gesamt</string>
+    <string name="wasch_gesamtpreis_brutto">Gesamt (Brutto)</string>
 </resources>

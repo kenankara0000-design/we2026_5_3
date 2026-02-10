@@ -86,6 +86,7 @@ fun BelegeScreen(
                         monthLabel = state.monthLabel,
                         erfassungen = state.erfassungen,
                         articlesMap = articlesMap,
+                        preiseGross = emptyMap(),
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
                         onBack = onBackFromBelegDetail,

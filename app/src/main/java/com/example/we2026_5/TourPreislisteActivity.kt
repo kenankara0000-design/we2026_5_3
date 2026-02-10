@@ -26,6 +26,7 @@ class TourPreislisteActivity : AppCompatActivity() {
                     onAddClick = { viewModel.openAddDialog() },
                     onCloseAddDialog = { viewModel.closeAddDialog() },
                     onSelectArticle = { viewModel.setSelectedArticleForAdd(it) },
+                    onArticleSearchQueryChange = { viewModel.setAddArticleSearchQuery(it) },
                     onPriceNetChange = { viewModel.setAddPriceNet(it) },
                     onPriceGrossChange = { viewModel.setAddPriceGross(it) },
                     onSaveTourPreis = { viewModel.saveTourPreis() },

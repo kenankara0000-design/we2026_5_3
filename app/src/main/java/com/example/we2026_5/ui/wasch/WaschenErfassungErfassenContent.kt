@@ -34,7 +34,7 @@ fun WaschenErfassungErfassenContent(
     onArtikelSearchQueryChange: (String) -> Unit,
     searchResults: List<ArticleDisplay>,
     zeilen: List<ErfassungZeile>,
-    onMengeChangeByIndex: (Int, Int) -> Unit,
+    onMengeChangeByIndex: (Int, Double) -> Unit,
     onAddPosition: (ArticleDisplay) -> Unit,
     showAllgemeinePreiseHint: Boolean = false,
     onRemovePosition: (Int) -> Unit,

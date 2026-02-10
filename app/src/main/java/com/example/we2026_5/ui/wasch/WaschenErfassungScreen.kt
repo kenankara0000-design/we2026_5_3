@@ -29,7 +29,7 @@ fun WaschenErfassungScreen(
     onBelegClick: (BelegMonat) -> Unit,
     onBackFromBelegDetail: () -> Unit,
     onBackFromDetail: () -> Unit,
-    onMengeChangeByIndex: (index: Int, menge: Int) -> Unit,
+    onMengeChangeByIndex: (index: Int, menge: Double) -> Unit,
     onNotizChange: (String) -> Unit,
     onSpeichern: () -> Unit,
     onBackFromErfassen: () -> Unit,
@@ -39,7 +39,9 @@ fun WaschenErfassungScreen(
     onAddPosition: (ArticleDisplay) -> Unit,
     onRemovePosition: (Int) -> Unit,
     onDeleteErfassung: (com.example.we2026_5.wasch.WaschErfassung) -> Unit = {},
-    onDeleteBeleg: () -> Unit = {}
+    onDeleteBeleg: () -> Unit = {},
+    /** Brutto-Preise pro Artikel für Beleg-Detail (Gesamtpreis-Anzeige). */
+    belegPreiseGross: Map<String, Double> = emptyMap()
 ) {
     val primaryBlue = colorResource(R.color.primary_blue)
     val backgroundLight = colorResource(R.color.background_light)
@@ -82,6 +84,7 @@ fun WaschenErfassungScreen(
                     monthLabel = state.monthLabel,
                     erfassungen = state.erfassungen,
                     articlesMap = articlesMap,
+                    preiseGross = belegPreiseGross,
                     textPrimary = textPrimary,
                     textSecondary = textSecondary,
                     onBack = onBackFromBelegDetail,
