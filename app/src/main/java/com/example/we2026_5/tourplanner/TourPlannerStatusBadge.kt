@@ -95,14 +95,14 @@ object TourPlannerStatusBadge {
             .firstOrNull { TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart }?.datum ?: 0L
         val hatAbholungHeute = abholungDatumHeute > 0
         val wurdeHeuteErledigt = customer.abholungErledigtAm > 0 &&
-            TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) == viewDateStart
+            TerminBerechnungUtils.isTimestampInBerlinDay(customer.abholungErledigtAm, viewDateStart)
         val sollAButtonAnzeigen = hatAbholungHeute || hatUeberfaelligeAbholung || wurdeHeuteErledigt
 
         val auslieferungDatumHeute = alleTermine.filter { it.typ == TerminTyp.AUSLIEFERUNG }
             .firstOrNull { TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart }?.datum ?: 0L
         val hatAuslieferungHeute = auslieferungDatumHeute > 0
         val wurdeAmTagErledigtL = customer.auslieferungErledigtAm > 0 &&
-            TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart
+            TerminBerechnungUtils.isTimestampInBerlinDay(customer.auslieferungErledigtAm, viewDateStart)
         val sollLButtonAnzeigen = hatAuslieferungHeute || hatUeberfaelligeAuslieferung || wurdeAmTagErledigtL
 
         return when {

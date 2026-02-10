@@ -38,7 +38,7 @@ class CustomerButtonVisibilityHelper(
         val hatAbholungHeute = abholungDatumHeute > 0 && TerminBerechnungUtils.getStartOfDay(abholungDatumHeute) == viewDateStart
         val hatUeberfaelligeAbholung = hasUeberfaelligeAbholung(customer, viewDateStart, heuteStart)
         val wurdeHeuteErledigt = customer.abholungErledigtAm > 0 &&
-            TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) == viewDateStart
+            TerminBerechnungUtils.isTimestampInBerlinDay(customer.abholungErledigtAm, viewDateStart)
         val hatKundenTerminA = customer.kundenTermine.any {
             TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart && it.typ == "A"
         }
@@ -55,9 +55,9 @@ class CustomerButtonVisibilityHelper(
         val hatAuslieferungHeute = auslieferungDatumHeute > 0 && TerminBerechnungUtils.getStartOfDay(auslieferungDatumHeute) == viewDateStart
         val hatUeberfaelligeAuslieferung = hasUeberfaelligeAuslieferung(customer, viewDateStart, heuteStart)
         val wurdeAmTagErledigtL = customer.auslieferungErledigtAm > 0 &&
-            TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart
+            TerminBerechnungUtils.isTimestampInBerlinDay(customer.auslieferungErledigtAm, viewDateStart)
         val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
-            TerminBerechnungUtils.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+            TerminBerechnungUtils.isTimestampInBerlinDay(customer.keinerWäscheErledigtAm, viewDateStart)
         var sollLButtonAnzeigen = hatAuslieferungHeute || hatUeberfaelligeAuslieferung || wurdeAmTagErledigtL || hatKundenTerminL
         if (kwErledigtAmTag) sollLButtonAnzeigen = false
         val istAmTatsaechlichenAuslieferungTag = (hatAuslieferungHeute && !hatUeberfaelligeAuslieferung) || hatKundenTerminL
@@ -79,20 +79,18 @@ class CustomerButtonVisibilityHelper(
         val uButtonAktiv = true
 
         val hatErledigtenATerminAmDatum = if (customer.abholungErfolgt) {
-            val abholungErledigtAmStart = if (customer.abholungErledigtAm > 0) TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) else 0L
-            if (abholungErledigtAmStart > 0 && viewDateStart == abholungErledigtAmStart) true
-            else abholungDatumHeute > 0 && TerminBerechnungUtils.getStartOfDay(abholungDatumHeute) == viewDateStart
+            (customer.abholungErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.abholungErledigtAm, viewDateStart)) ||
+                (abholungDatumHeute > 0 && TerminBerechnungUtils.getStartOfDay(abholungDatumHeute) == viewDateStart)
         } else false
         val hatErledigtenLTerminAmDatum = if (customer.auslieferungErfolgt) {
-            val auslieferungErledigtAmStart = if (customer.auslieferungErledigtAm > 0) TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) else 0L
-            if (auslieferungErledigtAmStart > 0 && viewDateStart == auslieferungErledigtAmStart) true
-            else auslieferungDatumHeute > 0 && TerminBerechnungUtils.getStartOfDay(auslieferungDatumHeute) == viewDateStart
+            (customer.auslieferungErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.auslieferungErledigtAm, viewDateStart)) ||
+                (auslieferungDatumHeute > 0 && TerminBerechnungUtils.getStartOfDay(auslieferungDatumHeute) == viewDateStart)
         } else false
         val hatAbholungRelevantAmTag = hatAbholungHeute || hatUeberfaelligeAbholung
         val hatAuslieferungRelevantAmTag = hatAuslieferungHeute || hatUeberfaelligeAuslieferung
         val beideRelevantAmTag = hatAbholungRelevantAmTag && hatAuslieferungRelevantAmTag
         val hatKwErledigtAmDatum = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
-            TerminBerechnungUtils.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+            TerminBerechnungUtils.isTimestampInBerlinDay(customer.keinerWäscheErledigtAm, viewDateStart)
         val sollRueckgaengigAnzeigen = if (istHeute) {
             if (beideRelevantAmTag) hatErledigtenATerminAmDatum && hatErledigtenLTerminAmDatum
             else hatErledigtenATerminAmDatum || hatErledigtenLTerminAmDatum || hatKwErledigtAmDatum
@@ -136,9 +134,9 @@ class CustomerButtonVisibilityHelper(
             TerminBerechnungUtils.getStartOfDay(it.datum) == viewDateStart && it.typ == "L"
         }
         val ausnahmeAAnTagBereitsErledigt = customer.abholungErledigtAm > 0 &&
-            TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) == viewDateStart
+            TerminBerechnungUtils.isTimestampInBerlinDay(customer.abholungErledigtAm, viewDateStart)
         val ausnahmeLAnTagBereitsErledigt = customer.auslieferungErledigtAm > 0 &&
-            TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart
+            TerminBerechnungUtils.isTimestampInBerlinDay(customer.auslieferungErledigtAm, viewDateStart)
         val enableAusnahmeAbholung = ausnahmeA && istHeuteKalender && !ausnahmeAAnTagBereitsErledigt
         val enableAusnahmeAuslieferung = ausnahmeL && istHeuteKalender && !ausnahmeLAnTagBereitsErledigt && (customer.abholungErfolgt || !ausnahmeA)
         // Nur A und L als Badge; Ü (Überfällig), KW, U (Urlaub) nur über Karten-Hintergrund/Status

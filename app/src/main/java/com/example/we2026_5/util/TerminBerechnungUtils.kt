@@ -31,6 +31,15 @@ object TerminBerechnungUtils {
         cal.set(java.util.Calendar.MILLISECOND, 0)
         return cal.timeInMillis
     }
+
+    /**
+     * Prüft, ob ein Zeitstempel (z. B. abholungErledigtAm) in den angezeigten Berlin-Tag fällt.
+     * Verwendet Tagesbereich [berlinDayStart, berlinDayStart+24h) statt exakter Gleichheit,
+     * damit alte Erledigt-Werte (gespeichert als Mitternacht in Geräte-/UTC-Zeitzone vor dem
+     * Timezone-Fix) weiterhin als „erledigt am Tag“ erkannt werden.
+     */
+    fun isTimestampInBerlinDay(ts: Long, berlinDayStart: Long): Boolean =
+        ts >= berlinDayStart && ts < berlinDayStart + TimeUnit.DAYS.toMillis(1)
     
     // Filter-Funktionen entfernt - jetzt in TerminFilterUtils
     

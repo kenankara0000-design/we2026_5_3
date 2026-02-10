@@ -124,11 +124,11 @@ class StatisticsViewModel(
 
         val doneTodayCount = activeCustomers.count { customer ->
             val abholungHeute = customer.abholungErledigtAm > 0 &&
-                TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) == heuteStart
+                TerminBerechnungUtils.isTimestampInBerlinDay(customer.abholungErledigtAm, heuteStart)
             val auslieferungHeute = customer.auslieferungErledigtAm > 0 &&
-                TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) == heuteStart
+                TerminBerechnungUtils.isTimestampInBerlinDay(customer.auslieferungErledigtAm, heuteStart)
             (abholungHeute && auslieferungHeute) || (customer.keinerWäscheErfolgt &&
-                customer.keinerWäscheErledigtAm > 0 && TerminBerechnungUtils.getStartOfDay(customer.keinerWäscheErledigtAm) == heuteStart)
+                customer.keinerWäscheErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.keinerWäscheErledigtAm, heuteStart))
         }
 
         val totalCustomers = activeCustomers.size

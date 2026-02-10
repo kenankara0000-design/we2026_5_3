@@ -2,6 +2,7 @@ package com.example.we2026_5.tourplanner
 
 import com.example.we2026_5.Customer
 import com.example.we2026_5.KundenListe
+import com.example.we2026_5.util.TerminBerechnungUtils
 
 /**
  * Implementierung: Wochentagslisten (wochentag 0..6), nur G/P ohne listeId, nur nicht-erledigte.
@@ -26,7 +27,7 @@ class WochentagslistenProcessorImpl(
             }
             val fälligeKunden = kunden.filter { customer ->
                 val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
-                    categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                    TerminBerechnungUtils.isTimestampInBerlinDay(customer.keinerWäscheErledigtAm, viewDateStart)
                 val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
                 if (isDone) return@filter false
                 val isOverdue = filter.istKundeUeberfaellig(customer, null, viewDateStart, heuteStart)

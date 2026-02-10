@@ -84,8 +84,8 @@ class CustomerDetailActivity : AppCompatActivity() {
             val editFormState by viewModel.editFormState.collectAsState(initial = null)
             val isLoading by viewModel.isLoading.collectAsState(initial = false)
             val isUploading by viewModel.isUploading.collectAsState(initial = false)
-            val regelNameByRegelId = emptyMap<String, String>()
             val tourListenName by viewModel.tourListenName.collectAsState(initial = null)
+            val terminePairs365 by viewModel.terminePairs365.collectAsState(initial = emptyList())
 
             CustomerDetailScreen(
                 isAdmin = adminChecker.isAdmin(),
@@ -192,6 +192,16 @@ class CustomerDetailActivity : AppCompatActivity() {
                         .show()
                 },
                 onResetToAutomatic = { viewModel.resetToAutomaticIntervall(customer, editFormState) },
+                onAddAbholungTermin = { c ->
+                    startActivity(Intent(this, AusnahmeTerminActivity::class.java)
+                        .putExtra("CUSTOMER_ID", c.id)
+                        .putExtra(AusnahmeTerminActivity.EXTRA_ADD_ABHOLUNG_MIT_LIEFERUNG, true))
+                },
+                onAddAusnahmeTermin = { c ->
+                    startActivity(Intent(this, AusnahmeTerminActivity::class.java)
+                        .putExtra("CUSTOMER_ID", c.id))
+                },
+                terminePairs365 = terminePairs365,
                 onPhotoClick = { url -> photoManager?.showImageInDialog(url) },
                 onDeletePhoto = { url ->
                     AlertDialog.Builder(this@CustomerDetailActivity)
@@ -216,7 +226,7 @@ class CustomerDetailActivity : AppCompatActivity() {
                         onDatumSelected = { viewModel.updateEditIntervalle(intervalle) }
                     )
                 },
-                regelNameByRegelId = regelNameByRegelId,
+                regelNameByRegelId = emptyMap(),
                 onRegelClick = { },
                 onUrlaubStartActivity = { customerId ->
                     startActivity(Intent(this@CustomerDetailActivity, UrlaubActivity::class.java).apply {
@@ -229,32 +239,6 @@ class CustomerDetailActivity : AppCompatActivity() {
                     })
                 },
                 onAddMonthlyIntervall = { viewModel.addMonthlyIntervall(it) },
-                onDeleteNextTermin = { terminDatum ->
-                    viewModel.deleteNaechstenTermin(terminDatum) { success ->
-                        if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
-                    }
-                },
-                onDeleteAusnahmeTermin = { termin ->
-                    viewModel.deleteAusnahmeTermin(termin) { success ->
-                        if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
-                        else Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
-                    }
-                },
-                onAddAbholungTermin = { c ->
-                    startActivity(Intent(this, AusnahmeTerminActivity::class.java)
-                        .putExtra("CUSTOMER_ID", c.id)
-                        .putExtra(AusnahmeTerminActivity.EXTRA_ADD_ABHOLUNG_MIT_LIEFERUNG, true))
-                },
-                onAddAusnahmeTermin = { c ->
-                    startActivity(Intent(this, AusnahmeTerminActivity::class.java)
-                        .putExtra("CUSTOMER_ID", c.id))
-                },
-                onDeleteKundenTermin = { termins ->
-                    viewModel.deleteKundenTermine(termins) { success ->
-                        if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
-                        else Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
-                    }
-                },
                 tourListenName = tourListenName
             )
         }

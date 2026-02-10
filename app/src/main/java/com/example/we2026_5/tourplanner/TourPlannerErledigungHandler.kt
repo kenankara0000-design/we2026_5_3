@@ -152,7 +152,7 @@ internal class TourPlannerErledigungHandler(
                 TerminBerechnungUtils.getStartOfDay(abholungDatumHeute) == viewDateStart
             val abholungErledigtAmTag = customer.abholungErfolgt && (
                 (customer.abholungErledigtAm > 0 &&
-                 TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) == viewDateStart) ||
+                 TerminBerechnungUtils.isTimestampInBerlinDay(customer.abholungErledigtAm, viewDateStart)) ||
                 hatAbholungHeute
             )
 
@@ -161,17 +161,17 @@ internal class TourPlannerErledigungHandler(
                 TerminBerechnungUtils.getStartOfDay(auslieferungDatumHeute) == viewDateStart
             val auslieferungErledigtAmTag = customer.auslieferungErfolgt && (
                 (customer.auslieferungErledigtAm > 0 &&
-                 TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart) ||
+                 TerminBerechnungUtils.isTimestampInBerlinDay(customer.auslieferungErledigtAm, viewDateStart)) ||
                 hatAuslieferungHeute
             )
 
             val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
-                TerminBerechnungUtils.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                TerminBerechnungUtils.isTimestampInBerlinDay(customer.keinerWäscheErledigtAm, viewDateStart)
 
             val beideAmGleichenTagErledigt = abholungErledigtAmTag && auslieferungErledigtAmTag &&
                 customer.abholungErledigtAm > 0 && customer.auslieferungErledigtAm > 0 &&
-                TerminBerechnungUtils.getStartOfDay(customer.abholungErledigtAm) ==
-                TerminBerechnungUtils.getStartOfDay(customer.auslieferungErledigtAm)
+                TerminBerechnungUtils.isTimestampInBerlinDay(customer.abholungErledigtAm, viewDateStart) &&
+                TerminBerechnungUtils.isTimestampInBerlinDay(customer.auslieferungErledigtAm, viewDateStart)
 
             val updates = mutableMapOf<String, Any>()
 

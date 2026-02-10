@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mockup: Aktiv + Neue Termin in einer Zeile, Alle Termine einklappbar</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f5f5f5;
+      padding: 24px;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+    /* Eine Zeile: Aktiv-Status + Neue Termin Button */
+    .row-aktiv-neu {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .aktiv-block {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .aktiv-badge {
+      background: rgba(76, 175, 80, 0.15);
+      color: #2e7d32;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 6px 10px;
+      border-radius: 6px;
+    }
+    .toggle {
+      width: 48px;
+      height: 28px;
+      border-radius: 14px;
+      background: #4caf50;
+      position: relative;
+      cursor: pointer;
+    }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      top: 3px;
+      right: 3px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    }
+    /* Neue Termin – blau, viereckig abgerundet */
+    .btn-neu-termin {
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 20px;
+      border-radius: 24px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-neu-termin:hover { background: #1565c0; }
+
+    /* Einklappbarer Bereich „Alle Termine“ */
+    .section-alle-termine {
+      margin-top: 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: #fafafa;
+      cursor: pointer;
+      user-select: none;
+    }
+    .section-header:hover { background: #f0f0f0; }
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #212121;
+    }
+    .section-arrow {
+      font-size: 12px;
+      color: #616161;
+      transition: transform 0.2s;
+    }
+    .section-alle-termine.collapsed .section-arrow { transform: rotate(-90deg); }
+    .section-body {
+      padding: 8px 12px 12px;
+      background: #fff;
+      max-height: 264px;
+      overflow-y: auto;
+    }
+    .section-alle-termine.collapsed .section-body { display: none; }
+    .empty-hint { color: #757575; font-size: 14px; padding: 8px 0; }
+    .termin-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    .badge-a { background: rgba(25, 118, 210, 0.2); color: #1976d2; padding: 4px 8px; border-radius: 4px; font-size: 13px; }
+    .badge-l { background: rgba(56, 142, 60, 0.2); color: #388e3c; padding: 4px 8px; border-radius: 4px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h2 style="margin:0 0 16px 0; font-size:18px;">Termine-Tab (Mockup)</h2>
+
+  <div class="card">
+    <!-- Eine Zeile: Aktiv + Neue Termin -->
+    <div class="row-aktiv-neu">
+      <div class="aktiv-block">
+        <span class="aktiv-badge">Aktiv</span>
+        <div class="toggle" title="Status umschalten"></div>
+      </div>
+      <button type="button" class="btn-neu-termin">+ Neue Termin</button>
+    </div>
+
+    <!-- Einklappbar: Alle Termine (standardmäßig eingeklappt) -->
+    <div class="section-alle-termine collapsed" id="alleTermine">
+      <div class="section-header" onclick="document.getElementById('alleTermine').classList.toggle('collapsed')">
+        <span class="section-title">Alle Termine</span>
+        <span class="section-arrow">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="empty-hint">Keine Termine</div>
+        <!-- Beispielzeilen (auskommentiert, wenn leer):
+        <div class="termin-row">
+          <span class="badge-a">A 17.02.2026</span>
+          <span class="badge-l">L 24.02.2026</span>
+        </div>
+        -->
+      </div>
+    </div>
+  </div>
+
+  <p style="margin-top:16px; font-size:12px; color:#757575;">
+    • Aktiv und „+ Neue Termin“ in einer Zeile, blau abgerundeter Button.<br>
+    • „Alle Termine“ ein- und ausklappbar, initial eingeklappt.
+  </p>
+</body>
+</html>

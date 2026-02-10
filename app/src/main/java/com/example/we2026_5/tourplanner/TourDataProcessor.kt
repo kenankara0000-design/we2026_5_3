@@ -61,7 +61,7 @@ class TourDataProcessor(
         }
         val filteredGewerblich = kundenOhneListeMitTerminen.filter { customer ->
             val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
-                categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                TerminBerechnungUtils.isTimestampInBerlinDay(customer.keinerWäscheErledigtAm, viewDateStart)
             val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
 
             // Erledigte Kunden: Prüfe ob am Tag ein Termin vorhanden ist
@@ -115,7 +115,7 @@ class TourDataProcessor(
             val hatUeberfaelligeAuslieferung = hatUeberfaelligeAuslieferung(customer, alleTermine, viewDateStart, heuteStart)
             
             val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
-                categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                TerminBerechnungUtils.isTimestampInBerlinDay(customer.keinerWäscheErledigtAm, viewDateStart)
             val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTag
 
             // "Am Tag relevant" = fällig am Tag ODER überfällig und heute angezeigt (damit A+L beide nötig sind)
@@ -208,7 +208,7 @@ class TourDataProcessor(
                 val erledigteKundenInListe = mutableListOf<Customer>()
                 kundenInListe.forEach { customer ->
                     val kwErledigtAmTagListe = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
-                        categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                        TerminBerechnungUtils.isTimestampInBerlinDay(customer.keinerWäscheErledigtAm, viewDateStart)
                     val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTagListe
                     val sollAlsErledigtAnzeigen = if (isDone) {
                         val termine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
@@ -236,7 +236,7 @@ class TourDataProcessor(
                     kundenInListe.forEach { customer ->
                         val istUeberfaellig = filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)
                         val kwErledigtAmTagListe = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
-                            categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                            TerminBerechnungUtils.isTimestampInBerlinDay(customer.keinerWäscheErledigtAm, viewDateStart)
                         val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTagListe
                         val sollAlsErledigtAnzeigen = if (isDone) {
                             val termine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
@@ -276,7 +276,7 @@ class TourDataProcessor(
                     kundenInListe.forEach { customer ->
                         val istUeberfaellig = filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)
                         val kwErledigtAmTagListe = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
-                            categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                            TerminBerechnungUtils.isTimestampInBerlinDay(customer.keinerWäscheErledigtAm, viewDateStart)
                         val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTagListe
                         val sollAlsErledigtAnzeigen = if (isDone) {
                             val termine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
@@ -363,8 +363,8 @@ class TourDataProcessor(
         hatAuslieferungAmTag: Boolean,
         kwErledigtAmTag: Boolean
     ): Boolean {
-        val abholungErledigtAmTag = customer.abholungErledigtAm > 0 && getStartOfDay(customer.abholungErledigtAm) == viewDateStart
-        val auslieferungErledigtAmTag = customer.auslieferungErledigtAm > 0 && getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart
+        val abholungErledigtAmTag = customer.abholungErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.abholungErledigtAm, viewDateStart)
+        val auslieferungErledigtAmTag = customer.auslieferungErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.auslieferungErledigtAm, viewDateStart)
         return when {
             hatAbholungAmTag && hatAuslieferungAmTag -> abholungErledigtAmTag && auslieferungErledigtAmTag
             hatAbholungAmTag -> abholungErledigtAmTag
@@ -376,13 +376,13 @@ class TourDataProcessor(
     /** Liefert den spätesten Erledigungszeitstempel am viewDateStart (für Sortierung „neueste zuerst“). */
     private fun erledigtZeitstempelAmTag(customer: Customer, viewDateStart: Long): Long {
         var maxTs = 0L
-        if (customer.abholungErledigtAm > 0 && getStartOfDay(customer.abholungErledigtAm) == viewDateStart) {
+        if (customer.abholungErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.abholungErledigtAm, viewDateStart)) {
             maxTs = maxOf(maxTs, if (customer.abholungZeitstempel > 0) customer.abholungZeitstempel else customer.abholungErledigtAm)
         }
-        if (customer.auslieferungErledigtAm > 0 && getStartOfDay(customer.auslieferungErledigtAm) == viewDateStart) {
+        if (customer.auslieferungErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.auslieferungErledigtAm, viewDateStart)) {
             maxTs = maxOf(maxTs, if (customer.auslieferungZeitstempel > 0) customer.auslieferungZeitstempel else customer.auslieferungErledigtAm)
         }
-        if (customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 && getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart) {
+        if (customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.keinerWäscheErledigtAm, viewDateStart)) {
             maxTs = maxOf(maxTs, customer.keinerWäscheErledigtAm)
         }
         return maxTs
@@ -407,12 +407,9 @@ class TourDataProcessor(
         val effectiveFaellig = TerminBerechnungUtils.effectiveFaelligAmDatum(customer)
         if (effectiveFaellig <= 0) return false
         val faelligAmStart = categorizer.getStartOfDay(effectiveFaellig)
-        val erledigtAmStart = when {
-            customer.abholungErledigtAm > 0 -> categorizer.getStartOfDay(customer.abholungErledigtAm)
-            customer.auslieferungErledigtAm > 0 -> categorizer.getStartOfDay(customer.auslieferungErledigtAm)
-            else -> 0L
-        }
-        return viewDateStart == faelligAmStart || (erledigtAmStart > 0 && viewDateStart == erledigtAmStart)
+        val erledigtAmViewDay = (customer.abholungErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.abholungErledigtAm, viewDateStart)) ||
+            (customer.auslieferungErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.auslieferungErledigtAm, viewDateStart))
+        return viewDateStart == faelligAmStart || erledigtAmViewDay
     }
 
     private fun istTerminUeberfaellig(terminStart: Long, viewDateStart: Long, heuteStart: Long): Boolean {

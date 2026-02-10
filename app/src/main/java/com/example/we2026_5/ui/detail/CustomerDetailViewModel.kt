@@ -11,6 +11,7 @@ import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.CustomerSnapshotParser
 import com.example.we2026_5.data.repository.KundenListeRepository
+import com.example.we2026_5.tourplanner.TerminCache
 import com.example.we2026_5.util.TerminAusKundeUtils
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
@@ -39,7 +40,8 @@ import java.util.concurrent.TimeUnit
  */
 class CustomerDetailViewModel(
     private val repository: CustomerRepository,
-    private val listeRepository: KundenListeRepository
+    private val listeRepository: KundenListeRepository,
+    private val termincache: TerminCache
 ) : ViewModel() {
 
     private val _customerId = MutableStateFlow<String?>(null)
@@ -76,6 +78,20 @@ class CustomerDetailViewModel(
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    /** A/L-Paare für die nächsten 365 Tage (alle Quellen). Für „Alle Termine“-Block im Termine-Tab und in der Kundenübersicht. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val terminePairs365: StateFlow<List<Pair<Long, Long>>> = currentCustomer
+        .flatMapLatest { customer ->
+            if (customer == null) flowOf(emptyList())
+            else flow {
+                val liste = withContext(Dispatchers.IO) {
+                    if (customer.listeId.isNotEmpty()) listeRepository.getListeById(customer.listeId) else null
+                }
+                emit(termincache.getTerminePairs365(customer, liste))
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /** true nach erfolgreichem Löschen → Activity beendet sich mit Result. */
     private val _deleted = MutableStateFlow(false)

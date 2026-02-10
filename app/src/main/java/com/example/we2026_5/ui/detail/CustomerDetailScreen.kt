@@ -18,8 +18,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
-import com.example.we2026_5.AusnahmeTermin
-import com.example.we2026_5.KundenTermin
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.KundenTyp
@@ -67,11 +65,10 @@ fun CustomerDetailScreen(
     onUrlaubStartActivity: (String) -> Unit = {},
     onErfassungClick: () -> Unit = {},
     onAddMonthlyIntervall: ((CustomerIntervall) -> Unit)? = null,
-    onDeleteNextTermin: (Long) -> Unit = {},
-    onDeleteAusnahmeTermin: (AusnahmeTermin) -> Unit = {},
     onAddAbholungTermin: (Customer) -> Unit = {},
     onAddAusnahmeTermin: (Customer) -> Unit = {},
-    onDeleteKundenTermin: (List<KundenTermin>) -> Unit = {},
+    /** A/L-Paare für „Alle Termine“-Block (Termine-Tab und Kundenübersicht). */
+    terminePairs365: List<Pair<Long, Long>> = emptyList(),
     /** Name der Tour-Liste, zu der der Kunde gehört (nur bei Tour-Kunden). Hinweis „Gehört zu Tour-Liste: …“. */
     tourListenName: String? = null
 ) {
@@ -299,7 +296,6 @@ fun CustomerDetailScreen(
                         isAdmin = isAdmin,
                         customer = customer,
                         isInEditMode = isInEditMode,
-                        intervalleToShow = if (isInEditMode) editIntervalle else customer.intervalle,
                         currentFormState = currentFormState,
                         onUpdateFormState = onUpdateFormState,
                         onStartDatumClick = onStartDatumClick,
@@ -307,27 +303,16 @@ fun CustomerDetailScreen(
                         textSecondary = textSecondary,
                         surfaceWhite = surfaceWhite,
                         primaryBlue = primaryBlue,
-                        typeLabel = typeLabel,
-                        regelNameByRegelId = regelNameByRegelId,
                         onPauseCustomer = onPauseCustomer,
                         onResumeCustomer = onResumeCustomer,
-                        onRegelClick = onRegelClick,
-                        onRemoveRegel = onRemoveRegel,
-                        onResetToAutomatic = onResetToAutomatic,
-                        onTerminAnlegen = onTerminAnlegen,
-                        onAddMonthlyClick = onAddMonthlyIntervall?.let { { showAddMonthlySheet = true } },
-                        tourSlotId = customer.tourSlotId,
-                        onAddMonthlyIntervall = onAddMonthlyIntervall,
+                        terminePairs365 = terminePairs365,
                         showAddMonthlySheet = showAddMonthlySheet,
                         onDismissAddMonthlySheet = { showAddMonthlySheet = false },
                         onConfirmAddMonthly = {
                             onAddMonthlyIntervall?.invoke(it)
                             showAddMonthlySheet = false
                         },
-                        onDeleteNextTermin = onDeleteNextTermin,
-                        onDeleteAusnahmeTermin = onDeleteAusnahmeTermin,
-                        onAddAbholungTermin = { customer?.let { onAddAbholungTermin(it) } },
-                        onDeleteKundenTermin = onDeleteKundenTermin,
+                        tourSlotId = customer.tourSlotId,
                         showNeuerTerminArtSheet = showNeuerTerminArtSheet,
                         onDismissNeuerTerminArtSheet = { showNeuerTerminArtSheet = false },
                         onNeuerTerminArtSelected = { art ->

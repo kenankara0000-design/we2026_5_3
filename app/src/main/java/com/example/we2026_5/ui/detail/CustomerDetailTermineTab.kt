@@ -9,10 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,24 +21,18 @@ import androidx.compose.ui.unit.sp
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.R
-import com.example.we2026_5.TerminRegelTyp
-import com.example.we2026_5.AusnahmeTermin
-import com.example.we2026_5.KundenTermin
-import com.example.we2026_5.util.TerminBerechnungUtils
-import com.example.we2026_5.util.AgentDebugLog
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
 import com.example.we2026_5.ui.common.DetailUiConstants
 
 /**
- * Tab-Inhalt „Termine & Tour“ für Kunden-Detail (Plan Punkt 3).
- * Eigenständige Datei, um CustomerDetailScreen schlank zu halten.
+ * Tab-Inhalt „Termine & Tour“ für Kunden-Detail.
+ * Eine Überschrift „Alle Termine“, scrollbare Liste (max. 6 Zeilen sichtbar), „+ Termin“-Chip.
  */
 @Composable
 fun CustomerDetailTermineTab(
     isAdmin: Boolean,
     customer: Customer,
     isInEditMode: Boolean,
-    intervalleToShow: List<CustomerIntervall>,
     currentFormState: AddCustomerState,
     onUpdateFormState: (AddCustomerState) -> Unit,
     onStartDatumClick: () -> Unit,
@@ -48,44 +40,25 @@ fun CustomerDetailTermineTab(
     textSecondary: androidx.compose.ui.graphics.Color,
     surfaceWhite: androidx.compose.ui.graphics.Color,
     primaryBlue: androidx.compose.ui.graphics.Color,
-    typeLabel: String,
-    regelNameByRegelId: Map<String, String>,
     onPauseCustomer: (pauseEndeWochen: Int?) -> Unit,
     onResumeCustomer: () -> Unit,
-    onRegelClick: (String) -> Unit,
-    onRemoveRegel: ((String) -> Unit)?,
-    onResetToAutomatic: () -> Unit,
-    onTerminAnlegen: () -> Unit,
-    onAddMonthlyClick: (() -> Unit)?,
-    tourSlotId: String,
-    onAddMonthlyIntervall: ((CustomerIntervall) -> Unit)?,
-    showAddMonthlySheet: Boolean,
-    onDismissAddMonthlySheet: () -> Unit,
-    onConfirmAddMonthly: (CustomerIntervall) -> Unit,
-    onDeleteNextTermin: (Long) -> Unit = {},
-    onDeleteAusnahmeTermin: (AusnahmeTermin) -> Unit = {},
-    onAddAbholungTermin: () -> Unit = {},
-    onDeleteKundenTermin: (List<KundenTermin>) -> Unit = {},
+    terminePairs365: List<Pair<Long, Long>>,
+    showAddMonthlySheet: Boolean = false,
+    onDismissAddMonthlySheet: () -> Unit = {},
+    onConfirmAddMonthly: (CustomerIntervall) -> Unit = {},
+    tourSlotId: String = "",
     showNeuerTerminArtSheet: Boolean = false,
     onDismissNeuerTerminArtSheet: () -> Unit = {},
     onNeuerTerminArtSelected: (NeuerTerminArt) -> Unit = {},
     onNeuerTerminClick: () -> Unit = {},
-    /** Name der Tour-Liste (nur bei Tour-Kunden). Zeigt Hinweis „Gehört zu Tour-Liste: …“. */
     tourListenName: String? = null
 ) {
-    val nextTermin = TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
-    // #region agent log
-    val hasMonthlyWeekday = intervalleToShow.any { it.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY }
-    AgentDebugLog.log("CustomerDetailTermineTab.kt", "nextTermin_computed", mapOf("customerId" to customer.id, "nextTermin" to nextTermin, "hasMonthlyWeekday" to hasMonthlyWeekday, "intervalleSize" to customer.intervalle.size), "H6")
-    // #endregion
-    val canDeleteNextTermin = hasMonthlyWeekday
     val useCentralNeuerTermin = isAdmin
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = if (useCentralNeuerTermin) 88.dp else 0.dp)
         ) {
             if (isInEditMode) {
                 CustomerDetailTermineTourForm(
@@ -111,57 +84,24 @@ fun CustomerDetailTermineTab(
                 onPauseCustomer = onPauseCustomer,
                 onResumeCustomer = onResumeCustomer,
                 textPrimary = textPrimary,
-                surfaceWhite = surfaceWhite
-            )
-            Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
-            CustomerDetailNaechsterTermin(
-                nextTerminMillis = nextTermin,
-                textPrimary = textPrimary,
-                textSecondary = textSecondary,
-                canDeleteNextTermin = canDeleteNextTermin,
-                onDeleteNextTermin = { if (nextTermin > 0) onDeleteNextTermin(nextTermin) }
-            )
-            CustomerDetailKundenTermineSection(
-                kundenTermine = customer.kundenTermine,
-                textPrimary = textPrimary,
-                textSecondary = textSecondary,
-                canDeleteTermin = isInEditMode,
-                onAddAbholungTermin = onAddAbholungTermin,
-                onDeleteKundenTermin = onDeleteKundenTermin,
-                showAddButton = !useCentralNeuerTermin
-            )
-            CustomerDetailAusnahmeTermineSection(
-                ausnahmeTermine = customer.ausnahmeTermine,
-                textPrimary = textPrimary,
-                textSecondary = textSecondary,
-                canDeleteTermin = isInEditMode,
-                onDeleteAusnahmeTermin = onDeleteAusnahmeTermin
-            )
-            if (!isInEditMode) {
-                CustomerDetailKundenTypSection(
-                    typeLabel = typeLabel,
-                    kundenTyp = customer.kundenTyp,
-                    effectiveAbholungWochentage = customer.effectiveAbholungWochentage,
-                    effectiveAuslieferungWochentage = customer.effectiveAuslieferungWochentage,
-                    textPrimary = textPrimary
-                )
-            }
-            Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
-            CustomerDetailTerminRegelCard(
-                intervalleToShow = intervalleToShow,
-                isInEditMode = isInEditMode,
-                canTerminAnlegen = isAdmin,
-                kundenTyp = customer.kundenTyp,
-                regelNameByRegelId = regelNameByRegelId,
-                primaryBlue = primaryBlue,
-                textSecondary = textSecondary,
                 surfaceWhite = surfaceWhite,
-                onRegelClick = onRegelClick,
-                onRemoveRegel = onRemoveRegel,
-                onResetToAutomatic = onResetToAutomatic,
-                onTerminAnlegen = onTerminAnlegen,
-                onAddMonthlyClick = onAddMonthlyClick,
-                useCentralNeuerTerminButton = useCentralNeuerTermin
+                trailingContent = if (useCentralNeuerTermin) {
+                    {
+                        Button(
+                            onClick = onNeuerTerminClick,
+                            colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp)
+                        ) {
+                            Text(stringResource(R.string.label_plus_termin), color = androidx.compose.ui.graphics.Color.White)
+                        }
+                    }
+                } else null
+            )
+            Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+            AlleTermineBlock(
+                pairs = terminePairs365,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary
             )
             AddMonthlyIntervallSheet(
                 visible = showAddMonthlySheet,
@@ -174,21 +114,6 @@ fun CustomerDetailTermineTab(
                 onDismiss = onDismissNeuerTerminArtSheet,
                 onArtSelected = onNeuerTerminArtSelected
             )
-        }
-        if (useCentralNeuerTermin) {
-            FloatingActionButton(
-                onClick = onNeuerTerminClick,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp),
-                contentColor = androidx.compose.ui.graphics.Color.White,
-                containerColor = primaryBlue
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.label_neuer_termin_anlegen)
-                )
-            }
         }
     }
 }

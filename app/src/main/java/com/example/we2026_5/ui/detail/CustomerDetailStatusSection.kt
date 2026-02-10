@@ -48,7 +48,9 @@ fun CustomerDetailStatusSection(
     onPauseCustomer: (pauseEndeWochen: Int?) -> Unit,
     onResumeCustomer: () -> Unit,
     textPrimary: Color,
-    surfaceWhite: Color
+    surfaceWhite: Color,
+    /** Optional: z. B. „+ Neue Termin“-Button in derselben Zeile rechts. */
+    trailingContent: @Composable (() -> Unit)? = null
 ) {
     val statusText = when (customer.status) {
         CustomerStatus.AKTIV -> stringResource(R.string.customer_status_active)
@@ -161,6 +163,7 @@ fun CustomerDetailStatusSection(
                         )
                     }
                 }
+                trailingContent?.invoke()
             }
             if (customer.tags.isNotEmpty()) {
                 Spacer(Modifier.height(6.dp))
