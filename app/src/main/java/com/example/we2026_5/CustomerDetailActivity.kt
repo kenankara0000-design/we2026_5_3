@@ -85,6 +85,7 @@ class CustomerDetailActivity : AppCompatActivity() {
             val isLoading by viewModel.isLoading.collectAsState(initial = false)
             val isUploading by viewModel.isUploading.collectAsState(initial = false)
             val regelNameByRegelId = emptyMap<String, String>()
+            val tourListenName by viewModel.tourListenName.collectAsState(initial = null)
 
             CustomerDetailScreen(
                 isAdmin = adminChecker.isAdmin(),
@@ -253,7 +254,8 @@ class CustomerDetailActivity : AppCompatActivity() {
                         if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
                         else Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
                     }
-                }
+                },
+                tourListenName = tourListenName
             )
         }
 

@@ -181,6 +181,9 @@ class CustomerRepository(
             if (customer.kundenTermine.isNotEmpty()) {
                 updateCustomer(customer.id, mapOf("kundenTermine" to CustomerSnapshotParser.serializeKundenTermine(customer.kundenTermine)))
             }
+            if (customer.termineVonListe.isNotEmpty()) {
+                updateCustomer(customer.id, mapOf("termineVonListe" to CustomerSnapshotParser.serializeKundenTermine(customer.termineVonListe)))
+            }
             termincache.invalidate(customer.id)
             true
         } catch (e: Exception) {
@@ -198,10 +201,14 @@ class CustomerRepository(
     private val tourRelevantKeys = setOf(
         "abholungErfolgt", "abholungErledigtAm", "auslieferungErfolgt", "auslieferungErledigtAm",
         "keinerWäscheErfolgt", "keinerWäscheErledigtAm", "geloeschteTermine", "verschobeneTermine",
-        "urlaubVon", "urlaubBis", "ausnahmeTermine", "kundenTermine",
+        "urlaubVon", "urlaubBis", "ausnahmeTermine", "kundenTermine", "termineVonListe",
         "listeId", "intervalle",
         "defaultAbholungWochentag", "defaultAuslieferungWochentag", "defaultAbholungWochentage", "defaultAuslieferungWochentage"
     )
+
+    /** Kunden, die der angegebenen Tour-Liste zugeordnet sind (für Sync der listenTermine → termineVonListe). */
+    suspend fun getCustomersByListeId(listeId: String): List<Customer> =
+        getAllCustomers().filter { it.listeId == listeId }
 
     /**
      * Aktualisiert einen Kunden

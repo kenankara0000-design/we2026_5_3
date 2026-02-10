@@ -16,6 +16,7 @@ import com.example.we2026_5.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Helper-Klasse für Callback-Handler in ListeBearbeitenActivity
@@ -48,7 +49,11 @@ class ListeBearbeitenCallbacks(
                 }
                 map
             } else {
-                mapOf("listeId" to "")
+                // Tour-Liste: listeId leeren und von der Liste übernommene Termine entfernen
+                mapOf(
+                    "listeId" to "",
+                    "termineVonListe" to CustomerSnapshotParser.serializeKundenTermine(emptyList())
+                )
             }
             if (updates.isEmpty()) {
                 onDataReload()
@@ -92,8 +97,9 @@ class ListeBearbeitenCallbacks(
                     )
                 }
             } else {
-                // Manuelle Liste: listeId setzen; Listen-Intervalle auf Kunde kopieren, damit Term-Daten nur vom Kunden kommen
+                // Tour-Liste: listeId setzen; Listen-Termine auf Kunden übertragen (termineVonListe)
                 val base = mutableMapOf<String, Any>("listeId" to liste.id)
+                base["termineVonListe"] = CustomerSnapshotParser.serializeKundenTermine(liste.listenTermine)
                 if (liste.intervalle.isNotEmpty()) {
                     base["intervalle"] = liste.intervalle.map {
                         mapOf(
@@ -211,7 +217,22 @@ class ListeBearbeitenCallbacks(
             if (success != null) {
                 Toast.makeText(activity, activity.getString(R.string.toast_liste_gespeichert), Toast.LENGTH_SHORT).show()
                 onSuccess(liste.copy(listenTermine = newTermine))
+                syncTermineVonListeToKunden(liste.id, newTermine)
             }
+        }
+    }
+
+    /**
+     * Überträgt die Listen-Termine auf alle Kunden dieser Tour-Liste (termineVonListe).
+     */
+    private fun syncTermineVonListeToKunden(listeId: String, newTermine: List<KundenTermin>) {
+        CoroutineScope(Dispatchers.Main).launch {
+            withContext(Dispatchers.IO) {
+                val customers = customerRepository.getCustomersByListeId(listeId)
+                val serialized = CustomerSnapshotParser.serializeKundenTermine(newTermine)
+                customers.forEach { customerRepository.updateCustomer(it.id, mapOf("termineVonListe" to serialized)) }
+            }
+            onDataReload()
         }
     }
 
@@ -288,6 +309,7 @@ class ListeBearbeitenCallbacks(
             if (success != null) {
                 Toast.makeText(activity, activity.getString(R.string.toast_liste_gespeichert), Toast.LENGTH_SHORT).show()
                 onSuccess(liste.copy(listenTermine = newTermine))
+                syncTermineVonListeToKunden(liste.id, newTermine)
             }
         }
     }

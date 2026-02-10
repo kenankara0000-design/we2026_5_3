@@ -245,7 +245,6 @@ fun TerminDatumKalenderContent(
                 }
             }
         }
-    }
 }
 
 /**

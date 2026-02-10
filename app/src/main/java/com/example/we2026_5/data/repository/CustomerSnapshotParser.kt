@@ -21,6 +21,7 @@ object CustomerSnapshotParser {
         val verschobeneTermine = parseVerschobeneTermine(child.child("verschobeneTermine"))
         val ausnahmeTermine = parseAusnahmeTermine(child.child("ausnahmeTermine"))
         val kundenTermine = parseKundenTermine(child.child("kundenTermine"))
+        val termineVonListe = parseKundenTermine(child.child("termineVonListe"))
         val abholungWochentage = parseIntListFromSnapshot(child.child("defaultAbholungWochentage"))
         val auslieferungWochentage = parseIntListFromSnapshot(child.child("defaultAuslieferungWochentage"))
         val kundenTypNode = child.child("kundenTyp")
@@ -39,6 +40,7 @@ object CustomerSnapshotParser {
             verschobeneTermine = verschobeneTermine,
             ausnahmeTermine = ausnahmeTermine,
             kundenTermine = kundenTermine,
+            termineVonListe = termineVonListe,
             defaultAbholungWochentage = abholungWochentage.ifEmpty { customer.defaultAbholungWochentage },
             defaultAuslieferungWochentage = auslieferungWochentage.ifEmpty { customer.defaultAuslieferungWochentage },
             abholungDatum = optionalLong(child, "abholungDatum"),

@@ -443,6 +443,7 @@
     <string name="label_termine_anlegen">Termin Anlegen</string>
     <string name="label_listen_termine">Listen-Termine</string>
     <string name="label_listen_termine_hint">Gilt für alle Kunden dieser Tour-Liste. A- und L-Termine.</string>
+    <string name="label_gehoert_zu_tour_liste">Gehört zu Tour-Liste: %1$s</string>
     <string name="label_listen_wochentag_a">Wochentag A (Abholung):</string>
     <string name="label_l_gleich_a_plus">L = A + %d</string>
     <string name="dialog_listen_termin_delete_title">Listen-Termin löschen?</string>

@@ -71,7 +71,9 @@ fun CustomerDetailScreen(
     onDeleteAusnahmeTermin: (AusnahmeTermin) -> Unit = {},
     onAddAbholungTermin: (Customer) -> Unit = {},
     onAddAusnahmeTermin: (Customer) -> Unit = {},
-    onDeleteKundenTermin: (List<KundenTermin>) -> Unit = {}
+    onDeleteKundenTermin: (List<KundenTermin>) -> Unit = {},
+    /** Name der Tour-Liste, zu der der Kunde gehört (nur bei Tour-Kunden). Hinweis „Gehört zu Tour-Liste: …“. */
+    tourListenName: String? = null
 ) {
     val context = LocalContext.current
     val primaryBlue = colorResource(R.color.primary_blue)
@@ -337,7 +339,8 @@ fun CustomerDetailScreen(
                                 NeuerTerminArt.EINMALIG_AUSNAHME -> customer?.let { onAddAusnahmeTermin(it) }
                             }
                         },
-                        onNeuerTerminClick = { showNeuerTerminArtSheet = true }
+                        onNeuerTerminClick = { showNeuerTerminArtSheet = true },
+                        tourListenName = tourListenName
                     )
                 }
             }

@@ -381,8 +381,20 @@ object TerminBerechnungUtils {
             alleTermine.addAll(fromWeekdays)
         }
 
-        // Listen-Termine: gelten für alle Kunden der Liste
-        if (liste != null && liste.listenTermine.isNotEmpty()) {
+        // Termine von der Tour-Liste: auf Kunden übertragen (termineVonListe); Erledigen etc. funktioniert ohne Liste
+        if (customer.termineVonListe.isNotEmpty()) {
+            val start = getStartOfDay(startDatum)
+            val end = start + TimeUnit.DAYS.toMillis(tageVoraus.toLong())
+            customer.termineVonListe.forEach { kt ->
+                val datumStart = getStartOfDay(kt.datum)
+                if (datumStart in start..end) {
+                    val typ = if (kt.typ == "L") TerminTyp.AUSLIEFERUNG else TerminTyp.ABHOLUNG
+                    alleTermine.add(TerminInfo(datum = kt.datum, typ = typ, intervallId = "liste", verschoben = false, originalDatum = null))
+                }
+            }
+        }
+        // Fallback: Listen-Termine direkt von der Liste (wenn keine termineVonListe beim Kunden)
+        else if (liste != null && liste.listenTermine.isNotEmpty()) {
             val tageAzuL = liste.tageAzuL.coerceIn(1, 365)
             val start = getStartOfDay(startDatum)
             val end = start + TimeUnit.DAYS.toMillis(tageVoraus.toLong())

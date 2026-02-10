@@ -7,6 +7,7 @@ import com.example.we2026_5.KundenListe
 import com.example.we2026_5.R
 import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.data.repository.CustomerSnapshotParser
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.util.CustomerTermFilter
 import kotlinx.coroutines.Dispatchers
@@ -66,6 +67,12 @@ class ListeBearbeitenViewModel(
                     activeKunden.filter { it.listeId.isEmpty() && it.kundenArt == "Tour" }.sortedBy { it.displayName }
                 }
                 val intervalle = if (_state.value.isInEditMode) _state.value.intervalle else geladeneListe.intervalle
+                // Backfill: Bestehende Tour-Listen-Kunden ohne termineVonListe mit listenTermine füllen
+                if (geladeneListe.wochentag !in 0..6 && geladeneListe.listenTermine.isNotEmpty()) {
+                    inListe.filter { it.termineVonListe.isEmpty() }.forEach { c ->
+                        customerRepository.updateCustomer(c.id, mapOf("termineVonListe" to CustomerSnapshotParser.serializeKundenTermine(geladeneListe.listenTermine)))
+                    }
+                }
                 _state.value = _state.value.copy(
                     liste = geladeneListe,
                     kundenInListe = inListe,

@@ -117,6 +117,10 @@ data class Customer(
     @Exclude
     val kundenTermine: List<KundenTermin> = emptyList(),
 
+    /** Termine von der Tour-Liste (listenTermine) auf den Kunden übertragen. Bei Änderung der Liste werden alle Kunden der Liste aktualisiert; beim Verlassen der Liste geleert. @Exclude, manuell lesen/schreiben. */
+    @Exclude
+    val termineVonListe: List<KundenTermin> = emptyList(),
+
     val fotoUrls: List<String> = listOf(),
     /** Thumbnail-URLs für Listen/Vorschau (Prio 3 PLAN_PERFORMANCE_OFFLINE); gleiche Reihenfolge wie fotoUrls; Fallback: fotoUrls. */
     val fotoThumbUrls: List<String> = listOf(),

@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.we2026_5.R
 import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.tageAzuLOrDefault
 import com.example.we2026_5.ui.common.TerminDatumKalenderContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

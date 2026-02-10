@@ -9,6 +9,7 @@ import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.CustomerSnapshotParser
+import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.util.TerminAusKundeUtils
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
@@ -24,7 +25,10 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
 /**
@@ -33,7 +37,8 @@ import java.util.concurrent.TimeUnit
  * Activity beobachtet nur State und leitet Klicks weiter.
  */
 class CustomerDetailViewModel(
-    private val repository: CustomerRepository
+    private val repository: CustomerRepository,
+    private val listeRepository: KundenListeRepository
 ) : ViewModel() {
 
     private val _customerId = MutableStateFlow<String?>(null)
@@ -54,6 +59,19 @@ class CustomerDetailViewModel(
                     _loadComplete.value = true
                     customer
                 }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    /** Name der Tour-Liste, zu der der Kunde gehört (nur wenn listeId gesetzt und Liste ist Tour-Liste, wochentag !in 0..6). Für Hinweis „Gehört zu Tour-Liste: …“. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val tourListenName: StateFlow<String?> = currentCustomer
+        .flatMapLatest { customer ->
+            val id = customer?.listeId
+            if (id.isNullOrEmpty()) flowOf(null)
+            else flow {
+                val liste = withContext(Dispatchers.IO) { listeRepository.getListeById(id) }
+                emit(if (liste != null && liste.wochentag !in 0..6) liste.name else null)
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)

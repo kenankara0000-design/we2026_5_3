@@ -13,11 +13,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.R
@@ -67,7 +69,9 @@ fun CustomerDetailTermineTab(
     showNeuerTerminArtSheet: Boolean = false,
     onDismissNeuerTerminArtSheet: () -> Unit = {},
     onNeuerTerminArtSelected: (NeuerTerminArt) -> Unit = {},
-    onNeuerTerminClick: () -> Unit = {}
+    onNeuerTerminClick: () -> Unit = {},
+    /** Name der Tour-Liste (nur bei Tour-Kunden). Zeigt Hinweis „Gehört zu Tour-Liste: …“. */
+    tourListenName: String? = null
 ) {
     val nextTermin = TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
     // #region agent log
@@ -89,6 +93,15 @@ fun CustomerDetailTermineTab(
                     onUpdate = onUpdateFormState,
                     onStartDatumClick = onStartDatumClick,
                     kundennummerReadOnly = true
+                )
+                Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+            }
+            if (tourListenName != null) {
+                Text(
+                    text = stringResource(R.string.label_gehoert_zu_tour_liste, tourListenName),
+                    fontSize = 14.sp,
+                    color = textSecondary,
+                    modifier = Modifier.padding(vertical = 4.dp)
                 )
                 Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
             }
