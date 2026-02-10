@@ -225,6 +225,12 @@
     <string name="erfassung_menu_belege">Belege</string>
     <string name="erfassung_menu_kundenpreise">Kundenpreise</string>
     <string name="erfassung_menu_artikel">Artikel verwalten</string>
+    <string name="erfassung_menu_tourpreise">Tour-Preisliste</string>
+    <string name="tour_preis_hinweis">Einheitliche Preise für alle Kunden mit Tour. Bei Erfassung werden diese Preise automatisch verwendet.</string>
+    <string name="tour_preis_leer">Noch keine Tour-Preise. Tippen Sie auf + um Preise hinzuzufügen.</string>
+    <string name="tour_preis_add">Preis hinzufügen</string>
+    <string name="tour_preis_article">Artikel wählen</string>
+    <string name="tour_preis_keine_artikel">Alle Artikel haben bereits einen Tour-Preis.</string>
     <string name="main_slot_button_label">Slot auswählen</string>
 
     <!-- Offline / Sync -->

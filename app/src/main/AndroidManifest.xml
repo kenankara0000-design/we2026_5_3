@@ -124,6 +124,11 @@
             android:theme="@style/Theme.We2026_5.LightBackground" />
 
         <activity
+            android:name=".TourPreislisteActivity"
+            android:exported="false"
+            android:theme="@style/Theme.We2026_5.LightBackground" />
+
+        <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.We2026_5.LightBackground" />

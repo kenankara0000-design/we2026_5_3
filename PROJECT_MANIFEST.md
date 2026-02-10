@@ -62,6 +62,7 @@ Das Manifest ergänzt sie um Ziele und Scope; es ersetzt sie nicht.
 - **articles** – Artikel (z. B. nach SevDesk-Import)
 - **waschErfassungen** – Erfassungen (Kunde, Positionen, Datum)
 - **kundenPreise** – Kundenpreise pro Kunde/Artikel (customerId → articleId → priceNet, priceGross)
+- **tourPreise** – Einheitliche Preisliste für Tour-Kunden (articleId → priceNet, priceGross); Kunden mit tourSlotId und ohneTour=false nutzen diese Preise bei Erfassung
 - Fotos: Firebase Storage (Pfade in Customer.fotoUrls)
 
 ---

@@ -68,8 +68,8 @@ class CustomerDetailViewModel(
     val tourListenName: StateFlow<String?> = currentCustomer
         .flatMapLatest { customer ->
             val id = customer?.listeId
-            if (id.isNullOrEmpty()) flowOf(null)
-            else flow {
+            if (id.isNullOrEmpty()) flowOf<String?>(null)
+            else flow<String?> {
                 val liste = withContext(Dispatchers.IO) { listeRepository.getListeById(id) }
                 emit(if (liste != null && liste.wochentag !in 0..6) liste.name else null)
             }

@@ -7,6 +7,7 @@ import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.ErfassungRepository
 import com.example.we2026_5.data.repository.KundenPreiseRepository
+import com.example.we2026_5.data.repository.TourPreiseRepository
 import com.example.we2026_5.wasch.Article
 import com.example.we2026_5.wasch.ErfassungPosition
 import com.example.we2026_5.wasch.WaschErfassung
@@ -82,7 +83,8 @@ class WaschenErfassungViewModel(
     private val customerRepository: CustomerRepository,
     private val articleRepository: ArticleRepository,
     private val erfassungRepository: ErfassungRepository,
-    private val kundenPreiseRepository: KundenPreiseRepository
+    private val kundenPreiseRepository: KundenPreiseRepository,
+    private val tourPreiseRepository: TourPreiseRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<WaschenErfassungUiState>(WaschenErfassungUiState.KundeSuchen())
@@ -221,9 +223,24 @@ class WaschenErfassungViewModel(
     fun neueErfassungClick(customer: Customer) {
         kundenPreiseJob?.cancel()
         _kundenPreiseForErfassung.value = emptyList()
+        val isTourKunde = customer.tourSlotId.isNotEmpty() && !customer.ohneTour
         kundenPreiseJob = viewModelScope.launch {
-            kundenPreiseRepository.getKundenPreiseForCustomerFlow(customer.id).collect {
-                _kundenPreiseForErfassung.value = it
+            if (isTourKunde) {
+                tourPreiseRepository.getTourPreiseFlow().collect { tourPreise ->
+                    val asKundenPreis = tourPreise.map { p ->
+                        com.example.we2026_5.wasch.KundenPreis(
+                            customerId = customer.id,
+                            articleId = p.articleId,
+                            priceNet = p.priceNet,
+                            priceGross = p.priceGross
+                        )
+                    }
+                    _kundenPreiseForErfassung.value = asKundenPreis
+                }
+            } else {
+                kundenPreiseRepository.getKundenPreiseForCustomerFlow(customer.id).collect {
+                    _kundenPreiseForErfassung.value = it
+                }
             }
         }
         _uiState.value = WaschenErfassungUiState.Erfassen(

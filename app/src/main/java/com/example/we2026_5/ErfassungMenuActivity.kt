@@ -24,6 +24,9 @@ class ErfassungMenuActivity : AppCompatActivity() {
                 onKundenpreise = {
                     startActivity(Intent(this, KundenpreiseActivity::class.java))
                 },
+                onTourPreisliste = {
+                    startActivity(Intent(this, TourPreislisteActivity::class.java))
+                },
                 onArtikelVerwalten = {
                     startActivity(Intent(this, ArtikelVerwaltungActivity::class.java))
                 },

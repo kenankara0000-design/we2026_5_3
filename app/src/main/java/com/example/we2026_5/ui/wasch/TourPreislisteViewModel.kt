@@ -1,0 +1,107 @@
+package com.example.we2026_5.ui.wasch
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.we2026_5.data.repository.ArticleRepository
+import com.example.we2026_5.data.repository.TourPreiseRepository
+import com.example.we2026_5.wasch.Article
+import com.example.we2026_5.wasch.TourPreis
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+data class TourPreislisteUiState(
+    val tourPreise: List<TourPreis> = emptyList(),
+    val addDialogOpen: Boolean = false,
+    val selectedArticleForAdd: Article? = null,
+    val addPriceNet: String = "",
+    val addPriceGross: String = "",
+    val isSaving: Boolean = false,
+    val message: String? = null
+)
+
+class TourPreislisteViewModel(
+    private val tourPreiseRepository: TourPreiseRepository,
+    private val articleRepository: ArticleRepository
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(TourPreislisteUiState())
+    val uiState: StateFlow<TourPreislisteUiState> = _uiState.asStateFlow()
+
+    val articles: StateFlow<List<Article>> = articleRepository.getAllArticlesFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    init {
+        viewModelScope.launch {
+            tourPreiseRepository.getTourPreiseFlow().collect { preise ->
+                _uiState.value = _uiState.value.copy(tourPreise = preise)
+            }
+        }
+    }
+
+    fun openAddDialog() {
+        _uiState.value = _uiState.value.copy(
+            addDialogOpen = true,
+            selectedArticleForAdd = null,
+            addPriceNet = "",
+            addPriceGross = "",
+            message = null
+        )
+    }
+
+    fun closeAddDialog() {
+        _uiState.value = _uiState.value.copy(
+            addDialogOpen = false,
+            selectedArticleForAdd = null,
+            addPriceNet = "",
+            addPriceGross = "",
+            message = null
+        )
+    }
+
+    fun setSelectedArticleForAdd(article: Article?) {
+        _uiState.value = _uiState.value.copy(selectedArticleForAdd = article)
+    }
+
+    fun setAddPriceNet(value: String) {
+        _uiState.value = _uiState.value.copy(addPriceNet = value)
+    }
+
+    fun setAddPriceGross(value: String) {
+        _uiState.value = _uiState.value.copy(addPriceGross = value)
+    }
+
+    fun saveTourPreis() {
+        val s = _uiState.value
+        val article = s.selectedArticleForAdd ?: return
+        val net = s.addPriceNet.toDoubleOrNull() ?: 0.0
+        val gross = s.addPriceGross.toDoubleOrNull() ?: 0.0
+        if (net <= 0 && gross <= 0) {
+            _uiState.value = _uiState.value.copy(message = "Bitte Netto oder Brutto eingeben.")
+            return
+        }
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSaving = true, message = null)
+            val preis = TourPreis(articleId = article.id, priceNet = net, priceGross = gross)
+            val ok = tourPreiseRepository.setTourPreis(preis)
+            _uiState.value = _uiState.value.copy(
+                isSaving = false,
+                addDialogOpen = !ok,
+                message = if (ok) null else "Fehler beim Speichern",
+                addPriceNet = "",
+                addPriceGross = "",
+                selectedArticleForAdd = null
+            )
+            if (ok) closeAddDialog()
+        }
+    }
+
+    fun removeTourPreis(articleId: String) {
+        viewModelScope.launch {
+            tourPreiseRepository.removeTourPreis(articleId)
+        }
+    }
+}

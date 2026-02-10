@@ -35,6 +35,7 @@ fun ErfassungMenuScreen(
     onErfassungStarten: () -> Unit,
     onBelege: () -> Unit,
     onKundenpreise: () -> Unit,
+    onTourPreisliste: () -> Unit,
     onArtikelVerwalten: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -80,6 +81,13 @@ fun ErfassungMenuScreen(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(stringResource(R.string.erfassung_menu_kundenpreise), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+            OutlinedButton(
+                onClick = onTourPreisliste,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(stringResource(R.string.erfassung_menu_tourpreise), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
             OutlinedButton(
                 onClick = onArtikelVerwalten,
