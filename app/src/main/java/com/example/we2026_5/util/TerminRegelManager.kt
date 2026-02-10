@@ -29,7 +29,7 @@ object TerminRegelManager {
             val vorschlaege = mutableListOf<TerminSlotVorschlag>()
             var datum = startOfDay
             while (datum <= horizon && vorschlaege.size < MAX_VORSCHLAEGE) {
-                val cal = Calendar.getInstance().apply { timeInMillis = datum }
+                val cal = AppTimeZone.newCalendar().apply { timeInMillis = datum }
                 val wochentag = (cal.get(Calendar.DAY_OF_WEEK) + 5) % 7 // 0=Mo .. 6=So
                 if (wochentag in 0..4) {
                     vorschlaege += TerminSlotVorschlag(

@@ -52,7 +52,9 @@ fun WaschenErfassungBelegDetailContent(
     textPrimary: androidx.compose.ui.graphics.Color,
     textSecondary: androidx.compose.ui.graphics.Color,
     onBack: () -> Unit,
-    onDeleteBeleg: () -> Unit
+    onDeleteBeleg: () -> Unit,
+    /** Nur bei offenen Belegen (nicht erledigt). */
+    onErledigt: (() -> Unit)? = null
 ) {
     var kebabExpanded by remember { mutableStateOf(false) }
 
@@ -114,6 +116,15 @@ fun WaschenErfassungBelegDetailContent(
                 expanded = kebabExpanded,
                 onDismissRequest = { kebabExpanded = false }
             ) {
+                if (onErledigt != null && erfassungen.isNotEmpty() && erfassungen.all { !it.erledigt }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.beleg_erledigt), color = textPrimary) },
+                        onClick = {
+                            kebabExpanded = false
+                            onErledigt()
+                        }
+                    )
+                }
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.beleg_loeschen), color = Color.Red) },
                     onClick = {

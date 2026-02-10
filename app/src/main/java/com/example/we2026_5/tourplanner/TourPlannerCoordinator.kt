@@ -12,6 +12,7 @@ import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.example.we2026_5.util.AgentDebugLog
+import com.example.we2026_5.util.AppTimeZone
 import com.example.we2026_5.util.Result
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -27,7 +28,7 @@ class TourPlannerCoordinator(
     private val repository: CustomerRepository,
     private val listeRepository: KundenListeRepository
 ) {
-    private val viewDate = Calendar.getInstance()
+    private val viewDate = AppTimeZone.newCalendar()
 
     val dateUtils: TourPlannerDateUtils = TourPlannerDateUtils { viewModel.getListen() }
     val dialogHelper: TourPlannerDialogHelper = TourPlannerDialogHelper(

@@ -20,6 +20,9 @@ fun BelegeScreen(
     belegMonate: List<BelegMonat>,
     alleBelegEintraege: List<BelegEintrag>,
     articles: List<Article>,
+    belegPreiseGross: Map<String, Double> = emptyMap(),
+    alleBelegEintraegeErledigt: List<BelegEintrag> = emptyList(),
+    belegMonateErledigt: List<BelegMonat> = emptyList(),
     onBack: () -> Unit,
     onCustomerSearchQueryChange: (String) -> Unit,
     onKundeWaehlen: (com.example.we2026_5.Customer) -> Unit,
@@ -29,7 +32,10 @@ fun BelegeScreen(
     onBackFromBelegDetail: () -> Unit,
     onNeueErfassungFromListe: () -> Unit,
     onDeleteBeleg: () -> Unit,
-    onAlleBelegeNameFilterChange: (String) -> Unit
+    onErledigtBeleg: () -> Unit = {},
+    onAlleBelegeNameFilterChange: (String) -> Unit,
+    onAlleBelegeShowErledigtTabChange: (Boolean) -> Unit = {},
+    onBelegListeShowErledigtTabChange: (Boolean) -> Unit = {}
 ) {
     val primaryBlue = colorResource(R.color.primary_blue)
     val textPrimary = colorResource(R.color.text_primary)
@@ -46,9 +52,11 @@ fun BelegeScreen(
             when (state) {
                 is BelegeUiState.AlleBelege -> {
                     WaschenErfassungAlleBelegeContent(
-                        belegEintraege = alleBelegEintraege,
+                        belegEintraege = if (state.showErledigtTab) alleBelegEintraegeErledigt else alleBelegEintraege,
                         nameFilter = state.nameFilter,
                         onNameFilterChange = onAlleBelegeNameFilterChange,
+                        showErledigtTab = state.showErledigtTab,
+                        onShowErledigtTabChange = onAlleBelegeShowErledigtTabChange,
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
                         onBelegEintragClick = onBelegEintragClick
@@ -71,7 +79,9 @@ fun BelegeScreen(
                 is BelegeUiState.BelegListe -> {
                     WaschenErfassungBelegListeContent(
                         customer = state.customer,
-                        belege = belegMonate,
+                        belege = if (state.showErledigtTab) belegMonateErledigt else belegMonate,
+                        showErledigtTab = state.showErledigtTab,
+                        onShowErledigtTabChange = onBelegListeShowErledigtTabChange,
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
                         onBackToKundeSuchen = onBackToAlleBelege,
@@ -86,11 +96,12 @@ fun BelegeScreen(
                         monthLabel = state.monthLabel,
                         erfassungen = state.erfassungen,
                         articlesMap = articlesMap,
-                        preiseGross = emptyMap(),
+                        preiseGross = belegPreiseGross,
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
                         onBack = onBackFromBelegDetail,
-                        onDeleteBeleg = onDeleteBeleg
+                        onDeleteBeleg = onDeleteBeleg,
+                        onErledigt = onErledigtBeleg
                     )
                 }
             }

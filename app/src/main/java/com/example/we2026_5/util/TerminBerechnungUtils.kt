@@ -20,10 +20,10 @@ import java.util.concurrent.TimeUnit
 object TerminBerechnungUtils {
 
     /**
-     * Normalisiert ein Datum auf Tagesanfang (00:00:00)
+     * Normalisiert ein Datum auf Tagesanfang (00:00:00) in Europe/Berlin.
      */
     fun getStartOfDay(timestamp: Long): Long {
-        val cal = java.util.Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         cal.timeInMillis = timestamp
         cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
         cal.set(java.util.Calendar.MINUTE, 0)
@@ -187,10 +187,10 @@ object TerminBerechnungUtils {
     }
     
     /**
-     * Liefert Wochentag 0=Mo..6=So für ein Datum (Tagesanfang).
+     * Liefert Wochentag 0=Mo..6=So für ein Datum (Tagesanfang) in Europe/Berlin.
      */
     private fun getWochentagForDay(dayStart: Long): Int {
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         cal.timeInMillis = dayStart
         return (cal.get(Calendar.DAY_OF_WEEK) + 5) % 7
     }
@@ -234,7 +234,7 @@ object TerminBerechnungUtils {
         verschobeneTermine: List<VerschobenerTermin>
     ): List<TerminInfo> {
         val result = mutableListOf<TerminInfo>()
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         cal.timeInMillis = startDatumStart
         val startYear = cal.get(Calendar.YEAR)
         val startMonth = cal.get(Calendar.MONTH)

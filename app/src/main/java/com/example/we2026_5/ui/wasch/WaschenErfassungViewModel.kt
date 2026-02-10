@@ -57,7 +57,7 @@ sealed class WaschenErfassungUiState {
         val customers: List<Customer> = emptyList()
     ) : WaschenErfassungUiState()
     /** Erfassungen für einen Kunden – gruppiert nach Monat (Belege). */
-    data class ErfassungenListe(val customer: Customer) : WaschenErfassungUiState()
+    data class ErfassungenListe(val customer: Customer, val showErledigtTab: Boolean = false) : WaschenErfassungUiState()
     /** Beleg-Detail: ein Monat, alle Erfassungen mit Datum/Uhrzeit. */
     data class BelegDetail(
         val customer: Customer,
@@ -95,10 +95,17 @@ class WaschenErfassungViewModel(
     private val _erfassungenList = MutableStateFlow<List<WaschErfassung>>(emptyList())
     val erfassungenList: StateFlow<List<WaschErfassung>> = _erfassungenList.asStateFlow()
 
-    /** Belege (nach Monat gruppiert) – nur bei Änderung von erfassungenList neu berechnet. */
+    /** Belege (nach Monat gruppiert) – nur offene. */
     val belegMonate: StateFlow<List<BelegMonat>> = _erfassungenList
         .map { BelegMonatGrouping.groupByMonth(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _erfassungenListErledigt = MutableStateFlow<List<WaschErfassung>>(emptyList())
+    val belegMonateErledigt: StateFlow<List<BelegMonat>> = _erfassungenListErledigt
+        .map { BelegMonatGrouping.groupByMonth(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private var erfassungenErledigtJob: Job? = null
 
     private val _kundenPreiseForErfassung = MutableStateFlow<List<com.example.we2026_5.wasch.KundenPreis>>(emptyList())
     /** Brutto-Preise pro Artikel für Beleg-Detail (Tour- oder Kundenpreise), für Gesamtpreis-Anzeige. */
@@ -171,17 +178,25 @@ class WaschenErfassungViewModel(
 
     fun kundeGewaehlt(customer: Customer) {
         erfassungenJob?.cancel()
-        _uiState.value = WaschenErfassungUiState.ErfassungenListe(customer)
+        erfassungenErledigtJob?.cancel()
+        _uiState.value = WaschenErfassungUiState.ErfassungenListe(customer, showErledigtTab = false)
         erfassungenJob = viewModelScope.launch {
             erfassungRepository.getErfassungenByCustomerFlow(customer.id).collect {
                 _erfassungenList.value = it
+            }
+        }
+        erfassungenErledigtJob = viewModelScope.launch {
+            erfassungRepository.getErfassungenByCustomerFlowErledigt(customer.id).collect {
+                _erfassungenListErledigt.value = it
             }
         }
     }
 
     fun backToKundeSuchen() {
         erfassungenJob?.cancel()
+        erfassungenErledigtJob?.cancel()
         _erfassungenList.value = emptyList()
+        _erfassungenListErledigt.value = emptyList()
         customersSearchCache = null
         _uiState.value = WaschenErfassungUiState.KundeSuchen(customerSearchQuery = "", customers = emptyList())
     }
@@ -282,6 +297,11 @@ class WaschenErfassungViewModel(
                 _erfassungenList.value = it
             }
         }
+    }
+
+    fun setBelegListeShowErledigtTab(showErledigt: Boolean) {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.ErfassungenListe) _uiState.value = s.copy(showErledigtTab = showErledigt)
     }
 
     fun setArtikelSearchQuery(query: String) {
@@ -434,6 +454,26 @@ class WaschenErfassungViewModel(
                     }
                 }
                 onDeleted()
+            }
+        }
+    }
+
+    /** Beleg als erledigt markieren; danach zurück zur Beleg-Liste (Beleg erscheint im Erledigt-Bereich). */
+    fun markBelegErledigt(erfassungen: List<WaschErfassung>, onMarked: () -> Unit) {
+        viewModelScope.launch {
+            val ok = erfassungRepository.markBelegErledigt(erfassungen)
+            if (ok && erfassungen.isNotEmpty()) {
+                val s = _uiState.value
+                if (s is WaschenErfassungUiState.BelegDetail) {
+                    _uiState.value = WaschenErfassungUiState.ErfassungenListe(s.customer)
+                    erfassungenJob?.cancel()
+                    erfassungenJob = viewModelScope.launch {
+                        erfassungRepository.getErfassungenByCustomerFlow(s.customer.id).collect {
+                            _erfassungenList.value = it
+                        }
+                    }
+                }
+                onMarked()
             }
         }
     }

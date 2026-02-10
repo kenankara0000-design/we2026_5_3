@@ -122,7 +122,7 @@ class KundenListenViewModel(
     }
 
     private fun sortListen(listen: List<KundenListe>): List<KundenListe> {
-        val todayIdx = ((java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_WEEK) + 5) % 7)
+        val todayIdx = ((com.example.we2026_5.util.AppTimeZone.newCalendar().get(java.util.Calendar.DAY_OF_WEEK) + 5) % 7)
         val (weekdayListen, other) = listen.partition { it.wochentag in 0..6 }
         val sortedWeekdays = weekdayListen.sortedBy { ((it.wochentag - todayIdx + 7) % 7) }
         return sortedWeekdays + other.sortedBy { it.name }

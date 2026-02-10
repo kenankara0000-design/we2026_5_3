@@ -40,6 +40,9 @@ fun WaschenErfassungScreen(
     onRemovePosition: (Int) -> Unit,
     onDeleteErfassung: (com.example.we2026_5.wasch.WaschErfassung) -> Unit = {},
     onDeleteBeleg: () -> Unit = {},
+    onErledigtBeleg: () -> Unit = {},
+    belegMonateErledigt: List<BelegMonat> = emptyList(),
+    onBelegListeShowErledigtTabChange: (Boolean) -> Unit = {},
     /** Brutto-Preise pro Artikel für Beleg-Detail (Gesamtpreis-Anzeige). */
     belegPreiseGross: Map<String, Double> = emptyMap()
 ) {
@@ -69,7 +72,9 @@ fun WaschenErfassungScreen(
             is WaschenErfassungUiState.ErfassungenListe -> {
                 WaschenErfassungBelegListeContent(
                     customer = state.customer,
-                    belege = belegMonate,
+                    belege = if (state.showErledigtTab) belegMonateErledigt else belegMonate,
+                    showErledigtTab = state.showErledigtTab,
+                    onShowErledigtTabChange = onBelegListeShowErledigtTabChange,
                     textPrimary = textPrimary,
                     textSecondary = textSecondary,
                     onBackToKundeSuchen = onBackToKundeSuchen,
@@ -88,7 +93,8 @@ fun WaschenErfassungScreen(
                     textPrimary = textPrimary,
                     textSecondary = textSecondary,
                     onBack = onBackFromBelegDetail,
-                    onDeleteBeleg = onDeleteBeleg
+                    onDeleteBeleg = onDeleteBeleg,
+                    onErledigt = onErledigtBeleg
                 )
             }
             is WaschenErfassungUiState.ErfassungDetail -> {

@@ -1,6 +1,7 @@
 package com.example.we2026_5
 
 import android.text.TextUtils
+import com.example.we2026_5.util.AppTimeZone
 import java.util.regex.Pattern
 
 object ValidationHelper {
@@ -121,13 +122,13 @@ object ValidationHelper {
     fun isValidFutureDate(timeInMillis: Long, allowToday: Boolean = true): Boolean {
         if (timeInMillis <= 0) return false
         
-        val today = java.util.Calendar.getInstance()
+        val today = AppTimeZone.newCalendar()
         today.set(java.util.Calendar.HOUR_OF_DAY, 0)
         today.set(java.util.Calendar.MINUTE, 0)
         today.set(java.util.Calendar.SECOND, 0)
         today.set(java.util.Calendar.MILLISECOND, 0)
         
-        val target = java.util.Calendar.getInstance()
+        val target = AppTimeZone.newCalendar()
         target.timeInMillis = timeInMillis
         target.set(java.util.Calendar.HOUR_OF_DAY, 0)
         target.set(java.util.Calendar.MINUTE, 0)

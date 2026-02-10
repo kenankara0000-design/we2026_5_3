@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.we2026_5.R
+import com.example.we2026_5.util.AppTimeZone
 import com.example.we2026_5.util.TerminBerechnungUtils
 import java.util.Calendar
 
@@ -53,7 +54,7 @@ fun TerminDatumKalenderContent(
     modifier: Modifier = Modifier
 ) {
     val calInit = remember(initialDate) {
-        Calendar.getInstance().apply { timeInMillis = initialDate }
+        AppTimeZone.newCalendar().apply { timeInMillis = initialDate }
     }
     var currentYear by remember(initialDate) { mutableStateOf(calInit.get(Calendar.YEAR)) }
     var currentMonth by remember(initialDate) { mutableStateOf(calInit.get(Calendar.MONTH)) }
@@ -83,12 +84,12 @@ fun TerminDatumKalenderContent(
 
     fun getWeekday(date: Calendar): Int = (date.get(Calendar.DAY_OF_WEEK) + 5) % 7 // 0=Mo .. 6=So
     fun getDaysInMonth(year: Int, month: Int): Int {
-        val c = Calendar.getInstance()
+        val c = AppTimeZone.newCalendar()
         c.set(year, month, 1)
         return c.getActualMaximum(Calendar.DAY_OF_MONTH)
     }
     fun getFirstWeekdayOfMonth(year: Int, month: Int): Int {
-        val c = Calendar.getInstance()
+        val c = AppTimeZone.newCalendar()
         c.set(year, month, 1)
         return getWeekday(c)
     }
@@ -186,7 +187,7 @@ fun TerminDatumKalenderContent(
                                 val dayNum = if (cellIndex >= firstWd && cellIndex < firstWd + daysInMonth) {
                                     cellIndex - firstWd + 1
                                 } else null
-                                val cal = Calendar.getInstance()
+                                val cal = AppTimeZone.newCalendar()
                                 cal.set(currentYear, currentMonth, dayNum ?: 1, 0, 0, 0)
                                 cal.set(Calendar.MILLISECOND, 0)
                                 val dayMs = if (dayNum != null) cal.timeInMillis else 0L

@@ -75,7 +75,7 @@ class UrlaubActivity : AppCompatActivity() {
                     initialDate = if (initialBis >= vonStartOfDay) initialBis else vonStartOfDay,
                     title = getString(R.string.dialog_urlaub_bis),
                     onDateSelected = { urlaubBis ->
-                        val bisCal = java.util.Calendar.getInstance().apply {
+                        val bisCal = com.example.we2026_5.util.AppTimeZone.newCalendar().apply {
                             timeInMillis = urlaubBis
                             set(java.util.Calendar.HOUR_OF_DAY, 23)
                             set(java.util.Calendar.MINUTE, 59)

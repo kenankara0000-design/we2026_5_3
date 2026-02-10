@@ -57,7 +57,7 @@ class CustomerDialogHelper(
                     context = context,
                     title = context.getString(R.string.dialog_urlaub_bis),
                     onDateSelected = { urlaubBis ->
-                        val pickedBis = Calendar.getInstance().apply {
+                        val pickedBis = com.example.we2026_5.util.AppTimeZone.newCalendar().apply {
                             timeInMillis = urlaubBis
                             set(Calendar.HOUR_OF_DAY, 23)
                             set(Calendar.MINUTE, 59)

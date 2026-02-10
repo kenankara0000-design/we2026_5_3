@@ -18,6 +18,7 @@ import com.example.we2026_5.ui.tourplanner.ErledigtSheetContent
 import com.example.we2026_5.util.CustomerTermFilter
 import com.example.we2026_5.util.AgentDebugLog
 import com.example.we2026_5.util.Result
+import com.example.we2026_5.util.AppTimeZone
 import com.example.we2026_5.util.TerminBerechnungUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -161,14 +162,9 @@ class TourPlannerViewModel(
         selectedTimestampFlow.value = current - TimeUnit.DAYS.toMillis(1)
     }
 
-    /** Springt auf heute. */
+    /** Springt auf heute (Berlin). */
     fun goToToday() {
-        val cal = Calendar.getInstance()
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        selectedTimestampFlow.value = cal.timeInMillis
+        selectedTimestampFlow.value = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
     }
     
     // processTourData Funktion entfernt - jetzt in TourDataProcessor
@@ -227,7 +223,7 @@ class TourPlannerViewModel(
     // --- Tour-Reihenfolge (Drag & Drop / Route) ---
 
     private fun dateKey(ts: Long): String {
-        val c = Calendar.getInstance().apply { timeInMillis = ts }
+        val c = AppTimeZone.newCalendar().apply { timeInMillis = ts }
         return String.format("%04d%02d%02d", c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH))
     }
 

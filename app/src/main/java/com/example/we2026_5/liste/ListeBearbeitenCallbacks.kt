@@ -13,6 +13,7 @@ import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.data.repository.CustomerSnapshotParser
 import com.example.we2026_5.KundenTermin
 import com.example.we2026_5.R
+import com.example.we2026_5.util.AppTimeZone
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -266,7 +267,7 @@ class ListeBearbeitenCallbacks(
      * Berechnet das nächste A-Datum für den gegebenen Wochentag (0=Mo..6=So) ab heute.
      */
     private fun naechstesADatumFuerWochentag(wochentag: Int, abDatum: Long): Long {
-        val cal = java.util.Calendar.getInstance(java.util.TimeZone.getDefault())
+        val cal = AppTimeZone.newCalendar()
         cal.timeInMillis = com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(abDatum)
         val heuteWochentag = (cal.get(java.util.Calendar.DAY_OF_WEEK) + 5) % 7
         var tageBis = (wochentag - heuteWochentag + 7) % 7

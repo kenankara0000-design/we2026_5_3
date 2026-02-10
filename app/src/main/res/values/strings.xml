@@ -768,6 +768,12 @@
     <string name="wasch_menge_kurz">Menge</string>
     <string name="wasch_einheit">Einheit</string>
     <string name="beleg_loeschen">Beleg löschen</string>
+    <string name="beleg_erledigt">Erledigt</string>
+    <string name="beleg_tab_offen">Offen</string>
+    <string name="beleg_tab_erledigt">Erledigt</string>
+    <string name="dialog_beleg_erledigt_title">Beleg als erledigt markieren?</string>
+    <string name="dialog_beleg_erledigt_message">Der Beleg wird verriegelt und in den Erledigt-Bereich verschoben.</string>
+    <string name="beleg_erledigt_toast">Beleg als erledigt markiert</string>
     <string name="dialog_beleg_loeschen_title">Beleg löschen?</string>
     <string name="dialog_beleg_loeschen_message">Gesamten Beleg für %1$s löschen? Alle %2$d Erfassungen werden entfernt.</string>
     <string name="beleg_geloescht">Beleg gelöscht</string>

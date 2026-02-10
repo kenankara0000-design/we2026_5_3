@@ -7,7 +7,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.Calendar
-import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 
 /**
@@ -17,7 +16,7 @@ class TerminBerechnungUtilsTest {
 
     @Test
     fun berechneAlleTermineFuerKunde_mitIntervalle_listeNull_berechnetTermine() {
-        val cal = Calendar.getInstance(TimeZone.getDefault())
+        val cal = AppTimeZone.newCalendar()
         cal.set(2026, Calendar.JANUARY, 1, 0, 0, 0)
         cal.set(Calendar.MILLISECOND, 0)
         val start = cal.timeInMillis
@@ -47,12 +46,12 @@ class TerminBerechnungUtilsTest {
 
     @Test
     fun getStartOfDay_normalizes_to_midnight() {
-        val cal = Calendar.getInstance(TimeZone.getDefault())
+        val cal = AppTimeZone.newCalendar()
         cal.set(2026, Calendar.JANUARY, 15, 14, 30, 45)
         cal.set(Calendar.MILLISECOND, 123)
         val input = cal.timeInMillis
         val result = TerminBerechnungUtils.getStartOfDay(input)
-        val resultCal = Calendar.getInstance(TimeZone.getDefault()).apply { timeInMillis = result }
+        val resultCal = AppTimeZone.newCalendar().apply { timeInMillis = result }
         assertEquals(2026, resultCal.get(Calendar.YEAR))
         assertEquals(Calendar.JANUARY, resultCal.get(Calendar.MONTH))
         assertEquals(15, resultCal.get(Calendar.DAY_OF_MONTH))
@@ -64,7 +63,7 @@ class TerminBerechnungUtilsTest {
 
     @Test
     fun getStartOfDay_same_day_unchanged() {
-        val cal = Calendar.getInstance(TimeZone.getDefault())
+        val cal = AppTimeZone.newCalendar()
         cal.set(2026, Calendar.JANUARY, 20, 0, 0, 0)
         cal.set(Calendar.MILLISECOND, 0)
         val input = cal.timeInMillis

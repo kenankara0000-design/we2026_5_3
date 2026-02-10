@@ -6,6 +6,7 @@ import com.example.we2026_5.R
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.TerminFilterUtils
 import com.example.we2026_5.util.DateFormatter
+import com.example.we2026_5.util.AppTimeZone
 import com.example.we2026_5.util.TerminInfo
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.tourplanner.ErledigungSheetState
@@ -207,8 +208,8 @@ class CustomerButtonVisibilityHelper(
 
     /** true, wenn die beiden Zeitstempel auf denselben Kalendertag (Jahr + Tag) fallen. */
     private fun isSameCalendarDay(ms1: Long, ms2: Long): Boolean {
-        val c1 = Calendar.getInstance().apply { timeInMillis = ms1 }
-        val c2 = Calendar.getInstance().apply { timeInMillis = ms2 }
+        val c1 = AppTimeZone.newCalendar().apply { timeInMillis = ms1 }
+        val c2 = AppTimeZone.newCalendar().apply { timeInMillis = ms2 }
         return c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR) &&
             c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR)
     }

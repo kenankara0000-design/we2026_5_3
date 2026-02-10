@@ -65,13 +65,13 @@ object DialogBaseHelper {
         onDateSelected: (Long) -> Unit,
         onCancel: (() -> Unit)? = null
     ): DatePickerDialog {
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         cal.timeInMillis = initialDate
         
         val dialog = DatePickerDialog(
             context,
             { _, year, month, dayOfMonth ->
-                val selected = Calendar.getInstance().apply {
+                val selected = AppTimeZone.newCalendar().apply {
                     set(year, month, dayOfMonth, 0, 0, 0)
                     set(Calendar.MILLISECOND, 0)
                 }

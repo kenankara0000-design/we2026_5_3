@@ -74,7 +74,7 @@ val appModule = module {
     viewModel { CustomerDetailViewModel(get(), get()) }
     viewModel { (customerId: String) -> UrlaubViewModel(get(), customerId) }
     viewModel { WaschenErfassungViewModel(get(), get(), get(), get(), get()) }
-    viewModel { BelegeViewModel(get(), get(), get()) }
+    viewModel { BelegeViewModel(get(), get(), get(), get(), get()) }
     viewModel { KundenpreiseViewModel(get(), get(), get()) }
     viewModel { TourPreislisteViewModel(get(), get()) }
     viewModel { ArtikelVerwaltungViewModel(get()) }

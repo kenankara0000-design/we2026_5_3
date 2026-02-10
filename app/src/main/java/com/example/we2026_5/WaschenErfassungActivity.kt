@@ -42,6 +42,7 @@ class WaschenErfassungActivity : AppCompatActivity() {
                 val erfassungArticles by viewModel.erfassungArticles.collectAsState(initial = emptyList())
                 val showAllgemeinePreiseHint by viewModel.showAllgemeinePreiseHint.collectAsState(initial = true)
                 val belegPreiseGross by viewModel.belegPreiseGross.collectAsState(initial = emptyMap())
+                val belegMonateErledigt by viewModel.belegMonateErledigt.collectAsState(initial = emptyList())
                 WaschenErfassungScreen(
                     state = state,
                     articles = articles,
@@ -66,6 +67,7 @@ class WaschenErfassungActivity : AppCompatActivity() {
                         (state as? WaschenErfassungUiState.ErfassungenListe)?.let { viewModel.neueErfassungClick(it.customer) }
                     },
                     onBelegClick = { viewModel.openBelegDetail(it) },
+                    onBelegListeShowErledigtTabChange = { viewModel.setBelegListeShowErledigtTab(it) },
                     onBackFromBelegDetail = { viewModel.backFromBelegDetail() },
                     onBackFromDetail = { viewModel.backFromDetail() },
                     onMengeChangeByIndex = { index, menge -> viewModel.setMengeByIndex(index, menge) },
@@ -80,6 +82,7 @@ class WaschenErfassungActivity : AppCompatActivity() {
                     onAddPosition = { viewModel.addPositionFromDisplay(it) },
                     onRemovePosition = { viewModel.removePosition(it) },
                     belegPreiseGross = belegPreiseGross,
+                    belegMonateErledigt = belegMonateErledigt,
                     onDeleteErfassung = { erfassung ->
                         AlertDialog.Builder(this@WaschenErfassungActivity)
                             .setTitle(R.string.dialog_erfassung_loeschen_title)
@@ -100,6 +103,21 @@ class WaschenErfassungActivity : AppCompatActivity() {
                                 .setPositiveButton(R.string.dialog_loeschen) { _, _ ->
                                     viewModel.deleteBeleg(detail.erfassungen) {
                                         Toast.makeText(this@WaschenErfassungActivity, getString(R.string.beleg_geloescht), Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                                .setNegativeButton(R.string.btn_cancel, null)
+                                .show()
+                        }
+                    },
+                    onErledigtBeleg = {
+                        (state as? WaschenErfassungUiState.BelegDetail)?.let { detail ->
+                            if (detail.erfassungen.any { it.erledigt }) return@let
+                            AlertDialog.Builder(this@WaschenErfassungActivity)
+                                .setTitle(R.string.dialog_beleg_erledigt_title)
+                                .setMessage(R.string.dialog_beleg_erledigt_message)
+                                .setPositiveButton(R.string.dialog_ok) { _, _ ->
+                                    viewModel.markBelegErledigt(detail.erfassungen) {
+                                        Toast.makeText(this@WaschenErfassungActivity, R.string.beleg_erledigt_toast, Toast.LENGTH_SHORT).show()
                                     }
                                 }
                                 .setNegativeButton(R.string.btn_cancel, null)

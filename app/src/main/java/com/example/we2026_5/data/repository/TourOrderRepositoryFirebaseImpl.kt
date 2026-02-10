@@ -52,7 +52,7 @@ class TourOrderRepositoryFirebaseImpl(
         val year = dateKey.substring(0, 4).toIntOrNull() ?: return null
         val month = dateKey.substring(4, 6).toIntOrNull()?.minus(1) ?: return null
         val day = dateKey.substring(6, 8).toIntOrNull() ?: return null
-        val cal = Calendar.getInstance().apply {
+        val cal = com.example.we2026_5.util.AppTimeZone.newCalendar().apply {
             set(Calendar.YEAR, year)
             set(Calendar.MONTH, month)
             set(Calendar.DAY_OF_MONTH, day)

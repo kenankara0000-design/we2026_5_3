@@ -78,7 +78,7 @@ class StatisticsViewModel(
         val heute = System.currentTimeMillis()
         val activeCustomers = CustomerTermFilter.filterActiveForTerms(allCustomers, heute)
         val heuteStart = TerminBerechnungUtils.getStartOfDay(heute)
-        val cal = Calendar.getInstance()
+        val cal = com.example.we2026_5.util.AppTimeZone.newCalendar()
 
         val heuteEnd = heuteStart + TimeUnit.DAYS.toMillis(1)
         val heuteCount = activeCustomers.count { customer ->

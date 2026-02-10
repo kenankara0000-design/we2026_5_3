@@ -1,5 +1,6 @@
 package com.example.we2026_5.ui.wasch
 
+import com.example.we2026_5.util.AppTimeZone
 import com.example.we2026_5.wasch.WaschErfassung
 import java.util.Calendar
 import java.util.Locale
@@ -20,7 +21,7 @@ data class BelegMonat(
  */
 object BelegMonatGrouping {
 
-    private val monthLabelFormat = java.text.SimpleDateFormat("MMMM yyyy", Locale.GERMANY)
+    private val monthLabelFormat = java.text.SimpleDateFormat("MMMM yyyy", Locale.GERMANY).apply { timeZone = AppTimeZone.timeZone }
 
     fun groupByMonth(erfassungen: List<WaschErfassung>): List<BelegMonat> {
         if (erfassungen.isEmpty()) return emptyList()
@@ -34,7 +35,7 @@ object BelegMonatGrouping {
     }
 
     fun monthKeyFromDatum(datumMs: Long): String {
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         cal.timeInMillis = datumMs
         val year = cal.get(Calendar.YEAR)
         val month = cal.get(Calendar.MONTH) + 1
@@ -46,7 +47,7 @@ object BelegMonatGrouping {
         if (parts.size != 2) return monthKey
         val year = parts[0].toIntOrNull() ?: return monthKey
         val month = parts[1].toIntOrNull()?.minus(1) ?: return monthKey
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         cal.set(Calendar.YEAR, year)
         cal.set(Calendar.MONTH, month)
         cal.set(Calendar.DAY_OF_MONTH, 1)

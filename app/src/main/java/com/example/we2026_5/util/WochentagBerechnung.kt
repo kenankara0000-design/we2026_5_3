@@ -19,7 +19,7 @@ object WochentagBerechnung {
         if (!isValidWeekday(wochentag)) {
             return TerminBerechnungUtils.getStartOfDay(startDatum)
         }
-        val calendar = Calendar.getInstance()
+        val calendar = AppTimeZone.newCalendar()
         calendar.timeInMillis = startDatum
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)

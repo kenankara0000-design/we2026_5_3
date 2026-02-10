@@ -13,6 +13,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,10 +30,13 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.R
 import androidx.compose.foundation.clickable
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WaschenErfassungBelegListeContent(
     customer: Customer,
     belege: List<BelegMonat>,
+    showErledigtTab: Boolean = false,
+    onShowErledigtTabChange: (Boolean) -> Unit = {},
     textPrimary: androidx.compose.ui.graphics.Color,
     textSecondary: androidx.compose.ui.graphics.Color,
     onBackToKundeSuchen: () -> Unit,
@@ -55,14 +62,33 @@ fun WaschenErfassungBelegListeContent(
             color = textPrimary,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        Button(
-            onClick = onNeueErfassungFromListe,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp)
-        ) {
-            Text(stringResource(R.string.wasch_neue_erfassung))
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            SegmentedButton(
+                selected = !showErledigtTab,
+                onClick = { onShowErledigtTabChange(false) },
+                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+            ) {
+                Text(stringResource(R.string.beleg_tab_offen))
+            }
+            SegmentedButton(
+                selected = showErledigtTab,
+                onClick = { onShowErledigtTabChange(true) },
+                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+            ) {
+                Text(stringResource(R.string.beleg_tab_erledigt))
+            }
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(8.dp))
+        if (!showErledigtTab) {
+            Button(
+                onClick = onNeueErfassungFromListe,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(stringResource(R.string.wasch_neue_erfassung))
+            }
+            Spacer(Modifier.height(12.dp))
+        }
         if (belege.isEmpty()) {
             Text(
                 stringResource(R.string.wasch_keine_erfassungen),

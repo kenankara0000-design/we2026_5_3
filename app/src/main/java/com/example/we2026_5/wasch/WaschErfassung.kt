@@ -22,5 +22,7 @@ data class WaschErfassung(
     val zeit: String = "",
     val positionen: List<ErfassungPosition> = emptyList(),
     /** Optional: z. B. "Paket 2" oder Notiz. */
-    val notiz: String = ""
+    val notiz: String = "",
+    /** Beleg als erledigt markiert (verriegelt) – erscheint nur im Erledigt-Bereich. */
+    val erledigt: Boolean = false
 )

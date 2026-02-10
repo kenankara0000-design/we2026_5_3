@@ -6,6 +6,8 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.ErfassungRepository
+import com.example.we2026_5.data.repository.KundenPreiseRepository
+import com.example.we2026_5.data.repository.TourPreiseRepository
 import com.example.we2026_5.wasch.WaschErfassung
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,35 +17,57 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Ein Beleg in der „Alle Belege“-Liste: Kunde + Monatsbeleg. */
 data class BelegEintrag(val customer: Customer, val beleg: BelegMonat)
 
 sealed class BelegeUiState {
     /** Liste aller erfassten Belege (nach Kundenname sortiert); Startansicht. Liste kommt aus alleBelegEintraege-Flow. */
-    data class AlleBelege(val nameFilter: String = "") : BelegeUiState()
+    data class AlleBelege(val nameFilter: String = "", val showErledigtTab: Boolean = false) : BelegeUiState()
     /** Kunde suchen: nur Suchfeld, Treffer nur bei Eingabe (keine vollständige Kundenliste). */
     data class KundeSuchen(val customerSearchQuery: String = "", val customers: List<Customer> = emptyList()) : BelegeUiState()
-    data class BelegListe(val customer: Customer) : BelegeUiState()
+    data class BelegListe(val customer: Customer, val showErledigtTab: Boolean = false) : BelegeUiState()
     data class BelegDetail(val customer: Customer, val monthKey: String, val monthLabel: String, val erfassungen: List<WaschErfassung>) : BelegeUiState()
 }
 
 class BelegeViewModel(
     private val customerRepository: CustomerRepository,
     private val erfassungRepository: ErfassungRepository,
-    private val articleRepository: ArticleRepository
+    private val articleRepository: ArticleRepository,
+    private val kundenPreiseRepository: KundenPreiseRepository,
+    private val tourPreiseRepository: TourPreiseRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<BelegeUiState>(BelegeUiState.AlleBelege())
+
+    /** Brutto-Preise pro Artikel für Beleg-Detail (Tour- oder Kundenpreise), für Gesamtpreis-Anzeige. */
+    private val _belegPreiseGross = MutableStateFlow<Map<String, Double>>(emptyMap())
+    val belegPreiseGross = _belegPreiseGross.asStateFlow()
     val uiState: StateFlow<BelegeUiState> = _uiState.asStateFlow()
 
     /** Kundencache für Namen in Alle Belege und für Kunde-suchen-Treffer. */
     private val _customersCache = MutableStateFlow<Map<String, Customer>>(emptyMap())
 
     private val _allErfassungen = MutableStateFlow<List<WaschErfassung>>(emptyList())
-    /** Alle Belege: aus allen Erfassungen gruppiert (Kunde + Monat), nach Kundenname sortiert. */
+    /** Alle Belege (offen): aus allen nicht-erledigten Erfassungen gruppiert. */
     val alleBelegEintraege: StateFlow<List<BelegEintrag>> = combine(_allErfassungen, _customersCache) { erfassungen, cache ->
+        if (cache.isEmpty()) return@combine emptyList()
+        erfassungen
+            .groupBy { it.customerId }
+            .flatMap { (customerId, list) ->
+                val customer = cache[customerId] ?: return@flatMap emptyList()
+                BelegMonatGrouping.groupByMonth(list).map { beleg -> BelegEintrag(customer, beleg) }
+            }
+            .sortedWith(compareBy<BelegEintrag> { it.customer.displayName }.thenByDescending { it.beleg.monthKey })
+      }
+      .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _allErfassungenErledigt = MutableStateFlow<List<WaschErfassung>>(emptyList())
+    /** Alle Belege (erledigt): aus allen erledigten Erfassungen gruppiert. */
+    val alleBelegEintraegeErledigt: StateFlow<List<BelegEintrag>> = combine(_allErfassungenErledigt, _customersCache) { erfassungen, cache ->
         if (cache.isEmpty()) return@combine emptyList()
         erfassungen
             .groupBy { it.customerId }
@@ -60,7 +84,13 @@ class BelegeViewModel(
         .map { BelegMonatGrouping.groupByMonth(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    private val _erfassungenListErledigt = MutableStateFlow<List<WaschErfassung>>(emptyList())
+    val belegMonateErledigt: StateFlow<List<BelegMonat>> = _erfassungenListErledigt
+        .map { BelegMonatGrouping.groupByMonth(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     private var erfassungenJob: Job? = null
+    private var erfassungenErledigtJob: Job? = null
 
     val articles = articleRepository.getAllArticlesFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -75,11 +105,26 @@ class BelegeViewModel(
                 _allErfassungen.value = list
             }
         }
+        viewModelScope.launch {
+            erfassungRepository.getAllErfassungenFlowErledigt().collect { list ->
+                _allErfassungenErledigt.value = list
+            }
+        }
     }
 
     fun setAlleBelegeNameFilter(filter: String) {
         val s = _uiState.value
         if (s is BelegeUiState.AlleBelege) _uiState.value = s.copy(nameFilter = filter)
+    }
+
+    fun setAlleBelegeShowErledigtTab(showErledigt: Boolean) {
+        val s = _uiState.value
+        if (s is BelegeUiState.AlleBelege) _uiState.value = s.copy(showErledigtTab = showErledigt)
+    }
+
+    fun setBelegListeShowErledigtTab(showErledigt: Boolean) {
+        val s = _uiState.value
+        if (s is BelegeUiState.BelegListe) _uiState.value = s.copy(showErledigtTab = showErledigt)
     }
 
     fun setCustomerSearchQuery(query: String) {
@@ -98,7 +143,9 @@ class BelegeViewModel(
     /** Zurück von BelegListe zur Alle-Belege-Liste. */
     fun backToAlleBelege() {
         erfassungenJob?.cancel()
+        erfassungenErledigtJob?.cancel()
         _erfassungenList.value = emptyList()
+        _erfassungenListErledigt.value = emptyList()
         val s = _uiState.value
         val filter = (s as? BelegeUiState.AlleBelege)?.nameFilter ?: ""
         _uiState.value = BelegeUiState.AlleBelege(nameFilter = filter)
@@ -106,10 +153,16 @@ class BelegeViewModel(
 
     fun kundeGewaehlt(customer: Customer) {
         erfassungenJob?.cancel()
+        erfassungenErledigtJob?.cancel()
         _uiState.value = BelegeUiState.BelegListe(customer)
         erfassungenJob = viewModelScope.launch {
             erfassungRepository.getErfassungenByCustomerFlow(customer.id).collect {
                 _erfassungenList.value = it
+            }
+        }
+        erfassungenErledigtJob = viewModelScope.launch {
+            erfassungRepository.getErfassungenByCustomerFlowErledigt(customer.id).collect {
+                _erfassungenListErledigt.value = it
             }
         }
     }
@@ -123,6 +176,7 @@ class BelegeViewModel(
                 monthLabel = beleg.monthLabel,
                 erfassungen = beleg.erfassungen
             )
+            loadBelegPreise(s.customer)
         }
     }
 
@@ -134,11 +188,27 @@ class BelegeViewModel(
             monthLabel = eintrag.beleg.monthLabel,
             erfassungen = eintrag.beleg.erfassungen
         )
+        loadBelegPreise(eintrag.customer)
+    }
+
+    private fun loadBelegPreise(customer: Customer) {
+        viewModelScope.launch {
+            val isTourKunde = customer.tourSlotId.isNotEmpty() && !customer.ohneTour
+            val map = withContext(Dispatchers.IO) {
+                if (isTourKunde) {
+                    tourPreiseRepository.getTourPreise().associate { it.articleId to it.priceGross }
+                } else {
+                    kundenPreiseRepository.getKundenPreiseForCustomer(customer.id).associate { it.articleId to it.priceGross }
+                }
+            }
+            _belegPreiseGross.value = map
+        }
     }
 
     fun backFromBelegDetail() {
         val s = _uiState.value
         if (s is BelegeUiState.BelegDetail) {
+            _belegPreiseGross.value = emptyMap()
             _uiState.value = BelegeUiState.BelegListe(s.customer)
         }
     }
@@ -169,6 +239,35 @@ class BelegeViewModel(
                     }
                 }
                 onDeleted()
+            }
+        }
+    }
+
+    /** Beleg als erledigt markieren; danach zurück zur Beleg-Liste (Beleg erscheint im Erledigt-Bereich). */
+    fun markBelegErledigt(erfassungen: List<WaschErfassung>, onMarked: () -> Unit) {
+        viewModelScope.launch {
+            val ok = erfassungRepository.markBelegErledigt(erfassungen)
+            if (ok && erfassungen.isNotEmpty()) {
+                val s = _uiState.value
+                if (s is BelegeUiState.BelegDetail) {
+                    erfassungenJob?.cancel()
+                    _erfassungenList.value = emptyList()
+                    val remaining = erfassungRepository.getErfassungenByCustomer(s.customer.id)
+                    _erfassungenList.value = remaining
+                    _uiState.value = if (remaining.isEmpty()) {
+                        BelegeUiState.AlleBelege()
+                    } else {
+                        BelegeUiState.BelegListe(s.customer)
+                    }
+                    if (remaining.isNotEmpty()) {
+                        erfassungenJob = viewModelScope.launch {
+                            erfassungRepository.getErfassungenByCustomerFlow(s.customer.id).collect {
+                                _erfassungenList.value = it
+                            }
+                        }
+                    }
+                }
+                onMarked()
             }
         }
     }

@@ -22,7 +22,7 @@ object DateFormatter {
      * @param timeInMillis Zeitstempel in Millisekunden
      */
     fun formatDate(timeInMillis: Long): String {
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         cal.timeInMillis = timeInMillis
         return formatDate(cal)
     }
@@ -31,7 +31,7 @@ object DateFormatter {
      * Formatiert ein Datum als "26.01.2026" (Tag.Monat.Jahr mit führenden Nullen)
      */
     fun formatDateWithLeadingZeros(calendar: Calendar): String {
-        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).apply { timeZone = AppTimeZone.timeZone }
         return dateFormat.format(calendar.time)
     }
     
@@ -40,7 +40,7 @@ object DateFormatter {
      * @param timeInMillis Zeitstempel in Millisekunden
      */
     fun formatDateWithLeadingZeros(timeInMillis: Long): String {
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         cal.timeInMillis = timeInMillis
         return formatDateWithLeadingZeros(cal)
     }
@@ -57,7 +57,7 @@ object DateFormatter {
      * @param timeInMillis Zeitstempel in Millisekunden
      */
     fun formatTime(timeInMillis: Long): String {
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         cal.timeInMillis = timeInMillis
         return formatTime(cal)
     }
@@ -76,7 +76,7 @@ object DateFormatter {
      * @param timeInMillis Zeitstempel in Millisekunden
      */
     fun formatDateTime(timeInMillis: Long): String {
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         cal.timeInMillis = timeInMillis
         return formatDateTime(cal)
     }
@@ -93,7 +93,7 @@ object DateFormatter {
      * @param timeInMillis Zeitstempel in Millisekunden
      */
     fun formatDateShort(timeInMillis: Long): String {
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         cal.timeInMillis = timeInMillis
         return formatDateShort(cal)
     }
@@ -102,9 +102,9 @@ object DateFormatter {
      * Formatiert ein Datum als "09.02.26" (dd.MM.yy mit führenden Nullen)
      */
     fun formatDateShortWithYear(timeInMillis: Long): String {
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         cal.timeInMillis = timeInMillis
-        return SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(cal.time)
+        return SimpleDateFormat("dd.MM.yy", Locale.getDefault()).apply { timeZone = AppTimeZone.timeZone }.format(cal.time)
     }
     
     /**
@@ -122,7 +122,7 @@ object DateFormatter {
      * @param timeInMillis Zeitstempel in Millisekunden
      */
     fun formatDateWithWeekday(timeInMillis: Long): String {
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         cal.timeInMillis = timeInMillis
         return formatDateWithWeekday(cal)
     }
@@ -142,7 +142,7 @@ object DateFormatter {
      * @param timeInMillis Zeitstempel in Millisekunden
      */
     fun formatDateWithFullWeekday(timeInMillis: Long): String {
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         cal.timeInMillis = timeInMillis
         return formatDateWithFullWeekday(cal)
     }
@@ -153,13 +153,13 @@ object DateFormatter {
      * @param timeInMillis Zeitstempel in Millisekunden
      */
     fun formatDateRelative(timeInMillis: Long): String {
-        val today = Calendar.getInstance()
+        val today = AppTimeZone.newCalendar()
         today.set(Calendar.HOUR_OF_DAY, 0)
         today.set(Calendar.MINUTE, 0)
         today.set(Calendar.SECOND, 0)
         today.set(Calendar.MILLISECOND, 0)
         
-        val target = Calendar.getInstance()
+        val target = AppTimeZone.newCalendar()
         target.timeInMillis = timeInMillis
         target.set(Calendar.HOUR_OF_DAY, 0)
         target.set(Calendar.MINUTE, 0)
@@ -182,8 +182,8 @@ object DateFormatter {
      * @param timeInMillis Zeitstempel in Millisekunden
      */
     fun isToday(timeInMillis: Long): Boolean {
-        val today = Calendar.getInstance()
-        val target = Calendar.getInstance()
+        val today = AppTimeZone.newCalendar()
+        val target = AppTimeZone.newCalendar()
         target.timeInMillis = timeInMillis
         
         return today.get(Calendar.YEAR) == target.get(Calendar.YEAR) &&
@@ -195,10 +195,15 @@ object DateFormatter {
      * @param timeInMillis Zeitstempel in Millisekunden
      */
     fun isTomorrow(timeInMillis: Long): Boolean {
-        val today = Calendar.getInstance()
-        val tomorrow = Calendar.getInstance()
+        val today = AppTimeZone.newCalendar()
+        today.set(Calendar.HOUR_OF_DAY, 0)
+        today.set(Calendar.MINUTE, 0)
+        today.set(Calendar.SECOND, 0)
+        today.set(Calendar.MILLISECOND, 0)
+        val tomorrow = AppTimeZone.newCalendar()
+        tomorrow.timeInMillis = today.timeInMillis
         tomorrow.add(Calendar.DAY_OF_YEAR, 1)
-        val target = Calendar.getInstance()
+        val target = AppTimeZone.newCalendar()
         target.timeInMillis = timeInMillis
         
         return tomorrow.get(Calendar.YEAR) == target.get(Calendar.YEAR) &&
@@ -210,13 +215,13 @@ object DateFormatter {
      * @param timeInMillis Zeitstempel in Millisekunden
      */
     fun isPast(timeInMillis: Long): Boolean {
-        val today = Calendar.getInstance()
+        val today = AppTimeZone.newCalendar()
         today.set(Calendar.HOUR_OF_DAY, 0)
         today.set(Calendar.MINUTE, 0)
         today.set(Calendar.SECOND, 0)
         today.set(Calendar.MILLISECOND, 0)
         
-        val target = Calendar.getInstance()
+        val target = AppTimeZone.newCalendar()
         target.timeInMillis = timeInMillis
         target.set(Calendar.HOUR_OF_DAY, 0)
         target.set(Calendar.MINUTE, 0)

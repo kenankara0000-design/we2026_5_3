@@ -26,11 +26,17 @@ class BelegeActivity : AppCompatActivity() {
                 val belegMonate by viewModel.belegMonate.collectAsState(initial = emptyList())
                 val alleBelegEintraege by viewModel.alleBelegEintraege.collectAsState(initial = emptyList())
                 val articles by viewModel.articles.collectAsState(initial = emptyList())
+                val belegPreiseGross by viewModel.belegPreiseGross.collectAsState(initial = emptyMap())
+                val alleBelegEintraegeErledigt by viewModel.alleBelegEintraegeErledigt.collectAsState(initial = emptyList())
+                val belegMonateErledigt by viewModel.belegMonateErledigt.collectAsState(initial = emptyList())
                 BelegeScreen(
                     state = state,
                     belegMonate = belegMonate,
                     alleBelegEintraege = alleBelegEintraege,
                     articles = articles,
+                    belegPreiseGross = belegPreiseGross,
+                    alleBelegEintraegeErledigt = alleBelegEintraegeErledigt,
+                    belegMonateErledigt = belegMonateErledigt,
                     onBack = {
                         when (state) {
                             is BelegeUiState.AlleBelege -> finish()
@@ -64,7 +70,24 @@ class BelegeActivity : AppCompatActivity() {
                                 .show()
                         }
                     },
-                    onAlleBelegeNameFilterChange = { viewModel.setAlleBelegeNameFilter(it) }
+                    onErledigtBeleg = {
+                        (state as? BelegeUiState.BelegDetail)?.let { detail ->
+                            if (detail.erfassungen.any { it.erledigt }) return@let
+                            AlertDialog.Builder(this@BelegeActivity)
+                                .setTitle(R.string.dialog_beleg_erledigt_title)
+                                .setMessage(R.string.dialog_beleg_erledigt_message)
+                                .setPositiveButton(R.string.dialog_ok) { _, _ ->
+                                    viewModel.markBelegErledigt(detail.erfassungen) {
+                                        Toast.makeText(this@BelegeActivity, R.string.beleg_erledigt_toast, Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                                .setNegativeButton(R.string.btn_cancel, null)
+                                .show()
+                        }
+                    },
+                    onAlleBelegeNameFilterChange = { viewModel.setAlleBelegeNameFilter(it) },
+                    onAlleBelegeShowErledigtTabChange = { viewModel.setAlleBelegeShowErledigtTab(it) },
+                    onBelegListeShowErledigtTabChange = { viewModel.setBelegListeShowErledigtTab(it) }
                 )
             }
         }

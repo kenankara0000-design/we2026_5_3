@@ -13,7 +13,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,11 +29,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.clickable
 import com.example.we2026_5.R
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WaschenErfassungAlleBelegeContent(
     belegEintraege: List<BelegEintrag>,
     nameFilter: String,
     onNameFilterChange: (String) -> Unit,
+    showErledigtTab: Boolean = false,
+    onShowErledigtTabChange: (Boolean) -> Unit = {},
     textPrimary: androidx.compose.ui.graphics.Color,
     textSecondary: androidx.compose.ui.graphics.Color,
     onBelegEintragClick: (BelegEintrag) -> Unit
@@ -49,6 +56,25 @@ fun WaschenErfassungAlleBelegeContent(
             placeholder = { Text(stringResource(R.string.wasch_belege_filter_kunde), color = textSecondary) },
             singleLine = true
         )
+        Spacer(Modifier.height(8.dp))
+        SingleChoiceSegmentedButtonRow(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            SegmentedButton(
+                selected = !showErledigtTab,
+                onClick = { onShowErledigtTabChange(false) },
+                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+            ) {
+                Text(stringResource(R.string.beleg_tab_offen))
+            }
+            SegmentedButton(
+                selected = showErledigtTab,
+                onClick = { onShowErledigtTabChange(true) },
+                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+            ) {
+                Text(stringResource(R.string.beleg_tab_erledigt))
+            }
+        }
         Spacer(Modifier.height(12.dp))
         Text(
             stringResource(R.string.wasch_belege),

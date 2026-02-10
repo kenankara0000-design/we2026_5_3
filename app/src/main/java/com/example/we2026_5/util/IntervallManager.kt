@@ -22,7 +22,7 @@ object IntervallManager {
         isAbholung: Boolean,
         onDatumSelected: (CustomerIntervall) -> Unit
     ) {
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         val intervall = intervalle.getOrNull(position) ?: return
         
         val initialDatum = if (isAbholung && intervall.abholungDatum > 0) {
@@ -69,7 +69,7 @@ object IntervallManager {
         isAbholung: Boolean,
         onDatumSelected: (ListeIntervall) -> Unit
     ) {
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         val intervall = intervalle.getOrNull(position) ?: return
         
         val initialDatum = if (isAbholung && intervall.abholungDatum > 0) {
@@ -113,7 +113,7 @@ object IntervallManager {
         context: Context,
         onDateSelected: (Long) -> Unit
     ) {
-        val cal = Calendar.getInstance()
+        val cal = AppTimeZone.newCalendar()
         DatePickerDialog(
             context,
             DatePickerDialog.OnDateSetListener { _, year: Int, month: Int, dayOfMonth: Int ->
