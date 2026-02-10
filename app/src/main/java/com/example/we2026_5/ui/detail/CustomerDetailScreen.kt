@@ -70,6 +70,7 @@ fun CustomerDetailScreen(
     onDeleteNextTermin: (Long) -> Unit = {},
     onDeleteAusnahmeTermin: (AusnahmeTermin) -> Unit = {},
     onAddAbholungTermin: (Customer) -> Unit = {},
+    onAddAusnahmeTermin: (Customer) -> Unit = {},
     onDeleteKundenTermin: (List<KundenTermin>) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -244,6 +245,7 @@ fun CustomerDetailScreen(
         } else {
             val context = LocalContext.current
             var showAddMonthlySheet by remember { mutableStateOf(false) }
+            var showNeuerTerminArtSheet by remember { mutableStateOf(false) }
             val currentFormState = editFormState ?: formState
             val onUpdateFormState: (AddCustomerState) -> Unit = { newState ->
                 if (isInEditMode) onUpdateEditFormState(newState) else formState = newState
@@ -323,7 +325,19 @@ fun CustomerDetailScreen(
                         onDeleteNextTermin = onDeleteNextTermin,
                         onDeleteAusnahmeTermin = onDeleteAusnahmeTermin,
                         onAddAbholungTermin = { customer?.let { onAddAbholungTermin(it) } },
-                        onDeleteKundenTermin = onDeleteKundenTermin
+                        onDeleteKundenTermin = onDeleteKundenTermin,
+                        showNeuerTerminArtSheet = showNeuerTerminArtSheet,
+                        onDismissNeuerTerminArtSheet = { showNeuerTerminArtSheet = false },
+                        onNeuerTerminArtSelected = { art ->
+                            showNeuerTerminArtSheet = false
+                            when (art) {
+                                NeuerTerminArt.REGELMAESSIG -> onEdit()
+                                NeuerTerminArt.MONATLICH -> showAddMonthlySheet = true
+                                NeuerTerminArt.EINMALIG_KUNDEN_TERMIN -> customer?.let { onAddAbholungTermin(it) }
+                                NeuerTerminArt.EINMALIG_AUSNAHME -> customer?.let { onAddAusnahmeTermin(it) }
+                            }
+                        },
+                        onNeuerTerminClick = { showNeuerTerminArtSheet = true }
                     )
                 }
             }

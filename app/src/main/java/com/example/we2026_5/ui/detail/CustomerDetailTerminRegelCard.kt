@@ -35,7 +35,9 @@ fun CustomerDetailTerminRegelCard(
     onRemoveRegel: ((String) -> Unit)?,
     onResetToAutomatic: () -> Unit,
     onTerminAnlegen: () -> Unit,
-    onAddMonthlyClick: (() -> Unit)? = null
+    onAddMonthlyClick: (() -> Unit)? = null,
+    /** Wenn true: Buttons „Termin anlegen“ und „Monatlichen Termin“ werden ausgeblendet – zentrale FAB ersetzt sie. */
+    useCentralNeuerTerminButton: Boolean = false
 ) {
     Text(
         stringResource(R.string.label_termin_regel),
@@ -75,15 +77,17 @@ fun CustomerDetailTerminRegelCard(
                 OutlinedButton(onClick = onResetToAutomatic, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.btn_reset_to_automatic))
                 }
-                Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-                onAddMonthlyClick?.let { onAdd ->
-                    OutlinedButton(onClick = onAdd, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.label_add_monthly_termin))
-                    }
+                if (!useCentralNeuerTerminButton) {
                     Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    onAddMonthlyClick?.let { onAdd ->
+                        OutlinedButton(onClick = onAdd, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.label_add_monthly_termin))
+                        }
+                        Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
+                    }
                 }
             }
-            if (!isInEditMode && canTerminAnlegen) {
+            if (!useCentralNeuerTerminButton && !isInEditMode && canTerminAnlegen) {
                 Button(onClick = onTerminAnlegen, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.label_termine_anlegen))
                 }

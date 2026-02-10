@@ -244,6 +244,10 @@ class CustomerDetailActivity : AppCompatActivity() {
                         .putExtra("CUSTOMER_ID", c.id)
                         .putExtra(AusnahmeTerminActivity.EXTRA_ADD_ABHOLUNG_MIT_LIEFERUNG, true))
                 },
+                onAddAusnahmeTermin = { c ->
+                    startActivity(Intent(this, AusnahmeTerminActivity::class.java)
+                        .putExtra("CUSTOMER_ID", c.id))
+                },
                 onDeleteKundenTermin = { termins ->
                     viewModel.deleteKundenTermine(termins) { success ->
                         if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()

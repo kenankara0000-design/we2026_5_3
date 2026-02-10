@@ -42,7 +42,9 @@ fun CustomerDetailKundenTermineSection(
     textSecondary: Color,
     canDeleteTermin: Boolean,
     onAddAbholungTermin: () -> Unit,
-    onDeleteKundenTermin: (List<KundenTermin>) -> Unit
+    onDeleteKundenTermin: (List<KundenTermin>) -> Unit,
+    /** Wenn false: Add-Button ausgeblendet (zentrale FAB „Neuer Termin“ ersetzt ihn). */
+    showAddButton: Boolean = true
 ) {
     var terminToDelete by rememberSaveable { mutableStateOf<KundenTermin?>(null) }
     var terminLToDeleteWithA by rememberSaveable { mutableStateOf<KundenTermin?>(null) }
@@ -52,14 +54,16 @@ fun CustomerDetailKundenTermineSection(
         defaultExpanded = false,
         textPrimary = textPrimary
     ) {
-        Button(
-            onClick = onAddAbholungTermin,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
-        ) {
-            Text(stringResource(R.string.label_neu_termin), color = Color.White)
+        if (showAddButton) {
+            Button(
+                onClick = onAddAbholungTermin,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+            ) {
+                Text(stringResource(R.string.label_neu_termin), color = Color.White)
+            }
+            Spacer(Modifier.height(8.dp))
         }
-        Spacer(Modifier.height(8.dp))
 if (kundenTermine.isNotEmpty()) {
             val sorted = kundenTermine.sortedBy { it.datum }
             val aList = sorted.filter { it.typ == "A" }

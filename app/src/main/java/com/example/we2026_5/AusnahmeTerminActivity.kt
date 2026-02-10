@@ -5,30 +5,22 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -37,10 +29,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import com.example.we2026_5.util.DateFormatter
-import com.example.we2026_5.util.DialogBaseHelper
+import com.example.we2026_5.R
 import com.example.we2026_5.util.TerminBerechnungUtils
-import com.example.we2026_5.util.tageAzuLOrDefault
+import com.example.we2026_5.ui.common.TerminDatumKalenderContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -71,10 +62,12 @@ class AusnahmeTerminActivity : AppCompatActivity() {
             MaterialTheme {
                 val context = LocalContext.current
                 val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
-                val startOfToday = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-                val twoWeeks = (0 until 14).map { day ->
-                    startOfToday + java.util.concurrent.TimeUnit.DAYS.toMillis(day.toLong())
+                var customer by remember { mutableStateOf<Customer?>(null) }
+
+                LaunchedEffect(customerId) {
+                    customer = withContext(Dispatchers.IO) { repository.getCustomerById(customerId) }
                 }
+
                 Scaffold(
                     topBar = {
                         TopAppBar(
@@ -97,66 +90,27 @@ class AusnahmeTerminActivity : AppCompatActivity() {
                             .padding(paddingValues)
                             .padding(16.dp)
                     ) {
-                        Text(
-                            stringResource(R.string.termin_anlegen_ausnahme_datum_waehlen),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-                        if (addAbholungMitLieferung) {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                        .clickable {
-                                            DialogBaseHelper.showDatePickerDialog(
-                                                context = context,
-                                                initialDate = startOfToday,
-                                                title = getString(R.string.termin_anlegen_ausnahme_datum_waehlen),
-                                                onDateSelected = { datum -> saveAbholungMitLieferung(customerId, datum) }
-                                            )
-                                        },
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text(
-                                    stringResource(R.string.termin_anlegen_ausnahme_datum_waehlen),
-                                    modifier = Modifier.padding(16.dp),
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                            }
-                        } else {
-                            LazyColumn(
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                items(twoWeeks) { datum ->
-                                    val datumVal = datum
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                AlertDialog.Builder(this@AusnahmeTerminActivity)
-                                                    .setTitle(getString(R.string.termin_anlegen_ausnahme_typ_waehlen))
-                                                    .setPositiveButton(getString(R.string.termin_anlegen_ausnahme_abholung)) { _, _ ->
-                                                        saveAusnahmeAbholungMitLieferung(customerId, datumVal)
-                                                    }
-                                                    .setNegativeButton(getString(R.string.termin_anlegen_ausnahme_auslieferung)) { _, _ ->
-                                                        saveAusnahme(customerId, datumVal, "L")
-                                                    }
-                                                    .setNeutralButton(getString(R.string.btn_cancel), null)
-                                                    .show()
-                                            },
-                                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                                        shape = RoundedCornerShape(12.dp),
-                                        content = {
-                                            Text(
-                                                DateFormatter.formatDateWithWeekday(datumVal),
-                                                modifier = Modifier.padding(16.dp),
-                                                style = MaterialTheme.typography.bodyLarge
-                                            )
+                        TerminDatumKalenderContent(
+                            onDismiss = { finish() },
+                            onDateSelected = { datum ->
+                                if (addAbholungMitLieferung) {
+                                    saveAbholungMitLieferung(customerId, datum)
+                                } else {
+                                    AlertDialog.Builder(this@AusnahmeTerminActivity)
+                                        .setTitle(getString(R.string.termin_anlegen_ausnahme_typ_waehlen))
+                                        .setPositiveButton(getString(R.string.termin_anlegen_ausnahme_abholung)) { _, _ ->
+                                            saveAusnahmeAbholungMitLieferung(customerId, datum)
                                         }
-                                    )
+                                        .setNegativeButton(getString(R.string.termin_anlegen_ausnahme_auslieferung)) { _, _ ->
+                                            saveAusnahme(customerId, datum, "L")
+                                        }
+                                        .setNeutralButton(getString(R.string.btn_cancel), null)
+                                        .show()
                                 }
-                            }
-                        }
+                            },
+                            aWochentage = customer?.effectiveAbholungWochentage ?: emptyList(),
+                            initialDate = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+                        )
                     }
                 }
             }
