@@ -128,6 +128,20 @@ object SevDeskApi {
     private fun optStringTrim(obj: JSONObject, key: String): String =
         obj.optString(key, "").trim()
 
+    /** Preis aus JSON – camelCase oder snake_case (SevDesk API variiert). */
+    private fun optPrice(obj: JSONObject, vararg keys: String): Double {
+        for (k in keys) {
+            val v = obj.opt(k)
+            if (v != null && v != JSONObject.NULL) {
+                when (v) {
+                    is Number -> return v.toDouble()
+                    is String -> v.trim().toDoubleOrNull()?.let { return it }
+                }
+            }
+        }
+        return 0.0
+    }
+
     /**
      * Adresse aus Contact-Objekt: Direkt (street/zip/city) oder aus eingebettetem "addresses"-Array
      * (SevDesk liefert Adressen oft nur per embed=addresses).
@@ -228,8 +242,8 @@ object SevDeskApi {
                     ?: obj.optString("contact", "").trim()
                 val partId = obj.optJSONObject("part")?.optString("id", "")?.trim()
                     ?: obj.optString("part", "").trim()
-                val priceNet = (obj.opt("priceNet") as? Number)?.toDouble() ?: 0.0
-                val priceGross = (obj.opt("priceGross") as? Number)?.toDouble() ?: 0.0
+                val priceNet = optPrice(obj, "priceNet", "price_net", "price")
+                val priceGross = optPrice(obj, "priceGross", "price_gross")
                 if (contactId.isNotBlank() && partId.isNotBlank()) {
                     list.add(
                         SevDeskPartContactPrice(

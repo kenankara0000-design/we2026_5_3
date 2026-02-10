@@ -33,40 +33,53 @@ fun Customer.intervallTageOrDefault(default: Int = 7): Int =
 object TerminAusKundeUtils {
 
     /**
-     * Erstellt ein CustomerIntervall aus den Kundendaten.
+     * Erstellt CustomerIntervalle aus den Kundendaten – ein Intervall pro A-Wochentag.
      * Regelmäßig: L = A + tageAzuL, Zyklus = intervallTage (Tage bis zum nächsten A).
+     * Mehrere A-Tage (z. B. Mo + Mi): je ein Intervall, damit alle Termine in der 365-Tage-Berechnung erscheinen.
      * @param customer Kunde mit defaultAbholungWochentag, intervallTage (Zyklus)
      * @param startDatum Startdatum (z.B. heute)
      * @param tageAzuL Tage zwischen Abholung und Auslieferung (nur bei REGELMAESSIG)
      * @param intervallTageOverride Wenn gesetzt, wird dieser Zyklus verwendet (z. B. beim Bearbeiten ohne bestehende Intervalle).
-     * @return CustomerIntervall oder null wenn A-Tag fehlt
+     * @return Liste von CustomerIntervall (ein Eintrag pro A-Tag), leer wenn keine gültigen A-Tage
+     */
+    fun erstelleIntervalleAusKunde(
+        customer: Customer,
+        startDatum: Long = System.currentTimeMillis(),
+        tageAzuL: Int = 7,
+        intervallTageOverride: Int? = null
+    ): List<CustomerIntervall> {
+        val aTage = customer.effectiveAbholungWochentage.filter { WochentagBerechnung.isValidWeekday(it) }
+        if (aTage.isEmpty()) return emptyList()
+        val zyklus = intervallTageOverride?.coerceIn(1, 365) ?: customer.intervallTageOrDefault(7)
+        val tageAL = tageAzuL.coerceIn(0, 365)
+        val start = TerminBerechnungUtils.getStartOfDay(startDatum)
+
+        return aTage.map { abholTag ->
+            val abholungDatum = WochentagBerechnung.naechsterWochentagAb(start, abholTag)
+            val auslieferungDatum = abholungDatum + TimeUnit.DAYS.toMillis(tageAL.toLong())
+            CustomerIntervall(
+                id = UUID.randomUUID().toString(),
+                abholungDatum = abholungDatum,
+                auslieferungDatum = auslieferungDatum,
+                wiederholen = true,
+                intervallTage = zyklus,
+                intervallAnzahl = 0,
+                erstelltAm = start,
+                terminRegelId = "",
+                regelTyp = TerminRegelTyp.WEEKLY,
+                tourSlotId = customer.tourSlotId,
+                zyklusTage = zyklus
+            )
+        }
+    }
+
+    /**
+     * @deprecated Verwende erstelleIntervalleAusKunde – Rückgabe für Abwärtskompatibilität (erstes Intervall).
      */
     fun erstelleIntervallAusKunde(
         customer: Customer,
         startDatum: Long = System.currentTimeMillis(),
         tageAzuL: Int = 7,
         intervallTageOverride: Int? = null
-    ): CustomerIntervall? {
-        val abholTag = customer.effectiveAbholungWochentage.firstOrNull()?.takeIf { WochentagBerechnung.isValidWeekday(it) } ?: return null
-        val zyklus = intervallTageOverride?.coerceIn(1, 365) ?: customer.intervallTageOrDefault(7)
-        val tageAL = tageAzuL.coerceIn(0, 365)
-        val start = TerminBerechnungUtils.getStartOfDay(startDatum)
-
-        val abholungDatum = WochentagBerechnung.naechsterWochentagAb(start, abholTag)
-        val auslieferungDatum = abholungDatum + TimeUnit.DAYS.toMillis(tageAL.toLong())
-
-        return CustomerIntervall(
-            id = UUID.randomUUID().toString(),
-            abholungDatum = abholungDatum,
-            auslieferungDatum = auslieferungDatum,
-            wiederholen = true,
-            intervallTage = zyklus,
-            intervallAnzahl = 0,
-            erstelltAm = start,
-            terminRegelId = "",
-            regelTyp = TerminRegelTyp.WEEKLY,
-            tourSlotId = customer.tourSlotId,
-            zyklusTage = zyklus
-        )
-    }
+    ): CustomerIntervall? = erstelleIntervalleAusKunde(customer, startDatum, tageAzuL, intervallTageOverride).firstOrNull()
 }

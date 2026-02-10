@@ -329,12 +329,13 @@ class CustomerDetailViewModel(
             tourSlotId = slotId
         )
         val startDatum = formState.erstelltAm.takeIf { it > 0 } ?: TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-        val one = TerminAusKundeUtils.erstelleIntervallAusKunde(
+        val intervalle = TerminAusKundeUtils.erstelleIntervalleAusKunde(
             customerForIntervall,
             startDatum,
             formState.tageAzuL ?: 7,
             formState.intervallTage ?: 7
-        ) ?: return
-        _editIntervalle.value = listOf(one)
+        )
+        if (intervalle.isEmpty()) return
+        _editIntervalle.value = intervalle
     }
 }

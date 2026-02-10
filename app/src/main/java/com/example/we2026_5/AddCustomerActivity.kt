@@ -162,7 +162,7 @@ class AddCustomerActivity : AppCompatActivity() {
         )
         val startDatumA = state.erstelltAm.takeIf { it > 0 }?.let { TerminBerechnungUtils.getStartOfDay(it) } ?: TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
         val intervalle = if (state.kundenTyp == KundenTyp.REGELMAESSIG) {
-            TerminAusKundeUtils.erstelleIntervallAusKunde(baseCustomer, startDatumA, state.tageAzuL ?: 7, state.intervallTage)?.let { listOf(it) } ?: emptyList()
+            TerminAusKundeUtils.erstelleIntervalleAusKunde(baseCustomer, startDatumA, state.tageAzuL ?: 7, state.intervallTage)
         } else {
             emptyList()
         }

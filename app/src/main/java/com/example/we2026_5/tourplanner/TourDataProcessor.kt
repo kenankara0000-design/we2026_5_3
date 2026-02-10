@@ -197,9 +197,35 @@ class TourDataProcessor(
         val istVergangenheit = viewDateStart < heuteStart
 
         // 2. Kunden nach Listen: zuerst Tour-Listen (unter Überfällige, oberhalb normale Kunden), dann Wochentagslisten
-        // Vergangenheit: keine „normalen“ Listen-Karten (nur Überfällig/Erledigt)
+        // Vergangenheit: keine „normalen“ Listen-Karten (nur Überfällig/Erledigt), aber Erledigt-Daten für Sheet brauchen wir immer
         val tourListenErledigt = mutableListOf<Pair<KundenListe, List<Customer>>>()
         val bereitsAngezeigtWochentag = mutableSetOf<Pair<Int, String>>()
+
+        fun sammleErledigteInListen() {
+            (allListen.filter { it.wochentag !in 0..6 } + allListen.filter { it.wochentag in 0..6 }).forEach { liste ->
+                val kundenInListe = listenMitKunden[liste.id] ?: return@forEach
+                if (kundenInListe.isEmpty()) return@forEach
+                val erledigteKundenInListe = mutableListOf<Customer>()
+                kundenInListe.forEach { customer ->
+                    val kwErledigtAmTagListe = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
+                        categorizer.getStartOfDay(customer.keinerWäscheErledigtAm) == viewDateStart
+                    val isDone = customer.abholungErfolgt || customer.auslieferungErfolgt || kwErledigtAmTagListe
+                    val sollAlsErledigtAnzeigen = if (isDone) {
+                        val termine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
+                        val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
+                        val warUeberfaelligUndErledigt = isDone && warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
+                        val hatAbholungAmTagListe = termineAmTag.any { it.typ == TerminTyp.ABHOLUNG }
+                        val hatAuslieferungAmTagListe = termineAmTag.any { it.typ == TerminTyp.AUSLIEFERUNG }
+                        wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTagListe, hatAuslieferungAmTagListe, kwErledigtAmTagListe) || warUeberfaelligUndErledigt
+                    } else false
+                    if (sollAlsErledigtAnzeigen) erledigteKundenInListe.add(customer)
+                }
+                if (erledigteKundenInListe.isNotEmpty()) {
+                    tourListenErledigt.add(liste to erledigteKundenInListe.sortedBy { it.name })
+                }
+            }
+        }
+
         if (!istVergangenheit) {
             // 2a. Tour-Listen (wochentag !in 0..6) – direkt unter Überfällige
             allListen.filter { it.wochentag !in 0..6 }.sortedBy { it.name }.forEach { liste ->
@@ -274,6 +300,9 @@ class TourDataProcessor(
                     }
                 }
             }
+        } else {
+            // Vergangenheit: nur Erledigt-Daten für Sheet sammeln (keine Listen-Karten)
+            sammleErledigteInListen()
         }
 
         // 3. Normale Kunden (ohne solche, die bereits in einer Liste für diesen Tag stehen – z. B. Wochentagsliste)

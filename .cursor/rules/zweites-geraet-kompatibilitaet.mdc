@@ -7,6 +7,7 @@
 ## 1. Beim Entwickeln (bis zum Update)
 
 - **Alles, was wir bauen, muss mit dem zweiten Handy noch kompatibel funktionieren.**
+- **TourPlanner:** Alle Änderungen an TourPlanner, Terminberechnung, Listen, Erledigt-Logik, TourDataProcessor, TerminCache usw. **müssen rückwärtskompatibel** sein – bis das zweite Handy aktualisiert ist.
 - **Tour-Planer-relevante Daten und Firebase:** Keine Breaking Changes. Die alte App liest/schreibt: Kunden, Termine, Listen, `customers_for_tour`, Erledigung, Urlaub, Verschieben, Listen-Termine. Diese Strukturen und Felder **nicht löschen oder umbenennen**. Neue Funktionen nur **ergänzen** (neue Felder, neue Knoten), sodass die alte App weiterläuft und Unbekanntes ignoriert.
 - **Erfassung (Waschen, Artikel, Belege):** Wird auf dem zweiten Handy kaum genutzt – Änderungen dort sind weniger kritisch, können aber zur Sicherheit ebenfalls rückwärtskompatibel gehalten werden.
 - Bei Unsicherheit: Lieber neue Pfade/Felder nutzen als bestehende umbauen.
