@@ -109,14 +109,14 @@ class TerminCache {
                 val lDatum = TerminBerechnungUtils.getStartOfDay(a.datum + TimeUnit.DAYS.toMillis(tageAzuL.toLong()))
                 pairs.add(Pair(a.datum, lDatum))
             }
-        // Ausnahme-Termine
+        // Ausnahme-Termine: nur tatsächlich gespeicherte A oder L (kein automatisches L zu A)
         customer.ausnahmeTermine
-            .filter { it.typ == "A" && it.datum >= heuteStart && it.datum <= endMillis }
-            .forEach { a ->
-                val lDatum = TerminBerechnungUtils.getStartOfDay(a.datum + TimeUnit.DAYS.toMillis(tageAzuL.toLong()))
-                pairs.add(Pair(a.datum, lDatum))
+            .filter { it.datum >= heuteStart && it.datum <= endMillis }
+            .forEach {
+                if (it.typ == "A") pairs.add(Pair(it.datum, 0L))
+                else if (it.typ == "L") pairs.add(Pair(0L, it.datum))
             }
 
-        return pairs.sortedBy { it.first }
+        return pairs.sortedBy { (a, l) -> if (a > 0) a else l }
     }
 }

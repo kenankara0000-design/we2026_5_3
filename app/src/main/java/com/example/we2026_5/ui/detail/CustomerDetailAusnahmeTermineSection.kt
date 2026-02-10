@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.we2026_5.AusnahmeTermin
 import com.example.we2026_5.R
 import com.example.we2026_5.ui.common.DetailUiConstants
@@ -56,7 +57,7 @@ fun CustomerDetailAusnahmeTermineSection(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(Color(0xFFE0E0E0))
-                            .padding(12.dp),
+                            .padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         val typLabel = if (termin.typ == "A") stringResource(R.string.termin_anlegen_ausnahme_abholung)
@@ -65,7 +66,7 @@ fun CustomerDetailAusnahmeTermineSection(
                             text = "${DateFormatter.formatDateWithWeekday(termin.datum)} – $typLabel",
                             modifier = Modifier.weight(1f),
                             color = textPrimary,
-                            fontSize = DetailUiConstants.BodySp
+                            fontSize = 15.sp
                         )
                         if (canDeleteTermin) {
                             IconButton(

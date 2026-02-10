@@ -271,7 +271,7 @@
     <string name="label_filter_kunden_typ">Filter (Termin-Typ):</string>
     <string name="termin_anlegen_keine_slots_hinweis">Keine Terminvorschläge verfügbar. Bitte A/L-Tage beim Kunden setzen.</string>
     <string name="termin_anlegen_auf_abruf_keine_slots">Keine Terminvorschläge verfügbar.</string>
-    <string name="termin_anlegen_auswaehlen_zwei_wochen">Termine auswählen (nächste 2 Wochen):</string>
+    <string name="termin_anlegen_auswaehlen_zwei_wochen">Termine auswählen:</string>
     <string name="termin_anlegen_auswaehlen_acht_wochen">Termine auswählen (bis 8 Wochen):</string>
     <string name="label_filter_all">Alle</string>
     <string name="label_ohne_tour">Ohne Tour</string>
@@ -468,6 +468,8 @@
     <string name="label_termin_art_einmalig_kunde_sub">Vom Kunden vorgegebenes Datum</string>
     <string name="label_termin_art_einmalig_ausnahme">Einmalig – Ausnahme</string>
     <string name="label_termin_art_einmalig_ausnahme_sub">Sonderfall: A oder L an einem Tag</string>
+    <string name="label_termin_art_urlaub">Urlaub</string>
+    <string name="label_termin_art_urlaub_sub">Von–Bis, keine Abholung/Auslieferung</string>
     <string name="label_monthly_week_of_month">Woche im Monat</string>
     <string name="label_monthly_week_1">1. Woche</string>
     <string name="label_monthly_week_2">2. Woche</string>
@@ -476,10 +478,15 @@
     <string name="label_monthly_week_last">Letzte Woche</string>
     <string name="termin_anlegen_option_regulaer">Regulärer Termin</string>
     <string name="termin_anlegen_option_ausnahme">Ausnahme-Termin</string>
-    <string name="termin_anlegen_ausnahme_datum_waehlen">Datum wählen (nächste 2 Wochen)</string>
+    <string name="termin_anlegen_ausnahme_datum_waehlen">Datum wählen</string>
     <string name="termin_anlegen_ausnahme_typ_waehlen">Abholung (A) oder Auslieferung (L)?</string>
+    <string name="termin_anlegen_ausnahme_typ_a_oder_al">Nur Abholung (A) oder Abholung + Auslieferung (A+L)?</string>
+    <string name="termin_anlegen_ausnahme_nur_a">Nur Abholung (A)</string>
+    <string name="termin_anlegen_ausnahme_a_plus_l">Abholung + Auslieferung (A+L)</string>
     <string name="termin_anlegen_ausnahme_abholung">Abholung (A)</string>
     <string name="termin_anlegen_ausnahme_auslieferung">Auslieferung (L)</string>
+    <string name="dialog_ausnahme_bestaetigen">Ausnahme-Termin am %1$s anlegen?</string>
+    <string name="dialog_urlaub_bestaetigen">Urlaub vom %1$s bis %2$s eintragen?</string>
     <string name="badge_ausnahme_a">A-A</string>
     <string name="badge_ausnahme_l">A-L</string>
     <string name="label_ausnahme_termine">Ausnahme-Termine</string>
@@ -534,6 +541,7 @@
     <string name="label_month_nov">November</string>
     <string name="label_month_dec">Dezember</string>
     <string name="label_calendar_a_days_hint">A-Tage dieses Kunden: %1$s</string>
+    <string name="label_calendar_l_days_hint">L-Tage dieses Kunden: %1$s</string>
     <string name="content_desc_prev_month">Vorheriger Monat</string>
     <string name="content_desc_next_month">Nächster Monat</string>
     <string name="hint_heute">Heute</string>

@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.we2026_5.R
+import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.tageAzuLOrDefault
 import com.example.we2026_5.ui.common.TerminDatumKalenderContent
@@ -95,27 +96,59 @@ class AusnahmeTerminActivity : AppCompatActivity() {
                             onDismiss = { finish() },
                             onDateSelected = { datum ->
                                 if (addAbholungMitLieferung) {
-                                    saveAbholungMitLieferung(customerId, datum)
+                                    confirmThenSaveAbholungMitLieferung(customerId, datum)
                                 } else {
                                     AlertDialog.Builder(this@AusnahmeTerminActivity)
                                         .setTitle(getString(R.string.termin_anlegen_ausnahme_typ_waehlen))
                                         .setPositiveButton(getString(R.string.termin_anlegen_ausnahme_abholung)) { _, _ ->
-                                            saveAusnahmeAbholungMitLieferung(customerId, datum)
+                                            confirmThenSaveAusnahmeNurA(customerId, datum)
                                         }
                                         .setNegativeButton(getString(R.string.termin_anlegen_ausnahme_auslieferung)) { _, _ ->
-                                            saveAusnahme(customerId, datum, "L")
+                                            confirmThenSaveAusnahmeNurL(customerId, datum)
                                         }
                                         .setNeutralButton(getString(R.string.btn_cancel), null)
                                         .show()
                                 }
                             },
                             aWochentage = customer?.effectiveAbholungWochentage ?: emptyList(),
-                            initialDate = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+                            lWochentage = customer?.effectiveAuslieferungWochentage ?: emptyList(),
+                            initialDate = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis()),
+                            dismissOnDateSelected = false
                         )
                     }
                 }
             }
         }
+    }
+
+    private fun confirmThenSaveAbholungMitLieferung(customerId: String, datum: Long) {
+        val dateStr = DateFormatter.formatDate(datum)
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.label_termine_anlegen))
+            .setMessage(getString(R.string.dialog_ausnahme_bestaetigen, dateStr))
+            .setPositiveButton(getString(android.R.string.ok)) { _, _ -> saveAbholungMitLieferung(customerId, datum) }
+            .setNegativeButton(getString(R.string.btn_cancel), null)
+            .show()
+    }
+
+    private fun confirmThenSaveAusnahmeNurA(customerId: String, datum: Long) {
+        val dateStr = DateFormatter.formatDate(datum)
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.label_termine_anlegen))
+            .setMessage(getString(R.string.dialog_ausnahme_bestaetigen, dateStr))
+            .setPositiveButton(getString(android.R.string.ok)) { _, _ -> saveAusnahme(customerId, datum, "A") }
+            .setNegativeButton(getString(R.string.btn_cancel), null)
+            .show()
+    }
+
+    private fun confirmThenSaveAusnahmeNurL(customerId: String, datum: Long) {
+        val dateStr = DateFormatter.formatDate(datum)
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.label_termine_anlegen))
+            .setMessage(getString(R.string.dialog_ausnahme_bestaetigen, dateStr))
+            .setPositiveButton(getString(android.R.string.ok)) { _, _ -> saveAusnahme(customerId, datum, "L") }
+            .setNegativeButton(getString(R.string.btn_cancel), null)
+            .show()
     }
 
     private fun saveAbholungMitLieferung(customerId: String, datum: Long) {

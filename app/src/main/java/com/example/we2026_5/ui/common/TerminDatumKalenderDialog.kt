@@ -2,6 +2,7 @@ package com.example.we2026_5.ui.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.res.colorResource
 import com.example.we2026_5.R
 import com.example.we2026_5.util.AppTimeZone
 import com.example.we2026_5.util.TerminBerechnungUtils
@@ -41,16 +43,20 @@ import java.util.Calendar
 
 /**
  * Größerer Kalender für Termin-Datumsauswahl (inline oder im Dialog).
- * A-Tage des Kunden werden farblich hervorgehoben – alle Tage bleiben auswählbar.
+ * A-Tage und L-Tage des Kunden werden in Badge-Farben hervorgehoben (A=Blau, L=Grün, A+L=beide); alle Tage auswählbar.
  */
 @Composable
 fun TerminDatumKalenderContent(
     onDismiss: () -> Unit,
     onDateSelected: (Long) -> Unit,
-    /** Wochentage 0=Mo..6=So, an denen A stattfindet – werden hervorgehoben. */
+    /** Wochentage 0=Mo..6=So, an denen A stattfindet – werden in A-Badge-Farbe hervorgehoben. */
     aWochentage: List<Int> = emptyList(),
+    /** Wochentage 0=Mo..6=So, an denen L stattfindet – werden in L-Badge-Farbe hervorgehoben. */
+    lWochentage: List<Int> = emptyList(),
     /** Startdatum; Kalender zeigt diesen Monat initial. */
     initialDate: Long = System.currentTimeMillis(),
+    /** Wenn false, wird nach Datumswahl onDismiss() nicht aufgerufen (z. B. wenn danach noch ein Dialog gezeigt wird). */
+    dismissOnDateSelected: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val calInit = remember(initialDate) {
@@ -59,10 +65,13 @@ fun TerminDatumKalenderContent(
     var currentYear by remember(initialDate) { mutableStateOf(calInit.get(Calendar.YEAR)) }
     var currentMonth by remember(initialDate) { mutableStateOf(calInit.get(Calendar.MONTH)) }
     val primaryBlue = MaterialTheme.colorScheme.primary
-    val aDayHighlight = MaterialTheme.colorScheme.primaryContainer
-    val aDayText = MaterialTheme.colorScheme.onPrimaryContainer
+    val badgeA = colorResource(R.color.button_abholung)
+    val badgeL = colorResource(R.color.button_auslieferung)
+    val dayTextOnBadge = androidx.compose.ui.graphics.Color.White
     val onSurface = MaterialTheme.colorScheme.onSurface
     val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
+    val dayCellShape = RoundedCornerShape(10.dp)
+    val dayCellBgDefault = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
 
     val monatNamen = listOf(
         stringResource(R.string.label_month_jan), stringResource(R.string.label_month_feb),
@@ -106,14 +115,25 @@ fun TerminDatumKalenderContent(
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
-                if (aWochentage.isNotEmpty()) {
-                    val aStr = aWochentage.sorted().joinToString(", ") { wochentagKurz.getOrNull(it) ?: "" }
-                    Text(
-                        text = stringResource(R.string.label_calendar_a_days_hint, aStr),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+                if (aWochentage.isNotEmpty() || lWochentage.isNotEmpty()) {
+                    Column(modifier = Modifier.padding(top = 4.dp)) {
+                        if (aWochentage.isNotEmpty()) {
+                            val aStr = aWochentage.sorted().joinToString(", ") { wochentagKurz.getOrNull(it) ?: "" }
+                            Text(
+                                text = stringResource(R.string.label_calendar_a_days_hint, aStr),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (lWochentage.isNotEmpty()) {
+                            val lStr = lWochentage.sorted().joinToString(", ") { wochentagKurz.getOrNull(it) ?: "" }
+                            Text(
+                                text = stringResource(R.string.label_calendar_l_days_hint, lStr),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
 
@@ -193,26 +213,33 @@ fun TerminDatumKalenderContent(
                                 val dayMs = if (dayNum != null) cal.timeInMillis else 0L
                                 val wd = if (dayNum != null) getWeekday(cal) else -1
                                 val isADay = wd in aWochentage
+                                val isLDay = wd in lWochentage
                                 val isToday = dayNum != null && dayMs == todayStart
+                                val isBothDay = isADay && isLDay
+                                val cellBgColor = when {
+                                    dayNum == null -> androidx.compose.ui.graphics.Color.Transparent
+                                    isToday -> primaryBlue.copy(alpha = 0.25f)
+                                    isBothDay -> null
+                                    isADay -> badgeA
+                                    isLDay -> badgeL
+                                    else -> dayCellBgDefault
+                                }
+                                val cellBgBrush = if (dayNum != null && isBothDay) Brush.horizontalGradient(listOf(badgeA, badgeL)) else null
 
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
                                         .padding(2.dp)
-                                        .size(48.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            when {
-                                                dayNum == null -> androidx.compose.ui.graphics.Color.Transparent
-                                                isToday -> primaryBlue.copy(alpha = 0.3f)
-                                                isADay -> aDayHighlight
-                                                else -> surfaceVariant.copy(alpha = 0.5f)
-                                            }
+                                        .size(44.dp)
+                                        .clip(dayCellShape)
+                                        .then(
+                                            if (cellBgBrush != null) Modifier.background(cellBgBrush, dayCellShape)
+                                            else Modifier.background(cellBgColor!!, dayCellShape)
                                         )
                                         .then(
                                             if (dayNum != null) Modifier.clickable {
                                                 onDateSelected(dayMs)
-                                                onDismiss()
+                                                if (dismissOnDateSelected) onDismiss()
                                             } else Modifier
                                         ),
                                     contentAlignment = Alignment.Center
@@ -224,7 +251,7 @@ fun TerminDatumKalenderContent(
                                             fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
                                             color = when {
                                                 isToday -> primaryBlue
-                                                isADay -> aDayText
+                                                isADay || isLDay -> dayTextOnBadge
                                                 else -> onSurface
                                             }
                                         )
@@ -256,6 +283,7 @@ fun TerminDatumKalenderDialog(
     onDismiss: () -> Unit,
     onDateSelected: (Long) -> Unit,
     aWochentage: List<Int> = emptyList(),
+    lWochentage: List<Int> = emptyList(),
     initialDate: Long = System.currentTimeMillis(),
     modifier: Modifier = Modifier
 ) {
@@ -264,6 +292,7 @@ fun TerminDatumKalenderDialog(
             onDismiss = onDismiss,
             onDateSelected = onDateSelected,
             aWochentage = aWochentage,
+            lWochentage = lWochentage,
             initialDate = initialDate,
             modifier = modifier.fillMaxWidth(0.95f)
         )

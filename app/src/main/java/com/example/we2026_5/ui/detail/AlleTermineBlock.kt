@@ -21,13 +21,15 @@ import com.example.we2026_5.R
 import com.example.we2026_5.ui.common.ExpandableSection
 import com.example.we2026_5.util.DateFormatter
 
-/** Zeilenhöhe ca. 44dp (padding + Text). 6 Zeilen = ~264dp. */
+/** Zeilenhöhe ca. 52dp. 6 Zeilen sichtbar. */
 private const val MAX_VISIBLE_ROWS = 6
-private val ROW_HEIGHT_DP = 44.dp
+private val ROW_HEIGHT_DP = 52.dp
 private val MAX_HEIGHT_DP = ROW_HEIGHT_DP * MAX_VISIBLE_ROWS
+private val BADGE_FONT_SP = 15.sp
+private val ROW_PADDING_DP = 14.dp
 
 /**
- * Block „Alle Termine“: einklappbar (standardmäßig eingeklappt), scrollbare Liste von A/L-Paaren (max. 6 Zeilen sichtbar).
+ * Block „Alle Termine“: einklappbar, scrollbare Liste. Paare (A, L); 0 = nur anderer Typ (nur A oder nur L bei Ausnahme).
  */
 @Composable
 fun AlleTermineBlock(
@@ -63,25 +65,30 @@ fun AlleTermineBlock(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(colorResource(R.color.background_light), shape = MaterialTheme.shapes.small)
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                .padding(ROW_PADDING_DP),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "A ${DateFormatter.formatDateShortWithYear(aDatum)}",
-                                fontSize = 13.sp,
-                                color = badgeA,
-                                modifier = Modifier
-                                    .background(badgeA.copy(alpha = 0.2f), MaterialTheme.shapes.small)
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                            Text(
-                                text = "L ${DateFormatter.formatDateShortWithYear(lDatum)}",
-                                fontSize = 13.sp,
-                                color = badgeL,
-                                modifier = Modifier
-                                    .background(badgeL.copy(alpha = 0.2f), MaterialTheme.shapes.small)
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
+                            if (aDatum > 0L) {
+                                Text(
+                                    text = "A ${DateFormatter.formatDateShortWithYear(aDatum)}",
+                                    fontSize = BADGE_FONT_SP,
+                                    color = badgeA,
+                                    modifier = Modifier
+                                        .background(badgeA.copy(alpha = 0.2f), MaterialTheme.shapes.small)
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                )
+                            }
+                            if (lDatum > 0L) {
+                                Text(
+                                    text = "L ${DateFormatter.formatDateShortWithYear(lDatum)}",
+                                    fontSize = BADGE_FONT_SP,
+                                    color = badgeL,
+                                    modifier = Modifier
+                                        .background(badgeL.copy(alpha = 0.2f), MaterialTheme.shapes.small)
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                )
+                            }
                         }
                     }
                 }

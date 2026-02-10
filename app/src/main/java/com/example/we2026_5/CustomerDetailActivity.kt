@@ -239,7 +239,24 @@ class CustomerDetailActivity : AppCompatActivity() {
                     })
                 },
                 onAddMonthlyIntervall = { viewModel.addMonthlyIntervall(it) },
-                tourListenName = tourListenName
+                tourListenName = tourListenName,
+                onDeleteNextTermin = { terminDatum ->
+                    viewModel.deleteNaechstenTermin(terminDatum) { success ->
+                        if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onDeleteAusnahmeTermin = { termin ->
+                    viewModel.deleteAusnahmeTermin(termin) { success ->
+                        if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                        else Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onDeleteKundenTermin = { termins ->
+                    viewModel.deleteKundenTermine(termins) { success ->
+                        if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                        else Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
+                    }
+                }
             )
         }
 

@@ -67,10 +67,13 @@ fun CustomerDetailScreen(
     onAddMonthlyIntervall: ((CustomerIntervall) -> Unit)? = null,
     onAddAbholungTermin: (Customer) -> Unit = {},
     onAddAusnahmeTermin: (Customer) -> Unit = {},
-    /** A/L-Paare für „Alle Termine“-Block (Termine-Tab und Kundenübersicht). */
+    /** A/L-Paare für „Alle Termine“-Block (Termine-Tab). */
     terminePairs365: List<Pair<Long, Long>> = emptyList(),
     /** Name der Tour-Liste, zu der der Kunde gehört (nur bei Tour-Kunden). Hinweis „Gehört zu Tour-Liste: …“. */
-    tourListenName: String? = null
+    tourListenName: String? = null,
+    onDeleteNextTermin: (Long) -> Unit = {},
+    onDeleteAusnahmeTermin: (com.example.we2026_5.AusnahmeTermin) -> Unit = {},
+    onDeleteKundenTermin: (List<com.example.we2026_5.KundenTermin>) -> Unit = {}
 ) {
     val context = LocalContext.current
     val primaryBlue = colorResource(R.color.primary_blue)
@@ -322,10 +325,18 @@ fun CustomerDetailScreen(
                                 NeuerTerminArt.MONATLICH -> showAddMonthlySheet = true
                                 NeuerTerminArt.EINMALIG_KUNDEN_TERMIN -> customer?.let { onAddAbholungTermin(it) }
                                 NeuerTerminArt.EINMALIG_AUSNAHME -> customer?.let { onAddAusnahmeTermin(it) }
+                                NeuerTerminArt.URLAUB -> customer?.id?.let { onUrlaubStartActivity(it) }
                             }
                         },
                         onNeuerTerminClick = { showNeuerTerminArtSheet = true },
-                        tourListenName = tourListenName
+                        tourListenName = tourListenName,
+                        typeLabel = typeLabel,
+                        onDeleteNextTermin = onDeleteNextTermin,
+                        ausnahmeTermine = customer?.ausnahmeTermine ?: emptyList(),
+                        onDeleteAusnahmeTermin = onDeleteAusnahmeTermin,
+                        kundenTermine = customer?.kundenTermine ?: emptyList(),
+                        onAddAbholungTermin = { customer?.let { onAddAbholungTermin(it) } },
+                        onDeleteKundenTermin = onDeleteKundenTermin
                     )
                 }
             }

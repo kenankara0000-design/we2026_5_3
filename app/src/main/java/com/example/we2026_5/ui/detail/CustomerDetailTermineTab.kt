@@ -18,11 +18,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.we2026_5.AusnahmeTermin
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
+import com.example.we2026_5.KundenTermin
 import com.example.we2026_5.R
+import com.example.we2026_5.TerminRegelTyp
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
 import com.example.we2026_5.ui.common.DetailUiConstants
+import com.example.we2026_5.util.TerminBerechnungUtils
 
 /**
  * Tab-Inhalt „Termine & Tour“ für Kunden-Detail.
@@ -51,9 +55,18 @@ fun CustomerDetailTermineTab(
     onDismissNeuerTerminArtSheet: () -> Unit = {},
     onNeuerTerminArtSelected: (NeuerTerminArt) -> Unit = {},
     onNeuerTerminClick: () -> Unit = {},
-    tourListenName: String? = null
+    tourListenName: String? = null,
+    typeLabel: String = "",
+    onDeleteNextTermin: (Long) -> Unit = {},
+    ausnahmeTermine: List<AusnahmeTermin> = emptyList(),
+    onDeleteAusnahmeTermin: (AusnahmeTermin) -> Unit = {},
+    kundenTermine: List<KundenTermin> = emptyList(),
+    onAddAbholungTermin: () -> Unit = {},
+    onDeleteKundenTermin: (List<KundenTermin>) -> Unit = {}
 ) {
     val useCentralNeuerTermin = isAdmin
+    val nextTermin = TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
+    val canDeleteNextTermin = customer.intervalle.any { it.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY }
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -98,6 +111,41 @@ fun CustomerDetailTermineTab(
                 } else null
             )
             Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+            CustomerDetailNaechsterTermin(
+                nextTerminMillis = nextTermin,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary,
+                canDeleteNextTermin = canDeleteNextTermin,
+                onDeleteNextTermin = { if (nextTermin > 0) onDeleteNextTermin(nextTermin) }
+            )
+            if (!isInEditMode) {
+                CustomerDetailKundenTypSection(
+                    typeLabel = typeLabel,
+                    kundenTyp = customer.kundenTyp,
+                    effectiveAbholungWochentage = customer.effectiveAbholungWochentage,
+                    effectiveAuslieferungWochentage = customer.effectiveAuslieferungWochentage,
+                    textPrimary = textPrimary
+                )
+            }
+            Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+            CustomerDetailAusnahmeTermineSection(
+                ausnahmeTermine = ausnahmeTermine,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary,
+                canDeleteTermin = isAdmin,
+                onDeleteAusnahmeTermin = onDeleteAusnahmeTermin
+            )
+            Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+            CustomerDetailKundenTermineSection(
+                kundenTermine = kundenTermine,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary,
+                canDeleteTermin = isAdmin,
+                onAddAbholungTermin = onAddAbholungTermin,
+                onDeleteKundenTermin = onDeleteKundenTermin,
+                showAddButton = !useCentralNeuerTermin
+            )
+            Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
             AlleTermineBlock(
                 pairs = terminePairs365,
                 textPrimary = textPrimary,
@@ -112,7 +160,8 @@ fun CustomerDetailTermineTab(
             NeuerTerminArtSheet(
                 visible = showNeuerTerminArtSheet,
                 onDismiss = onDismissNeuerTerminArtSheet,
-                onArtSelected = onNeuerTerminArtSelected
+                onArtSelected = onNeuerTerminArtSelected,
+                kundenTyp = customer.kundenTyp
             )
         }
     }

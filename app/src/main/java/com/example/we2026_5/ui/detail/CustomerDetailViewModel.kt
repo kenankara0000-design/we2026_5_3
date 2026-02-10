@@ -340,6 +340,7 @@ class CustomerDetailViewModel(
             _isLoading.value = true
             _errorMessage.value = null
             val ok = repository.removeAusnahmeTermin(customer.id, termin)
+            if (ok) termincache.invalidate(customer.id)
             _isLoading.value = false
             onComplete(ok)
         }
@@ -359,6 +360,7 @@ class CustomerDetailViewModel(
             _isLoading.value = true
             _errorMessage.value = null
             val ok = repository.removeKundenTermine(customer.id, termins)
+            if (ok) termincache.invalidate(customer.id)
             _isLoading.value = false
             onComplete(ok)
         }

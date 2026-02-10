@@ -88,10 +88,19 @@ class UrlaubActivity : AppCompatActivity() {
                                     else Toast.makeText(this, getString(R.string.error_urlaub), Toast.LENGTH_SHORT).show()
                                 }
                             } else {
-                                viewModel.saveUrlaub(vonStartOfDay, bisCal.timeInMillis) { success ->
-                                    if (success) Toast.makeText(this, getString(R.string.toast_urlaub_eingetragen), Toast.LENGTH_SHORT).show()
-                                    else Toast.makeText(this, getString(R.string.error_urlaub), Toast.LENGTH_SHORT).show()
-                                }
+                                val vonStr = com.example.we2026_5.util.DateFormatter.formatDate(vonStartOfDay)
+                                val bisStr = com.example.we2026_5.util.DateFormatter.formatDate(bisCal.timeInMillis)
+                                AlertDialog.Builder(this@UrlaubActivity)
+                                    .setTitle(getString(R.string.dialog_urlaub_von))
+                                    .setMessage(getString(R.string.dialog_urlaub_bestaetigen, vonStr, bisStr))
+                                    .setPositiveButton(getString(android.R.string.ok)) { _, _ ->
+                                        viewModel.saveUrlaub(vonStartOfDay, bisCal.timeInMillis) { success ->
+                                            if (success) Toast.makeText(this@UrlaubActivity, getString(R.string.toast_urlaub_eingetragen), Toast.LENGTH_SHORT).show()
+                                            else Toast.makeText(this@UrlaubActivity, getString(R.string.error_urlaub), Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                    .setNegativeButton(getString(R.string.btn_cancel), null)
+                                    .show()
                             }
                         } else {
                             Toast.makeText(this, getString(R.string.toast_enddatum_nach_startdatum), Toast.LENGTH_SHORT).show()
