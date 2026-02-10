@@ -24,14 +24,14 @@ class TourDataProcessorTest {
 
     @Test
     fun processTourData_empty_customers_returns_empty_or_only_headers() {
-        val items = processor.processTourData(
+        val result = processor.processTourData(
             allCustomers = emptyList(),
             allListen = emptyList(),
             selectedTimestamp = System.currentTimeMillis(),
             expandedSections = setOf(SectionType.DONE)
         )
         // Leere Kunden → keine CustomerItems; ggf. leere SectionHeader
-        val customerItemCount = items.count { it is ListItem.CustomerItem }
+        val customerItemCount = result.items.count { it is ListItem.CustomerItem }
         assertEquals(0, customerItemCount)
     }
 }

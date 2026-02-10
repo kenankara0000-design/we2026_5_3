@@ -4,9 +4,9 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerStatus
 import com.example.we2026_5.TourSlot
 import com.example.we2026_5.Zeitfenster
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
 class TerminRegelManagerTest {
 
@@ -36,7 +36,7 @@ class TerminRegelManagerTest {
             tageVoraus = 7
         )
 
-        assertTrue(result.isNotEmpty(), "Es sollen Slot-Vorschläge erzeugt werden.")
+        assertTrue("Es sollen Slot-Vorschläge erzeugt werden.", result.isNotEmpty())
         assertEquals("c1", result.first().customerId)
         assertEquals("Test Kunde", result.first().customerName)
     }

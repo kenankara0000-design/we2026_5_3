@@ -55,6 +55,10 @@ class FakeCustomerRepository : CustomerRepositoryInterface {
         else Result.Error("Fehler beim Löschen. Bitte erneut versuchen.")
     }
 
+    override suspend fun deleteAllSevDeskContacts(): Result<Pair<Int, List<String>>> {
+        return Result.Success(0 to emptyList())
+    }
+
     /** Test-Helfer: Kunden setzen. */
     fun setCustomers(customers: List<Customer>) {
         _customers.value = customers.sortedBy { it.name }
