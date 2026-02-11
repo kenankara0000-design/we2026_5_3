@@ -22,6 +22,14 @@ Keine Änderung am Verhalten (Bug-Fix) ohne ausdrückliche Freigabe (vgl. `.curs
 
 ## Behoben
 
+### Ausnahme-Termine: A+L konnten nicht erstellt werden
+
+- **Behoben Feb 2026:** Im Ausnahme-Termin-Dialog (Einmalig – Ausnahme) fehlte die Option „Abholung + Auslieferung (A+L)“. Nur „Nur Abholung“ und „Nur Auslieferung“ waren wählbar; die Methode `saveAusnahmeAbholungMitLieferung` existierte, wurde aber nie aufgerufen. Fix: Dialog auf Listenauswahl (setItems) umgestellt mit dritter Option „Abholung + Auslieferung (A+L)“, die `addAusnahmeAbholungMitLieferung` nutzt. Relevante Stelle: `AusnahmeTerminActivity.kt`.
+
+### Ausnahme-Termine: Kalender war an A/L-Wochentage gebunden
+
+- **Behoben Feb 2026:** Der Kalender in AusnahmeTerminActivity zeigte A/L-Wochentage farblich hervorgehoben, wodurch der Eindruck entstand, Ausnahme-Termine seien nur an diesen Tagen möglich. Ausnahme-Termine sollen aber an jedem Datum und für jeden Typ (A, L, A+L) erstellt werden können. Fix: `aWochentage` und `lWochentage` werden nun als leere Listen übergeben – der Kalender ist neutral, jeder Tag gleich darstellbar.
+
 ### Cursor springt bei Kunde-Suche in Erfassung zurück
 
 - **Behoben Feb 2026:** Beim Tippen ins „Kunde suchen“-Feld (Erfassung starten, Kundenpreise) sprang der Cursor an den Anfang. Ursache: Die Such-Query wurde erst asynchron im ViewModel aktualisiert. Fix: Sofortige synchrone Aktualisierung von `customerSearchQuery`, Filterung der Kundenliste weiterhin asynchron. Betroffene ViewModels: `WaschenErfassungViewModel`, `KundenpreiseViewModel`.
@@ -37,3 +45,7 @@ Keine Änderung am Verhalten (Bug-Fix) ohne ausdrückliche Freigabe (vgl. `.curs
 ### Erledigte-Liste bei vergangenem Datum leer (z. B. gestern)
 
 - **Behoben Feb 2026:** Zwei Ursachen: (1) `TourDataProcessor` ruft bei Vergangenheit `sammleErledigteInListen()` auf. (2) **Entscheidend:** `TerminCache.getTermineInRange()` nutzte immer `getTermine365()` (Termine nur ab heute). Bei viewDate = gestern lieferte das keine Termine → `hatKundeTerminAmDatum` false → `listenMitKunden` blieb leer → Erledigte-Sheet leer. Fix: In `TerminCache.getTermineInRange()` wird bei `startDatum` in der Vergangenheit nun direkt `TerminBerechnungUtils.berechneAlleTermineFuerKunde(…, startDatum, tageVoraus)` aufgerufen, sodass Listen für gestern befüllt werden und das Erledigt-Sheet die Listen-Kunden anzeigt.
+
+### Ausnahme-Termine: 01.01.70 statt nur A/L, normale Badges statt A-A/A-L gelb
+
+- **Behoben Feb 2026:** Ausnahme-Termine (nur A oder nur L) wurden in Termine-Tab und Alle-Termine-Block falsch angezeigt: (1) Bei nur L zeigte sich „A 01.01.70“ (epoch), bei nur A „L 01.01.70“. (2) Ausnahme-Termine sahen aus wie normale A/L (blau/grün) statt A-A/A-L (gelb). Fix: In `ErledigungTabTerminContent` und `AlleTermineBlock` werden 0-Daten nicht mehr angezeigt; Ausnahme-Termine (Pair mit einem 0-Wert) werden mit A-A/A-L und Farbe `status_ausnahme` dargestellt.

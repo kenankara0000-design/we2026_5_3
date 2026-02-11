@@ -30,7 +30,17 @@ sealed class BelegeUiState {
     /** Kunde suchen: nur Suchfeld, Treffer nur bei Eingabe (keine vollständige Kundenliste). */
     data class KundeSuchen(val customerSearchQuery: String = "", val customers: List<Customer> = emptyList()) : BelegeUiState()
     data class BelegListe(val customer: Customer, val showErledigtTab: Boolean = false) : BelegeUiState()
-    data class BelegDetail(val customer: Customer, val monthKey: String, val monthLabel: String, val erfassungen: List<WaschErfassung>) : BelegeUiState()
+    data class BelegDetail(
+        val customer: Customer,
+        val monthKey: String,
+        val monthLabel: String,
+        val erfassungen: List<WaschErfassung>,
+        /** true = aus AlleBelege geöffnet → zurück zu AlleBelege; false = aus BelegListe → zurück zu BelegListe */
+        val cameFromAlleBelege: Boolean = false,
+        val alleBelegeNameFilter: String = "",
+        val alleBelegeShowErledigt: Boolean = false,
+        val belegListeShowErledigt: Boolean = false
+    ) : BelegeUiState()
 }
 
 class BelegeViewModel(
@@ -174,7 +184,9 @@ class BelegeViewModel(
                 customer = s.customer,
                 monthKey = beleg.monthKey,
                 monthLabel = beleg.monthLabel,
-                erfassungen = beleg.erfassungen
+                erfassungen = beleg.erfassungen,
+                cameFromAlleBelege = false,
+                belegListeShowErledigt = s.showErledigtTab
             )
             loadBelegPreise(s.customer)
         }
@@ -182,11 +194,16 @@ class BelegeViewModel(
 
     /** Beleg aus der Alle-Belege-Liste öffnen. */
     fun openBelegDetailFromAlle(eintrag: BelegEintrag) {
+        val prev = _uiState.value
+        val alleState = prev as? BelegeUiState.AlleBelege
         _uiState.value = BelegeUiState.BelegDetail(
             customer = eintrag.customer,
             monthKey = eintrag.beleg.monthKey,
             monthLabel = eintrag.beleg.monthLabel,
-            erfassungen = eintrag.beleg.erfassungen
+            erfassungen = eintrag.beleg.erfassungen,
+            cameFromAlleBelege = true,
+            alleBelegeNameFilter = alleState?.nameFilter ?: "",
+            alleBelegeShowErledigt = alleState?.showErledigtTab ?: false
         )
         loadBelegPreise(eintrag.customer)
     }
@@ -209,7 +226,11 @@ class BelegeViewModel(
         val s = _uiState.value
         if (s is BelegeUiState.BelegDetail) {
             _belegPreiseGross.value = emptyMap()
-            _uiState.value = BelegeUiState.BelegListe(s.customer)
+            _uiState.value = if (s.cameFromAlleBelege) {
+                BelegeUiState.AlleBelege(nameFilter = s.alleBelegeNameFilter, showErledigtTab = s.alleBelegeShowErledigt)
+            } else {
+                BelegeUiState.BelegListe(s.customer, s.belegListeShowErledigt)
+            }
         }
     }
 

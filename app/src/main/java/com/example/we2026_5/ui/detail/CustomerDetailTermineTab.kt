@@ -132,7 +132,7 @@ fun CustomerDetailTermineTab(
                 ausnahmeTermine = ausnahmeTermine,
                 textPrimary = textPrimary,
                 textSecondary = textSecondary,
-                canDeleteTermin = isAdmin,
+                canDeleteTermin = isInEditMode,
                 onDeleteAusnahmeTermin = onDeleteAusnahmeTermin
             )
             Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
@@ -140,7 +140,7 @@ fun CustomerDetailTermineTab(
                 kundenTermine = kundenTermine,
                 textPrimary = textPrimary,
                 textSecondary = textSecondary,
-                canDeleteTermin = isAdmin,
+                canDeleteTermin = isInEditMode,
                 onAddAbholungTermin = onAddAbholungTermin,
                 onDeleteKundenTermin = onDeleteKundenTermin,
                 showAddButton = !useCentralNeuerTermin

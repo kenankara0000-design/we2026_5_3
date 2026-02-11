@@ -29,6 +29,7 @@ fun ErledigungTabTerminContent(
     val textSecondary = colorResource(R.color.text_secondary)
     val badgeA = colorResource(R.color.button_abholung)
     val badgeL = colorResource(R.color.button_auslieferung)
+    val badgeAusnahme = colorResource(R.color.status_ausnahme)
 
     Column(
         modifier = Modifier
@@ -45,6 +46,8 @@ fun ErledigungTabTerminContent(
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 pairs.forEach { (aDatum, lDatum) ->
+                    val isAusnahmeA = aDatum > 0L && lDatum == 0L
+                    val isAusnahmeL = aDatum == 0L && lDatum > 0L
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -52,22 +55,28 @@ fun ErledigungTabTerminContent(
                             .padding(12.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = "A ${DateFormatter.formatDateShortWithYear(aDatum)}",
-                            fontSize = 13.sp,
-                            color = badgeA,
-                            modifier = Modifier
-                                .background(badgeA.copy(alpha = 0.2f), MaterialTheme.shapes.small)
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                        Text(
-                            text = "L ${DateFormatter.formatDateShortWithYear(lDatum)}",
-                            fontSize = 13.sp,
-                            color = badgeL,
-                            modifier = Modifier
-                                .background(badgeL.copy(alpha = 0.2f), MaterialTheme.shapes.small)
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
+                        if (aDatum > 0L) {
+                            val (label, color) = if (isAusnahmeA) "A-A" to badgeAusnahme else "A" to badgeA
+                            Text(
+                                text = "$label ${DateFormatter.formatDateShortWithYear(aDatum)}",
+                                fontSize = 13.sp,
+                                color = color,
+                                modifier = Modifier
+                                    .background(color.copy(alpha = 0.2f), MaterialTheme.shapes.small)
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                        if (lDatum > 0L) {
+                            val (label, color) = if (isAusnahmeL) "A-L" to badgeAusnahme else "L" to badgeL
+                            Text(
+                                text = "$label ${DateFormatter.formatDateShortWithYear(lDatum)}",
+                                fontSize = 13.sp,
+                                color = color,
+                                modifier = Modifier
+                                    .background(color.copy(alpha = 0.2f), MaterialTheme.shapes.small)
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
                     }
                 }
             }

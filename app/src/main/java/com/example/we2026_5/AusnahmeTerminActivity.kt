@@ -100,18 +100,25 @@ class AusnahmeTerminActivity : AppCompatActivity() {
                                 } else {
                                     AlertDialog.Builder(this@AusnahmeTerminActivity)
                                         .setTitle(getString(R.string.termin_anlegen_ausnahme_typ_waehlen))
-                                        .setPositiveButton(getString(R.string.termin_anlegen_ausnahme_abholung)) { _, _ ->
-                                            confirmThenSaveAusnahmeNurA(customerId, datum)
+                                        .setItems(
+                                            arrayOf(
+                                                getString(R.string.termin_anlegen_ausnahme_abholung),
+                                                getString(R.string.termin_anlegen_ausnahme_auslieferung),
+                                                getString(R.string.termin_anlegen_ausnahme_a_plus_l)
+                                            )
+                                        ) { _, which ->
+                                            when (which) {
+                                                0 -> confirmThenSaveAusnahmeNurA(customerId, datum)
+                                                1 -> confirmThenSaveAusnahmeNurL(customerId, datum)
+                                                2 -> confirmThenSaveAusnahmeAbholungMitLieferung(customerId, datum)
+                                            }
                                         }
-                                        .setNegativeButton(getString(R.string.termin_anlegen_ausnahme_auslieferung)) { _, _ ->
-                                            confirmThenSaveAusnahmeNurL(customerId, datum)
-                                        }
-                                        .setNeutralButton(getString(R.string.btn_cancel), null)
+                                        .setNegativeButton(getString(R.string.btn_cancel), null)
                                         .show()
                                 }
                             },
-                            aWochentage = customer?.effectiveAbholungWochentage ?: emptyList(),
-                            lWochentage = customer?.effectiveAuslieferungWochentage ?: emptyList(),
+                            aWochentage = emptyList(),
+                            lWochentage = emptyList(),
                             initialDate = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis()),
                             dismissOnDateSelected = false
                         )
@@ -127,6 +134,16 @@ class AusnahmeTerminActivity : AppCompatActivity() {
             .setTitle(getString(R.string.label_termine_anlegen))
             .setMessage(getString(R.string.dialog_ausnahme_bestaetigen, dateStr))
             .setPositiveButton(getString(android.R.string.ok)) { _, _ -> saveAbholungMitLieferung(customerId, datum) }
+            .setNegativeButton(getString(R.string.btn_cancel), null)
+            .show()
+    }
+
+    private fun confirmThenSaveAusnahmeAbholungMitLieferung(customerId: String, datum: Long) {
+        val dateStr = DateFormatter.formatDate(datum)
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.label_termine_anlegen))
+            .setMessage(getString(R.string.dialog_ausnahme_bestaetigen, dateStr))
+            .setPositiveButton(getString(android.R.string.ok)) { _, _ -> saveAusnahmeAbholungMitLieferung(customerId, datum) }
             .setNegativeButton(getString(R.string.btn_cancel), null)
             .show()
     }
