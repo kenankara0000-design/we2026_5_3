@@ -457,6 +457,10 @@
     <string name="label_l_gleich_a_plus">L = A + %d</string>
     <string name="dialog_listen_termin_delete_title">Listen-Termin löschen?</string>
     <string name="dialog_listen_termin_delete_message">Dieser Termin wird für alle Kunden der Liste entfernt.</string>
+    <string name="dialog_listen_termin_art_title">Termin anlegen</string>
+    <string name="listen_termin_art_a_plus_l">A+L (L = A + Tage)</string>
+    <string name="listen_termin_art_nur_a_oder_l">Nur A oder Nur L (ein Datum)</string>
+    <string name="listen_termin_nur_a_oder_l_waehlen">Nur Abholung (A) oder nur Auslieferung (L)?</string>
     <string name="label_add_monthly_termin">Monatlichen Termin hinzufügen</string>
     <string name="label_neuer_termin_anlegen">Neuer Termin anlegen</string>
     <string name="label_termin_art_sheet_title">Termin hinzufügen – Art wählen</string>

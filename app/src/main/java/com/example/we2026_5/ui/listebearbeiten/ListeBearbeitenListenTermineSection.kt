@@ -63,6 +63,8 @@ fun ListeBearbeitenListenTermineSection(
     val aList = listenTermine.filter { it.typ == "A" }.sortedBy { it.datum }
     val lList = listenTermine.filter { it.typ == "L" }.sortedBy { it.datum }
     val pairs = aList.zip(lList)
+    val orphanAs = aList.drop(lList.size)
+    val orphanLs = lList.drop(aList.size)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -125,7 +127,7 @@ fun ListeBearbeitenListenTermineSection(
             ) {
                 Text(stringResource(R.string.label_termine_anlegen))
             }
-            if (pairs.isNotEmpty()) {
+            if (pairs.isNotEmpty() || orphanAs.isNotEmpty() || orphanLs.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     pairs.forEach { (aTermin, lTermin) ->
@@ -154,6 +156,54 @@ fun ListeBearbeitenListenTermineSection(
                             Spacer(Modifier.weight(1f))
                             IconButton(
                                 onClick = { terminToDelete = aTermin; terminLToDeleteWithA = lTermin },
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.content_desc_delete_kunden_termin), tint = textPrimary)
+                            }
+                        }
+                    }
+                    orphanAs.forEach { aTermin ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFFE8F0FE))
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("A", modifier = Modifier
+                                .background(Color(0xFF1976D2).copy(alpha = 0.2f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                                color = Color(0xFF1976D2), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                            Text(DateFormatter.formatDateWithWeekday(aTermin.datum),
+                                modifier = Modifier.padding(start = 8.dp, end = 12.dp),
+                                color = textPrimary, fontSize = 13.sp)
+                            Spacer(Modifier.weight(1f))
+                            IconButton(
+                                onClick = { terminToDelete = aTermin; terminLToDeleteWithA = null },
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.content_desc_delete_kunden_termin), tint = textPrimary)
+                            }
+                        }
+                    }
+                    orphanLs.forEach { lTermin ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFFE8F0FE))
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("L", modifier = Modifier
+                                .background(Color(0xFF388E3C).copy(alpha = 0.2f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                                color = Color(0xFF388E3C), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                            Text(DateFormatter.formatDateWithWeekday(lTermin.datum),
+                                modifier = Modifier.padding(start = 8.dp, end = 12.dp),
+                                color = textPrimary, fontSize = 13.sp)
+                            Spacer(Modifier.weight(1f))
+                            IconButton(
+                                onClick = { terminToDelete = lTermin; terminLToDeleteWithA = null },
                                 modifier = Modifier.size(40.dp)
                             ) {
                                 Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.content_desc_delete_kunden_termin), tint = textPrimary)

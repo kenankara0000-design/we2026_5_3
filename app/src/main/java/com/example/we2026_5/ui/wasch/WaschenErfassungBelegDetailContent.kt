@@ -95,14 +95,14 @@ fun WaschenErfassungBelegDetailContent(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     customerName,
-                    fontSize = 16.sp,
-                    color = textSecondary
-                )
-                Text(
-                    monthLabel,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = textPrimary
+                )
+                Text(
+                    monthLabel,
+                    fontSize = 16.sp,
+                    color = textSecondary
                 )
             }
             IconButton(onClick = { kebabExpanded = true }) {

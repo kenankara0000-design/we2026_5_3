@@ -76,15 +76,48 @@ class ListeBearbeitenActivity : AppCompatActivity() {
                 },
                 onTerminAnlegen = {
                     val liste = state.liste ?: return@ListeBearbeitenScreen
-                    val tageAzuL = liste.tageAzuL.coerceIn(1, 365)
-                    IntervallManager.showDatePickerForListenTermin(
-                        context = this@ListeBearbeitenActivity,
-                        onDateSelected = { dateMillis ->
-                            callbacks.addListenTermin(liste, dateMillis, tageAzuL) { updated ->
-                                viewModel.updateListe(updated)
+                    val options = arrayOf(
+                        getString(R.string.listen_termin_art_a_plus_l),
+                        getString(R.string.listen_termin_art_nur_a_oder_l)
+                    )
+                    androidx.appcompat.app.AlertDialog.Builder(this@ListeBearbeitenActivity)
+                        .setTitle(getString(R.string.dialog_listen_termin_art_title))
+                        .setItems(options) { _, which ->
+                            when (which) {
+                                0 -> {
+                                    val tageAzuL = liste.tageAzuL.coerceIn(1, 365)
+                                    IntervallManager.showDatePickerForListenTermin(
+                                        context = this@ListeBearbeitenActivity,
+                                        onDateSelected = { dateMillis ->
+                                            callbacks.addListenTermin(liste, dateMillis, tageAzuL) { updated ->
+                                                viewModel.updateListe(updated)
+                                            }
+                                        }
+                                    )
+                                }
+                                1 -> {
+                                    IntervallManager.showDatePickerForListenTermin(
+                                        context = this@ListeBearbeitenActivity,
+                                        onDateSelected = { dateMillis ->
+                                            val aOrL = arrayOf(
+                                                getString(R.string.termin_anlegen_ausnahme_abholung),
+                                                getString(R.string.termin_anlegen_ausnahme_auslieferung)
+                                            )
+                                            androidx.appcompat.app.AlertDialog.Builder(this@ListeBearbeitenActivity)
+                                                .setTitle(getString(R.string.listen_termin_nur_a_oder_l_waehlen))
+                                                .setItems(aOrL) { _, typWhich ->
+                                                    val typ = if (typWhich == 0) "A" else "L"
+                                                    callbacks.addSingleListenTermin(liste, dateMillis, typ) { updated ->
+                                                        viewModel.updateListe(updated)
+                                                    }
+                                                }
+                                                .show()
+                                        }
+                                    )
+                                }
                             }
                         }
-                    )
+                        .show()
                 },
                 onDeleteListenTermine = { toRemove ->
                     val liste = state.liste ?: return@ListeBearbeitenScreen

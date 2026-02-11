@@ -224,6 +224,30 @@ class ListeBearbeitenCallbacks(
     }
 
     /**
+     * Fügt einen einzelnen Listen-Termin hinzu (nur A oder nur L am gewählten Datum).
+     * Gilt für alle Kunden der Liste. Bestehende A+L-Logik bleibt unberührt.
+     */
+    fun addSingleListenTermin(liste: KundenListe, datum: Long, typ: String, onSuccess: (KundenListe) -> Unit) {
+        if (typ != "A" && typ != "L") return
+        CoroutineScope(Dispatchers.Main).launch {
+            val startOfDay = com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(datum)
+            val newTermine = liste.listenTermine + KundenTermin(datum = startOfDay, typ = typ)
+            val updates = mapOf("listenTermine" to CustomerSnapshotParser.serializeKundenTermine(newTermine))
+            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
+                operation = { listeRepository.updateListe(liste.id, updates) },
+                context = activity,
+                errorMessage = activity.getString(R.string.error_save_generic),
+                maxRetries = 3
+            )
+            if (success != null) {
+                Toast.makeText(activity, activity.getString(R.string.toast_liste_gespeichert), Toast.LENGTH_SHORT).show()
+                onSuccess(liste.copy(listenTermine = newTermine))
+                syncTermineVonListeToKunden(liste.id, newTermine)
+            }
+        }
+    }
+
+    /**
      * Überträgt die Listen-Termine auf alle Kunden dieser Tour-Liste (termineVonListe).
      */
     private fun syncTermineVonListeToKunden(listeId: String, newTermine: List<KundenTermin>) {

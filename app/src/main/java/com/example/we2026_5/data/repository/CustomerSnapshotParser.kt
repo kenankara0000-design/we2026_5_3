@@ -35,6 +35,16 @@ object CustomerSnapshotParser {
         }
         val erstelltAm = optionalLong(child, "erstelltAm").takeIf { it > 0 } ?: customer.erstelltAm
         val intervalle = parseIntervalleWithErstelltAm(child.child("intervalle"), customer.intervalle)
+        // Erledigungsfelder explizit lesen (Firebase liefert Long oft als Double → sonst 0, Termine erscheinen wieder als nicht erledigt)
+        val abholungErfolgt = optionalBoolean(child, "abholungErfolgt")
+        val auslieferungErfolgt = optionalBoolean(child, "auslieferungErfolgt")
+        val keinerWäscheErfolgt = optionalBoolean(child, "keinerWäscheErfolgt")
+        val abholungErledigtAm = optionalLong(child, "abholungErledigtAm")
+        val auslieferungErledigtAm = optionalLong(child, "auslieferungErledigtAm")
+        val abholungZeitstempel = optionalLong(child, "abholungZeitstempel")
+        val auslieferungZeitstempel = optionalLong(child, "auslieferungZeitstempel")
+        val keinerWäscheErledigtAm = optionalLong(child, "keinerWäscheErledigtAm")
+        val faelligAmDatum = optionalLong(child, "faelligAmDatum")
         val base = customer.copy(
             id = id,
             verschobeneTermine = verschobeneTermine,
@@ -50,7 +60,16 @@ object CustomerSnapshotParser {
             letzterTermin = optionalLong(child, "letzterTermin"),
             kundenTyp = kundenTypParsed ?: customer.kundenTyp,
             erstelltAm = erstelltAm,
-            intervalle = intervalle
+            intervalle = intervalle,
+            abholungErfolgt = abholungErfolgt,
+            auslieferungErfolgt = auslieferungErfolgt,
+            keinerWäscheErfolgt = keinerWäscheErfolgt,
+            abholungErledigtAm = abholungErledigtAm,
+            auslieferungErledigtAm = auslieferungErledigtAm,
+            abholungZeitstempel = abholungZeitstempel,
+            auslieferungZeitstempel = auslieferungZeitstempel,
+            keinerWäscheErledigtAm = keinerWäscheErledigtAm,
+            faelligAmDatum = faelligAmDatum
         )
         return if (child.child("kundenTyp").exists()) base else base.migrateKundenTyp()
     }

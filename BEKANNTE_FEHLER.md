@@ -22,6 +22,10 @@ Keine Änderung am Verhalten (Bug-Fix) ohne ausdrückliche Freigabe (vgl. `.curs
 
 ## Behoben
 
+### Bereits erledigte Termine erschienen wieder als nicht erledigt
+
+- **Behoben Feb 2026:** Nach dem erneuten Öffnen der App oder nach Neuladen wurden Termine, die bereits als erledigt markiert waren, wieder als nicht erledigt angezeigt. Ursache: Beim Lesen aus der Firebase Realtime DB werden Zahlen teils als Double geliefert; die Standard-Deserialisierung (`getValue(Customer::class.java)`) setzte die Long-Felder `abholungErledigtAm`, `auslieferungErledigtAm` usw. dann auf 0. Fix: In `CustomerSnapshotParser` werden die Erledigungsfelder (abholungErfolgt, auslieferungErfolgt, abholungErledigtAm, auslieferungErledigtAm, abholungZeitstempel, auslieferungZeitstempel, keinerWäscheErfolgt, keinerWäscheErledigtAm, faelligAmDatum) explizit mit `optionalLong`/`optionalBoolean` gelesen und in das Customer-Objekt übernommen – Long-Werte kommen so korrekt an (Number→Long).
+
 ### Ausnahme-Termine: A+L konnten nicht erstellt werden
 
 - **Behoben Feb 2026:** Im Ausnahme-Termin-Dialog (Einmalig – Ausnahme) fehlte die Option „Abholung + Auslieferung (A+L)“. Nur „Nur Abholung“ und „Nur Auslieferung“ waren wählbar; die Methode `saveAusnahmeAbholungMitLieferung` existierte, wurde aber nie aufgerufen. Fix: Dialog auf Listenauswahl (setItems) umgestellt mit dritter Option „Abholung + Auslieferung (A+L)“, die `addAusnahmeAbholungMitLieferung` nutzt. Relevante Stelle: `AusnahmeTerminActivity.kt`.
