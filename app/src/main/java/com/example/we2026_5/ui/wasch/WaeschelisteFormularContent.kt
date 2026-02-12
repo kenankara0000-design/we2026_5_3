@@ -190,9 +190,10 @@ private fun WaeschelisteArtiklSpalte(
                         val v = str.toIntOrNull() ?: 0
                         onMengeChange(item.key, v.coerceAtLeast(0))
                     },
-                    modifier = Modifier.widthIn(min = 48.dp, max = 64.dp).padding(end = 8.dp),
+                    modifier = Modifier.widthIn(min = 36.dp, max = 44.dp).padding(end = 6.dp),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp)
                 )
                 Text(item.label, fontSize = 12.sp, color = textPrimary, modifier = Modifier.weight(1f))
             }
