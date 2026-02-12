@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TourPlanner – UX Mockup (Punkt 6)</title>
+  <style>
+    :root{
+      --bg:#F5F7FA;
+      --surface:#FFFFFF;
+      --text:#1E293B;
+      --muted:#64748B;
+      --line:#E2E8F0;
+      --primary:#1F6FEB;
+      --primary-ink:#0B3A90;
+      --warn:#E11D48;
+      --warn-bg:#FEE2E2;
+      --ok:#16A34A;
+      --ok-bg:#DCFCE7;
+      --chip:#EFF6FF;
+      --chip-line:#BFDBFE;
+      --shadow:0 6px 18px rgba(2,6,23,.10);
+      --radius:14px;
+      --tap:44px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:var(--bg);
+      color:var(--text);
+    }
+    a{ color:inherit; }
+    button, input, select{
+      font:inherit;
+    }
+    .app{
+      max-width: 980px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* Top bar */
+    .topbar{
+      position: sticky;
+      top:0;
+      z-index:20;
+      background: linear-gradient(180deg, var(--primary) 0%, #1B5FDB 100%);
+      color:#fff;
+      box-shadow: 0 8px 22px rgba(2,6,23,.20);
+    }
+    .topbar__row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 12px 14px;
+    }
+    .iconbtn{
+      width:var(--tap);
+      height:var(--tap);
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.20);
+      background: rgba(255,255,255,.12);
+      color:#fff;
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+    }
+    .iconbtn:active{ transform: translateY(1px); }
+    .topbar__title{
+      flex:1;
+      min-width: 0;
+    }
+    .title{
+      font-weight:800;
+      font-size: 16px;
+      letter-spacing:.2px;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .subtitle{
+      opacity:.85;
+      font-size: 12px;
+      margin-top: 2px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      border:1px solid rgba(255,255,255,.25);
+      background: rgba(255,255,255,.10);
+      white-space: nowrap;
+    }
+    .badge strong{ font-variant-numeric: tabular-nums; }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      border:1px solid rgba(255,255,255,.20);
+      background: rgba(255,255,255,.08);
+      cursor:pointer;
+    }
+    .pill[aria-pressed="true"]{
+      background: rgba(255,255,255,.22);
+      border-color: rgba(255,255,255,.35);
+    }
+    .topbar__actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .dateNav{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .dateNav .iconbtn{
+      width:40px;
+      height:40px;
+      border-radius: 12px;
+    }
+
+    /* Content */
+    main{
+      padding: 14px 14px 24px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+
+    /* Filters */
+    .filters{
+      background: rgba(255,255,255,.65);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 6px 16px rgba(2,6,23,.05);
+      backdrop-filter: blur(6px);
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .filters__row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid var(--chip-line);
+      background: var(--chip);
+      color: var(--primary-ink);
+      cursor:pointer;
+      user-select:none;
+      font-size: 13px;
+      min-height: 36px;
+    }
+    .chip[aria-pressed="true"]{
+      background: var(--primary);
+      border-color: var(--primary);
+      color:#fff;
+    }
+    .chip small{
+      opacity:.8;
+      font-family: var(--mono);
+    }
+    .filterSelect{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background: var(--surface);
+      border:1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 10px;
+      min-height: 36px;
+    }
+    .filterSelect label{
+      font-size: 13px;
+      color: var(--muted);
+    }
+    select{
+      border:0;
+      outline:0;
+      background:transparent;
+      color:var(--text);
+      font-weight:700;
+      cursor:pointer;
+    }
+    .filters__hint{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .filters__hint code{
+      font-family: var(--mono);
+      background: #F1F5F9;
+      border:1px solid var(--line);
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
+
+    /* Section headers */
+    .section{
+      border-radius: var(--radius);
+      overflow:hidden;
+      border:1px solid var(--line);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .section__head{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 12px 12px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .section__head:hover{ background: #F8FAFC; }
+    .section__title{
+      flex:1;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .section__title h2{
+      font-size: 14px;
+      margin:0;
+      font-weight:900;
+      letter-spacing:.2px;
+      white-space:nowrap;
+    }
+    .section__count{
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--mono);
+      border:1px solid var(--line);
+      background:#F8FAFC;
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space:nowrap;
+    }
+    .section__meta{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .section__toggle{
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border:1px solid var(--line);
+      background: #fff;
+      cursor:pointer;
+    }
+    .section__toggle:active{ transform:translateY(1px); }
+    .section__body{
+      border-top:1px solid var(--line);
+      padding: 10px 10px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .hidden{ display:none !important; }
+
+    /* Cards */
+    .card{
+      border:1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 12px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+    .card[draggable="true"]{ cursor:grab; }
+    .card.dragging{
+      opacity:.55;
+      box-shadow: 0 14px 34px rgba(2,6,23,.18);
+    }
+    .card__left{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width: 0;
+      flex:1;
+    }
+    .card__row1{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      min-width:0;
+      flex-wrap:wrap;
+    }
+    .typeTag{
+      font-weight:900;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      color:#fff;
+      background: #475569;
+    }
+    .typeTag.G{ background: #0F766E; }
+    .typeTag.P{ background: #7C3AED; }
+    .typeTag.T{ background: #2563EB; }
+
+    .name{
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing:.2px;
+      min-width: 0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .statusTag{
+      font-size: 12px;
+      font-weight: 800;
+      border-radius: 999px;
+      padding: 4px 10px;
+      border:1px solid var(--line);
+      background:#F8FAFC;
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .statusTag.overdue{
+      color: var(--warn);
+      background: var(--warn-bg);
+      border-color: #FCA5A5;
+    }
+    .statusTag.done{
+      color: var(--ok);
+      background: var(--ok-bg);
+      border-color:#86EFAC;
+    }
+    .meta{
+      font-size: 13px;
+      color: var(--muted);
+      line-height:1.35;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .meta .mono{
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+    .meta strong{ color: var(--text); }
+
+    .card__right{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      align-items:flex-end;
+    }
+    .quickActions{
+      display:flex;
+      gap:8px;
+    }
+    .qa{
+      min-width: var(--tap);
+      height: var(--tap);
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background:#fff;
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+    }
+    .qa:active{ transform: translateY(1px); }
+    .qa[title]{ color: var(--text); }
+    .small{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .ctaRow{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-top: 2px;
+    }
+    .btn{
+      border:1px solid var(--line);
+      background:#fff;
+      color: var(--text);
+      border-radius: 12px;
+      height: var(--tap);
+      padding: 0 12px;
+      font-weight: 800;
+      cursor:pointer;
+    }
+    .btn.primary{
+      background: var(--primary);
+      border-color: var(--primary);
+      color:#fff;
+    }
+    .btn.ghost{
+      background: transparent;
+      border-color: rgba(255,255,255,.25);
+      color:#fff;
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    /* Bottom sheet / modal */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background: rgba(2,6,23,.45);
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      padding: 14px;
+      z-index:50;
+    }
+    .sheet{
+      width: min(720px, 100%);
+      background: var(--surface);
+      border-radius: 18px;
+      box-shadow: 0 20px 70px rgba(2,6,23,.35);
+      border:1px solid var(--line);
+      overflow:hidden;
+    }
+    .sheet__head{
+      padding: 12px 14px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border-bottom:1px solid var(--line);
+    }
+    .sheet__head h3{
+      margin:0;
+      font-size: 14px;
+      font-weight: 900;
+      flex:1;
+    }
+    .sheet__body{
+      padding: 12px 14px 14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      max-height: min(70vh, 620px);
+      overflow:auto;
+    }
+    .sheet__item{
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .sheet__item .left{
+      min-width:0;
+    }
+    .sheet__item .left .t{
+      font-weight: 900;
+      font-size: 14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .sheet__item .left .d{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .kbd{
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background:#F8FAFC;
+      color: var(--muted);
+    }
+
+    /* Desktop tweaks */
+    @media (min-width: 740px){
+      .topbar__row{ padding: 14px 18px; }
+      main{ padding: 16px 18px 28px; }
+      .filters{ padding: 14px; }
+    }
+
+    /* Demo banner */
+    .demoBanner{
+      background: #0B1220;
+      color: #E5E7EB;
+      border-top: 1px solid rgba(255,255,255,.10);
+      padding: 10px 14px;
+      font-size: 12px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .demoBanner code{
+      font-family: var(--mono);
+      color:#93C5FD;
+    }
+    .demoBanner .right{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar" role="banner">
+      <div class="topbar__row">
+        <button class="iconbtn" id="btnBack" aria-label="Zurück">←</button>
+
+        <div class="topbar__title">
+          <div class="title">
+            <span id="dateText">Do, 12.02.2026</span>
+            <span class="badge" title="A/L Counts">
+              A <strong id="countA">6</strong>
+              <span style="opacity:.6">•</span>
+              L <strong id="countL">4</strong>
+            </span>
+            <span class="badge" id="offlineBadge" style="display:none" title="Offline">Offline</span>
+          </div>
+          <div class="subtitle">
+            <button class="pill" id="pillExpandAll" aria-pressed="false" title="Alle Sektionen auf/zu">
+              ⇵ Alle Sektionen
+            </button>
+            <span class="badge" title="Hinweis: Drag&Drop Demo">
+              Drag&Drop: <strong>Aktiv</strong>
+            </span>
+          </div>
+        </div>
+
+        <div class="topbar__actions" aria-label="Aktionen">
+          <div class="dateNav" aria-label="Datum">
+            <button class="iconbtn" id="btnPrev" aria-label="Vorheriger Tag">‹</button>
+            <button class="btn ghost" id="btnToday" aria-label="Heute">Heute</button>
+            <button class="iconbtn" id="btnNext" aria-label="Nächster Tag">›</button>
+          </div>
+          <button class="btn ghost" id="btnMap" aria-label="Karte öffnen">Karte</button>
+          <button class="iconbtn" id="btnMore" aria-label="Mehr">⋮</button>
+        </div>
+      </div>
+      <div class="demoBanner">
+        <div>
+          <strong>Mockup Punkt 6</strong> – demonstriert: TopBar-Dichte/Overflow, Sektionen mit Counts + Expand/Collapse, Filterchips,
+          Kunden-Cards mit Status + „nächste Aktion“, Quick-Actions, Overview-Dialog, Aktionen-Sheet, Erledigt-Sheet, Drag&Drop-Reorder.
+        </div>
+        <div class="right">
+          <span class="kbd">Tipp</span>
+          <span>Klicke auf eine Kundenkarte → <code>Overview</code>, oder auf „Aktionen“ → <code>Bottom Sheet</code></span>
+        </div>
+      </div>
+    </header>
+
+    <main role="main">
+      <section class="filters" aria-label="Filter & Sortierung">
+        <div class="filters__row">
+          <div class="filterSelect">
+            <label for="selType">Typ</label>
+            <select id="selType">
+              <option value="ALL">Alle</option>
+              <option value="G">Gewerblich</option>
+              <option value="P">Privat</option>
+              <option value="T">Tour</option>
+            </select>
+          </div>
+          <div class="filterSelect">
+            <label for="selList">Liste</label>
+            <select id="selList">
+              <option value="ALL">Alle</option>
+              <option value="Nord">Nord</option>
+              <option value="Sued">Süd</option>
+              <option value="Privat">Privat (keine Liste)</option>
+            </select>
+          </div>
+          <div class="filterSelect">
+            <label for="selCity">Stadt</label>
+            <select id="selCity">
+              <option value="ALL">Alle</option>
+              <option value="Berlin">Berlin</option>
+              <option value="Potsdam">Potsdam</option>
+              <option value="Falkensee">Falkensee</option>
+            </select>
+          </div>
+          <div class="filterSelect">
+            <label for="selSort">Sort</label>
+            <select id="selSort">
+              <option value="DEFAULT">Tour-Reihenfolge</option>
+              <option value="NAME">Name A→Z</option>
+              <option value="NEXT">Nächste Aktion</option>
+              <option value="OVERDUE">Überfällig zuerst</option>
+            </select>
+          </div>
+        </div>
+        <div class="filters__row" aria-label="Schnellfilter">
+          <div class="chip" id="chipOnlyOverdue" role="button" tabindex="0" aria-pressed="false">Nur Überfällig <small>⚠</small></div>
+          <div class="chip" id="chipOnlyToday" role="button" tabindex="0" aria-pressed="false">Nur Heute <small>📅</small></div>
+          <div class="chip" id="chipHideDone" role="button" tabindex="0" aria-pressed="true">Erledigte ausblenden <small>✓</small></div>
+          <div class="chip" id="chipShowPhoneNav" role="button" tabindex="0" aria-pressed="true">Quick-Actions <small>☎/➤</small></div>
+        </div>
+        <div class="filters__hint">
+          Ziel: „finden“ & „abarbeiten“ ohne Chaos. Sekundäraktionen wandern in <code>⋮</code>. Filter sind sichtbar und lassen sich schnell zurücksetzen.
+        </div>
+      </section>
+
+      <section class="section" id="secOverdue" aria-label="Sektion Überfällig">
+        <div class="section__head" data-toggle="overdue">
+          <div class="section__title">
+            <h2>Überfällig</h2>
+            <span class="section__count" id="countOverdue">0</span>
+          </div>
+          <div class="section__meta">
+            <span class="statusTag overdue">⚠ A/L verpasst</span>
+            <button class="section__toggle" aria-label="Sektion umschalten" data-togglebtn="overdue">⌄</button>
+          </div>
+        </div>
+        <div class="section__body" id="bodyOverdue"></div>
+      </section>
+
+      <section class="section" id="secToday" aria-label="Sektion Heute">
+        <div class="section__head" data-toggle="today">
+          <div class="section__title">
+            <h2>Heute</h2>
+            <span class="section__count" id="countToday">0</span>
+          </div>
+          <div class="section__meta">
+            <span class="statusTag">📅 A/L heute</span>
+            <button class="section__toggle" aria-label="Sektion umschalten" data-togglebtn="today">⌄</button>
+          </div>
+        </div>
+        <div class="section__body" id="bodyToday"></div>
+      </section>
+
+      <section class="section" id="secDone" aria-label="Sektion Erledigt">
+        <div class="section__head" data-toggle="done">
+          <div class="section__title">
+            <h2>Erledigt</h2>
+            <span class="section__count" id="countDone">0</span>
+          </div>
+          <div class="section__meta">
+            <span class="statusTag done">✓ heute erledigt</span>
+            <button class="section__toggle" aria-label="Sektion umschalten" data-togglebtn="done">⌄</button>
+          </div>
+        </div>
+        <div class="section__body" id="bodyDone"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Bottom sheets / dialogs (in DOM, toggled by JS) -->
+  <div class="overlay hidden" id="overlay" aria-hidden="true"></div>
+
+  <script>
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+    const state = {
+      date: new Date(2026, 1, 12), // 12.02.2026
+      show: { overdue:true, today:true, done:false },
+      filters: {
+        type: "ALL",
+        list: "ALL",
+        city: "ALL",
+        sort: "DEFAULT",
+        onlyOverdue: false,
+        onlyToday: false,
+        hideDone: true,
+        showQuickActions: true,
+      },
+      expandAll: false,
+      items: [
+        { id:"c1", type:"G", name:"Hotel Adler", address:"Musterstr. 12, 10115 Berlin", city:"Berlin", list:"Nord",
+          status:"OVERDUE", next:"A heute + L morgen", nextTime:"08:30–10:00", phone:"030 123456", note:"Torcode 4711", },
+        { id:"c2", type:"T", name:"Pflegeheim Sonnenblick", address:"Parkweg 5, 14467 Potsdam", city:"Potsdam", list:"Sued",
+          status:"OVERDUE", next:"L überfällig seit Di", nextTime:"10:00–12:00", phone:"0331 55555", note:"Anmeldung am Empfang", },
+        { id:"c3", type:"P", name:"Kunde: Meier", address:"Am See 3, 14612 Falkensee", city:"Falkensee", list:"Privat",
+          status:"TODAY", next:"A heute", nextTime:"13:00–15:00", phone:"0176 000000", note:"Hund im Garten", },
+        { id:"c4", type:"T", name:"Bäckerei König", address:"Hauptstr. 77, 10117 Berlin", city:"Berlin", list:"Nord",
+          status:"TODAY", next:"A+L heute (same day)", nextTime:"15:00–16:00", phone:"030 987654", note:"Parken hinten", },
+        { id:"c5", type:"G", name:"Fitness Center West", address:"Ringstr. 9, 14469 Potsdam", city:"Potsdam", list:"Sued",
+          status:"DONE", next:"Erledigt (A+L)", nextTime:"—", phone:"0331 44444", note:"", },
+      ],
+      reorderedIds: [],
+    };
+
+    function formatDate(d){
+      const opts = { weekday:"short", day:"2-digit", month:"2-digit", year:"numeric" };
+      return d.toLocaleDateString("de-DE", opts);
+    }
+
+    function iconForType(t){
+      if (t === "G") return "G";
+      if (t === "P") return "P";
+      return "T";
+    }
+
+    function typeLabel(t){
+      if (t === "G") return "Gewerblich";
+      if (t === "P") return "Privat";
+      return "Tour";
+    }
+
+    function statusBadge(item){
+      if (item.status === "OVERDUE") return { text:"Überfällig", cls:"overdue" };
+      if (item.status === "DONE") return { text:"Erledigt", cls:"done" };
+      return { text:"Heute", cls:"" };
+    }
+
+    function applyFilters(items){
+      let out = items.slice();
+      const f = state.filters;
+      if (f.type !== "ALL") out = out.filter(i => i.type === f.type);
+      if (f.list !== "ALL") out = out.filter(i => i.list === f.list);
+      if (f.city !== "ALL") out = out.filter(i => i.city === f.city);
+      if (f.onlyOverdue) out = out.filter(i => i.status === "OVERDUE");
+      if (f.onlyToday) out = out.filter(i => i.status === "TODAY");
+      if (f.hideDone) out = out.filter(i => i.status !== "DONE");
+      // Sorting
+      if (f.sort === "NAME") out.sort((a,b) => a.name.localeCompare(b.name, "de"));
+      if (f.sort === "OVERDUE") out.sort((a,b) => (a.status === "OVERDUE" ? -1 : 1) - (b.status === "OVERDUE" ? -1 : 1));
+      if (f.sort === "NEXT") out.sort((a,b) => (a.next||"").localeCompare(b.next||"", "de"));
+      // DEFAULT keeps current order (including drag reorder).
+      return out;
+    }
+
+    function groupItems(items){
+      return {
+        overdue: items.filter(i => i.status === "OVERDUE"),
+        today: items.filter(i => i.status === "TODAY"),
+        done: items.filter(i => i.status === "DONE"),
+      };
+    }
+
+    function render(){
+      $("#dateText").textContent = formatDate(state.date);
+
+      // A/L counts: in real app computed from Termine. Here: rough demo.
+      const filtered = applyFilters(state.items);
+      const g = groupItems(filtered);
+      $("#countOverdue").textContent = String(g.overdue.length);
+      $("#countToday").textContent = String(g.today.length);
+      $("#countDone").textContent = String(g.done.length);
+
+      const countA = g.overdue.length + g.today.length; // demo
+      const countL = Math.max(0, (g.today.length + g.done.length) - 1); // demo
+      $("#countA").textContent = String(countA);
+      $("#countL").textContent = String(countL);
+
+      // Sections visibility
+      $("#bodyOverdue").classList.toggle("hidden", !state.show.overdue);
+      $("#bodyToday").classList.toggle("hidden", !state.show.today);
+      $("#bodyDone").classList.toggle("hidden", !state.show.done);
+      $$("[data-togglebtn]").forEach(btn => {
+        const key = btn.dataset.togglebtn;
+        btn.textContent = state.show[key] ? "⌄" : "›";
+      });
+
+      // Chips state
+      $("#chipOnlyOverdue").setAttribute("aria-pressed", String(state.filters.onlyOverdue));
+      $("#chipOnlyToday").setAttribute("aria-pressed", String(state.filters.onlyToday));
+      $("#chipHideDone").setAttribute("aria-pressed", String(state.filters.hideDone));
+      $("#chipShowPhoneNav").setAttribute("aria-pressed", String(state.filters.showQuickActions));
+
+      // Selects
+      $("#selType").value = state.filters.type;
+      $("#selList").value = state.filters.list;
+      $("#selCity").value = state.filters.city;
+      $("#selSort").value = state.filters.sort;
+
+      // Render lists
+      $("#bodyOverdue").innerHTML = "";
+      $("#bodyToday").innerHTML = "";
+      $("#bodyDone").innerHTML = "";
+
+      const makeCard = (item) => {
+        const sb = statusBadge(item);
+        const el = document.createElement("div");
+        el.className = "card";
+        el.setAttribute("draggable", "true");
+        el.dataset.id = item.id;
+
+        el.innerHTML = `
+          <div class="card__left">
+            <div class="card__row1">
+              <span class="typeTag ${iconForType(item.type)}" title="${typeLabel(item.type)}">${iconForType(item.type)}</span>
+              <span class="name" title="${item.name}">${item.name}</span>
+              <span class="statusTag ${sb.cls}">${sb.text}</span>
+            </div>
+            <div class="meta">
+              <div><strong>Nächste Aktion:</strong> ${item.next} <span class="mono">(${item.nextTime})</span></div>
+              <div>${item.address}</div>
+              ${item.note ? `<div class="small">Hinweis: ${escapeHtml(item.note)}</div>` : ``}
+            </div>
+            <div class="ctaRow">
+              <button class="btn primary" data-open="overview">Overview</button>
+              <button class="btn" data-open="actions">Aktionen</button>
+              <span class="small">Drag zum Umordnen (nur Demo)</span>
+            </div>
+          </div>
+          <div class="card__right">
+            <div class="quickActions" style="${state.filters.showQuickActions ? "" : "display:none"}">
+              <button class="qa" title="Anrufen" data-qa="call" aria-label="Anrufen">☎</button>
+              <button class="qa" title="Navigation" data-qa="nav" aria-label="Navigation">➤</button>
+            </div>
+            <div class="small" style="text-align:right">
+              Liste: <strong>${item.list}</strong><br/>
+              Stadt: <strong>${item.city}</strong>
+            </div>
+          </div>
+        `;
+
+        // Click handlers
+        el.addEventListener("click", (ev) => {
+          const btn = ev.target.closest("button");
+          if (!btn) return;
+          if (btn.dataset.open === "overview") openOverview(item);
+          if (btn.dataset.open === "actions") openActions(item);
+          if (btn.dataset.qa === "call") openToast(`☎ Würde anrufen: ${item.phone}`);
+          if (btn.dataset.qa === "nav") openToast(`➤ Würde Navigation öffnen: ${item.address}`);
+          ev.stopPropagation();
+        });
+
+        // Drag & drop (simple, reorder within same visible group only)
+        el.addEventListener("dragstart", (ev) => {
+          el.classList.add("dragging");
+          ev.dataTransfer.setData("text/plain", item.id);
+          ev.dataTransfer.effectAllowed = "move";
+        });
+        el.addEventListener("dragend", () => el.classList.remove("dragging"));
+        el.addEventListener("dragover", (ev) => {
+          ev.preventDefault();
+          ev.dataTransfer.dropEffect = "move";
+        });
+        el.addEventListener("drop", (ev) => {
+          ev.preventDefault();
+          const fromId = ev.dataTransfer.getData("text/plain");
+          const toId = item.id;
+          if (!fromId || fromId === toId) return;
+          reorder(fromId, toId);
+        });
+
+        return el;
+      };
+
+      g.overdue.forEach(i => $("#bodyOverdue").appendChild(makeCard(i)));
+      g.today.forEach(i => $("#bodyToday").appendChild(makeCard(i)));
+      // Done list is hidden by default; still render when visible (or when hideDone disabled).
+      g.done.forEach(i => $("#bodyDone").appendChild(makeCard(i)));
+    }
+
+    function reorder(fromId, toId){
+      const items = state.items.slice();
+      const fromIdx = items.findIndex(i => i.id === fromId);
+      const toIdx = items.findIndex(i => i.id === toId);
+      if (fromIdx < 0 || toIdx < 0) return;
+      const [moved] = items.splice(fromIdx, 1);
+      items.splice(toIdx, 0, moved);
+      state.items = items;
+      state.reorderedIds = items.map(i => i.id);
+      openToast(`Reorder (Demo): ${fromId} → Position von ${toId}`);
+      render();
+    }
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#39;");
+    }
+
+    function setOverlay(contentEl){
+      const ov = $("#overlay");
+      ov.innerHTML = "";
+      ov.classList.remove("hidden");
+      ov.setAttribute("aria-hidden","false");
+      ov.appendChild(contentEl);
+      ov.onclick = (ev) => {
+        if (ev.target === ov) closeOverlay();
+      };
+      document.addEventListener("keydown", onEscOnce);
+    }
+    function closeOverlay(){
+      const ov = $("#overlay");
+      ov.classList.add("hidden");
+      ov.setAttribute("aria-hidden","true");
+      ov.innerHTML = "";
+      ov.onclick = null;
+      document.removeEventListener("keydown", onEscOnce);
+    }
+    function onEscOnce(ev){
+      if (ev.key === "Escape") closeOverlay();
+    }
+
+    function openSheet(title, bodyNodes){
+      const sheet = document.createElement("div");
+      sheet.className = "sheet";
+      sheet.innerHTML = `
+        <div class="sheet__head">
+          <h3>${escapeHtml(title)}</h3>
+          <button class="iconbtn" style="width:40px;height:40px;border-color:var(--line);background:#fff;color:var(--text)" aria-label="Schließen">✕</button>
+        </div>
+        <div class="sheet__body"></div>
+      `;
+      sheet.querySelector("button[aria-label='Schließen']").onclick = closeOverlay;
+      const body = sheet.querySelector(".sheet__body");
+      bodyNodes.forEach(n => body.appendChild(n));
+      const ov = document.createElement("div");
+      ov.className = "overlay";
+      ov.appendChild(sheet);
+      setOverlay(ov);
+    }
+
+    function openOverview(item){
+      const nodes = [];
+      const n1 = document.createElement("div");
+      n1.className = "sheet__item";
+      n1.innerHTML = `
+        <div class="left">
+          <div class="t">${escapeHtml(item.name)}</div>
+          <div class="d">${escapeHtml(item.address)}</div>
+        </div>
+        <span class="kbd">${typeLabel(item.type)}</span>
+      `;
+      nodes.push(n1);
+
+      const n2 = document.createElement("div");
+      n2.className = "sheet__item";
+      n2.innerHTML = `
+        <div class="left">
+          <div class="t">Nächste Aktion</div>
+          <div class="d">${escapeHtml(item.next)} (${escapeHtml(item.nextTime)})</div>
+        </div>
+        <button class="btn primary">Details öffnen</button>
+      `;
+      n2.querySelector("button").onclick = () => openToast("Mock: würde Kundendetail öffnen");
+      nodes.push(n2);
+
+      const n3 = document.createElement("div");
+      n3.className = "sheet__item";
+      n3.innerHTML = `
+        <div class="left">
+          <div class="t">Quick-Actions</div>
+          <div class="d">Telefon / Navigation als 1-Tap-Icons mit 44dp Touch-Targets</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn">☎</button>
+          <button class="btn">➤</button>
+        </div>
+      `;
+      n3.querySelectorAll("button")[0].onclick = () => openToast(`☎ Würde anrufen: ${item.phone}`);
+      n3.querySelectorAll("button")[1].onclick = () => openToast(`➤ Würde Navigation öffnen`);
+      nodes.push(n3);
+
+      openSheet("Overview (Dialog)", nodes);
+    }
+
+    function openActions(item){
+      const nodes = [];
+      nodes.push(actionRow("Abholung erledigt", "A", () => openToast("Mock: Abholung als erledigt")));
+      nodes.push(actionRow("Auslieferung erledigt", "L", () => openToast("Mock: Auslieferung als erledigt")));
+      nodes.push(actionRow("KW", "KW", () => openToast("Mock: KW bestätigt")));
+      nodes.push(actionRow("Verschieben…", "↷", () => openToast("Mock: Verschieben Dialog")));
+      nodes.push(actionRow("Rückgängig", "↩", () => openToast("Mock: Rückgängig")));
+      nodes.push(actionRow("Einmalige Abholung anlegen", "+A", () => openToast("Mock: Termin anlegen")));
+      openSheet(`Aktionen – ${item.name}`, nodes);
+    }
+
+    function actionRow(title, key, onClick){
+      const n = document.createElement("div");
+      n.className = "sheet__item";
+      n.innerHTML = `
+        <div class="left">
+          <div class="t">${escapeHtml(title)}</div>
+          <div class="d">Sekundäraktion im Bottom Sheet (statt TopBar zu überladen)</div>
+        </div>
+        <button class="btn">${escapeHtml(key)}</button>
+      `;
+      n.querySelector("button").onclick = onClick;
+      return n;
+    }
+
+    function openDoneSheet(){
+      const filtered = applyFilters(state.items);
+      const done = filtered.filter(i => i.status === "DONE");
+      const nodes = [];
+      if (done.length === 0) {
+        const n = document.createElement("div");
+        n.className = "sheet__item";
+        n.innerHTML = `<div class="left"><div class="t">Keine erledigten Einträge</div><div class="d">Tipp: „Erledigte ausblenden“ ist aktiv.</div></div>`;
+        nodes.push(n);
+      } else {
+        done.forEach(i => {
+          const n = document.createElement("div");
+          n.className = "sheet__item";
+          n.innerHTML = `
+            <div class="left">
+              <div class="t">${escapeHtml(i.name)}</div>
+              <div class="d">${escapeHtml(i.next)}</div>
+            </div>
+            <button class="btn">Undo</button>
+          `;
+          n.querySelector("button").onclick = () => openToast(`Mock: Undo für ${i.name}`);
+          nodes.push(n);
+        });
+      }
+      openSheet("Erledigt (Bottom Sheet)", nodes);
+    }
+
+    function openMoreMenu(){
+      const nodes = [];
+      nodes.push(actionRow("Refresh / Neu laden", "⟳", () => openToast("Mock: Reload")));
+      nodes.push(actionRow("Filter zurücksetzen", "×", () => { resetFilters(); openToast("Filter zurückgesetzt"); }));
+      nodes.push(actionRow("Erledigt anzeigen (Sheet)", "✓", () => openDoneSheet()));
+      nodes.push(actionRow("Offline simulieren", "⛔", () => toggleOffline()));
+      openSheet("Mehr (Overflow)", nodes);
+    }
+
+    let toastTimer = null;
+    function openToast(msg){
+      // minimal, non-intrusive
+      clearTimeout(toastTimer);
+      let t = $("#_toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "_toast";
+        t.style.position = "fixed";
+        t.style.left = "50%";
+        t.style.bottom = "18px";
+        t.style.transform = "translateX(-50%)";
+        t.style.background = "rgba(2,6,23,.92)";
+        t.style.color = "#fff";
+        t.style.padding = "10px 12px";
+        t.style.borderRadius = "12px";
+        t.style.boxShadow = "0 18px 50px rgba(2,6,23,.35)";
+        t.style.maxWidth = "min(720px, calc(100% - 28px))";
+        t.style.fontSize = "13px";
+        t.style.zIndex = "80";
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      t.style.display = "block";
+      toastTimer = setTimeout(() => { t.style.display = "none"; }, 2200);
+    }
+
+    function toggleChip(id, key){
+      const el = $(id);
+      state.filters[key] = !state.filters[key];
+      // mutual exclusivity demo: onlyOverdue and onlyToday
+      if (key === "onlyOverdue" && state.filters.onlyOverdue) state.filters.onlyToday = false;
+      if (key === "onlyToday" && state.filters.onlyToday) state.filters.onlyOverdue = false;
+      render();
+    }
+
+    function resetFilters(){
+      state.filters = {
+        type: "ALL",
+        list: "ALL",
+        city: "ALL",
+        sort: "DEFAULT",
+        onlyOverdue: false,
+        onlyToday: false,
+        hideDone: true,
+        showQuickActions: true,
+      };
+      render();
+    }
+
+    function toggleOffline(){
+      const el = $("#offlineBadge");
+      const show = el.style.display === "none";
+      el.style.display = show ? "inline-flex" : "none";
+      openToast(show ? "Offline Badge aktiv" : "Offline Badge aus");
+    }
+
+    // Wire UI
+    $("#btnBack").onclick = () => openToast("Mock: Zurück");
+    $("#btnPrev").onclick = () => { state.date.setDate(state.date.getDate() - 1); render(); };
+    $("#btnNext").onclick = () => { state.date.setDate(state.date.getDate() + 1); render(); };
+    $("#btnToday").onclick = () => { state.date = new Date(); render(); openToast("Heute"); };
+    $("#btnMap").onclick = () => openToast("Mock: Karte öffnen (Maps Intent)");
+    $("#btnMore").onclick = () => openMoreMenu();
+    $("#pillExpandAll").onclick = () => {
+      state.expandAll = !state.expandAll;
+      const anyClosed = Object.values(state.show).some(v => v === false);
+      if (anyClosed) {
+        state.show.overdue = true; state.show.today = true; state.show.done = true;
+      } else {
+        state.show.overdue = true; state.show.today = true; state.show.done = false;
+      }
+      $("#pillExpandAll").setAttribute("aria-pressed", String(state.expandAll));
+      render();
+    };
+
+    // Section toggles
+    $$("[data-toggle]").forEach(h => {
+      h.addEventListener("click", (ev) => {
+        // ignore if click was on internal button? keep simple
+        const key = h.dataset.toggle;
+        state.show[key] = !state.show[key];
+        render();
+      });
+    });
+    $$("[data-togglebtn]").forEach(btn => {
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        const key = btn.dataset.togglebtn;
+        state.show[key] = !state.show[key];
+        render();
+      });
+    });
+
+    // Filters
+    $("#selType").onchange = (e) => { state.filters.type = e.target.value; render(); };
+    $("#selList").onchange = (e) => { state.filters.list = e.target.value; render(); };
+    $("#selCity").onchange = (e) => { state.filters.city = e.target.value; render(); };
+    $("#selSort").onchange = (e) => { state.filters.sort = e.target.value; render(); };
+
+    $("#chipOnlyOverdue").onclick = () => toggleChip("#chipOnlyOverdue", "onlyOverdue");
+    $("#chipOnlyToday").onclick = () => toggleChip("#chipOnlyToday", "onlyToday");
+    $("#chipHideDone").onclick = () => toggleChip("#chipHideDone", "hideDone");
+    $("#chipShowPhoneNav").onclick = () => toggleChip("#chipShowPhoneNav", "showQuickActions");
+
+    // Keyboard support for chips
+    ["#chipOnlyOverdue","#chipOnlyToday","#chipHideDone","#chipShowPhoneNav"].forEach(sel => {
+      $(sel).addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); ev.currentTarget.click(); }
+      });
+    });
+
+    // Initial render
+    render();
+  </script>
+</body>
+</html>
+
