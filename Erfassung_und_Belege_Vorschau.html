@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Was du willst – Vorschau</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: #eee; margin: 0; padding: 20px; color: #1a1a1a; }
+    h2 { font-size: 16px; margin: 24px 0 12px; color: #333; border-bottom: 1px solid #ccc; padding-bottom: 6px; }
+    .screen { background: #fff; border-radius: 16px; padding: 20px; max-width: 400px; margin: 0 auto 32px; box-shadow: 0 2px 8px rgba(0,0,0,.08); min-height: 520px; position: relative; }
+    .nav-placeholder { height: 48px; background: #e0e0e0; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #666; }
+    .section-label { font-size: 14px; font-weight: 700; color: #444; margin-bottom: 12px; }
+    .row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .btn { flex: 1; padding: 14px; border: none; border-radius: 12px; font-size: 13px; font-weight: 500; background: #1976d2; color: #fff; text-align: center; }
+    .caption { font-size: 11px; color: #666; margin-top: 8px; }
+    /* Belege-Screen: Liste + feste Buttons unten */
+    .tabs { display: flex; border: 1px solid #ccc; border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+    .tab { flex: 1; padding: 10px; text-align: center; font-size: 14px; background: #fff; border: none; }
+    .tab.sel { background: #1976d2; color: #fff; }
+    .beleg-list { min-height: 220px; padding: 8px 0; }
+    .beleg-item { padding: 14px; background: #f5f5f5; border-radius: 12px; margin-bottom: 8px; font-size: 14px; display: flex; justify-content: space-between; }
+    .bottom-spacer { height: 80px; }
+    .floating-bar { position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 20px 24px; background: #fff; border-top: 1px solid #eee; display: flex; gap: 12px; }
+    .floating-bar .btn { flex: 1; }
+    .google-nav { height: 56px; background: #e8e8e8; border-radius: 8px; margin-top: 12px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #666; }
+  </style>
+</head>
+<body>
+
+  <h2>1. Hauptbildschirm – Erfassung-Bereich</h2>
+  <p class="caption">So soll der <strong>Erfassung-Bereich auf dem Hauptbildschirm</strong> aussehen: 2 Buttons pro Zeile, inkl. Kamera/Scan und Manuelle Erfassung Wäscheliste. (Nicht unter „Belege“.)</p>
+  <div class="screen">
+    <div class="nav-placeholder">… Rest der App (z. B. Navigation) …</div>
+    <div class="section-label">Erfassung</div>
+    <div class="row">
+      <button type="button" class="btn">Manuell erfassen</button>
+      <button type="button" class="btn">Kamera / Scan</button>
+    </div>
+    <div class="row">
+      <button type="button" class="btn">Manuelle Erfassung Wäscheliste-Formular</button>
+      <button type="button" class="btn">Mit Wäscheliste-Formular</button>
+    </div>
+    <p class="caption">Alle Erfassungs-Buttons hier, je 2 pro Zeile. Kein „Belege“-Tab auf dem Hauptbildschirm für dieses Layout.</p>
+  </div>
+
+  <h2>2. Kunden-Übersicht – Belege-Tab (bei einem Kunden)</h2>
+  <p class="caption">Wenn du einen <strong>Kunden</strong> ausgewählt hast: Direkt Belege anzeigen (Offen / Erledigt). Unten mit Abstand zur Google-Navi-Leiste: 2 feste Buttons schwebend nebeneinander. „Beleg erstellen“ entfernt.</p>
+  <div class="screen">
+    <div class="section-label">Max Mustermann – Belege</div>
+    <div class="tabs">
+      <button type="button" class="tab sel">Offen</button>
+      <button type="button" class="tab">Erledigt</button>
+    </div>
+    <div class="beleg-list">
+      <div class="beleg-item"><span>Februar 2026</span><span>3 Erfassungen</span></div>
+      <div class="beleg-item"><span>Januar 2026</span><span>5 Erfassungen</span></div>
+    </div>
+    <div class="bottom-spacer"></div>
+    <div class="floating-bar">
+      <button type="button" class="btn">Kamera / Foto</button>
+      <button type="button" class="btn">Manuell erfassen</button>
+    </div>
+    <div class="google-nav">Abstand → Google Navi-Leiste (unten)</div>
+  </div>
+
+  <h2>Kurz – Was du willst</h2>
+  <ul style="font-size: 14px; line-height: 1.6; color: #333;">
+    <li><strong>Hauptbildschirm – Erfassung-Bereich:</strong> Layout mit 2 Buttons pro Zeile; alle Erfassungs-Buttons dort (Manuell erfassen, Kamera/Scan, Manuelle Erfassung Wäscheliste-Formular, Mit Wäscheliste-Formular). Nicht unter dem Belege-Tab.</li>
+    <li><strong>Kunden-Übersicht – Belege:</strong> Direkt Belege anzeigen (Offen / Erledigt). Kein „Beleg erstellen“-Button. Unten, mit Abstand zur Google-Navi-Leiste: 2 feste Buttons nebeneinander – links „Kamera / Foto“, rechts „Manuell erfassen“. Diese Buttons schweben/fest über dem Bereich.</li>
+  </ul>
+
+</body>
+</html>

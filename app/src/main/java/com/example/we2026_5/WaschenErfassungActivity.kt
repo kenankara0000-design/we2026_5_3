@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -100,7 +101,14 @@ class WaschenErfassungActivity : AppCompatActivity() {
                 val showAllgemeinePreiseHint by viewModel.showAllgemeinePreiseHint.collectAsState(initial = true)
                 val belegPreiseGross by viewModel.belegPreiseGross.collectAsState(initial = emptyMap())
                 val belegMonateErledigt by viewModel.belegMonateErledigt.collectAsState(initial = emptyList())
+                val requestFormularCameraOnOpen by viewModel.requestFormularCameraOnOpen.collectAsState(initial = false)
                 var belegMonthKeyHandled by remember { mutableStateOf(false) }
+                LaunchedEffect(state, requestFormularCameraOnOpen) {
+                    if (state is WaschenErfassungUiState.Formular && requestFormularCameraOnOpen) {
+                        viewModel.clearFormularCameraRequest()
+                        showFormularKameraFotoDialog()
+                    }
+                }
                 LaunchedEffect(state, belegMonate) {
                     if (state !is WaschenErfassungUiState.ErfassungenListe || belegMonate.isEmpty() || belegMonthKeyHandled) return@LaunchedEffect
                     val key = intent.getStringExtra("BELEG_MONTH_KEY") ?: return@LaunchedEffect
@@ -109,6 +117,37 @@ class WaschenErfassungActivity : AppCompatActivity() {
                         belegMonthKeyHandled = true
                     }
                 }
+                val openFormularWithCameraWhenReady = remember { mutableStateOf(intent.getBooleanExtra("OPEN_FORMULAR_WITH_CAMERA", false)) }
+                val openFormularWhenReady = remember { mutableStateOf(intent.getBooleanExtra("OPEN_FORMULAR", false)) }
+                val openErfassenWhenReady = remember { mutableStateOf(intent.getBooleanExtra("OPEN_ERFASSEN", false)) }
+                LaunchedEffect(state) {
+                    if (state is WaschenErfassungUiState.ErfassungenListe) {
+                        val listState = state as WaschenErfassungUiState.ErfassungenListe
+                        if (openFormularWithCameraWhenReady.value) {
+                            openFormularWithCameraWhenReady.value = false
+                            viewModel.openFormularWithCamera(listState.customer)
+                        } else if (openFormularWhenReady.value) {
+                            openFormularWhenReady.value = false
+                            viewModel.openFormular(listState.customer)
+                        } else if (openErfassenWhenReady.value) {
+                            openErfassenWhenReady.value = false
+                            viewModel.neueErfassungClick(listState.customer)
+                        }
+                    }
+                }
+
+                val handleBack: () -> Unit = {
+                    when (state) {
+                        is WaschenErfassungUiState.KundeSuchen -> finish()
+                        is WaschenErfassungUiState.ErfassungenListe -> viewModel.backToKundeSuchen()
+                        is WaschenErfassungUiState.BelegDetail -> viewModel.backFromBelegDetail()
+                        is WaschenErfassungUiState.ErfassungDetail -> viewModel.backFromDetail()
+                        is WaschenErfassungUiState.Erfassen -> viewModel.backFromErfassenToListe()
+                        is WaschenErfassungUiState.Formular -> viewModel.backFromFormularToListe()
+                    }
+                }
+                BackHandler(enabled = true) { handleBack() }
+
                 WaschenErfassungScreen(
                     state = state,
                     articles = articles,
@@ -117,24 +156,20 @@ class WaschenErfassungActivity : AppCompatActivity() {
                     erfassungArticles = erfassungArticles,
                     showAllgemeinePreiseHint = showAllgemeinePreiseHint,
                     onBack = {
-                        when (state) {
-                            is WaschenErfassungUiState.KundeSuchen -> finish()
-                            is WaschenErfassungUiState.ErfassungenListe -> viewModel.backToKundeSuchen()
-                            is WaschenErfassungUiState.BelegDetail -> viewModel.backFromBelegDetail()
-                            is WaschenErfassungUiState.ErfassungDetail -> viewModel.backFromDetail()
-                            is WaschenErfassungUiState.Erfassen -> viewModel.backFromErfassenToListe()
-                            is WaschenErfassungUiState.Formular -> viewModel.backFromFormularToListe()
-                        }
+                        handleBack()
                     },
                     onCustomerSearchQueryChange = { viewModel.setCustomerSearchQuery(it) },
                     onKundeWaehlen = { viewModel.kundeGewaehlt(it) },
                     onBackToKundeSuchen = { viewModel.backToKundeSuchen() },
                     onErfassungClick = { viewModel.openErfassungDetail(it) },
-                    onNeueErfassungFromListe = {
-                        (state as? WaschenErfassungUiState.ErfassungenListe)?.let { viewModel.neueErfassungClick(it.customer) }
+                    onNeueErfassungKameraFotoFromListe = {
+                        (state as? WaschenErfassungUiState.ErfassungenListe)?.let { viewModel.openFormularWithCamera(it.customer) }
                     },
-                    onWaeschelisteFormularFromListe = {
+                    onNeueErfassungFormularFromListe = {
                         (state as? WaschenErfassungUiState.ErfassungenListe)?.let { viewModel.openFormular(it.customer) }
+                    },
+                    onNeueErfassungManuellFromListe = {
+                        (state as? WaschenErfassungUiState.ErfassungenListe)?.let { viewModel.neueErfassungClick(it.customer) }
                     },
                     onBelegClick = { viewModel.openBelegDetail(it) },
                     onBelegListeShowErledigtTabChange = { viewModel.setBelegListeShowErledigtTab(it) },

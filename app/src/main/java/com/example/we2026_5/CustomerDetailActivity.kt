@@ -87,6 +87,7 @@ class CustomerDetailActivity : AppCompatActivity() {
             val tourListenName by viewModel.tourListenName.collectAsState(initial = null)
             val terminePairs365 by viewModel.terminePairs365.collectAsState(initial = emptyList())
             val belegMonateForCustomer by viewModel.belegMonateForCustomer.collectAsState(initial = emptyList())
+            val belegMonateErledigtForCustomer by viewModel.belegMonateErledigtForCustomer.collectAsState(initial = emptyList())
 
             CustomerDetailScreen(
                 isAdmin = adminChecker.isAdmin(),
@@ -259,8 +260,27 @@ class CustomerDetailActivity : AppCompatActivity() {
                     }
                 },
                 belegMonateForCustomer = belegMonateForCustomer,
-                onBelegErstellen = {
-                    startActivity(Intent(this@CustomerDetailActivity, WaschenErfassungActivity::class.java).putExtra("CUSTOMER_ID", id))
+                belegMonateErledigtForCustomer = belegMonateErledigtForCustomer,
+                onKameraFotoBelege = {
+                    startActivity(Intent(this@CustomerDetailActivity, WaschenErfassungActivity::class.java)
+                        .putExtra("CUSTOMER_ID", id)
+                        .putExtra("OPEN_FORMULAR_WITH_CAMERA", true))
+                },
+                onManuellErfassenBelege = {
+                    AlertDialog.Builder(this@CustomerDetailActivity)
+                        .setTitle(getString(R.string.dialog_manuell_erfassen_title))
+                        .setMessage(getString(R.string.dialog_manuell_erfassen_subtitle))
+                        .setPositiveButton(getString(R.string.btn_waescheliste_formular)) { _, _ ->
+                            startActivity(Intent(this@CustomerDetailActivity, WaschenErfassungActivity::class.java)
+                                .putExtra("CUSTOMER_ID", id)
+                                .putExtra("OPEN_FORMULAR", true))
+                        }
+                        .setNeutralButton(getString(R.string.erfassung_menu_start)) { _, _ ->
+                            startActivity(Intent(this@CustomerDetailActivity, WaschenErfassungActivity::class.java)
+                                .putExtra("CUSTOMER_ID", id))
+                        }
+                        .setNegativeButton(R.string.btn_cancel, null)
+                        .show()
                 },
                 onBelegClick = { beleg ->
                     startActivity(Intent(this@CustomerDetailActivity, WaschenErfassungActivity::class.java)

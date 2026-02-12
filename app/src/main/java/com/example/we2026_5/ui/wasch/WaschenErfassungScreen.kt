@@ -24,7 +24,6 @@ fun WaschenErfassungScreen(
     onKundeWaehlen: (Customer) -> Unit,
     onBackToKundeSuchen: () -> Unit,
     onErfassungClick: (com.example.we2026_5.wasch.WaschErfassung) -> Unit,
-    onNeueErfassungFromListe: () -> Unit,
     belegMonate: List<BelegMonat>,
     onBelegClick: (BelegMonat) -> Unit,
     onBackFromBelegDetail: () -> Unit,
@@ -45,7 +44,9 @@ fun WaschenErfassungScreen(
     onBelegListeShowErledigtTabChange: (Boolean) -> Unit = {},
     /** Brutto-Preise pro Artikel für Beleg-Detail (Gesamtpreis-Anzeige). */
     belegPreiseGross: Map<String, Double> = emptyMap(),
-    onWaeschelisteFormularFromListe: () -> Unit = {},
+    onNeueErfassungKameraFotoFromListe: () -> Unit = {},
+    onNeueErfassungFormularFromListe: () -> Unit = {},
+    onNeueErfassungManuellFromListe: () -> Unit = {},
     onFormularNameChange: (String) -> Unit = {},
     onFormularAdresseChange: (String) -> Unit = {},
     onFormularTelefonChange: (String) -> Unit = {},
@@ -87,8 +88,9 @@ fun WaschenErfassungScreen(
                     textPrimary = textPrimary,
                     textSecondary = textSecondary,
                     onBackToKundeSuchen = onBackToKundeSuchen,
-                    onNeueErfassungFromListe = onNeueErfassungFromListe,
-                    onWaeschelisteFormularFromListe = onWaeschelisteFormularFromListe,
+                    onNeueErfassungKameraFoto = onNeueErfassungKameraFotoFromListe,
+                    onNeueErfassungFormular = onNeueErfassungFormularFromListe,
+                    onNeueErfassungManuell = onNeueErfassungManuellFromListe,
                     onBelegClick = onBelegClick
                 )
             }

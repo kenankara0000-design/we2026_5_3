@@ -30,7 +30,9 @@ fun BelegeScreen(
     onBelegClick: (BelegMonat) -> Unit,
     onBelegEintragClick: (BelegEintrag) -> Unit,
     onBackFromBelegDetail: () -> Unit,
-    onNeueErfassungFromListe: () -> Unit,
+    onNeueErfassungKameraFotoFromListe: () -> Unit = {},
+    onNeueErfassungFormularFromListe: () -> Unit = {},
+    onNeueErfassungManuellFromListe: () -> Unit = {},
     onDeleteBeleg: () -> Unit,
     onErledigtBeleg: () -> Unit = {},
     onAlleBelegeNameFilterChange: (String) -> Unit,
@@ -85,7 +87,9 @@ fun BelegeScreen(
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
                         onBackToKundeSuchen = onBackToAlleBelege,
-                        onNeueErfassungFromListe = onNeueErfassungFromListe,
+                        onNeueErfassungKameraFoto = onNeueErfassungKameraFotoFromListe,
+                        onNeueErfassungFormular = onNeueErfassungFormularFromListe,
+                        onNeueErfassungManuell = onNeueErfassungManuellFromListe,
                         onBelegClick = onBelegClick
                     )
                 }

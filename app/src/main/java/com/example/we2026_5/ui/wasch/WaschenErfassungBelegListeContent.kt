@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,11 +20,15 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.Customer
@@ -40,10 +45,12 @@ fun WaschenErfassungBelegListeContent(
     textPrimary: androidx.compose.ui.graphics.Color,
     textSecondary: androidx.compose.ui.graphics.Color,
     onBackToKundeSuchen: () -> Unit,
-    onNeueErfassungFromListe: () -> Unit,
-    onWaeschelisteFormularFromListe: () -> Unit = {},
+    onNeueErfassungKameraFoto: () -> Unit = {},
+    onNeueErfassungFormular: () -> Unit = {},
+    onNeueErfassungManuell: () -> Unit = {},
     onBelegClick: (BelegMonat) -> Unit
 ) {
+    val showNeueErfassungDialog = remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -79,67 +86,95 @@ fun WaschenErfassungBelegListeContent(
                 Text(stringResource(R.string.beleg_tab_erledigt))
             }
         }
-        Spacer(Modifier.height(8.dp))
-        if (!showErledigtTab) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = onNeueErfassungFromListe,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(stringResource(R.string.btn_manuell_erfassen))
-                }
-                Button(
-                    onClick = onWaeschelisteFormularFromListe,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(stringResource(R.string.btn_waescheliste_formular))
-                }
-            }
-            Spacer(Modifier.height(12.dp))
-        }
-        if (belege.isEmpty()) {
-            Text(
-                stringResource(R.string.wasch_keine_erfassungen),
-                fontSize = 14.sp,
-                color = textSecondary,
-                modifier = Modifier.padding(vertical = 16.dp)
-            )
-        } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(belege) { beleg ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onBelegClick(beleg) },
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
+        Spacer(Modifier.height(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            if (belege.isEmpty()) {
+                Text(
+                    stringResource(R.string.wasch_keine_erfassungen),
+                    fontSize = 14.sp,
+                    color = textSecondary,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
+            } else {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(belege) { beleg ->
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                                .clickable { onBelegClick(beleg) },
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text(
-                                beleg.monthLabel,
-                                fontSize = 16.sp,
-                                color = textPrimary
-                            )
-                            Text(
-                                stringResource(R.string.wasch_x_erfassungen, beleg.erfassungen.size),
-                                fontSize = 14.sp,
-                                color = textSecondary
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    beleg.monthLabel,
+                                    fontSize = 16.sp,
+                                    color = textPrimary
+                                )
+                                Text(
+                                    stringResource(R.string.wasch_x_erfassungen, beleg.erfassungen.size),
+                                    fontSize = 14.sp,
+                                    color = textSecondary
+                                )
+                            }
                         }
                     }
                 }
             }
         }
+        Button(
+            onClick = { showNeueErfassungDialog.value = true },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(stringResource(R.string.wasch_btn_neue_erfassung))
+        }
+    }
+
+    if (showNeueErfassungDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showNeueErfassungDialog.value = false },
+            title = { Text(stringResource(R.string.wasch_btn_neue_erfassung), fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = {
+                            showNeueErfassungDialog.value = false
+                            onNeueErfassungKameraFoto()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) { Text(stringResource(R.string.btn_kamera_foto)) }
+                    Button(
+                        onClick = {
+                            showNeueErfassungDialog.value = false
+                            onNeueErfassungFormular()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) { Text(stringResource(R.string.btn_waescheliste_formular)) }
+                    Button(
+                        onClick = {
+                            showNeueErfassungDialog.value = false
+                            onNeueErfassungManuell()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) { Text(stringResource(R.string.btn_manuell_erfassen)) }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showNeueErfassungDialog.value = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
     }
 }

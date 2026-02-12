@@ -75,9 +75,11 @@ fun CustomerDetailScreen(
     onDeleteNextTermin: (Long) -> Unit = {},
     onDeleteAusnahmeTermin: (com.example.we2026_5.AusnahmeTermin) -> Unit = {},
     onDeleteKundenTermin: (List<com.example.we2026_5.KundenTermin>) -> Unit = {},
-    /** Belege für Tab Belege (vom ViewModel). */
+    /** Belege für Tab Belege (vom ViewModel): offen und erledigt. */
     belegMonateForCustomer: List<BelegMonat> = emptyList(),
-    onBelegErstellen: () -> Unit = {},
+    belegMonateErledigtForCustomer: List<BelegMonat> = emptyList(),
+    onKameraFotoBelege: () -> Unit = {},
+    onManuellErfassenBelege: () -> Unit = {},
     onBelegClick: (BelegMonat) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -351,9 +353,11 @@ fun CustomerDetailScreen(
                     2 -> CustomerDetailBelegeTab(
                         customer = customer,
                         belegMonate = belegMonateForCustomer,
+                        belegMonateErledigt = belegMonateErledigtForCustomer,
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
-                        onBelegErstellen = onBelegErstellen,
+                        onKameraFoto = onKameraFotoBelege,
+                        onManuellErfassen = onManuellErfassenBelege,
                         onBelegClick = onBelegClick
                     )
                 }

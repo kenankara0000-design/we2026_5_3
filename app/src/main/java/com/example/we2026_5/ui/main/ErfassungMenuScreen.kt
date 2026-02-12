@@ -2,11 +2,13 @@ package com.example.we2026_5.ui.main
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -57,8 +59,9 @@ fun ErfassungMenuScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(paddingValues)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Button(
                 onClick = onErfassungStarten,
@@ -66,35 +69,45 @@ fun ErfassungMenuScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text(stringResource(R.string.erfassung_menu_start), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.erfassung_menu_start), fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
-            OutlinedButton(
-                onClick = onBelege,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(12.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(stringResource(R.string.erfassung_menu_belege), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                OutlinedButton(
+                    onClick = onBelege,
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.erfassung_menu_belege), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
+                OutlinedButton(
+                    onClick = onKundenpreise,
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.erfassung_menu_kundenpreise), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
             }
-            OutlinedButton(
-                onClick = onKundenpreise,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(12.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(stringResource(R.string.erfassung_menu_kundenpreise), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            }
-            OutlinedButton(
-                onClick = onTourPreisliste,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(stringResource(R.string.erfassung_menu_tourpreise), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            }
-            OutlinedButton(
-                onClick = onArtikelVerwalten,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(stringResource(R.string.erfassung_menu_artikel), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                OutlinedButton(
+                    onClick = onTourPreisliste,
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.erfassung_menu_tourpreise), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
+                OutlinedButton(
+                    onClick = onArtikelVerwalten,
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.erfassung_menu_artikel), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }

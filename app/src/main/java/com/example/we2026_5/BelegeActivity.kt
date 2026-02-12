@@ -51,9 +51,29 @@ class BelegeActivity : AppCompatActivity() {
                     onBelegClick = { viewModel.openBelegDetail(it) },
                     onBelegEintragClick = { viewModel.openBelegDetailFromAlle(it) },
                     onBackFromBelegDetail = { viewModel.backFromBelegDetail() },
-                    onNeueErfassungFromListe = {
+                    onNeueErfassungKameraFotoFromListe = {
                         (state as? BelegeUiState.BelegListe)?.customer?.let { customer ->
-                            startActivity(Intent(this@BelegeActivity, WaschenErfassungActivity::class.java).putExtra("CUSTOMER_ID", customer.id))
+                            startActivity(Intent(this@BelegeActivity, WaschenErfassungActivity::class.java)
+                                .putExtra("CUSTOMER_ID", customer.id)
+                                .putExtra("OPEN_FORMULAR_WITH_CAMERA", true))
+                        }
+                    },
+                    onNeueErfassungFormularFromListe = {
+                        (state as? BelegeUiState.BelegListe)?.customer?.let { customer ->
+                            startActivity(
+                                Intent(this@BelegeActivity, WaschenErfassungActivity::class.java)
+                                    .putExtra("CUSTOMER_ID", customer.id)
+                                    .putExtra("OPEN_FORMULAR", true)
+                            )
+                        }
+                    },
+                    onNeueErfassungManuellFromListe = {
+                        (state as? BelegeUiState.BelegListe)?.customer?.let { customer ->
+                            startActivity(
+                                Intent(this@BelegeActivity, WaschenErfassungActivity::class.java)
+                                    .putExtra("CUSTOMER_ID", customer.id)
+                                    .putExtra("OPEN_ERFASSEN", true)
+                            )
                         }
                     },
                     onDeleteBeleg = {

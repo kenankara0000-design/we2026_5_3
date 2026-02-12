@@ -830,6 +830,8 @@
     <string name="waescheliste_formular_title">Wäscheliste-Formular</string>
     <string name="btn_waescheliste_formular">Mit Wäscheliste-Formular</string>
     <string name="btn_manuell_erfassen">Manuell erfassen</string>
+    <string name="btn_kamera_scan">Kamera / Scan</string>
+    <string name="btn_manuelle_waescheliste_formular">Manuelle Erfassung Wäscheliste-Formular</string>
     <string name="btn_kamera_foto">Kamera / Foto</string>
     <string name="waescheliste_name">NAME</string>
     <string name="waescheliste_adresse">ADRESSE</string>
@@ -843,4 +845,6 @@
     <string name="waescheliste_scan_placeholder">Scan wird in einer zukünftigen Version unterstützt.</string>
     <string name="waescheliste_ocr_fehler_bild">Bild konnte nicht ausgewertet werden. Bitte manuell eintragen.</string>
     <string name="waescheliste_ocr_laden">Wird ausgewertet…</string>
+    <string name="dialog_manuell_erfassen_title">Manuell erfassen</string>
+    <string name="dialog_manuell_erfassen_subtitle">Wie möchten Sie erfassen?</string>
 </resources>

@@ -109,6 +109,17 @@ class CustomerDetailViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    /** Belege (nach Monat) für den aktuellen Kunden – nur erledigte. Für Tab Belege (Tab „Erledigt“). */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val belegMonateErledigtForCustomer: StateFlow<List<BelegMonat>> = currentCustomer
+        .flatMapLatest { customer ->
+            if (customer == null) flowOf(emptyList())
+            else erfassungRepository.getErfassungenByCustomerFlowErledigt(customer.id).map { list ->
+                BelegMonatGrouping.groupByMonth(list)
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     /** true nach erfolgreichem Löschen → Activity beendet sich mit Result. */
     private val _deleted = MutableStateFlow(false)
     val deleted: StateFlow<Boolean> = _deleted.asStateFlow()

@@ -135,6 +135,10 @@ class WaschenErfassungViewModel(
     /** Cache für Kunde-Suche: nur bei Eingabe Treffer anzeigen, nicht alle Kunden beim Start. */
     private var customersSearchCache: List<Customer>? = null
 
+    /** Einmalig true nach openFormularWithCamera – Activity zeigt Kamera-Dialog und ruft clearFormularCameraRequest(). */
+    private val _requestFormularCameraOnOpen = MutableStateFlow(false)
+    val requestFormularCameraOnOpen: StateFlow<Boolean> = _requestFormularCameraOnOpen.asStateFlow()
+
     val articles = articleRepository.getAllArticlesFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -444,6 +448,21 @@ class WaschenErfassungViewModel(
 
     /** Öffnet Wäscheliste-Formular für den Kunden (Kundendaten vorbelegt). */
     fun openFormular(customer: Customer) {
+        _requestFormularCameraOnOpen.value = false
+        openFormularInternal(customer)
+    }
+
+    /** Öffnet Wäscheliste-Formular und fordert die Activity auf, direkt den Kamera/Scan-Dialog zu zeigen. */
+    fun openFormularWithCamera(customer: Customer) {
+        openFormularInternal(customer)
+        _requestFormularCameraOnOpen.value = true
+    }
+
+    fun clearFormularCameraRequest() {
+        _requestFormularCameraOnOpen.value = false
+    }
+
+    private fun openFormularInternal(customer: Customer) {
         val adresse = listOf(customer.adresse, customer.plz, customer.stadt).filter { it.isNotBlank() }.joinToString(", ")
         val formState = WaeschelisteFormularState(
             name = customer.displayName,

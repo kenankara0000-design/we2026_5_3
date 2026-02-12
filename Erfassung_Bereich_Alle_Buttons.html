@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Erfassung-Bereich – alle Buttons</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: #eee; margin: 0; padding: 20px; color: #1a1a1a; }
+    .screen {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 400px;
+      margin: 0 auto;
+      box-shadow: 0 2px 12px rgba(0,0,0,.1);
+    }
+    .section-label { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #1a1a1a; }
+    .row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .btn { flex: 1; padding: 14px 10px; border: none; border-radius: 12px; font-size: 13px; font-weight: 500; background: #1976d2; color: #fff; text-align: center; }
+    .btn:hover { background: #1565c0; }
+    .hint { font-size: 11px; color: #666; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="screen">
+    <div class="section-label">Erfassung</div>
+    <div class="row">
+      <button type="button" class="btn">Manuell erfassen</button>
+      <button type="button" class="btn">Kamera / Scan</button>
+    </div>
+    <div class="row">
+      <button type="button" class="btn">Manuelle Erfassung Wäscheliste-Formular</button>
+      <button type="button" class="btn">Mit Wäscheliste-Formular</button>
+    </div>
+    <div class="row">
+      <button type="button" class="btn">Kamera / Foto</button>
+      <button type="button" class="btn">Manuell erfassen</button>
+    </div>
+    <p class="hint">Oben: vorhandene Buttons (je 2 pro Zeile). Unten: dieselben 2 wie unter Belege-Tab (Kamera / Foto, Manuell erfassen).</p>
+  </div>
+</body>
+</html>
