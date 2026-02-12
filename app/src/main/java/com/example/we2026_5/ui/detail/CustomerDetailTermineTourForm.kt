@@ -170,7 +170,7 @@ fun CustomerDetailTermineTourForm(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                placeholder = { Text("z.B. 7") },
+                placeholder = { Text(stringResource(R.string.placeholder_zb_7)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 supportingText = { Text(stringResource(R.string.hint_a_plus_tage), color = textSecondary, fontSize = 12.sp) }
             )
@@ -260,7 +260,7 @@ fun CustomerDetailTermineTourForm(
                 label = { Text(stringResource(R.string.label_default_time_optional)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                placeholder = { Text("09:00") }
+                placeholder = { Text(stringResource(R.string.placeholder_time_09)) }
             )
             Spacer(modifier = Modifier.height(spacing))
             OutlinedTextField(
@@ -307,7 +307,7 @@ fun CustomerDetailTermineTourForm(
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     label = { Text(stringResource(R.string.label_time_from)) },
-                    placeholder = { Text("09:00") }
+                    placeholder = { Text(stringResource(R.string.placeholder_time_09)) }
                 )
                 OutlinedTextField(
                     value = state.tourZeitEnde,
@@ -315,7 +315,7 @@ fun CustomerDetailTermineTourForm(
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     label = { Text(stringResource(R.string.label_time_to)) },
-                    placeholder = { Text("13:00") }
+                    placeholder = { Text(stringResource(R.string.placeholder_time_13)) }
                 )
             }
         }

@@ -164,7 +164,7 @@ internal fun TourCustomerRow(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("A", fontSize = CustomerBadgeSp, color = Color.White, fontWeight = FontWeight.SemiBold)
+                                    Text(stringResource(R.string.badge_abholung_short), fontSize = CustomerBadgeSp, color = Color.White, fontWeight = FontWeight.SemiBold)
                                     if (showACheck) {
                                         Spacer(Modifier.size(2.dp))
                                         Text("✓", fontSize = CustomerBadgeSp, color = ErledigtBadgeGreen, fontWeight = FontWeight.Bold)
@@ -178,7 +178,7 @@ internal fun TourCustomerRow(
                                     .padding(horizontal = 4.dp, vertical = CustomerBadgePaddingV),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("L", fontSize = CustomerBadgeSp, color = Color.White, fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.badge_auslieferung_short), fontSize = CustomerBadgeSp, color = Color.White, fontWeight = FontWeight.SemiBold)
                             }
                         }
                     } else {
@@ -189,7 +189,7 @@ internal fun TourCustomerRow(
                         Box(modifier = baseBadge, contentAlignment = Alignment.Center) {
                             if (showACheck && statusBadgeText == "A") {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("A", fontSize = CustomerBadgeSp, color = Color.White, fontWeight = FontWeight.SemiBold)
+                                    Text(stringResource(R.string.badge_abholung_short), fontSize = CustomerBadgeSp, color = Color.White, fontWeight = FontWeight.SemiBold)
                                     Spacer(Modifier.size(2.dp))
                                     Text("✓", fontSize = CustomerBadgeSp, color = ErledigtBadgeGreen, fontWeight = FontWeight.Bold)
                                 }

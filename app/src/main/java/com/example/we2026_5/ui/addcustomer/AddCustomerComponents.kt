@@ -83,9 +83,9 @@ internal fun AddCustomerTageAzuLField(
                 .fillMaxWidth()
                 .onFocusChanged { if (it.isFocused) tfValue = tfValue.copy(selection = TextRange(0, tfValue.text.length)) },
             singleLine = true,
-            placeholder = { Text("z.B. 7") },
+            placeholder = { Text(stringResource(R.string.placeholder_zb_7)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            supportingText = { Text("0–365 Tage", color = textPrimary.copy(alpha = 0.7f)) }
+            supportingText = { Text(stringResource(R.string.hint_range_0_365), color = textPrimary.copy(alpha = 0.7f)) }
         )
     }
 }
@@ -123,9 +123,9 @@ internal fun AddCustomerIntervallSchnellauswahl(
                 .fillMaxWidth()
                 .onFocusChanged { if (it.isFocused) tfValue = tfValue.copy(selection = TextRange(0, tfValue.text.length)) },
             singleLine = true,
-            placeholder = { Text("z.B. 7, 10, 14, 21 …") },
+            placeholder = { Text(stringResource(R.string.placeholder_intervall_beispiele)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            supportingText = { Text("1–365 Tage", color = textPrimary.copy(alpha = 0.7f)) }
+            supportingText = { Text(stringResource(R.string.hint_range_1_365), color = textPrimary.copy(alpha = 0.7f)) }
         )
     }
 }

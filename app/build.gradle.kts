@@ -76,6 +76,9 @@ dependencies {
     
     // WorkManager für Offline-Upload-Queue
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    // ML Kit Text Recognition (Latin-Script, inkl. Deutsch) für Wäscheliste-Formular OCR
+    implementation("com.google.mlkit:text-recognition:16.0.1")
     
     // Koin Dependency Injection (kein Kapt/KSP nötig!)
     // In Koin 3.x ist ViewModel-Support bereits in koin-android enthalten

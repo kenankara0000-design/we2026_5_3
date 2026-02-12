@@ -138,7 +138,7 @@ fun ListeBearbeitenListenTermineSection(
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("A", modifier = Modifier
+                            Text(stringResource(R.string.badge_abholung_short), modifier = Modifier
                                 .background(Color(0xFF1976D2).copy(alpha = 0.2f))
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
                                 color = Color(0xFF1976D2), fontSize = 13.sp, fontWeight = FontWeight.Medium)
@@ -146,7 +146,7 @@ fun ListeBearbeitenListenTermineSection(
                                 modifier = Modifier.padding(start = 8.dp, end = 12.dp),
                                 color = textPrimary, fontSize = 13.sp)
                             Text("·", modifier = Modifier.padding(horizontal = 4.dp), color = textSecondary, fontSize = 13.sp)
-                            Text("L", modifier = Modifier
+                            Text(stringResource(R.string.badge_auslieferung_short), modifier = Modifier
                                 .background(Color(0xFF388E3C).copy(alpha = 0.2f))
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
                                 color = Color(0xFF388E3C), fontSize = 13.sp, fontWeight = FontWeight.Medium)
@@ -170,7 +170,7 @@ fun ListeBearbeitenListenTermineSection(
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("A", modifier = Modifier
+                            Text(stringResource(R.string.badge_abholung_short), modifier = Modifier
                                 .background(Color(0xFF1976D2).copy(alpha = 0.2f))
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
                                 color = Color(0xFF1976D2), fontSize = 13.sp, fontWeight = FontWeight.Medium)
@@ -194,7 +194,7 @@ fun ListeBearbeitenListenTermineSection(
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("L", modifier = Modifier
+                            Text(stringResource(R.string.badge_auslieferung_short), modifier = Modifier
                                 .background(Color(0xFF388E3C).copy(alpha = 0.2f))
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
                                 color = Color(0xFF388E3C), fontSize = 13.sp, fontWeight = FontWeight.Medium)

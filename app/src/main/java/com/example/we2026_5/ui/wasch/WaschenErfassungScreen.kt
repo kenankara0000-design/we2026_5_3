@@ -105,6 +105,7 @@ fun WaschenErfassungScreen(
                     onAbbrechen = onFormularAbbrechen,
                     onSpeichern = onFormularSpeichern,
                     isSaving = state.isSaving,
+                    isScanning = state.isScanning,
                     errorMessage = state.errorMessage,
                     textPrimary = textPrimary,
                     textSecondary = textSecondary

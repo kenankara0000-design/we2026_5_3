@@ -27,4 +27,15 @@ data class WaeschelisteFormularState(
 
     /** Summe aller Stückzahlen (für Anzeige GESAMT). */
     fun gesamtStueck(): Int = mengen.values.sum()
+
+    /** Übernimmt OCR-Ergebnis: nur nicht-leere Felder überschreiben, Mengen zusammenführen. */
+    fun mergeOcrResult(ocr: WaeschelisteOcrParser.OcrResult): WaeschelisteFormularState {
+        var s = this
+        if (ocr.name.isNotBlank()) s = s.copy(name = ocr.name)
+        if (ocr.adresse.isNotBlank()) s = s.copy(adresse = ocr.adresse)
+        if (ocr.telefon.isNotBlank()) s = s.copy(telefon = ocr.telefon)
+        if (ocr.sonstiges.isNotBlank()) s = s.copy(sonstiges = ocr.sonstiges)
+        ocr.mengen.forEach { (key, value) -> if (value > 0) s = s.withMenge(key, value) }
+        return s
+    }
 }

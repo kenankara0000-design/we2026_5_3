@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
+import com.example.we2026_5.R
 
 data class SevDeskImportState(
     val token: String = "",
@@ -46,14 +47,14 @@ class SevDeskImportViewModel(
 
     fun saveToken() {
         setSevDeskToken(context, _state.value.token.trim())
-        _state.value = _state.value.copy(message = "Token gespeichert")
+        _state.value = _state.value.copy(message = context.getString(R.string.sevdesk_message_token_gespeichert))
     }
 
     /** Nur Kontakte importieren (keine Kundenpreise). Preise separat über „Preise importieren“. */
     fun importContacts() {
         val token = _state.value.token.trim()
         if (token.isEmpty()) {
-            _state.value = _state.value.copy(error = "Bitte API-Token eingeben.")
+            _state.value = _state.value.copy(error = context.getString(R.string.sevdesk_error_token_empty))
             return
         }
         viewModelScope.launch {
@@ -65,14 +66,14 @@ class SevDeskImportViewModel(
             result.fold(
                 onSuccess = { (created, updated) ->
                     val msg = buildString {
-                        if (created > 0) append("$created neu angelegt. ")
-                        if (updated > 0) append("$updated aktualisiert (nur Name/Adresse aus SevDesk). ")
-                        if (created == 0 && updated == 0) append("Keine Änderungen. ")
-                        else append("Alias/Termine etc. bleiben unverändert.")
+                        if (created > 0) append(context.getString(R.string.sevdesk_contacts_created, created)).append(" ")
+                        if (updated > 0) append(context.getString(R.string.sevdesk_contacts_updated, updated)).append(" ")
+                        if (created == 0 && updated == 0) append(context.getString(R.string.sevdesk_contacts_no_changes)).append(" ")
+                        else append(context.getString(R.string.sevdesk_contacts_unchanged))
                     }
                     _state.value = _state.value.copy(message = msg.trim())
                 }
-            ) { e -> _state.value = _state.value.copy(error = e.message ?: "Fehler beim Import.") }
+            ) { e -> _state.value = _state.value.copy(error = e.message ?: context.getString(R.string.sevdesk_error_import)) }
         }
     }
 
@@ -80,7 +81,7 @@ class SevDeskImportViewModel(
     fun importKundenpreise() {
         val token = _state.value.token.trim()
         if (token.isEmpty()) {
-            _state.value = _state.value.copy(error = "Bitte API-Token eingeben.")
+            _state.value = _state.value.copy(error = context.getString(R.string.sevdesk_error_token_empty))
             return
         }
         viewModelScope.launch {
@@ -93,12 +94,12 @@ class SevDeskImportViewModel(
             result.fold(
                 onSuccess = { count ->
                     _state.value = _state.value.copy(
-                        message = if (count > 0) "$count Kunden mit Kundenpreisen übernommen."
-                        else "Keine Kundenpreise zugeordnet. Zuerst Kontakte und Artikel importieren."
+                        message = if (count > 0) context.getString(R.string.sevdesk_preise_count, count)
+                        else context.getString(R.string.sevdesk_preise_keine)
                     )
                 },
                 onFailure = { e ->
-                    _state.value = _state.value.copy(error = e.message ?: "Fehler beim Preise-Import.")
+                    _state.value = _state.value.copy(error = e.message ?: context.getString(R.string.sevdesk_error_preise_import))
                 }
             )
         }
@@ -107,7 +108,7 @@ class SevDeskImportViewModel(
     fun importArticles() {
         val token = _state.value.token.trim()
         if (token.isEmpty()) {
-            _state.value = _state.value.copy(error = "Bitte API-Token eingeben.")
+            _state.value = _state.value.copy(error = context.getString(R.string.sevdesk_error_token_empty))
             return
         }
         viewModelScope.launch {
@@ -117,8 +118,8 @@ class SevDeskImportViewModel(
             }
             _state.value = _state.value.copy(isImportingArticles = false)
             result.fold(
-                onSuccess = { count -> _state.value = _state.value.copy(message = "$count Artikel importiert.") }
-            ) { e -> _state.value = _state.value.copy(error = e.message ?: "Fehler beim Import.") }
+                onSuccess = { count -> _state.value = _state.value.copy(message = context.getString(R.string.sevdesk_articles_imported, count)) }
+            ) { e -> _state.value = _state.value.copy(error = e.message ?: context.getString(R.string.sevdesk_error_import)) }
         }
     }
 
@@ -137,7 +138,7 @@ class SevDeskImportViewModel(
                     if (kundennummern.isNotEmpty()) {
                         SevDeskDeletedIds.addAll(context, kundennummern)
                     }
-                    _state.value = _state.value.copy(message = "$count SevDesk-Kontakte gelöscht (werden beim Re-Import nicht wieder angelegt).")
+                    _state.value = _state.value.copy(message = context.getString(R.string.sevdesk_contacts_deleted, count))
                 }
                 is Result.Error -> _state.value = _state.value.copy(error = result.message)
             }
@@ -149,13 +150,13 @@ class SevDeskImportViewModel(
             _state.value = _state.value.copy(isDeletingSevDeskArticles = true, error = null, message = null)
             val count = withContext(Dispatchers.IO) { articleRepository.deleteAllSevDeskArticles() }
             _state.value = _state.value.copy(isDeletingSevDeskArticles = false)
-            _state.value = _state.value.copy(message = "$count SevDesk-Artikel gelöscht.")
+            _state.value = _state.value.copy(message = context.getString(R.string.sevdesk_articles_deleted, count))
         }
     }
 
     /** Re-Import-Ignore-Liste leeren – beim nächsten Kontakte-Import werden alle SevDesk-Kontakte wieder angelegt. */
     fun clearReimportIgnoreList() {
         SevDeskDeletedIds.clear(context)
-        _state.value = _state.value.copy(message = "Re-Import-Liste geleert. Beim nächsten Import werden alle Kontakte aus SevDesk wieder berücksichtigt.")
+        _state.value = _state.value.copy(message = context.getString(R.string.sevdesk_reimport_list_cleared))
     }
 }

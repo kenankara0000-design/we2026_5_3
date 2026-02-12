@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -35,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -127,13 +129,13 @@ fun TourPreislisteScreen(
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(name, fontSize = 16.sp, color = textPrimary)
                                     Text(
-                                        "Netto: %.2f €  ·  Brutto: %.2f €".format(preis.priceNet, preis.priceGross),
+                                        stringResource(R.string.format_netto_brutto, preis.priceNet, preis.priceGross),
                                         fontSize = 14.sp,
                                         color = textSecondary
                                     )
                                 }
                                 IconButton(onClick = { onRemoveTourPreis(preis.articleId) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Löschen", tint = textSecondary)
+                                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.label_delete), tint = textSecondary)
                                 }
                             }
                         }
@@ -163,7 +165,7 @@ fun TourPreislisteScreen(
                             ) {
                                 Text(a.name, color = textPrimary)
                                 TextButton(onClick = { onSelectArticle(null) }) {
-                                    Text("Ändern")
+                                    Text(stringResource(R.string.btn_aendern))
                                 }
                             }
                         }
@@ -227,14 +229,16 @@ fun TourPreislisteScreen(
                             onValueChange = onPriceNetChange,
                             label = { Text(stringResource(R.string.label_netto_eur)) },
                             modifier = Modifier.weight(1f),
-                            singleLine = true
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                         )
                         OutlinedTextField(
                             value = state.addPriceGross,
                             onValueChange = onPriceGrossChange,
                             label = { Text(stringResource(R.string.label_brutto_eur)) },
                             modifier = Modifier.weight(1f),
-                            singleLine = true
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                         )
                     }
                     state.message?.let { msg ->

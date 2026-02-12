@@ -40,16 +40,12 @@ class WaschenErfassungActivity : AppCompatActivity() {
 
     private val formularTakePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
-            formularCameraTmpUri?.let { viewModel.onFormularScanImageStub() }
-            Toast.makeText(this, getString(R.string.waescheliste_scan_placeholder), Toast.LENGTH_SHORT).show()
+            formularCameraTmpUri?.let { viewModel.onFormularImageSelected(it.toString()) }
         }
         formularCameraTmpUri = null
     }
     private val formularPickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            viewModel.onFormularScanImageStub()
-            Toast.makeText(this, getString(R.string.waescheliste_scan_placeholder), Toast.LENGTH_SHORT).show()
-        }
+        uri?.let { viewModel.onFormularImageSelected(it.toString()) }
     }
     private val formularCameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) startFormularCamera()
@@ -191,7 +187,7 @@ class WaschenErfassungActivity : AppCompatActivity() {
                                 .setMessage(R.string.dialog_beleg_erledigt_message)
                                 .setPositiveButton(R.string.dialog_ok) { _, _ ->
                                     viewModel.markBelegErledigt(detail.erfassungen) {
-                                        Toast.makeText(this@WaschenErfassungActivity, R.string.beleg_erledigt_toast, Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(this@WaschenErfassungActivity, getString(R.string.beleg_erledigt_toast), Toast.LENGTH_SHORT).show()
                                     }
                                 }
                                 .setNegativeButton(R.string.btn_cancel, null)

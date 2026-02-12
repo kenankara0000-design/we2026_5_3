@@ -54,6 +54,7 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
             var selectedIds by remember { mutableStateOf<Set<Int>>(emptySet()) }
             var isLoading by remember { mutableStateOf(true) }
             var loadError by remember { mutableStateOf<String?>(null) }
+            val context = LocalContext.current
 
             LaunchedEffect(customerId) {
                 isLoading = true
@@ -79,13 +80,12 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                     }
                 } catch (e: Exception) {
                     android.util.Log.e("TerminAnlegenUnregel", "Fehler beim Laden", e)
-                    loadError = e.message ?: "Unbekannter Fehler"
+                    loadError = e.message ?: context.getString(R.string.error_unknown)
                 } finally {
                     isLoading = false
                 }
             }
 
-            val context = LocalContext.current
             Scaffold(
                 topBar = {
                     TopAppBar(
@@ -111,9 +111,9 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                     } else if (loadError != null) {
                         Text(loadError!!, color = MaterialTheme.colorScheme.error)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(getString(R.string.error_load_generic))
+                        Text(stringResource(R.string.error_load_generic))
                     } else if (customer == null) {
-                        Text("Kunde nicht gefunden")
+                        Text(stringResource(R.string.toast_customer_not_found))
                     } else if (vorschlaege.isEmpty()) {
                         Text(
                             when (customer?.kundenTyp) {
@@ -179,7 +179,7 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                             Button(
                             onClick = {
                                 if (selectedIds.isEmpty()) {
-                                    Toast.makeText(context, "Bitte mindestens einen Termin wählen", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.error_termin_mindestens_waehlen), Toast.LENGTH_SHORT).show()
                                     return@Button
                                 }
                                 scope.launch {
@@ -189,7 +189,7 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                         list.getOrNull(idx)
                                     }
                                     if (toAdd.isEmpty()) {
-                                        Toast.makeText(context, "Bitte mindestens einen Termin wählen", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.error_termin_mindestens_waehlen), Toast.LENGTH_SHORT).show()
                                         return@launch
                                     }
                                     val isAufAbruf = c.kundenTyp == KundenTyp.AUF_ABRUF
@@ -240,20 +240,20 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                                             repository.saveCustomer(updated)
                                         }
                                         if (success) {
-                                            Toast.makeText(context, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, context.getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
                                             finish()
                                         } else {
-                                            Toast.makeText(context, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, context.getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
                                         }
                                     } catch (e: Exception) {
                                         android.util.Log.e("TerminAnlegenUnregel", "Fehler beim Speichern", e)
-                                        Toast.makeText(context, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Gewählte Termine anlegen")
+                                Text(stringResource(R.string.btn_gewaehlte_termine_anlegen))
                             }
                         }
                     }

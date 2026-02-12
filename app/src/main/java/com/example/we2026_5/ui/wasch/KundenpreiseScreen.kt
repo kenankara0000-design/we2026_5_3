@@ -91,7 +91,7 @@ fun KundenpreiseScreen(
                                         Column(Modifier.padding(16.dp)) {
                                             Text(name, fontSize = 16.sp, color = textPrimary)
                                             Text(
-                                                "Netto: %.2f €  ·  Brutto: %.2f €".format(preis.priceNet, preis.priceGross),
+                                                stringResource(R.string.format_netto_brutto, preis.priceNet, preis.priceGross),
                                                 fontSize = 14.sp,
                                                 color = textSecondary
                                             )

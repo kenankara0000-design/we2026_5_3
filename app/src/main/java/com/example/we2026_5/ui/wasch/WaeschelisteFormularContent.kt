@@ -1,8 +1,10 @@
 package com.example.we2026_5.ui.wasch
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -11,9 +13,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
@@ -42,16 +46,18 @@ fun WaeschelisteFormularContent(
     onAbbrechen: () -> Unit,
     onSpeichern: () -> Unit,
     isSaving: Boolean,
+    isScanning: Boolean = false,
     errorMessage: String?,
     textPrimary: Color,
     textSecondary: Color
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
         Text(
             stringResource(R.string.waescheliste_formular_title),
             fontSize = 16.sp,
@@ -138,10 +144,29 @@ fun WaeschelisteFormularContent(
         Button(
             onClick = onSpeichern,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            enabled = !isSaving,
+            enabled = !isSaving && !isScanning,
             shape = buttonShape
         ) {
             Text(if (isSaving) "…" else stringResource(R.string.wasch_speichern))
+        }
+        }
+        if (isScanning) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator()
+                    Text(
+                        stringResource(R.string.waescheliste_ocr_laden),
+                        modifier = Modifier.padding(top = 8.dp),
+                        color = textSecondary,
+                        fontSize = 14.sp
+                    )
+                }
+            }
         }
     }
 }

@@ -1,8 +1,15 @@
 package com.example.we2026_5.ui.wasch
 
 import android.content.Context
+import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import com.example.we2026_5.R
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.example.we2026_5.wasch.WaeschelisteOcrParser
+import kotlinx.coroutines.tasks.await
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
 import com.example.we2026_5.data.repository.ArticleRepository
@@ -87,6 +94,7 @@ sealed class WaschenErfassungUiState {
         val customer: Customer,
         val formularState: WaeschelisteFormularState,
         val isSaving: Boolean = false,
+        val isScanning: Boolean = false,
         val errorMessage: String? = null
     ) : WaschenErfassungUiState()
 }
@@ -589,13 +597,70 @@ class WaschenErfassungViewModel(
     }
 
     /**
-     * Stub: Bild von Kamera/Galerie für spätere OCR-Erkennung.
-     * Aufruf aus Activity nach Foto-Auswahl (Kamera: temporäre Datei-URI, Galerie: Content-URI).
-     * Später: URI hier entgegennehmen (z. B. als String), OCR ausführen, Ergebnis in
-     * [WaschenErfassungUiState.Formular].formularState schreiben (Kundendaten, Mengen, Sonstiges).
+     * Bild von Kamera/Galerie per OCR auswerten und Formular befüllen.
+     * URI als String (Kamera: file-URI, Galerie: content-URI). Ladeindikator via isScanning.
      */
-    fun onFormularScanImageStub() {
-        // Platzhalter – OCR später einbauen.
+    fun onFormularImageSelected(uri: String) {
+        val s = _uiState.value
+        if (s !is WaschenErfassungUiState.Formular) return
+        _uiState.value = s.copy(isScanning = true, errorMessage = null)
+        viewModelScope.launch {
+            try {
+                val bitmap = withContext(Dispatchers.IO) { loadBitmapForOcr(context, uri) }
+                if (bitmap == null) {
+                    _uiState.value = ( _uiState.value as? WaschenErfassungUiState.Formular)?.copy(
+                        isScanning = false,
+                        errorMessage = context.getString(R.string.waescheliste_ocr_fehler_bild)
+                    ) ?: return@launch
+                    return@launch
+                }
+                val fullText = withContext(Dispatchers.IO) {
+                    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                    try {
+                        val image = InputImage.fromBitmap(bitmap, 0)
+                        val result = recognizer.process(image).await()
+                        result.text
+                    } finally {
+                        recognizer.close()
+                    }
+                }
+                val ocrResult = WaeschelisteOcrParser.parse(fullText ?: "")
+                val current = _uiState.value
+                if (current is WaschenErfassungUiState.Formular) {
+                    _uiState.value = current.copy(
+                        formularState = current.formularState.mergeOcrResult(ocrResult),
+                        isScanning = false
+                    )
+                }
+            } catch (e: Exception) {
+                val current = _uiState.value
+                if (current is WaschenErfassungUiState.Formular) {
+                    _uiState.value = current.copy(
+                        isScanning = false,
+                        errorMessage = context.getString(R.string.waescheliste_ocr_fehler_bild)
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun loadBitmapForOcr(context: Context, uriString: String): android.graphics.Bitmap? = withContext(Dispatchers.IO) {
+        try {
+            context.contentResolver.openInputStream(Uri.parse(uriString))?.use { stream ->
+                val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeStream(stream, null, opts)
+                val maxSize = 1024
+                opts.inSampleSize = when {
+                    opts.outWidth <= maxSize && opts.outHeight <= maxSize -> 1
+                    opts.outWidth > opts.outHeight -> (opts.outWidth / maxSize).coerceAtLeast(1)
+                    else -> (opts.outHeight / maxSize).coerceAtLeast(1)
+                }
+                opts.inJustDecodeBounds = false
+                context.contentResolver.openInputStream(Uri.parse(uriString))?.use { stream2 ->
+                    BitmapFactory.decodeStream(stream2, null, opts)
+                }
+            }
+        } catch (_: Exception) { null }
     }
 
     /** Erfassung löschen; bei Erfolg aus Detail zurück zur Liste, Liste aktualisiert sich per Flow. */

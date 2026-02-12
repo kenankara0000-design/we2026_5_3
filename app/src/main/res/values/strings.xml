@@ -58,6 +58,8 @@
     <string name="termin_regel_abbrechen">Abbrechen</string>
     <string name="termin_regel_abholung">Abholung</string>
     <string name="termin_regel_auslieferung">Auslieferung</string>
+    <string name="badge_abholung_short">A</string>
+    <string name="badge_auslieferung_short">L</string>
     <string name="termin_regel_heute_verwenden">Heute verwenden</string>
     <string name="termin_regel_datum_waehlen">Datum wählen</string>
     <string name="termin_regel_label_typ">Regel-Typ</string>
@@ -232,9 +234,12 @@
     <string name="tour_preis_article">Artikel wählen</string>
     <string name="tour_preis_keine_artikel">Alle Artikel haben bereits einen Tour-Preis.</string>
     <string name="tour_preis_keine_treffer">Keine passenden Artikel.</string>
+    <string name="error_termin_mindestens_waehlen">Bitte mindestens einen Termin wählen</string>
     <string name="error_tourpreis_netto_brutto">Bitte Netto oder Brutto eingeben.</string>
     <string name="label_netto_eur">Netto (€)</string>
     <string name="label_brutto_eur">Brutto (€)</string>
+    <string name="btn_aendern">Ändern</string>
+    <string name="format_netto_brutto">Netto: %1$.2f €  ·  Brutto: %2$.2f €</string>
     <string name="main_slot_button_label">Slot auswählen</string>
 
     <!-- Offline / Sync -->
@@ -276,12 +281,14 @@
     <string name="termin_anlegen_auf_abruf_keine_slots">Keine Terminvorschläge verfügbar.</string>
     <string name="termin_anlegen_auswaehlen_zwei_wochen">Termine auswählen:</string>
     <string name="termin_anlegen_auswaehlen_acht_wochen">Termine auswählen (bis 8 Wochen):</string>
+    <string name="btn_gewaehlte_termine_anlegen">Gewählte Termine anlegen</string>
     <string name="label_filter_all">Alle</string>
     <string name="label_ohne_tour">Ohne Tour</string>
     <string name="label_startdatum_a">Startdatum (A-Termin)</string>
     <string name="label_filter_ohne_tour">Ohne Tour:</string>
     <string name="label_ohne_tour_anzeigen">Ohne Tour anzeigen</string>
     <string name="label_ohne_tour_ausblenden">Ohne Tour ausblenden</string>
+    <string name="tour_keine_termine">Keine Termine</string>
     <string name="label_filter_keine_termine">Keine Termine:</string>
     <string name="label_keine_termine_alle">Alle</string>
     <string name="label_keine_termine_nur">Nur ohne Termine (Tour-Kunden)</string>
@@ -573,6 +580,8 @@
     <string name="hint_rule_name">z.B. Wöchentlich Montag, Alle 2 Wochen</string>
     <string name="hint_desc_optional">Optionale Beschreibung</string>
     <string name="hint_interval_days">z.B. 7 für wöchentlich, 14 für alle 2 Wochen</string>
+    <string name="hint_range_0_365">0–365 Tage</string>
+    <string name="hint_range_1_365">1–365 Tage</string>
     <string name="hint_repeat_unlimited">0 = unbegrenzt</string>
     <string name="add_customer_title">Neuen Kunden anlegen</string>
     <string name="add_customer_hint">💡 Hinweis</string>
@@ -606,6 +615,10 @@
     <string name="label_same_day_option_week">L eine Woche später (L = A + 7)</string>
     <string name="label_a_plus_tage_l">L-Termin</string>
     <string name="hint_a_plus_tage">Tage zwischen A und L (z. B. 7)</string>
+    <string name="placeholder_zb_7">z.B. 7</string>
+    <string name="placeholder_time_09">09:00</string>
+    <string name="placeholder_time_13">13:00</string>
+    <string name="placeholder_intervall_beispiele">z.B. 7, 10, 14, 21 …</string>
     <string name="label_default_time_optional">Bevorzugte Uhrzeit (Optional)</string>
     <string name="label_customer_tags">Tags (durch Komma getrennt)</string>
     <string name="hint_tags_example">z. B. VIP, Nur Vormittags</string>
@@ -757,6 +770,20 @@
     <string name="sevdesk_test_export">Exportieren / Teilen</string>
     <string name="sevdesk_export_hint">Datei erstellt – wähle zum Teilen z. B. E-Mail oder Speichern.</string>
     <string name="sevdesk_test_clear">Testergebnis ausblenden</string>
+    <string name="sevdesk_message_token_gespeichert">Token gespeichert</string>
+    <string name="sevdesk_error_token_empty">Bitte API-Token eingeben.</string>
+    <string name="sevdesk_error_import">Fehler beim Import.</string>
+    <string name="sevdesk_error_preise_import">Fehler beim Preise-Import.</string>
+    <string name="sevdesk_contacts_unchanged">Alias/Termine etc. bleiben unverändert.</string>
+    <string name="sevdesk_contacts_no_changes">Keine Änderungen.</string>
+    <string name="sevdesk_contacts_created">%d neu angelegt.</string>
+    <string name="sevdesk_contacts_updated">%d aktualisiert (nur Name/Adresse aus SevDesk).</string>
+    <string name="sevdesk_preise_count">%d Kunden mit Kundenpreisen übernommen.</string>
+    <string name="sevdesk_preise_keine">Keine Kundenpreise zugeordnet. Zuerst Kontakte und Artikel importieren.</string>
+    <string name="sevdesk_articles_imported">%d Artikel importiert.</string>
+    <string name="sevdesk_contacts_deleted">%d SevDesk-Kontakte gelöscht (werden beim Re-Import nicht wieder angelegt).</string>
+    <string name="sevdesk_articles_deleted">%d SevDesk-Artikel gelöscht.</string>
+    <string name="sevdesk_reimport_list_cleared">Re-Import-Liste geleert. Beim nächsten Import werden alle Kontakte aus SevDesk wieder berücksichtigt.</string>
     <string name="wasch_btn_sevdesk">SevDesk Import</string>
     <string name="wasch_erfassung_kunde">Kunde</string>
     <string name="wasch_erfassung_datum">Datum</string>
@@ -814,4 +841,6 @@
     <string name="dialog_stammdaten_ergaenzen_title">Stammdaten ergänzen?</string>
     <string name="dialog_stammdaten_ergaenzen_message">Adresse oder Telefon aus dem Formular im Kundenstamm speichern?</string>
     <string name="waescheliste_scan_placeholder">Scan wird in einer zukünftigen Version unterstützt.</string>
+    <string name="waescheliste_ocr_fehler_bild">Bild konnte nicht ausgewertet werden. Bitte manuell eintragen.</string>
+    <string name="waescheliste_ocr_laden">Wird ausgewertet…</string>
 </resources>
