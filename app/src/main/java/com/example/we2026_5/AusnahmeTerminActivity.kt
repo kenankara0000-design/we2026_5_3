@@ -58,7 +58,7 @@ class AusnahmeTerminActivity : AppCompatActivity() {
             return
         }
         val addAbholungMitLieferung = intent.getBooleanExtra(EXTRA_ADD_ABHOLUNG_MIT_LIEFERUNG, false)
-        val titleStr = if (addAbholungMitLieferung) getString(R.string.label_neu_termin)
+        val titleStr = if (addAbholungMitLieferung) getString(R.string.label_termin_art_einmalig_kunde)
         else getString(R.string.termin_anlegen_option_ausnahme)
         setContent {
             MaterialTheme {
@@ -132,7 +132,7 @@ class AusnahmeTerminActivity : AppCompatActivity() {
         val dateStr = DateFormatter.formatDate(datum)
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.label_termine_anlegen))
-            .setMessage(getString(R.string.dialog_ausnahme_bestaetigen, dateStr))
+            .setMessage(getString(R.string.dialog_kunden_termin_bestaetigen, dateStr))
             .setPositiveButton(getString(android.R.string.ok)) { _, _ -> saveAbholungMitLieferung(customerId, datum) }
             .setNegativeButton(getString(R.string.btn_cancel), null)
             .show()

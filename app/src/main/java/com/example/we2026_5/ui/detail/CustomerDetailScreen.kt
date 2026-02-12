@@ -78,8 +78,9 @@ fun CustomerDetailScreen(
     /** Belege für Tab Belege (vom ViewModel): offen und erledigt. */
     belegMonateForCustomer: List<BelegMonat> = emptyList(),
     belegMonateErledigtForCustomer: List<BelegMonat> = emptyList(),
-    onKameraFotoBelege: () -> Unit = {},
-    onManuellErfassenBelege: () -> Unit = {},
+    onNeueErfassungKameraFotoBelege: () -> Unit = {},
+    onNeueErfassungFormularBelege: () -> Unit = {},
+    onNeueErfassungManuellBelege: () -> Unit = {},
     onBelegClick: (BelegMonat) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -356,8 +357,9 @@ fun CustomerDetailScreen(
                         belegMonateErledigt = belegMonateErledigtForCustomer,
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
-                        onKameraFoto = onKameraFotoBelege,
-                        onManuellErfassen = onManuellErfassenBelege,
+                        onNeueErfassungKameraFoto = onNeueErfassungKameraFotoBelege,
+                        onNeueErfassungFormular = onNeueErfassungFormularBelege,
+                        onNeueErfassungManuell = onNeueErfassungManuellBelege,
                         onBelegClick = onBelegClick
                     )
                 }

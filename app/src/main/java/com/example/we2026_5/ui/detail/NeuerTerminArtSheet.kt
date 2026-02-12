@@ -42,16 +42,16 @@ private val colorAusnahmeText = Color(0xFFE65100)
 private val colorUrlaubBg = Color(0x4DEF6C00)     // Orange
 private val colorUrlaubText = Color(0xFFBF360C)
 
-/** Erlaubte Termin-Arten pro KundenTyp: Regelmäßig nur Regel/Monatlich/Ausnahme/Urlaub; Unregelmäßig nur Ausnahme/Urlaub; Abruf Ausnahme/Einmalig/Urlaub. */
+/** Erlaubte Termin-Arten pro KundenTyp: Regelmäßig nur Regel/Monatlich/Ausnahme/Urlaub; Unregelmäßig nur Einmalig-Kunde/Ausnahme/Urlaub; Abruf Ausnahme/Einmalig/Urlaub. */
 private fun allowedArtsFor(kundenTyp: KundenTyp): Set<NeuerTerminArt> = when (kundenTyp) {
     KundenTyp.REGELMAESSIG -> setOf(NeuerTerminArt.REGELMAESSIG, NeuerTerminArt.MONATLICH, NeuerTerminArt.EINMALIG_AUSNAHME, NeuerTerminArt.URLAUB)
-    KundenTyp.UNREGELMAESSIG -> setOf(NeuerTerminArt.EINMALIG_AUSNAHME, NeuerTerminArt.URLAUB)
+    KundenTyp.UNREGELMAESSIG -> setOf(NeuerTerminArt.EINMALIG_KUNDEN_TERMIN, NeuerTerminArt.EINMALIG_AUSNAHME, NeuerTerminArt.URLAUB)
     KundenTyp.AUF_ABRUF -> setOf(NeuerTerminArt.EINMALIG_AUSNAHME, NeuerTerminArt.EINMALIG_KUNDEN_TERMIN, NeuerTerminArt.URLAUB)
 }
 
 /**
  * Bottom-Sheet zur Auswahl der Art beim Anlegen eines neuen Termins.
- * Zeigt nur die zum KundenTyp erlaubten Optionen (Regelmäßig: Regel, Monatlich, Ausnahme, Urlaub; Unregelmäßig: Ausnahme, Urlaub; Abruf: Ausnahme, Einmalig, Urlaub).
+ * Zeigt nur die zum KundenTyp erlaubten Optionen (Regelmäßig: Regel, Monatlich, Ausnahme, Urlaub; Unregelmäßig: Einmalig-Kunde, Ausnahme, Urlaub; Abruf: Ausnahme, Einmalig, Urlaub).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

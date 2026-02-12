@@ -22,11 +22,14 @@ import com.example.we2026_5.AusnahmeTermin
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.KundenTermin
+import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
 import com.example.we2026_5.TerminRegelTyp
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
 import com.example.we2026_5.ui.common.DetailUiConstants
 import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.tageAzuLOrDefault
+import java.util.concurrent.TimeUnit
 
 /**
  * Tab-Inhalt „Termine & Tour“ für Kunden-Detail.
@@ -67,6 +70,32 @@ fun CustomerDetailTermineTab(
     val useCentralNeuerTermin = isAdmin
     val nextTermin = TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
     val canDeleteNextTermin = customer.intervalle.any { it.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY }
+    val tageAzuL = customer.tageAzuLOrDefault(7)
+    val angelegtePairs: Set<Pair<Long, Long>> =
+        buildSet {
+            // Kunden-Termine (A -> L = A + tageAzuL)
+            kundenTermine
+                .filter { it.typ == "A" }
+                .forEach { a ->
+                    val aStart = TerminBerechnungUtils.getStartOfDay(a.datum)
+                    val lDatum = TerminBerechnungUtils.getStartOfDay(aStart + TimeUnit.DAYS.toMillis(tageAzuL.toLong()))
+                    add(Pair(aStart, lDatum))
+                }
+            // Robuster: falls DB historisch nur L gespeichert hat (ohne A)
+            kundenTermine
+                .filter { it.typ == "L" }
+                .forEach { l ->
+                    val lStart = TerminBerechnungUtils.getStartOfDay(l.datum)
+                    val aStart = TerminBerechnungUtils.getStartOfDay(lStart - TimeUnit.DAYS.toMillis(tageAzuL.toLong()))
+                    if (aStart > 0L) add(Pair(aStart, lStart))
+                }
+            // Ausnahme-Termine (nur A oder nur L)
+            ausnahmeTermine.forEach { t ->
+                val d = TerminBerechnungUtils.getStartOfDay(t.datum)
+                if (t.typ == "A") add(Pair(d, 0L))
+                else if (t.typ == "L") add(Pair(0L, d))
+            }
+        }
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -148,6 +177,8 @@ fun CustomerDetailTermineTab(
             Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
             AlleTermineBlock(
                 pairs = terminePairs365,
+                angelegtePairs = angelegtePairs,
+                graueMoeglicheTermine = customer.kundenTyp == KundenTyp.UNREGELMAESSIG,
                 textPrimary = textPrimary,
                 textSecondary = textSecondary
             )

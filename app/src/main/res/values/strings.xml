@@ -501,6 +501,7 @@
     <string name="termin_anlegen_ausnahme_abholung">Abholung (A)</string>
     <string name="termin_anlegen_ausnahme_auslieferung">Auslieferung (L)</string>
     <string name="dialog_ausnahme_bestaetigen">Ausnahme-Termin am %1$s anlegen?</string>
+    <string name="dialog_kunden_termin_bestaetigen">Einmalig – Kunden-Termin am %1$s anlegen?</string>
     <string name="dialog_urlaub_bestaetigen">Urlaub vom %1$s bis %2$s eintragen?</string>
     <string name="badge_ausnahme_a">A-A</string>
     <string name="badge_ausnahme_l">A-L</string>

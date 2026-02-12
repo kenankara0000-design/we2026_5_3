@@ -34,6 +34,8 @@ private val ROW_PADDING_DP = 14.dp
 @Composable
 fun AlleTermineBlock(
     pairs: List<Pair<Long, Long>>,
+    angelegtePairs: Set<Pair<Long, Long>> = emptySet(),
+    graueMoeglicheTermine: Boolean = false,
     modifier: Modifier = Modifier,
     textPrimary: Color = colorResource(R.color.text_primary),
     textSecondary: Color = colorResource(R.color.text_secondary)
@@ -41,6 +43,9 @@ fun AlleTermineBlock(
     val badgeA = colorResource(R.color.button_abholung)
     val badgeL = colorResource(R.color.button_auslieferung)
     val badgeAusnahme = colorResource(R.color.status_ausnahme)
+    val possibleBadgeColor = textSecondary
+    val possibleBadgeBg = textSecondary.copy(alpha = 0.18f)
+    val possibleRowBg = textSecondary.copy(alpha = 0.06f)
     ExpandableSection(
         titleResId = R.string.label_alle_termine,
         defaultExpanded = false,
@@ -64,33 +69,43 @@ fun AlleTermineBlock(
                     pairs.forEach { (aDatum, lDatum) ->
                         val isAusnahmeA = aDatum > 0L && lDatum == 0L
                         val isAusnahmeL = aDatum == 0L && lDatum > 0L
+                        val isAngelegt = angelegtePairs.contains(Pair(aDatum, lDatum))
+                        val isMoeglich = !isAngelegt
+                        val showAsPossible = graueMoeglicheTermine && isMoeglich
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(colorResource(R.color.background_light), shape = MaterialTheme.shapes.small)
+                                .background(
+                                    color = if (showAsPossible) possibleRowBg else colorResource(R.color.background_light),
+                                    shape = MaterialTheme.shapes.small
+                                )
                                 .padding(ROW_PADDING_DP),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                         ) {
                             if (aDatum > 0L) {
-                                val (label, color) = if (isAusnahmeA) "A-A" to badgeAusnahme else "A" to badgeA
+                                val (label, baseColor) = if (isAusnahmeA) "A-A" to badgeAusnahme else "A" to badgeA
+                                val color = if (showAsPossible) possibleBadgeColor else baseColor
+                                val bg = if (showAsPossible) possibleBadgeBg else baseColor.copy(alpha = 0.2f)
                                 Text(
                                     text = "$label ${DateFormatter.formatDateShortWithYear(aDatum)}",
                                     fontSize = BADGE_FONT_SP,
                                     color = color,
                                     modifier = Modifier
-                                        .background(color.copy(alpha = 0.2f), MaterialTheme.shapes.small)
+                                        .background(bg, MaterialTheme.shapes.small)
                                         .padding(horizontal = 10.dp, vertical = 6.dp)
                                 )
                             }
                             if (lDatum > 0L) {
-                                val (label, color) = if (isAusnahmeL) "A-L" to badgeAusnahme else "L" to badgeL
+                                val (label, baseColor) = if (isAusnahmeL) "A-L" to badgeAusnahme else "L" to badgeL
+                                val color = if (showAsPossible) possibleBadgeColor else baseColor
+                                val bg = if (showAsPossible) possibleBadgeBg else baseColor.copy(alpha = 0.2f)
                                 Text(
                                     text = "$label ${DateFormatter.formatDateShortWithYear(lDatum)}",
                                     fontSize = BADGE_FONT_SP,
                                     color = color,
                                     modifier = Modifier
-                                        .background(color.copy(alpha = 0.2f), MaterialTheme.shapes.small)
+                                        .background(bg, MaterialTheme.shapes.small)
                                         .padding(horizontal = 10.dp, vertical = 6.dp)
                                 )
                             }

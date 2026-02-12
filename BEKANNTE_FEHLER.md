@@ -65,3 +65,15 @@ Keine Änderung am Verhalten (Bug-Fix) ohne ausdrückliche Freigabe (vgl. `.curs
 ### Ausnahme-Termine: 01.01.70 statt nur A/L, normale Badges statt A-A/A-L gelb
 
 - **Behoben Feb 2026:** Ausnahme-Termine (nur A oder nur L) wurden in Termine-Tab und Alle-Termine-Block falsch angezeigt: (1) Bei nur L zeigte sich „A 01.01.70“ (epoch), bei nur A „L 01.01.70“. (2) Ausnahme-Termine sahen aus wie normale A/L (blau/grün) statt A-A/A-L (gelb). Fix: In `ErledigungTabTerminContent` und `AlleTermineBlock` werden 0-Daten nicht mehr angezeigt; Ausnahme-Termine (Pair mit einem 0-Wert) werden mit A-A/A-L und Farbe `status_ausnahme` dargestellt.
+
+### Kunden-Termine: „mögliche“ Termine nicht als solche erkennbar (sollten ausgegraut sein)
+
+- **Behoben Feb 2026:** Nur für **unregelmäßige** Kunden (`kundenTyp=UNREGELMAESSIG`): Im „Alle Termine“-Block (Kundendetail → Termine & Tour) und im Aktionen-Sheet (TourPlanner → Tab „Termin“) werden „mögliche“ (nur berechnete) Termine **neutral grau** dargestellt (ohne A/L-Farben), bis der Termin tatsächlich als Kunden-/Ausnahme-Termin angelegt ist. Relevante Stellen: `ui/detail/AlleTermineBlock.kt`, `ui/detail/CustomerDetailTermineTab.kt`, `ui/tourplanner/ErledigungTabTerminContent.kt`.
+
+### „+ Termin“: Unregelmäßig zeigte „Einmalig – Kunden-Termin“ nicht an
+
+- **Behoben Feb 2026:** Bei unregelmäßigen Kunden (`kundenTyp=UNREGELMAESSIG`) soll das „+ Termin“-Sheet nur **Einmalig – Kunden-Termin**, **Einmalig – Ausnahme** und **Urlaub** anbieten. Vorher fehlte „Einmalig – Kunden-Termin“ (es wurden nur Ausnahme/Urlaub angezeigt). Fix: Allowed-Optionen im `NeuerTerminArtSheet` angepasst. Relevante Stelle: `ui/detail/NeuerTerminArtSheet.kt`.
+
+### Einmalig – Kunden-Termin: Bestätigungsdialog zeigte „Ausnahme“
+
+- **Behoben Feb 2026:** Beim Anlegen eines „Einmalig – Kunden-Termins“ (A+L) wurde im Bestätigungsdialog fälschlich „Ausnahme-Termin … anlegen?“ angezeigt, obwohl korrekt ein Kunden-Termin gespeichert wurde. Fix: Eigener Dialogtext + Titel für Einmalig-Kunde im `AusnahmeTerminActivity`. Relevante Stellen: `AusnahmeTerminActivity.kt`, `strings.xml` (`dialog_kunden_termin_bestaetigen`).
