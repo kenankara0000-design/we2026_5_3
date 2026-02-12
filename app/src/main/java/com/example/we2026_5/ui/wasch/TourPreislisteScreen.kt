@@ -33,12 +33,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.R
@@ -65,6 +69,9 @@ fun TourPreislisteScreen(
     val textSecondary = colorResource(R.color.text_secondary)
     val backgroundLight = colorResource(R.color.background_light)
     val articlesMap = articles.associateBy { it.id }
+    var deleteConfirmOpen by remember { mutableStateOf(false) }
+    var deleteArticleId by remember { mutableStateOf<String?>(null) }
+    var deleteArticleName by remember { mutableStateOf<String?>(null) }
     val articleIdsWithPreis = state.tourPreise.map { it.articleId }.toSet()
     val articlesWithoutPreis = articles.filter { it.id !in articleIdsWithPreis }
     val articleSearchQuery = state.addArticleSearchQuery.trim()
@@ -134,7 +141,11 @@ fun TourPreislisteScreen(
                                         color = textSecondary
                                     )
                                 }
-                                IconButton(onClick = { onRemoveTourPreis(preis.articleId) }) {
+                                IconButton(onClick = {
+                                    deleteArticleId = preis.articleId
+                                    deleteArticleName = name
+                                    deleteConfirmOpen = true
+                                }) {
                                     Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.label_delete), tint = textSecondary)
                                 }
                             }
@@ -257,6 +268,43 @@ fun TourPreislisteScreen(
             },
             dismissButton = {
                 TextButton(onClick = onCloseAddDialog) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
+    }
+
+    if (deleteConfirmOpen) {
+        val id = deleteArticleId
+        val name = deleteArticleName
+        AlertDialog(
+            onDismissRequest = {
+                deleteConfirmOpen = false
+                deleteArticleId = null
+                deleteArticleName = null
+            },
+            title = { Text(stringResource(R.string.dialog_preisliste_preis_loeschen_title)) },
+            text = { Text(stringResource(R.string.dialog_preisliste_preis_loeschen_message, name ?: "")) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        deleteConfirmOpen = false
+                        deleteArticleId = null
+                        deleteArticleName = null
+                        if (id != null) onRemoveTourPreis(id)
+                    }
+                ) {
+                    Text(stringResource(R.string.dialog_loeschen))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        deleteConfirmOpen = false
+                        deleteArticleId = null
+                        deleteArticleName = null
+                    }
+                ) {
                     Text(stringResource(R.string.btn_cancel))
                 }
             }

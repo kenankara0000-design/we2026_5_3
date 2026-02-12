@@ -9,6 +9,12 @@ Keine Änderung am Verhalten (Bug-Fix) ohne ausdrückliche Freigabe (vgl. `.curs
 
 ## Offen
 
+### Preisliste Tour / Privat: Löschen ohne Bestätigung
+
+- **Symptom:** In „Preisliste Tour / Privat“ werden Preise beim Tippen auf das Papierkorb-Icon sofort gelöscht, ohne Bestätigungs-Dialog.
+- **Ursache:** `TourPreislisteScreen.kt` ruft `onRemoveTourPreis(...)` direkt im `IconButton` auf.
+- **Relevante Stelle:** `ui/wasch/TourPreislisteScreen.kt` (Delete-Icon in der Preisliste-Liste).
+
 ### Erfassung-Menü: „Kamera / Foto“ wirkt „kaputt“ (öffnet nicht sofort Kamera/Formular)
 
 - **Symptom:** In `Erfassung` (Menü) führt „Kamera / Foto“ nicht direkt wie im Kundendetail-Tab „Belege“ in den Kamera/Formular-Flow; es ist zuerst eine Kundenauswahl nötig, erst danach öffnet sich das Formular inkl. Kamera/Foto.

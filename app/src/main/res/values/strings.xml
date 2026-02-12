@@ -236,6 +236,8 @@
     <string name="tour_preis_hinweis">Einheitliche Preise für Tour- und Privat-Kunden. Bei Erfassung werden diese Preise automatisch verwendet, wenn keine Kundenpreise hinterlegt sind.</string>
     <string name="tour_preis_leer">Noch keine Tour-Preise. Tippen Sie auf + um Preise hinzuzufügen.</string>
     <string name="tour_preis_add">Preis hinzufügen</string>
+    <string name="dialog_preisliste_preis_loeschen_title">Preis löschen?</string>
+    <string name="dialog_preisliste_preis_loeschen_message">Preis für „%1$s“ wirklich löschen?</string>
     <string name="tour_preis_article">Artikel wählen</string>
     <string name="tour_preis_keine_artikel">Alle Artikel haben bereits einen Tour-Preis.</string>
     <string name="tour_preis_keine_treffer">Keine passenden Artikel.</string>
