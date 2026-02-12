@@ -225,14 +225,14 @@ fun TourPreislisteScreen(
                         OutlinedTextField(
                             value = state.addPriceNet,
                             onValueChange = onPriceNetChange,
-                            label = { Text("Netto (€)") },
+                            label = { Text(stringResource(R.string.label_netto_eur)) },
                             modifier = Modifier.weight(1f),
                             singleLine = true
                         )
                         OutlinedTextField(
                             value = state.addPriceGross,
                             onValueChange = onPriceGrossChange,
-                            label = { Text("Brutto (€)") },
+                            label = { Text(stringResource(R.string.label_brutto_eur)) },
                             modifier = Modifier.weight(1f),
                             singleLine = true
                         )

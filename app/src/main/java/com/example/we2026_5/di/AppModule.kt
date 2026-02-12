@@ -71,12 +71,12 @@ val appModule = module {
     viewModel { KundenListenViewModel(get<Context>(), get<KundenListeRepository>(), get<CustomerRepository>()) }
     viewModel { ListeBearbeitenViewModel(get(), get<CustomerRepository>()) }
     viewModel { MapViewViewModel(get<CustomerRepository>(), get<KundenListeRepository>()) }
-    viewModel { CustomerDetailViewModel(get(), get(), get()) }
+    viewModel { CustomerDetailViewModel(get(), get(), get(), get()) }
     viewModel { (customerId: String) -> UrlaubViewModel(get(), customerId) }
-    viewModel { WaschenErfassungViewModel(get(), get(), get(), get(), get()) }
+    viewModel { WaschenErfassungViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { BelegeViewModel(get(), get(), get(), get(), get()) }
     viewModel { KundenpreiseViewModel(get(), get(), get()) }
-    viewModel { TourPreislisteViewModel(get(), get()) }
+    viewModel { TourPreislisteViewModel(get(), get(), get()) }
     viewModel { ArtikelVerwaltungViewModel(get()) }
     viewModel { (ctx: Context) -> SevDeskImportViewModel(ctx, get(), get(), get()) }
 }

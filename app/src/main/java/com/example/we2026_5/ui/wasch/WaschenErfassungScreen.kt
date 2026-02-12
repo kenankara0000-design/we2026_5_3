@@ -44,7 +44,16 @@ fun WaschenErfassungScreen(
     belegMonateErledigt: List<BelegMonat> = emptyList(),
     onBelegListeShowErledigtTabChange: (Boolean) -> Unit = {},
     /** Brutto-Preise pro Artikel für Beleg-Detail (Gesamtpreis-Anzeige). */
-    belegPreiseGross: Map<String, Double> = emptyMap()
+    belegPreiseGross: Map<String, Double> = emptyMap(),
+    onWaeschelisteFormularFromListe: () -> Unit = {},
+    onFormularNameChange: (String) -> Unit = {},
+    onFormularAdresseChange: (String) -> Unit = {},
+    onFormularTelefonChange: (String) -> Unit = {},
+    onFormularMengeChange: (String, Int) -> Unit = { _, _ -> },
+    onFormularSonstigesChange: (String) -> Unit = {},
+    onFormularKameraFoto: () -> Unit = {},
+    onFormularAbbrechen: () -> Unit = {},
+    onFormularSpeichern: () -> Unit = {}
 ) {
     val primaryBlue = colorResource(R.color.primary_blue)
     val backgroundLight = colorResource(R.color.background_light)
@@ -79,7 +88,26 @@ fun WaschenErfassungScreen(
                     textSecondary = textSecondary,
                     onBackToKundeSuchen = onBackToKundeSuchen,
                     onNeueErfassungFromListe = onNeueErfassungFromListe,
+                    onWaeschelisteFormularFromListe = onWaeschelisteFormularFromListe,
                     onBelegClick = onBelegClick
+                )
+            }
+            is WaschenErfassungUiState.Formular -> {
+                WaeschelisteFormularContent(
+                    customer = state.customer,
+                    formularState = state.formularState,
+                    onNameChange = onFormularNameChange,
+                    onAdresseChange = onFormularAdresseChange,
+                    onTelefonChange = onFormularTelefonChange,
+                    onMengeChange = onFormularMengeChange,
+                    onSonstigesChange = onFormularSonstigesChange,
+                    onKameraFoto = onFormularKameraFoto,
+                    onAbbrechen = onFormularAbbrechen,
+                    onSpeichern = onFormularSpeichern,
+                    isSaving = state.isSaving,
+                    errorMessage = state.errorMessage,
+                    textPrimary = textPrimary,
+                    textSecondary = textSecondary
                 )
             }
             is WaschenErfassungUiState.BelegDetail -> {

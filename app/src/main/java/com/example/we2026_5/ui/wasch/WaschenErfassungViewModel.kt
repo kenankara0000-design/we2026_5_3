@@ -1,6 +1,8 @@
 package com.example.we2026_5.ui.wasch
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
+import com.example.we2026_5.R
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.Customer
 import com.example.we2026_5.data.repository.ArticleRepository
@@ -11,6 +13,7 @@ import com.example.we2026_5.data.repository.TourPreiseRepository
 import com.example.we2026_5.wasch.Article
 import com.example.we2026_5.wasch.ErfassungPosition
 import com.example.we2026_5.wasch.WaschErfassung
+import com.example.we2026_5.wasch.WaeschelisteFormularState
 import com.example.we2026_5.util.TerminBerechnungUtils
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,9 +82,17 @@ sealed class WaschenErfassungUiState {
         val isSaving: Boolean = false,
         val errorMessage: String? = null
     ) : WaschenErfassungUiState()
+    /** Wäscheliste-Formular: Kundendaten + Artikl-Mengen + Sonstiges. */
+    data class Formular(
+        val customer: Customer,
+        val formularState: WaeschelisteFormularState,
+        val isSaving: Boolean = false,
+        val errorMessage: String? = null
+    ) : WaschenErfassungUiState()
 }
 
 class WaschenErfassungViewModel(
+    private val context: Context,
     private val customerRepository: CustomerRepository,
     private val articleRepository: ArticleRepository,
     private val erfassungRepository: ErfassungRepository,
@@ -371,7 +382,7 @@ class WaschenErfassungViewModel(
             ErfassungPosition(articleId = z.articleId, menge = z.menge, einheit = z.einheit)
         }
         if (positionen.isEmpty()) {
-            _uiState.value = s.copy(errorMessage = "Bitte mindestens einen Artikel mit Menge > 0 eintragen.")
+            _uiState.value = s.copy(errorMessage = context.getString(R.string.error_erfassen_min_artikel))
             return
         }
         viewModelScope.launch {
@@ -399,7 +410,7 @@ class WaschenErfassungViewModel(
                 }
                 onSaved()
             } else {
-                _uiState.value = s.copy(errorMessage = "Fehler beim Speichern.")
+                _uiState.value = s.copy(errorMessage = context.getString(R.string.wasch_fehler_speichern))
             }
         }
     }
@@ -421,6 +432,170 @@ class WaschenErfassungViewModel(
                 }
             }
         }
+    }
+
+    /** Öffnet Wäscheliste-Formular für den Kunden (Kundendaten vorbelegt). */
+    fun openFormular(customer: Customer) {
+        val adresse = listOf(customer.adresse, customer.plz, customer.stadt).filter { it.isNotBlank() }.joinToString(", ")
+        val formState = WaeschelisteFormularState(
+            name = customer.displayName,
+            adresse = adresse,
+            telefon = customer.telefon
+        )
+        _uiState.value = WaschenErfassungUiState.Formular(customer = customer, formularState = formState)
+    }
+
+    fun backFromFormularToListe() {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.Formular) {
+            _uiState.value = WaschenErfassungUiState.ErfassungenListe(s.customer)
+            erfassungenJob?.cancel()
+            erfassungenJob = viewModelScope.launch {
+                erfassungRepository.getErfassungenByCustomerFlow(s.customer.id).collect {
+                    _erfassungenList.value = it
+                }
+            }
+        }
+    }
+
+    fun setFormularKundendaten(name: String, adresse: String, telefon: String) {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.Formular) {
+            _uiState.value = s.copy(formularState = s.formularState.withKundendaten(name, adresse, telefon))
+        }
+    }
+
+    fun setFormularName(name: String) {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.Formular) {
+            _uiState.value = s.copy(formularState = s.formularState.copy(name = name))
+        }
+    }
+
+    fun setFormularAdresse(adresse: String) {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.Formular) {
+            _uiState.value = s.copy(formularState = s.formularState.copy(adresse = adresse))
+        }
+    }
+
+    fun setFormularTelefon(telefon: String) {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.Formular) {
+            _uiState.value = s.copy(formularState = s.formularState.copy(telefon = telefon))
+        }
+    }
+
+    fun setFormularMenge(key: String, value: Int) {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.Formular) {
+            _uiState.value = s.copy(formularState = s.formularState.withMenge(key, value.coerceAtLeast(0)))
+        }
+    }
+
+    fun setFormularSonstiges(sonstiges: String) {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.Formular) {
+            _uiState.value = s.copy(formularState = s.formularState.withSonstiges(sonstiges))
+        }
+    }
+
+    private var pendingFormularOnSaved: (() -> Unit)? = null
+
+    /** Speichert Wäscheliste-Formular als eine WaschErfassung (nur Positionen mit Menge > 0). Optional: Stammdaten-Vorschlag. */
+    fun saveFormular(
+        onSaved: () -> Unit,
+        onSuggestStammdatenUpdate: ((Customer, String, String) -> Unit)? = null
+    ) {
+        val s = _uiState.value
+        if (s !is WaschenErfassungUiState.Formular) return
+        val posList = s.formularState.mengen.filter { it.value > 0 }.map { (key, menge) ->
+            ErfassungPosition(articleId = key, menge = menge.toDouble(), einheit = "Stk")
+        }
+        if (posList.isEmpty()) {
+            _uiState.value = s.copy(errorMessage = context.getString(R.string.error_waescheliste_min_menge))
+            return
+        }
+        viewModelScope.launch {
+            _uiState.value = s.copy(isSaving = true, errorMessage = null)
+            val now = System.currentTimeMillis()
+            val datum = TerminBerechnungUtils.getStartOfDay(now)
+            val zeit = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(now))
+            val notiz = s.formularState.sonstiges.takeIf { it.isNotBlank() }.orEmpty()
+            val ok = erfassungRepository.saveErfassungNew(
+                WaschErfassung(
+                    customerId = s.customer.id,
+                    datum = datum,
+                    zeit = zeit,
+                    positionen = posList,
+                    notiz = notiz
+                )
+            )
+            _uiState.value = s.copy(isSaving = false)
+            if (ok) {
+                val suggestAdresse = s.customer.adresse.isBlank() && s.formularState.adresse.isNotBlank()
+                val suggestTelefon = s.customer.telefon.isBlank() && s.formularState.telefon.isNotBlank()
+                if ((suggestAdresse || suggestTelefon) && onSuggestStammdatenUpdate != null) {
+                    pendingFormularOnSaved = onSaved
+                    onSuggestStammdatenUpdate(s.customer, s.formularState.adresse, s.formularState.telefon)
+                    return@launch
+                }
+                _uiState.value = WaschenErfassungUiState.ErfassungenListe(s.customer)
+                erfassungenJob?.cancel()
+                erfassungenJob = viewModelScope.launch {
+                    erfassungRepository.getErfassungenByCustomerFlow(s.customer.id).collect {
+                        _erfassungenList.value = it
+                    }
+                }
+                onSaved()
+            } else {
+                _uiState.value = s.copy(errorMessage = context.getString(R.string.wasch_fehler_speichern))
+            }
+        }
+    }
+
+    /** Nach Bestätigung im Stammdaten-Dialog: zurück zur Liste und onSaved ausführen. */
+    fun finishFormularAfterStammdatenConfirm() {
+        val s = _uiState.value
+        if (s is WaschenErfassungUiState.Formular) {
+            _uiState.value = WaschenErfassungUiState.ErfassungenListe(s.customer)
+            erfassungenJob?.cancel()
+            erfassungenJob = viewModelScope.launch {
+                erfassungRepository.getErfassungenByCustomerFlow(s.customer.id).collect {
+                    _erfassungenList.value = it
+                }
+            }
+            pendingFormularOnSaved?.invoke()
+            pendingFormularOnSaved = null
+        }
+    }
+
+    /** Stammdaten-Dialog abgelehnt: trotzdem zur Liste wechseln und onSaved ausführen. */
+    fun finishFormularWithoutStammdatenUpdate() {
+        pendingFormularOnSaved?.let { cb ->
+            val s = _uiState.value
+            if (s is WaschenErfassungUiState.Formular) {
+                _uiState.value = WaschenErfassungUiState.ErfassungenListe(s.customer)
+                erfassungenJob?.cancel()
+                erfassungenJob = viewModelScope.launch {
+                    erfassungRepository.getErfassungenByCustomerFlow(s.customer.id).collect {
+                        _erfassungenList.value = it
+                    }
+                }
+                cb()
+            }
+            pendingFormularOnSaved = null
+        }
+    }
+
+    /**
+     * Stub: Bild von Kamera/Galerie für spätere OCR-Erkennung.
+     * Aufruf aus Activity nach Foto-Auswahl (Kamera: temporäre Datei-URI, Galerie: Content-URI).
+     * Später: URI hier entgegennehmen (z. B. als String), OCR ausführen, Ergebnis in
+     * [WaschenErfassungUiState.Formular].formularState schreiben (Kundendaten, Mengen, Sonstiges).
+     */
+    fun onFormularScanImageStub() {
+        // Platzhalter – OCR später einbauen.
     }
 
     /** Erfassung löschen; bei Erfolg aus Detail zurück zur Liste, Liste aktualisiert sich per Flow. */

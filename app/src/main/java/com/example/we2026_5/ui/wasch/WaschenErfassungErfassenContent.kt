@@ -75,7 +75,7 @@ fun WaschenErfassungErfassenContent(
         OutlinedTextField(
             value = notiz,
             onValueChange = onNotizChange,
-            label = { Text("Notiz (optional)") },
+            label = { Text(stringResource(R.string.wasch_notiz_optional)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )

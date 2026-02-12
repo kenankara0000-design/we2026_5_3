@@ -86,6 +86,7 @@ class CustomerDetailActivity : AppCompatActivity() {
             val isUploading by viewModel.isUploading.collectAsState(initial = false)
             val tourListenName by viewModel.tourListenName.collectAsState(initial = null)
             val terminePairs365 by viewModel.terminePairs365.collectAsState(initial = emptyList())
+            val belegMonateForCustomer by viewModel.belegMonateForCustomer.collectAsState(initial = emptyList())
 
             CustomerDetailScreen(
                 isAdmin = adminChecker.isAdmin(),
@@ -256,6 +257,15 @@ class CustomerDetailActivity : AppCompatActivity() {
                         if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
                         else Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
                     }
+                },
+                belegMonateForCustomer = belegMonateForCustomer,
+                onBelegErstellen = {
+                    startActivity(Intent(this@CustomerDetailActivity, WaschenErfassungActivity::class.java).putExtra("CUSTOMER_ID", id))
+                },
+                onBelegClick = { beleg ->
+                    startActivity(Intent(this@CustomerDetailActivity, WaschenErfassungActivity::class.java)
+                        .putExtra("CUSTOMER_ID", id)
+                        .putExtra("BELEG_MONTH_KEY", beleg.monthKey))
                 }
             )
         }

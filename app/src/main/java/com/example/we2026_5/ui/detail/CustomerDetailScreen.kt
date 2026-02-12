@@ -29,6 +29,7 @@ import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.intervallTageOrDefault
 import com.example.we2026_5.util.tageAzuLOrDefault
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
+import com.example.we2026_5.ui.wasch.BelegMonat
 import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,7 +74,11 @@ fun CustomerDetailScreen(
     tourListenName: String? = null,
     onDeleteNextTermin: (Long) -> Unit = {},
     onDeleteAusnahmeTermin: (com.example.we2026_5.AusnahmeTermin) -> Unit = {},
-    onDeleteKundenTermin: (List<com.example.we2026_5.KundenTermin>) -> Unit = {}
+    onDeleteKundenTermin: (List<com.example.we2026_5.KundenTermin>) -> Unit = {},
+    /** Belege für Tab Belege (vom ViewModel). */
+    belegMonateForCustomer: List<BelegMonat> = emptyList(),
+    onBelegErstellen: () -> Unit = {},
+    onBelegClick: (BelegMonat) -> Unit = {}
 ) {
     val context = LocalContext.current
     val primaryBlue = colorResource(R.color.primary_blue)
@@ -274,6 +279,11 @@ fun CustomerDetailScreen(
                         onClick = { selectedTabIndex = 1 },
                         text = { Text(stringResource(R.string.tab_termine_tour)) }
                     )
+                    Tab(
+                        selected = selectedTabIndex == 2,
+                        onClick = { selectedTabIndex = 2 },
+                        text = { Text(stringResource(R.string.tab_belege)) }
+                    )
                 }
                 when (selectedTabIndex) {
                     0 -> CustomerDetailStammdatenTab(
@@ -337,6 +347,14 @@ fun CustomerDetailScreen(
                         kundenTermine = customer?.kundenTermine ?: emptyList(),
                         onAddAbholungTermin = { customer?.let { onAddAbholungTermin(it) } },
                         onDeleteKundenTermin = onDeleteKundenTermin
+                    )
+                    2 -> CustomerDetailBelegeTab(
+                        customer = customer,
+                        belegMonate = belegMonateForCustomer,
+                        textPrimary = textPrimary,
+                        textSecondary = textSecondary,
+                        onBelegErstellen = onBelegErstellen,
+                        onBelegClick = onBelegClick
                     )
                 }
             }

@@ -10,6 +10,7 @@ import com.example.we2026_5.KundenListe
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.CustomerSnapshotParser
+import com.example.we2026_5.data.repository.ErfassungRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.tourplanner.TerminCache
 import com.example.we2026_5.util.TerminAusKundeUtils
@@ -31,6 +32,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.example.we2026_5.ui.wasch.BelegMonat
+import com.example.we2026_5.ui.wasch.BelegMonatGrouping
+import com.example.we2026_5.wasch.WaschErfassung
 import java.util.concurrent.TimeUnit
 
 /**
@@ -41,7 +45,8 @@ import java.util.concurrent.TimeUnit
 class CustomerDetailViewModel(
     private val repository: CustomerRepository,
     private val listeRepository: KundenListeRepository,
-    private val termincache: TerminCache
+    private val termincache: TerminCache,
+    private val erfassungRepository: ErfassungRepository
 ) : ViewModel() {
 
     private val _customerId = MutableStateFlow<String?>(null)
@@ -89,6 +94,17 @@ class CustomerDetailViewModel(
                     if (customer.listeId.isNotEmpty()) listeRepository.getListeById(customer.listeId) else null
                 }
                 emit(termincache.getTerminePairs365(customer, liste))
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** Belege (nach Monat) für den aktuellen Kunden – nur offene (nicht erledigte). Für Tab Belege. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val belegMonateForCustomer: StateFlow<List<BelegMonat>> = currentCustomer
+        .flatMapLatest { customer ->
+            if (customer == null) flowOf(emptyList())
+            else erfassungRepository.getErfassungenByCustomerFlow(customer.id).map { list ->
+                BelegMonatGrouping.groupByMonth(list)
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

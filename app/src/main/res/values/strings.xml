@@ -232,6 +232,9 @@
     <string name="tour_preis_article">Artikel wählen</string>
     <string name="tour_preis_keine_artikel">Alle Artikel haben bereits einen Tour-Preis.</string>
     <string name="tour_preis_keine_treffer">Keine passenden Artikel.</string>
+    <string name="error_tourpreis_netto_brutto">Bitte Netto oder Brutto eingeben.</string>
+    <string name="label_netto_eur">Netto (€)</string>
+    <string name="label_brutto_eur">Brutto (€)</string>
     <string name="main_slot_button_label">Slot auswählen</string>
 
     <!-- Offline / Sync -->
@@ -311,6 +314,7 @@
     <string name="btn_save_and_next_customer">Speichern und nächster Kunde</string>
     <string name="tab_stammdaten">Stammdaten</string>
     <string name="tab_termine_tour">Termine &amp; Tour</string>
+    <string name="tab_belege">Belege</string>
     <string name="content_desc_save">Speichern</string>
     <string name="toast_gespeichert">Änderungen gespeichert</string>
     <string name="toast_customer_deleted">Kunde und alle Termine gelöscht</string>
@@ -720,11 +724,14 @@
     <string name="wasch_artikel_hinzufuegen">Artikel hinzufügen</string>
     <string name="wasch_menge">Stück</string>
     <string name="wasch_speichern">Speichern</string>
+    <string name="wasch_notiz_optional">Notiz (optional)</string>
     <string name="wasch_keine_artikel">Keine Artikel. Bitte zuerst Artikel importieren (z. B. SevDesk).</string>
     <string name="wasch_keine_kunden">Keine Kunden.</string>
     <string name="wasch_kunde_suchen_hinweis">Kundenname eingeben, um zu suchen.</string>
     <string name="wasch_erfassung_gespeichert">Erfassung gespeichert</string>
     <string name="wasch_fehler_speichern">Fehler beim Speichern</string>
+    <string name="error_waescheliste_min_menge">Bitte mindestens eine Menge eintragen.</string>
+    <string name="error_erfassen_min_artikel">Bitte mindestens einen Artikel mit Menge &gt; 0 eintragen.</string>
     <string name="label_customer_alias">Alias (Anzeigename in der App)</string>
 
     <!-- SevDesk Import -->
@@ -793,4 +800,18 @@
     <string name="beleg_geloescht">Beleg gelöscht</string>
     <string name="wasch_gesamt">Gesamt</string>
     <string name="wasch_gesamtpreis_brutto">Gesamt (Brutto)</string>
+    <string name="waescheliste_formular_title">Wäscheliste-Formular</string>
+    <string name="btn_waescheliste_formular">Mit Wäscheliste-Formular</string>
+    <string name="btn_manuell_erfassen">Manuell erfassen</string>
+    <string name="btn_kamera_foto">Kamera / Foto</string>
+    <string name="waescheliste_name">NAME</string>
+    <string name="waescheliste_adresse">ADRESSE</string>
+    <string name="waescheliste_telefon">TELEFON</string>
+    <string name="waescheliste_sonstiges">SONSTIGES</string>
+    <string name="waescheliste_stueck">STÜCK</string>
+    <string name="waescheliste_artikl">Artikl</string>
+    <string name="beleg_erstellen">Beleg erstellen</string>
+    <string name="dialog_stammdaten_ergaenzen_title">Stammdaten ergänzen?</string>
+    <string name="dialog_stammdaten_ergaenzen_message">Adresse oder Telefon aus dem Formular im Kundenstamm speichern?</string>
+    <string name="waescheliste_scan_placeholder">Scan wird in einer zukünftigen Version unterstützt.</string>
 </resources>

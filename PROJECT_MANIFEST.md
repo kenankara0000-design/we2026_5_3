@@ -31,7 +31,7 @@ Diese Datei muss gepflegt werden. Wenn sich Ziele, Scope oder Planung ändern: H
 - **Termin-Regeln, Intervalle, Listen:** Kunden-Intervalle (inkl. monatlich/Wochentag), KundenListen mit Listenintervallen; Tour-Slots (tourPlaene); Termin-Regeln am Kunden (Regel-Vorlagen-Strings in UI, kein eigener Haupt-Einstieg)
 - **Statistiken, MapView:** Statistiken-Screen; MapView für Kunden/Adressen
 - **Offline-Fähigkeit:** Firebase Realtime DB Persistence; NetworkMonitor; Sync-Hinweise in UI
-- **Erfassung:** Waschen/Artikel erfassen (Kunde, Positionen); Artikelverwaltung; SevDesk-Artikel-Import als Quelle
+- **Erfassung:** Waschen/Artikel erfassen (Kunde, Positionen); Artikelverwaltung; SevDesk-Artikel-Import als Quelle. Belege pro Kunde (Tab „Belege“ in Kundendetail); Wäscheliste-Formular zur Beleg-Erstellung (Kundendaten, Artikl-Mengen, Kamera/Foto-Stub für spätere OCR, Stammdaten-Ergänzung nach Bestätigung).
 
 ---
 
@@ -101,7 +101,7 @@ In SevDesk gibt es unter **Kontakte → Kunde → Tab „Kunden Preise“** die 
 | ListeBearbeitenActivity | Liste bearbeiten, Kunden zuordnen | ListeBearbeitenScreen |
 | TerminAnlegenUnregelmaessigActivity | Einzel-/Ausnahme-Termine anlegen | (Compose) |
 | UrlaubActivity | Urlaub (von/bis, Einträge) | UrlaubScreen |
-| WaschenErfassungActivity | Erfassung starten (Kunde, Positionen) | WaschenErfassungScreen |
+| WaschenErfassungActivity | Erfassung starten (Kunde, Positionen); Belege pro Monat; Wäscheliste-Formular, manuell | WaschenErfassungScreen |
 | ArtikelVerwaltungActivity | Artikel verwalten | ArtikelVerwaltungScreen |
 | SevDeskImportActivity | SevDesk Import | SevDeskImportScreen |
 | ErfassungMenuActivity | Erfassung → „Erfassung starten“ / „Artikel verwalten“ | ErfassungMenuScreen |

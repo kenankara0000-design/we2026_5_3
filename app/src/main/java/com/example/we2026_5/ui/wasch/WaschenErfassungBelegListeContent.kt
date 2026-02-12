@@ -41,6 +41,7 @@ fun WaschenErfassungBelegListeContent(
     textSecondary: androidx.compose.ui.graphics.Color,
     onBackToKundeSuchen: () -> Unit,
     onNeueErfassungFromListe: () -> Unit,
+    onWaeschelisteFormularFromListe: () -> Unit = {},
     onBelegClick: (BelegMonat) -> Unit
 ) {
     Column(
@@ -80,12 +81,24 @@ fun WaschenErfassungBelegListeContent(
         }
         Spacer(Modifier.height(8.dp))
         if (!showErledigtTab) {
-            Button(
-                onClick = onNeueErfassungFromListe,
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(stringResource(R.string.wasch_neue_erfassung))
+                Button(
+                    onClick = onNeueErfassungFromListe,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.btn_manuell_erfassen))
+                }
+                Button(
+                    onClick = onWaeschelisteFormularFromListe,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.btn_waescheliste_formular))
+                }
             }
             Spacer(Modifier.height(12.dp))
         }

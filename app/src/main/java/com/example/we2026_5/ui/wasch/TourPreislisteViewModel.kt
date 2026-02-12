@@ -1,6 +1,8 @@
 package com.example.we2026_5.ui.wasch
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
+import com.example.we2026_5.R
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.TourPreiseRepository
@@ -25,6 +27,7 @@ data class TourPreislisteUiState(
 )
 
 class TourPreislisteViewModel(
+    private val context: Context,
     private val tourPreiseRepository: TourPreiseRepository,
     private val articleRepository: ArticleRepository
 ) : ViewModel() {
@@ -90,7 +93,7 @@ class TourPreislisteViewModel(
         val net = s.addPriceNet.toDoubleOrNull() ?: 0.0
         val gross = s.addPriceGross.toDoubleOrNull() ?: 0.0
         if (net <= 0 && gross <= 0) {
-            _uiState.value = _uiState.value.copy(message = "Bitte Netto oder Brutto eingeben.")
+            _uiState.value = _uiState.value.copy(message = context.getString(R.string.error_tourpreis_netto_brutto))
             return
         }
         viewModelScope.launch {
@@ -100,7 +103,7 @@ class TourPreislisteViewModel(
             _uiState.value = _uiState.value.copy(
                 isSaving = false,
                 addDialogOpen = !ok,
-                message = if (ok) null else "Fehler beim Speichern",
+                message = if (ok) null else context.getString(R.string.wasch_fehler_speichern),
                 addPriceNet = "",
                 addPriceGross = "",
                 selectedArticleForAdd = null
