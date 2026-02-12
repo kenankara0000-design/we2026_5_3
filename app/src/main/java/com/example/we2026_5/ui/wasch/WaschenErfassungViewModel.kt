@@ -127,10 +127,13 @@ class WaschenErfassungViewModel(
     private var erfassungenErledigtJob: Job? = null
 
     private val _kundenPreiseForErfassung = MutableStateFlow<List<com.example.we2026_5.wasch.KundenPreis>>(emptyList())
+    /** Brutto-Preise aus der globalen Preisliste (Tour / Privat), für Preis-Labels in der Erfassung. */
+    private val _preislisteGrossForErfassung = MutableStateFlow<Map<String, Double>>(emptyMap())
     /** Brutto-Preise pro Artikel für Beleg-Detail (Tour- oder Kundenpreise), für Gesamtpreis-Anzeige. */
     private val _belegPreiseGross = MutableStateFlow<Map<String, Double>>(emptyMap())
     val belegPreiseGross: StateFlow<Map<String, Double>> = _belegPreiseGross.asStateFlow()
     private var kundenPreiseJob: Job? = null
+    private var preislisteJob: Job? = null
     private var erfassungenJob: Job? = null
     /** Cache für Kunde-Suche: nur bei Eingabe Treffer anzeigen, nicht alle Kunden beim Start. */
     private var customersSearchCache: List<Customer>? = null
@@ -142,29 +145,27 @@ class WaschenErfassungViewModel(
     val articles = articleRepository.getAllArticlesFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    /** Artikel für Erfassung: bei Kundenpreisen nur diese mit Preis, sonst alle mit Hinweis „Allgemeine Preise“. */
+    /** Artikel für Erfassung: alle Artikel, mit Preis-Label aus Kundenpreisen oder (Fallback) Preisliste Tour/Privat. */
     val erfassungArticles: StateFlow<List<ArticleDisplay>> = combine(
         articles,
-        _kundenPreiseForErfassung
-    ) { arts, preise ->
-        if (preise.isEmpty()) {
-            arts.map { ArticleDisplay(it.id, it.name, it.einheit.ifBlank { "Stk" }, null) }
-        } else {
-            val artsMap = arts.associateBy { it.id }
-            preise.map { p ->
-                val a = artsMap[p.articleId]
-                ArticleDisplay(
-                    p.articleId,
-                    a?.name ?: p.articleId,
-                    (a?.einheit).orEmpty().ifBlank { "Stk" },
-                    "%.2f €".format(p.priceGross)
-                )
-            }
+        _kundenPreiseForErfassung,
+        _preislisteGrossForErfassung
+    ) { arts, kundenPreise, preislisteGross ->
+        val kundenPreisMap = kundenPreise.associate { it.articleId to it.priceGross }
+        arts.map { a ->
+            val priceGross = kundenPreisMap[a.id] ?: preislisteGross[a.id]
+            ArticleDisplay(
+                id = a.id,
+                name = a.name,
+                einheit = a.einheit.ifBlank { "Stk" },
+                priceLabel = priceGross?.let { "%.2f €".format(it) }
+            )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val showAllgemeinePreiseHint: StateFlow<Boolean> = _kundenPreiseForErfassung
-        .map { it.isEmpty() }
+    val showAllgemeinePreiseHint: StateFlow<Boolean> = combine(_kundenPreiseForErfassung, _preislisteGrossForErfassung) { kundenPreise, preisliste ->
+        kundenPreise.isEmpty() && preisliste.isEmpty()
+    }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     init {
@@ -236,13 +237,11 @@ class WaschenErfassungViewModel(
             )
             viewModelScope.launch {
                 val customer = s.customer
-                val isTourKunde = customer.tourSlotId.isNotEmpty() && !customer.ohneTour
                 val map = withContext(Dispatchers.IO) {
-                    if (isTourKunde) {
-                        tourPreiseRepository.getTourPreise().associate { it.articleId to it.priceGross }
-                    } else {
-                        kundenPreiseRepository.getKundenPreiseForCustomer(customer.id).associate { it.articleId to it.priceGross }
-                    }
+                    val kunden = kundenPreiseRepository.getKundenPreiseForCustomer(customer.id)
+                        .associate { it.articleId to it.priceGross }
+                    if (kunden.isNotEmpty()) kunden
+                    else tourPreiseRepository.getTourPreise().associate { it.articleId to it.priceGross }
                 }
                 _belegPreiseGross.value = map
             }
@@ -284,24 +283,17 @@ class WaschenErfassungViewModel(
     fun neueErfassungClick(customer: Customer) {
         kundenPreiseJob?.cancel()
         _kundenPreiseForErfassung.value = emptyList()
-        val isTourKunde = customer.tourSlotId.isNotEmpty() && !customer.ohneTour
+        preislisteJob?.cancel()
+        _preislisteGrossForErfassung.value = emptyMap()
+
         kundenPreiseJob = viewModelScope.launch {
-            if (isTourKunde) {
-                tourPreiseRepository.getTourPreiseFlow().collect { tourPreise ->
-                    val asKundenPreis = tourPreise.map { p ->
-                        com.example.we2026_5.wasch.KundenPreis(
-                            customerId = customer.id,
-                            articleId = p.articleId,
-                            priceNet = p.priceNet,
-                            priceGross = p.priceGross
-                        )
-                    }
-                    _kundenPreiseForErfassung.value = asKundenPreis
-                }
-            } else {
-                kundenPreiseRepository.getKundenPreiseForCustomerFlow(customer.id).collect {
-                    _kundenPreiseForErfassung.value = it
-                }
+            kundenPreiseRepository.getKundenPreiseForCustomerFlow(customer.id).collect {
+                _kundenPreiseForErfassung.value = it
+            }
+        }
+        preislisteJob = viewModelScope.launch {
+            tourPreiseRepository.getTourPreiseFlow().collect { tourPreise ->
+                _preislisteGrossForErfassung.value = tourPreise.associate { it.articleId to it.priceGross }
             }
         }
         _uiState.value = WaschenErfassungUiState.Erfassen(
@@ -436,6 +428,8 @@ class WaschenErfassungViewModel(
         if (s is WaschenErfassungUiState.Erfassen) {
             kundenPreiseJob?.cancel()
             _kundenPreiseForErfassung.value = emptyList()
+            preislisteJob?.cancel()
+            _preislisteGrossForErfassung.value = emptyMap()
             _uiState.value = WaschenErfassungUiState.ErfassungenListe(s.customer)
             erfassungenJob?.cancel()
             erfassungenJob = viewModelScope.launch {

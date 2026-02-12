@@ -10,8 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,19 +30,24 @@ import com.example.we2026_5.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ErfassungMenuScreen(
-    onErfassungStarten: () -> Unit,
-    onBelege: () -> Unit,
+fun PreiseScreen(
+    onKundenpreise: () -> Unit,
+    onTourPreisliste: () -> Unit,
+    onArtikelVerwalten: () -> Unit,
     onBack: () -> Unit
 ) {
     val primaryBlue = colorResource(R.color.primary_blue)
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.erfassung_menu_title), fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.preise_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = Color.White)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back),
+                            tint = Color.White
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue, titleContentColor = Color.White)
@@ -57,23 +60,30 @@ fun ErfassungMenuScreen(
                 .padding(paddingValues)
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Button(
-                onClick = onErfassungStarten,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
+            OutlinedButton(
+                onClick = onKundenpreise,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text(stringResource(R.string.erfassung_menu_start), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.erfassung_menu_kundenpreise), fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
             OutlinedButton(
-                onClick = onBelege,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                onClick = onTourPreisliste,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text(stringResource(R.string.erfassung_menu_belege), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.erfassung_menu_tourpreise), fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            }
+            OutlinedButton(
+                onClick = onArtikelVerwalten,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(stringResource(R.string.erfassung_menu_artikel), fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
 }
+

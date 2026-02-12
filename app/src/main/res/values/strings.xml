@@ -218,6 +218,11 @@
     <string name="settings_title">Einstellungen</string>
     <string name="settings_sevdesk_import">SevDesk Import</string>
     <string name="settings_sevdesk_readonly_hint">SevDesk API: Nur Lesen (kein Löschen/Ändern in SevDesk).</string>
+    <string name="settings_menu">Menü</string>
+    <string name="settings_btn_preise">Preise</string>
+    <string name="settings_btn_data_import">Data Import</string>
+    <string name="preise_title">Preise</string>
+    <string name="data_import_title">Data Import</string>
     <string name="settings_abmelden">Abmelden</string>
     <string name="settings_reset_app_data">App-Daten zurücksetzen</string>
     <string name="settings_reset_app_data_confirm">Lokale Einstellungen zurücksetzen? (Re-Import-Liste, SevDesk-Token, Tourenplaner-Prefs. Firebase-Daten bleiben unverändert.)</string>
@@ -227,8 +232,8 @@
     <string name="erfassung_menu_belege">Belege</string>
     <string name="erfassung_menu_kundenpreise">Kundenpreise</string>
     <string name="erfassung_menu_artikel">Artikel verwalten</string>
-    <string name="erfassung_menu_tourpreise">Tour-Preisliste</string>
-    <string name="tour_preis_hinweis">Einheitliche Preise für alle Kunden mit Tour. Bei Erfassung werden diese Preise automatisch verwendet.</string>
+    <string name="erfassung_menu_tourpreise">Preisliste Tour / Privat</string>
+    <string name="tour_preis_hinweis">Einheitliche Preise für Tour- und Privat-Kunden. Bei Erfassung werden diese Preise automatisch verwendet, wenn keine Kundenpreise hinterlegt sind.</string>
     <string name="tour_preis_leer">Noch keine Tour-Preise. Tippen Sie auf + um Preise hinzuzufügen.</string>
     <string name="tour_preis_add">Preis hinzufügen</string>
     <string name="tour_preis_article">Artikel wählen</string>

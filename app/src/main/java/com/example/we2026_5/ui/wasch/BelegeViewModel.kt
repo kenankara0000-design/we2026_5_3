@@ -210,13 +210,11 @@ class BelegeViewModel(
 
     private fun loadBelegPreise(customer: Customer) {
         viewModelScope.launch {
-            val isTourKunde = customer.tourSlotId.isNotEmpty() && !customer.ohneTour
             val map = withContext(Dispatchers.IO) {
-                if (isTourKunde) {
-                    tourPreiseRepository.getTourPreise().associate { it.articleId to it.priceGross }
-                } else {
-                    kundenPreiseRepository.getKundenPreiseForCustomer(customer.id).associate { it.articleId to it.priceGross }
-                }
+                val kunden = kundenPreiseRepository.getKundenPreiseForCustomer(customer.id)
+                    .associate { it.articleId to it.priceGross }
+                if (kunden.isNotEmpty()) kunden
+                else tourPreiseRepository.getTourPreise().associate { it.articleId to it.priceGross }
             }
             _belegPreiseGross.value = map
         }

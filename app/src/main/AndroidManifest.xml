@@ -129,6 +129,16 @@
             android:theme="@style/Theme.We2026_5.LightBackground" />
 
         <activity
+            android:name=".PreiseActivity"
+            android:exported="false"
+            android:theme="@style/Theme.We2026_5.LightBackground" />
+
+        <activity
+            android:name=".DataImportActivity"
+            android:exported="false"
+            android:theme="@style/Theme.We2026_5.LightBackground" />
+
+        <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.We2026_5.LightBackground" />

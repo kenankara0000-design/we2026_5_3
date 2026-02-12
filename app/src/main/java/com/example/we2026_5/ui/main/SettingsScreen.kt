@@ -10,8 +10,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,18 +41,42 @@ import com.example.we2026_5.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onSevDeskImport: () -> Unit,
+    onOpenPreise: () -> Unit,
+    onOpenDataImport: () -> Unit,
     onResetAppData: () -> Unit,
     onAbmelden: () -> Unit,
     onBack: () -> Unit
 ) {
     val primaryBlue = colorResource(R.color.primary_blue)
     val textSecondary = colorResource(R.color.text_secondary)
+    var menuExpanded by remember { mutableStateOf(false) }
+    var showResetConfirm by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = { },
+                actions = {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = stringResource(R.string.settings_menu),
+                            tint = Color.White
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.settings_reset_app_data)) },
+                            onClick = {
+                                menuExpanded = false
+                                showResetConfirm = true
+                            }
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue, titleContentColor = Color.White)
             )
         }
@@ -63,19 +89,19 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                stringResource(R.string.settings_sevdesk_import),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = colorResource(R.color.text_primary)
-            )
-            Button(
-                onClick = onSevDeskImport,
+            OutlinedButton(
+                onClick = onOpenPreise,
                 modifier = Modifier.fillMaxWidth().height(48.dp),
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = primaryBlue),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text(stringResource(R.string.settings_sevdesk_import), fontSize = 15.sp)
+                Text(stringResource(R.string.settings_btn_preise), fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            }
+            OutlinedButton(
+                onClick = onOpenDataImport,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(stringResource(R.string.settings_btn_data_import), fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
             Text(
                 stringResource(R.string.settings_sevdesk_readonly_hint),
@@ -83,39 +109,7 @@ fun SettingsScreen(
                 color = textSecondary,
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(Modifier.height(24.dp))
-            var showResetConfirm by remember { mutableStateOf(false) }
-            OutlinedButton(
-                onClick = { showResetConfirm = true },
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(stringResource(R.string.settings_reset_app_data), fontSize = 15.sp)
-            }
-            if (showResetConfirm) {
-                AlertDialog(
-                    onDismissRequest = { showResetConfirm = false },
-                    title = { Text(stringResource(R.string.settings_reset_app_data)) },
-                    text = { Text(stringResource(R.string.settings_reset_app_data_confirm)) },
-                    confirmButton = {
-                        Button(
-                            onClick = {
-                                showResetConfirm = false
-                                onResetAppData()
-                            },
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(stringResource(R.string.settings_reset_app_data))
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showResetConfirm = false }) {
-                            Text(stringResource(R.string.btn_cancel))
-                        }
-                    }
-                )
-            }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(8.dp))
             OutlinedButton(
                 onClick = onAbmelden,
                 modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -124,5 +118,29 @@ fun SettingsScreen(
                 Text(stringResource(R.string.settings_abmelden), fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
         }
+    }
+
+    if (showResetConfirm) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirm = false },
+            title = { Text(stringResource(R.string.settings_reset_app_data)) },
+            text = { Text(stringResource(R.string.settings_reset_app_data_confirm)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showResetConfirm = false
+                        onResetAppData()
+                    },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(stringResource(R.string.settings_reset_app_data))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetConfirm = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
     }
 }

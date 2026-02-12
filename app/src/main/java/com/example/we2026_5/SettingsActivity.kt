@@ -11,15 +11,18 @@ import com.example.we2026_5.ui.main.SettingsScreen
 import com.google.firebase.auth.FirebaseAuth
 
 /**
- * Einstellungen: SevDesk Import (nur Lesen), App-Daten zurücksetzen, Abmelden.
+ * Einstellungen: Preise, Data Import, App-Daten zurücksetzen, Abmelden.
  */
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             SettingsScreen(
-                onSevDeskImport = {
-                    startActivity(Intent(this, SevDeskImportActivity::class.java))
+                onOpenPreise = {
+                    startActivity(Intent(this, PreiseActivity::class.java))
+                },
+                onOpenDataImport = {
+                    startActivity(Intent(this, DataImportActivity::class.java))
                 },
                 onResetAppData = {
                     resetAppData(applicationContext)

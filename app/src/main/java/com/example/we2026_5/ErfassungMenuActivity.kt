@@ -21,15 +21,6 @@ class ErfassungMenuActivity : AppCompatActivity() {
                 onBelege = {
                     startActivity(Intent(this, BelegeActivity::class.java))
                 },
-                onKundenpreise = {
-                    startActivity(Intent(this, KundenpreiseActivity::class.java))
-                },
-                onTourPreisliste = {
-                    startActivity(Intent(this, TourPreislisteActivity::class.java))
-                },
-                onArtikelVerwalten = {
-                    startActivity(Intent(this, ArtikelVerwaltungActivity::class.java))
-                },
                 onBack = { finish() }
             )
         }

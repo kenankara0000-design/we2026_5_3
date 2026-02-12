@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 
-/** Repository für die einheitliche Tour-Preisliste (alle Kunden mit Tour nutzen diese Preise). */
+/** Repository für die einheitliche Preisliste (Tour / Privat) – kann für alle Kunden verwendet werden. */
 class TourPreiseRepository(
     private val database: FirebaseDatabase
 ) {
