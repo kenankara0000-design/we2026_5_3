@@ -141,6 +141,7 @@ class SevDeskImportViewModel(
                     _state.value = _state.value.copy(message = context.getString(R.string.sevdesk_contacts_deleted, count))
                 }
                 is Result.Error -> _state.value = _state.value.copy(error = result.message)
+                is Result.Loading -> { /* Ignorieren */ }
             }
         }
     }

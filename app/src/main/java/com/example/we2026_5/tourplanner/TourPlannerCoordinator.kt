@@ -110,6 +110,7 @@ class TourPlannerCoordinator(
                                 when (val undo = viewModel.restoreTerminForCustomer(customer, terminDatum)) {
                                     is Result.Success -> reloadCurrentView()
                                     is Result.Error -> viewModel.setError(undo.message)
+                                    is Result.Loading -> { /* Ignorieren */ }
                                 }
                             }
                         }
@@ -120,6 +121,7 @@ class TourPlannerCoordinator(
                     viewModel.setError(result.message)
                     android.widget.Toast.makeText(activity, result.message, android.widget.Toast.LENGTH_SHORT).show()
                 }
+                is Result.Loading -> { /* Ignorieren */ }
             }
         }
     }

@@ -197,6 +197,7 @@ class CustomerDetailViewModel(
             when (val result = repository.updateCustomerResult(id, finalUpdates)) {
                 is Result.Success -> onComplete?.invoke(result.data)
                 is Result.Error -> _errorMessage.value = result.message
+                is Result.Loading -> { /* Ignorieren */ }
             }
             _isLoading.value = false
         }
@@ -210,6 +211,7 @@ class CustomerDetailViewModel(
             when (val result = repository.deleteCustomerResult(id)) {
                 is Result.Success -> _deleted.value = true
                 is Result.Error -> _errorMessage.value = result.message
+                is Result.Loading -> { /* Ignorieren */ }
             }
             _isLoading.value = false
         }
@@ -352,6 +354,7 @@ class CustomerDetailViewModel(
                     _errorMessage.value = result.message
                     onComplete(false)
                 }
+                is Result.Loading -> { /* Ignorieren */ }
             }
             _isLoading.value = false
         }

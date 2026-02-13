@@ -87,6 +87,7 @@ class UrlaubViewModel(
             when (val result = repository.updateCustomerResult(customerId, buildUpdates(newList))) {
                 is Result.Success -> onComplete?.invoke(result.data)
                 is Result.Error -> _errorMessage.value = result.message
+                is Result.Loading -> { /* Ignorieren */ }
             }
             _isSaving.value = false
         }

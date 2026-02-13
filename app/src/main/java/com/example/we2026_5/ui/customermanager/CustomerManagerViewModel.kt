@@ -191,6 +191,7 @@ class CustomerManagerViewModel(
                     _error.value = result.message
                     onError(result.message)
                 }
+                is Result.Loading -> { /* Ignorieren */ }
             }
         }
     }
