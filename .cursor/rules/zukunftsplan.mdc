@@ -1,6 +1,6 @@
 ---
 description: Bei Umsetzung aus dem Tiefenanalyse-Bericht: Zukunftsplan = in ZUKUNFTSPLAENE.md eintragen, nicht bauen
-globs: BERICHT_TIEFENANALYSE_APP_2026.md,ZUKUNFTSPLAENE.md
+globs: ZUKUNFTSPLAENE.md
 alwaysApply: false
 ---
 
@@ -8,7 +8,7 @@ alwaysApply: false
 
 ## Kontext
 
-Empfehlungen aus **BERICHT_TIEFENANALYSE_APP_2026.md** werden schrittweise abgearbeitet. Für **jeden** Punkt wird gefragt: umsetzen oder Zukunftsplan?
+Empfehlungen aus Analysen/Backlog werden schrittweise abgearbeitet. Für **jeden** Punkt wird gefragt: umsetzen oder Zukunftsplan?
 
 ## Regel
 

@@ -18,7 +18,7 @@ Diese Datei muss gepflegt werden. Wenn sich Ziele, Scope oder Planung ändern: H
 
 **Die App ist von Anfang an für bis zu 500 Kunden ausgelegt.**
 
-- Ab ca. 500 Kunden: Paging/Lazy-Loading im Kundenmanager empfohlen (laut BERICHT_TIEFENANALYSE_APP_2026)
+- Ab ca. 500 Kunden: Paging/Lazy-Loading im Kundenmanager empfohlen (siehe REFERENZ_ANALYSEN_UND_BERICHTE.md)
 - Aktuell: Alle Kunden werden geladen; Parsing läuft im Hintergrund (Feb 2026)
 
 ---
@@ -31,7 +31,7 @@ Diese Datei muss gepflegt werden. Wenn sich Ziele, Scope oder Planung ändern: H
 - **Termin-Regeln, Intervalle, Listen:** Kunden-Intervalle (inkl. monatlich/Wochentag), KundenListen mit Listenintervallen; Tour-Slots (tourPlaene); Termin-Regeln am Kunden (Regel-Vorlagen-Strings in UI, kein eigener Haupt-Einstieg)
 - **Statistiken, MapView:** Statistiken-Screen; MapView für Kunden/Adressen
 - **Offline-Fähigkeit:** Firebase Realtime DB Persistence; NetworkMonitor; Sync-Hinweise in UI
-- **Erfassung:** Waschen/Artikel erfassen (Kunde, Positionen); Artikelverwaltung; SevDesk-Artikel-Import als Quelle. Belege pro Kunde (Tab „Belege“ in Kundendetail); Wäscheliste-Formular zur Beleg-Erstellung (Kundendaten, Artikl-Mengen, Kamera/Foto-Stub für spätere OCR, Stammdaten-Ergänzung nach Bestätigung).
+- **Erfassung:** Waschen/Artikel erfassen (Kunde, Positionen); Artikelverwaltung; SevDesk-Artikel-Import als Quelle. Belege pro Kunde (Tab „Belege“ in Kundendetail); Wäscheliste-Formular zur Beleg-Erstellung (Kundendaten, Artikl-Mengen, Kamera/Foto für OCR, Stammdaten-Ergänzung nach Bestätigung). **OCR:** Aktuell ML Kit Text Recognition (On-Device); Optionen für Cloud-OCR siehe REFERENZ_ANALYSEN_UND_BERICHTE.md (Abschnitt 8).
 
 ---
 
@@ -47,7 +47,7 @@ Das Manifest ergänzt sie um Ziele und Scope; es ersetzt sie nicht.
 - **Datenbank:** Firebase Realtime Database (nicht Firestore)
 - **Auth:** Firebase Auth (LoginActivity als Launcher; MainActivity nach Login). Nur **anonymer Login**; alle angemeldeten Nutzer haben volle Rechte (keine Admin/Anonymous-Trennung).
 - **Storage:** Firebase Storage (Fotos; ImageUploadWorker, StorageUploadManager)
-- **UI:** Jetpack Compose (Migration weitgehend abgeschlossen); schwere Screens mit ViewModel + Coordinator (siehe ARCHITEKTUR_ACTIVITY_COORDINATOR.md)
+- **UI:** Jetpack Compose (Migration abgeschlossen); schwere Screens mit ViewModel + Coordinator (siehe REFERENZ_ANALYSEN_UND_BERICHTE.md Abschnitte 1 und 3)
 - **DI:** Koin (appModule: Repositories, ViewModels)
 
 ---
@@ -149,7 +149,7 @@ Hinweis: Strings für „Regel-Vorlagen“ (main_btn_termin_regeln) existieren; 
 
 ## 13. Ursprüngliche Ideen (von Anfang an) – Status
 
-*Quelle: BERICHT_TIEFENANALYSE_APP_2026.md, Abschnitte 1.1 und 1.2. Stand: Feb 2026.*
+*Quelle: REFERENZ_ANALYSEN_UND_BERICHTE.md (Abschn. 9), ehem. Tiefenanalyse. Stand: Feb 2026.*
 
 | Idee | Status | Anmerkung |
 |------|--------|-----------|
@@ -169,27 +169,12 @@ Hinweis: Strings für „Regel-Vorlagen“ (main_btn_termin_regeln) existieren; 
 
 ## 14. Noch zu machen / Backlog
 
-*Details und Priorisierung in **IDEEN_ZUKUNFT.md** und **ZUKUNFTSPLAENE.md**. Nichts davon ohne ausdrückliche Freigabe umsetzen (vgl. `.cursor/rules/zukunftsplan.mdc`).*
+*Details und Priorisierung in **ZUKUNFTSPLAENE.md**. Nichts davon ohne ausdrückliche Freigabe umsetzen (vgl. `.cursor/rules/zukunftsplan.mdc`).*
 
-### Aus ZUKUNFTSPLAENE.md (Ideen & Vorschläge)
+### Aus ZUKUNFTSPLAENE.md (Auswahl)
 
-- **Login-Feedback:** Bei Fehler der Anmeldung Meldung + Retry statt sofort finish().
-- **History-Log für Kunden:** Änderungen protokollieren (wer, wann, was).
-- **Optionale Features:** Echte Karten-UI, Tour-Reihenfolge (Drag & Drop), Benachrichtigungen, Paging im Kundenmanager.
-- **Benutzer und Rollen:** 3 vordefinierte Benutzer (Admin, Wäscherei, Fahrer) mit rollenbasierter Sicht/Bearbeitung.
-
-### Aus IDEEN_ZUKUNFT.md (bereits als „Zukunft“ markiert)
-
-- **Kalender-Export:** Termine in Gerätekalender (iCal/CalDAV).
-- **Onboarding:** Bei leerer App kurze Anleitung „Erstelle deine erste Kundenliste“ mit Navigation.
-
-### Weitere Ideen (IDEEN_ZUKUNFT / BERICHT 4.x)
-
-- **Benachrichtigungen:** Push „Morgen X Kunden fällig“; Erinnerung für pausierte Kunden.
-- **Berichte & Export:** Monatliche Berichte (PDF/CSV); Export für Buchhaltung; Tour-Last-Anzeige.
-- **Technik & UX:** Paging/Lazy-Loading bei vielen Kunden (>500); Accessibility (contentDescription, 48dp Touch-Targets); Dark Mode (derzeit global deaktiviert).
-- **Sonstiges:** Vertragsende/Kündigungsdatum mit Auto-Pause; Bulk-Import (CSV/Excel); Adress-Validierung (Geocoding); Mehrsprachigkeit.
-- **Tourenplaner:** Filter nach Kundenart/Liste/Region; Erledigungsquote pro Zeitraum (Woche/Monat).
+- History-Log, Optionale Features (Karten-UI, Tour-Reihenfolge, Benachrichtigungen, Paging), Benutzer und Rollen (Admin/Wäscherei/Fahrer), Kalender-Export, Onboarding.
+- Benachrichtigungen, Berichte & Export, Technik & UX (Paging, Accessibility, Dark Mode), Sonstiges (Vertragsende, Bulk-Import, Adress-Validierung, Mehrsprachigkeit), Tourenplaner-Filter, Erledigungsquote pro Zeitraum.
 
 ---
 
@@ -229,6 +214,13 @@ Dort werden Symptom, Ursache und relevante Code-Stellen geführt. Keine Änderun
 - Drucker mit **ESC/POS** und **Bluetooth** wählen.
 - In der App eine **ESC/POS-Library** einbinden und Text (Kunden-Alias, Zeilen/Summen, Endpreis) als einfachen Beleg/Etikett-Text an den Drucker senden.
 - **58 mm (oder 40 mm)** reicht für kurze Belege/Klebestreifen mit Alias und Endpreis gut aus.
+
+---
+
+## 17. Übersicht Analysen und Berichte
+
+- **Index (was wo liegt):** **DOKUMENTATION_REFERENZ_INDEX.md**
+- **Konsolidierte Referenz (vollständiger Inhalt):** **REFERENZ_ANALYSEN_UND_BERICHTE.md**
 
 ---
 
