@@ -3,6 +3,7 @@ package com.example.we2026_5
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -29,6 +30,17 @@ class BelegeActivity : AppCompatActivity() {
                 val belegPreiseGross by viewModel.belegPreiseGross.collectAsState(initial = emptyMap())
                 val alleBelegEintraegeErledigt by viewModel.alleBelegEintraegeErledigt.collectAsState(initial = emptyList())
                 val belegMonateErledigt by viewModel.belegMonateErledigt.collectAsState(initial = emptyList())
+
+                val handleBack: () -> Unit = {
+                    when (state) {
+                        is BelegeUiState.AlleBelege -> finish()
+                        is BelegeUiState.KundeSuchen -> viewModel.backToKundeSuchen()
+                        is BelegeUiState.BelegListe -> viewModel.backToAlleBelege()
+                        is BelegeUiState.BelegDetail -> viewModel.backFromBelegDetail()
+                    }
+                }
+                BackHandler(enabled = true) { handleBack() }
+
                 BelegeScreen(
                     state = state,
                     belegMonate = belegMonate,
@@ -37,14 +49,7 @@ class BelegeActivity : AppCompatActivity() {
                     belegPreiseGross = belegPreiseGross,
                     alleBelegEintraegeErledigt = alleBelegEintraegeErledigt,
                     belegMonateErledigt = belegMonateErledigt,
-                    onBack = {
-                        when (state) {
-                            is BelegeUiState.AlleBelege -> finish()
-                            is BelegeUiState.KundeSuchen -> viewModel.backToKundeSuchen()
-                            is BelegeUiState.BelegListe -> viewModel.backToAlleBelege()
-                            is BelegeUiState.BelegDetail -> viewModel.backFromBelegDetail()
-                        }
-                    },
+                    onBack = { handleBack() },
                     onCustomerSearchQueryChange = { viewModel.setCustomerSearchQuery(it) },
                     onKundeWaehlen = { viewModel.kundeGewaehlt(it) },
                     onBackToAlleBelege = { viewModel.backToAlleBelege() },

@@ -24,6 +24,12 @@ Keine Änderung am Verhalten (Bug-Fix) ohne ausdrückliche Freigabe (vgl. `.curs
 
 ## Behoben
 
+### Belege: Android-Zurück vom Beleg-Detail ging ins Erfassungs-Menü (Behoben 2026-02-13)
+
+- **War:** Beleg öffnen → Zurück drücken → landete im Erfassungs-Menü statt einmal zurück in die Belege-Liste.
+- **Ursache:** BelegeActivity hatte keinen BackHandler; System-Zurück beendete die Activity.
+- **Fix:** BackHandler in BelegeActivity (analog WaschenErfassungActivity) führt bei Zurück die gleiche Logik aus wie die TopBar (BelegDetail → backFromBelegDetail(), BelegListe → backToAlleBelege() usw., nur bei AlleBelege → finish()).
+
 ### Erfassung: Android-Zurück beendete Screen (Behoben)
 
 - **War:** Nach Kundenauswahl → „Neue Erfassung“ → Art wählen: Android-Zurück beendete die Activity statt einmal zurück zur Kunden-Ansicht zu gehen.
