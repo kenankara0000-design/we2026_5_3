@@ -44,7 +44,7 @@ internal fun CustomerManagerCard(
     val surfaceWhite = colorResource(R.color.surface_white)
     val gplColor = when (customer.kundenArt) {
         "Privat" -> colorResource(R.color.button_privat_glossy)
-        "Tour" -> colorResource(R.color.button_liste_glossy)
+        "Listenkunden" -> colorResource(R.color.button_liste_glossy)
         else -> colorResource(R.color.button_gewerblich_glossy)
     }
     Card(
@@ -89,7 +89,7 @@ internal fun CustomerManagerCard(
                     Text(
                         text = when (customer.kundenArt) {
                             "Privat" -> "P"
-                            "Tour" -> stringResource(R.string.label_type_t_letter)
+                            "Listenkunden" -> stringResource(R.string.label_type_l_letter)
                             else -> "G"
                         },
                         fontSize = 14.sp,

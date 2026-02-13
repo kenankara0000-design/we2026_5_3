@@ -126,17 +126,17 @@ fun CustomerDetailScreen(
 
     val typeLabel = when (customer?.kundenArt) {
         "Privat" -> stringResource(R.string.label_type_privat)
-        "Tour" -> stringResource(R.string.label_type_tour)
+        "Listenkunden" -> stringResource(R.string.label_type_tour)
         else -> stringResource(R.string.label_type_gewerblich)
     }
     val typeLetter = when (customer?.kundenArt) {
         "Privat" -> stringResource(R.string.label_type_p_letter)
-        "Tour" -> stringResource(R.string.label_type_t_letter)
+        "Listenkunden" -> stringResource(R.string.label_type_l_letter)
         else -> stringResource(R.string.label_type_g)
     }
     val typeColor = when (customer?.kundenArt) {
         "Privat" -> colorResource(R.color.button_privat_glossy)
-        "Tour" -> colorResource(R.color.button_liste_glossy)
+        "Listenkunden" -> colorResource(R.color.button_liste_glossy)
         else -> colorResource(R.color.button_gewerblich_glossy)
     }
 

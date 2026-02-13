@@ -1,6 +1,6 @@
 package com.example.we2026_5.data.repository
 
-import com.example.we2026_5.wasch.TourPreis
+import com.example.we2026_5.wasch.StandardPreis
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
@@ -10,18 +10,18 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 
-/** Repository für die einheitliche Preisliste (Tour / Privat) – kann für alle Kunden verwendet werden. */
-class TourPreiseRepository(
+/** Repository für die Standardpreisliste (Listenkunden + Privat). */
+class StandardPreiseRepository(
     private val database: FirebaseDatabase
 ) {
-    private val tourPreiseRef = database.reference.child("tourPreise")
+    private val standardPreiseRef = database.reference.child("standardPreise")
 
-    fun getTourPreiseFlow(): Flow<List<TourPreis>> = callbackFlow {
+    fun getStandardPreiseFlow(): Flow<List<StandardPreis>> = callbackFlow {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val list = mutableListOf<TourPreis>()
+                val list = mutableListOf<StandardPreis>()
                 snapshot.children.forEach { child ->
-                    parseTourPreis(child)?.let { list.add(it) }
+                    parseStandardPreis(child)?.let { list.add(it) }
                 }
                 trySend(list)
             }
@@ -29,26 +29,26 @@ class TourPreiseRepository(
                 close(Exception(error.message))
             }
         }
-        tourPreiseRef.addValueEventListener(listener)
-        awaitClose { tourPreiseRef.removeEventListener(listener) }
+        standardPreiseRef.addValueEventListener(listener)
+        awaitClose { standardPreiseRef.removeEventListener(listener) }
     }
 
-    suspend fun getTourPreise(): List<TourPreis> {
-        val snapshot = tourPreiseRef.get().await()
-        return snapshot.children.mapNotNull { parseTourPreis(it) }
+    suspend fun getStandardPreise(): List<StandardPreis> {
+        val snapshot = standardPreiseRef.get().await()
+        return snapshot.children.mapNotNull { parseStandardPreis(it) }
     }
 
-    private fun parseTourPreis(snapshot: DataSnapshot): TourPreis? {
+    private fun parseStandardPreis(snapshot: DataSnapshot): StandardPreis? {
         val articleId = snapshot.key ?: return null
         val priceNet = (snapshot.child("priceNet").getValue(Any::class.java) as? Number)?.toDouble() ?: 0.0
         val priceGross = (snapshot.child("priceGross").getValue(Any::class.java) as? Number)?.toDouble() ?: 0.0
-        return TourPreis(articleId = articleId, priceNet = priceNet, priceGross = priceGross)
+        return StandardPreis(articleId = articleId, priceNet = priceNet, priceGross = priceGross)
     }
 
-    suspend fun setTourPreis(preis: TourPreis): Boolean {
+    suspend fun setStandardPreis(preis: StandardPreis): Boolean {
         if (preis.articleId.isBlank()) return false
         return try {
-            val ref = tourPreiseRef.child(preis.articleId)
+            val ref = standardPreiseRef.child(preis.articleId)
             withTimeout(2000) {
                 ref.setValue(mapOf(
                     "priceNet" to preis.priceNet,
@@ -57,18 +57,18 @@ class TourPreiseRepository(
             }
             true
         } catch (e: Exception) {
-            android.util.Log.e("TourPreiseRepository", "setTourPreis failed", e)
+            android.util.Log.e("StandardPreiseRepository", "setStandardPreis failed", e)
             false
         }
     }
 
-    suspend fun removeTourPreis(articleId: String): Boolean {
+    suspend fun removeStandardPreis(articleId: String): Boolean {
         if (articleId.isBlank()) return false
         return try {
-            withTimeout(2000) { tourPreiseRef.child(articleId).removeValue().await() }
+            withTimeout(2000) { standardPreiseRef.child(articleId).removeValue().await() }
             true
         } catch (e: Exception) {
-            android.util.Log.e("TourPreiseRepository", "removeTourPreis failed", e)
+            android.util.Log.e("StandardPreiseRepository", "removeStandardPreis failed", e)
             false
         }
     }

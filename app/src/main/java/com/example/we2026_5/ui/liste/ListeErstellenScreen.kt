@@ -141,8 +141,8 @@ fun ListeErstellenScreen(
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
-                        selected = state.selectedType == "Tour",
-                        onClick = { onTypeChange("Tour") }
+                        selected = state.selectedType == "Listenkunden",
+                        onClick = { onTypeChange("Listenkunden") }
                     )
                     Text(stringResource(R.string.label_type_tour), color = textPrimary)
                 }

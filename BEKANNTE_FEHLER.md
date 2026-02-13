@@ -9,11 +9,10 @@ Keine Änderung am Verhalten (Bug-Fix) ohne ausdrückliche Freigabe (vgl. `.curs
 
 ## Offen
 
-### Preisliste Tour / Privat: Löschen ohne Bestätigung
+### Standardpreisliste: Löschen ohne Bestätigung (historisch)
 
-- **Symptom:** In „Preisliste Tour / Privat“ werden Preise beim Tippen auf das Papierkorb-Icon sofort gelöscht, ohne Bestätigungs-Dialog.
-- **Ursache:** `TourPreislisteScreen.kt` ruft `onRemoveTourPreis(...)` direkt im `IconButton` auf.
-- **Relevante Stelle:** `ui/wasch/TourPreislisteScreen.kt` (Delete-Icon in der Preisliste-Liste).
+- **Hinweis:** Die „Preisliste Tour / Privat“ wurde in **Standardpreisliste** umbenannt (`StandardPreislisteScreen.kt`). Im neuen Screen wird beim Löschen ein Bestätigungsdialog angezeigt (`ConfirmDialog`). Falls in einer älteren Version noch ohne Dialog gelöscht wurde, betrifft das die alte TourPreisliste; die aktuelle Standardpreisliste hat einen Lösch-Dialog.
+- **Relevante Stelle:** `ui/wasch/StandardPreislisteScreen.kt` (Delete → ConfirmDialog, dann `onRemoveStandardPreis`).
 
 ### Erfassung-Menü: „Kamera / Foto“ wirkt „kaputt“ (öffnet nicht sofort Kamera/Formular)
 

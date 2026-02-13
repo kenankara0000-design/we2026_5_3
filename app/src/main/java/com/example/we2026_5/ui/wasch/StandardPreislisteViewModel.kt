@@ -5,9 +5,9 @@ import androidx.lifecycle.ViewModel
 import com.example.we2026_5.R
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.data.repository.ArticleRepository
-import com.example.we2026_5.data.repository.TourPreiseRepository
+import com.example.we2026_5.data.repository.StandardPreiseRepository
 import com.example.we2026_5.wasch.Article
-import com.example.we2026_5.wasch.TourPreis
+import com.example.we2026_5.wasch.StandardPreis
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class TourPreislisteUiState(
-    val tourPreise: List<TourPreis> = emptyList(),
+data class StandardPreislisteUiState(
+    val standardPreise: List<StandardPreis> = emptyList(),
     val addDialogOpen: Boolean = false,
     val selectedArticleForAdd: Article? = null,
     val addArticleSearchQuery: String = "",
@@ -26,22 +26,22 @@ data class TourPreislisteUiState(
     val message: String? = null
 )
 
-class TourPreislisteViewModel(
+class StandardPreislisteViewModel(
     private val context: Context,
-    private val tourPreiseRepository: TourPreiseRepository,
+    private val standardPreiseRepository: StandardPreiseRepository,
     private val articleRepository: ArticleRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(TourPreislisteUiState())
-    val uiState: StateFlow<TourPreislisteUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(StandardPreislisteUiState())
+    val uiState: StateFlow<StandardPreislisteUiState> = _uiState.asStateFlow()
 
     val articles: StateFlow<List<Article>> = articleRepository.getAllArticlesFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         viewModelScope.launch {
-            tourPreiseRepository.getTourPreiseFlow().collect { preise ->
-                _uiState.value = _uiState.value.copy(tourPreise = preise)
+            standardPreiseRepository.getStandardPreiseFlow().collect { preise ->
+                _uiState.value = _uiState.value.copy(standardPreise = preise)
             }
         }
     }
@@ -87,19 +87,19 @@ class TourPreislisteViewModel(
         _uiState.value = _uiState.value.copy(addPriceGross = value)
     }
 
-    fun saveTourPreis() {
+    fun saveStandardPreis() {
         val s = _uiState.value
         val article = s.selectedArticleForAdd ?: return
         val net = s.addPriceNet.toDoubleOrNull() ?: 0.0
         val gross = s.addPriceGross.toDoubleOrNull() ?: 0.0
         if (net <= 0 && gross <= 0) {
-            _uiState.value = _uiState.value.copy(message = context.getString(R.string.error_tourpreis_netto_brutto))
+            _uiState.value = _uiState.value.copy(message = context.getString(R.string.error_standardpreis_netto_brutto))
             return
         }
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSaving = true, message = null)
-            val preis = TourPreis(articleId = article.id, priceNet = net, priceGross = gross)
-            val ok = tourPreiseRepository.setTourPreis(preis)
+            val preis = StandardPreis(articleId = article.id, priceNet = net, priceGross = gross)
+            val ok = standardPreiseRepository.setStandardPreis(preis)
             _uiState.value = _uiState.value.copy(
                 isSaving = false,
                 addDialogOpen = !ok,
@@ -112,9 +112,9 @@ class TourPreislisteViewModel(
         }
     }
 
-    fun removeTourPreis(articleId: String) {
+    fun removeStandardPreis(articleId: String) {
         viewModelScope.launch {
-            tourPreiseRepository.removeTourPreis(articleId)
+            standardPreiseRepository.removeStandardPreis(articleId)
         }
     }
 }

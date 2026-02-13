@@ -21,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,13 +46,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.R
 import com.example.we2026_5.wasch.Article
-import com.example.we2026_5.wasch.TourPreis
+import com.example.we2026_5.wasch.StandardPreis
 import com.example.we2026_5.util.ComposeDialogHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TourPreislisteScreen(
-    state: TourPreislisteUiState,
+fun StandardPreislisteScreen(
+    state: StandardPreislisteUiState,
     articles: List<Article>,
     onBack: () -> Unit,
     onAddClick: () -> Unit,
@@ -62,8 +61,8 @@ fun TourPreislisteScreen(
     onArticleSearchQueryChange: (String) -> Unit,
     onPriceNetChange: (String) -> Unit,
     onPriceGrossChange: (String) -> Unit,
-    onSaveTourPreis: () -> Unit,
-    onRemoveTourPreis: (String) -> Unit
+    onSaveStandardPreis: () -> Unit,
+    onRemoveStandardPreis: (String) -> Unit
 ) {
     val primaryBlue = colorResource(R.color.primary_blue)
     val textPrimary = colorResource(R.color.text_primary)
@@ -73,7 +72,7 @@ fun TourPreislisteScreen(
     var deleteConfirmOpen by remember { mutableStateOf(false) }
     var deleteArticleId by remember { mutableStateOf<String?>(null) }
     var deleteArticleName by remember { mutableStateOf<String?>(null) }
-    val articleIdsWithPreis = state.tourPreise.map { it.articleId }.toSet()
+    val articleIdsWithPreis = state.standardPreise.map { it.articleId }.toSet()
     val articlesWithoutPreis = articles.filter { it.id !in articleIdsWithPreis }
     val articleSearchQuery = state.addArticleSearchQuery.trim()
     val filteredArticles = if (articleSearchQuery.isBlank()) emptyList()
@@ -84,7 +83,7 @@ fun TourPreislisteScreen(
             WaschenErfassungTopBar(
                 primaryBlue = primaryBlue,
                 onBack = onBack,
-                titleResId = R.string.erfassung_menu_tourpreise
+                titleResId = R.string.erfassung_menu_standardpreise
             )
         },
         containerColor = backgroundLight,
@@ -106,21 +105,21 @@ fun TourPreislisteScreen(
                 .padding(16.dp)
         ) {
             Text(
-                stringResource(R.string.tour_preis_hinweis),
+                stringResource(R.string.standard_preis_hinweis),
                 fontSize = 14.sp,
                 color = textSecondary,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            if (state.tourPreise.isEmpty()) {
+            if (state.standardPreise.isEmpty()) {
                 Text(
-                    stringResource(R.string.tour_preis_leer),
+                    stringResource(R.string.standard_preis_leer),
                     fontSize = 14.sp,
                     color = textSecondary,
                     modifier = Modifier.padding(vertical = 24.dp)
                 )
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(state.tourPreise) { preis ->
+                    items(state.standardPreise) { preis ->
                         val name = articlesMap[preis.articleId]?.name ?: preis.articleId
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -261,7 +260,7 @@ fun TourPreislisteScreen(
         confirmText = if (state.isSaving) "…" else stringResource(R.string.wasch_speichern),
         confirmEnabled = state.selectedArticleForAdd != null && !state.isSaving,
         onDismiss = onCloseAddDialog,
-        onConfirm = onSaveTourPreis
+        onConfirm = onSaveStandardPreis
     )
 
     ComposeDialogHelper.ConfirmDialog(
@@ -277,7 +276,7 @@ fun TourPreislisteScreen(
         },
         onConfirm = {
             val id = deleteArticleId
-            if (id != null) onRemoveTourPreis(id)
+            if (id != null) onRemoveStandardPreis(id)
             deleteArticleId = null
             deleteArticleName = null
         }

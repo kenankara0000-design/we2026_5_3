@@ -110,7 +110,7 @@ class KundenListenViewModel(
             KundenListe(
                 id = "weekday-$index",
                 name = name,
-                listeArt = "Tour",
+                listeArt = "Listenkunden",
                 wochentag = index,
                 intervalle = emptyList(),
                 erstelltAm = System.currentTimeMillis()

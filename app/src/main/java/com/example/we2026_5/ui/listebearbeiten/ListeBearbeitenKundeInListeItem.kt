@@ -72,7 +72,7 @@ internal fun ListeBearbeitenKundeInListeItem(
                     Text(
                         text = when (kunde.kundenArt) {
                             "Privat" -> stringResource(R.string.label_type_p_letter)
-                            "Tour" -> stringResource(R.string.label_type_t_letter)
+                            "Listenkunden" -> stringResource(R.string.label_type_l_letter)
                             else -> stringResource(R.string.label_type_g)
                         },
                         fontSize = 14.sp,

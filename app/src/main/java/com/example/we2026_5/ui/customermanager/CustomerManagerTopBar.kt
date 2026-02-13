@@ -138,7 +138,7 @@ fun CustomerManagerTopBar(
             containerColor = primaryBlue,
             contentColor = Color.White
         ) {
-            listOf("Gewerblich", "Privat", "Tour").forEachIndexed { index, title ->
+            listOf("Gewerblich", "Privat", stringResource(R.string.label_type_tour)).forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
                     onClick = { onTabSelected(index) },

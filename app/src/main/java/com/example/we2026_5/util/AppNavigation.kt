@@ -199,9 +199,9 @@ object AppNavigation {
         return Intent(context, KundenpreiseActivity::class.java)
     }
 
-    /** Tourpreisliste verwalten */
-    fun toTourPreisliste(context: Context): Intent {
-        return Intent(context, TourPreislisteActivity::class.java)
+    /** Standardpreisliste verwalten */
+    fun toStandardPreisliste(context: Context): Intent {
+        return Intent(context, StandardPreislisteActivity::class.java)
     }
 
     /** Artikelverwaltung */

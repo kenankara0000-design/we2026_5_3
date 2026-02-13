@@ -18,10 +18,13 @@ import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.util.AppNavigation
 import com.example.we2026_5.util.runListeArtToTourMigration
+import com.example.we2026_5.util.runListeArtTourToListenkundenMigration
 import com.example.we2026_5.util.runListeIntervalleMigration
 import com.example.we2026_5.util.runListeToTourMigration
 import com.example.we2026_5.util.runPauseExpiredReset
 import com.example.we2026_5.util.runRemoveDeprecatedFieldsMigration
+import com.example.we2026_5.util.runStandardPreisMigration
+import com.example.we2026_5.util.runTourToListenkundenMigration
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import org.koin.android.ext.android.inject
@@ -32,6 +35,7 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModel()
     private val customerRepository: CustomerRepository by inject()
     private val listeRepository: KundenListeRepository by inject()
+    private val database: com.google.firebase.database.FirebaseDatabase by inject()
     private val adminChecker: AdminChecker by inject()
     private val auth = FirebaseAuth.getInstance()
     private lateinit var networkMonitor: NetworkMonitor
@@ -51,6 +55,9 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             runListeToTourMigration(this@MainActivity, customerRepository)
             runListeArtToTourMigration(this@MainActivity, listeRepository)
+            runTourToListenkundenMigration(this@MainActivity, customerRepository)
+            runListeArtTourToListenkundenMigration(this@MainActivity, listeRepository)
+            runStandardPreisMigration(this@MainActivity, database)
             runListeIntervalleMigration(this@MainActivity, customerRepository, listeRepository)
             runRemoveDeprecatedFieldsMigration(this@MainActivity, customerRepository)
             runPauseExpiredReset(customerRepository)

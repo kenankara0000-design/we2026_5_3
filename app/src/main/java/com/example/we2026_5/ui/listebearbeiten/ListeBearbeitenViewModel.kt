@@ -64,7 +64,7 @@ class ListeBearbeitenViewModel(
                         geladeneListe.wochentag !in k.effectiveAuslieferungWochentage
                     }.sortedBy { it.displayName }
                 } else {
-                    activeKunden.filter { it.listeId.isEmpty() && it.kundenArt == "Tour" }.sortedBy { it.displayName }
+                    activeKunden.filter { it.listeId.isEmpty() && it.kundenArt == "Listenkunden" }.sortedBy { it.displayName }
                 }
                 val intervalle = if (_state.value.isInEditMode) _state.value.intervalle else geladeneListe.intervalle
                 // Backfill: Bestehende Tour-Listen-Kunden ohne termineVonListe mit listenTermine füllen

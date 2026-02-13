@@ -148,8 +148,8 @@ fun CustomerStammdatenForm(
             )
             AddCustomerRadioOption(
                 text = stringResource(R.string.label_type_tour),
-                selected = state.kundenArt == "Tour",
-                onSelect = { onUpdate(state.copy(kundenArt = "Tour")) },
+                selected = state.kundenArt == "Listenkunden",
+                onSelect = { onUpdate(state.copy(kundenArt = "Listenkunden")) },
                 textPrimary = textPrimary
             )
         }

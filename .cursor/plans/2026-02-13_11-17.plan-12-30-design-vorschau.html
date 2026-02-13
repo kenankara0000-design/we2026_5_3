@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan 12-30 – Grosse Design-Vorschau Vorher / Nachher</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --card: #252540;
+      --surface: #2d2d44;
+      --text: #e8e8ed;
+      --text-muted: #9a9ab0;
+      --accent: #6c8eb8;
+      --badge-g: #5a9a6e;
+      --badge-p: #8b7cb8;
+      --badge-t: #b89a5a;
+      --badge-l: #6a9ac4;
+      --border: #3d3d5c;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 24px; line-height: 1.45; }
+    h1 { font-size: 1.5rem; margin: 0 0 8px 0; }
+    .subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 32px; }
+    .section { margin-bottom: 48px; }
+    .section h2 { font-size: 1.2rem; color: var(--accent); margin: 0 0 16px 0; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+    @media (max-width: 900px) { .comparison { grid-template-columns: 1fr; } }
+    .panel { background: var(--surface); border-radius: 12px; padding: 16px; border: 1px solid var(--border); }
+    .panel-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 12px; }
+    .panel-title.vorher { color: #d4a574; }
+    .panel-title.nachher { color: #7cb87c; }
+    .phone { width: 320px; max-width: 100%; margin: 0 auto; background: #0d0d14; border-radius: 28px; padding: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
+    .phone-screen { background: var(--bg); border-radius: 20px; overflow: hidden; min-height: 520px; }
+    .status-bar { height: 28px; background: #0d0d14; font-size: 11px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: var(--text-muted); }
+    .app-bar { padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--border); font-weight: 600; font-size: 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .app-bar.bulk { background: #2d3d5c; }
+    .tabs { display: flex; background: var(--card); padding: 8px 12px 0; gap: 4px; border-bottom: 1px solid var(--border); }
+    .tab { padding: 10px 12px; font-size: 0.8rem; border: none; background: transparent; color: var(--text-muted); border-radius: 8px 8px 0 0; cursor: default; }
+    .tab.active { background: var(--surface); color: var(--text); font-weight: 500; }
+    .tab .count { font-size: 0.75rem; opacity: 0.9; margin-left: 2px; }
+    .search-row { padding: 10px 16px; background: var(--card); }
+    .search-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 0.9rem; color: var(--text-muted); }
+    .result-count { padding: 6px 16px; font-size: 0.8rem; color: var(--text-muted); }
+    .filter-chips { padding: 8px 16px; display: flex; flex-wrap: wrap; gap: 6px; background: var(--card); }
+    .filter-chips .chip { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 4px 10px; font-size: 0.75rem; }
+    .filter-chips .chip.active { background: var(--accent); border-color: var(--accent); }
+    .filter-chips .reset { font-size: 0.75rem; color: var(--accent); margin-left: auto; }
+    .customer-list { padding: 12px 16px; }
+    .customer-card { background: var(--card); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; border: 1px solid var(--border); }
+    .card-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+    .card-badges { display: flex; gap: 4px; margin-left: auto; flex-shrink: 0; }
+    .badge { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+    .badge-g { background: var(--badge-g); color: #fff; }
+    .badge-p { background: var(--badge-p); color: #fff; }
+    .badge-t { background: var(--badge-t); color: #fff; }
+    .badge-l { background: var(--badge-l); color: #fff; }
+    .badge-status { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background: var(--surface); color: var(--text-muted); }
+    .card-name { font-weight: 600; font-size: 0.95rem; }
+    .card-addr { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+    .card-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
+    .card-next { font-size: 0.75rem; color: var(--accent); margin-top: 4px; }
+    .form-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip-btn { padding: 8px 14px; background: var(--surface); border-radius: 8px; font-size: 0.9rem; border: 1px solid var(--border); color: var(--text); }
+    .chip-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .empty-state { padding: 32px 24px; text-align: center; color: var(--text-muted); font-size: 0.9rem; }
+    .empty-state button { margin-top: 12px; padding: 10px 20px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 0.9rem; cursor: pointer; }
+    .ref { margin-top: 12px; font-size: 0.75rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <h1>Plan 2026-02-12_12-30 – Grosse Design-Vorschau</h1>
+  <p class="subtitle">Alle visuellen Änderungen: Vorher (Ist) und Nachher (Soll). Kundenübersicht, Detail, Listen.</p>
+
+  <!-- 1. Kundenübersicht -->
+  <section class="section">
+    <h2>1. Kundenübersicht – Tab, Filter, Karten</h2>
+    <div class="comparison">
+      <div class="panel">
+        <div class="panel-title vorher">Vorher</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status-bar">9:41</div>
+            <div class="app-bar">Kunden · Export · Auswählen · +</div>
+            <div class="tabs">
+              <span class="tab">Gewerblich</span>
+              <span class="tab">Privat</span>
+              <span class="tab active">Tour</span>
+            </div>
+            <div class="search-row"><div class="search-box">Suchen…</div></div>
+            <div class="customer-list">
+              <div class="customer-card">
+                <div class="card-header">
+                  <span class="badge badge-t">T</span>
+                  <div>
+                    <div class="card-name">Muster Listenkunde</div>
+                    <div class="card-addr">Stadtweg 12, 12345 Stadt</div>
+                    <div class="card-meta">A Do · L Fr</div>
+                  </div>
+                </div>
+              </div>
+              <div class="customer-card">
+                <div class="card-header">
+                  <span class="badge badge-p">P</span>
+                  <div>
+                    <div class="card-name">Privatkunde</div>
+                    <div class="card-addr">Privatstr. 1</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="ref">Tab „Tour“, Badge „T“. Keine Counts, keine Filter-Chips, keine Ergebnisanzahl.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-title nachher">Nachher</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status-bar">9:41</div>
+            <div class="app-bar">Kunden · Export · Auswählen · +</div>
+            <div class="tabs">
+              <span class="tab">Gewerblich <span class="count">(128)</span></span>
+              <span class="tab">Privat <span class="count">(45)</span></span>
+              <span class="tab active">Listenkunden <span class="count">(62)</span></span>
+            </div>
+            <div class="search-row"><div class="search-box">Suchen…</div></div>
+            <div class="result-count">62 Kunden</div>
+            <div class="filter-chips">
+              <span class="chip active">Regelmäßig ×</span>
+              <span class="chip">Pausiert: Aus</span>
+              <span class="reset">Filter zurücksetzen</span>
+            </div>
+            <div class="customer-list">
+              <div class="customer-card">
+                <div class="card-header">
+                  <span class="badge badge-l">L</span>
+                  <div>
+                    <div class="card-name">Muster Listenkunde</div>
+                    <div class="card-addr">Do 8–12 · Nord-Stadt</div>
+                    <div class="card-meta">A Do · L Fr</div>
+                    <div class="card-next">Nächste Abholung: Di 18.02</div>
+                  </div>
+                  <div class="card-badges"><span class="badge-status">Auf Abruf</span></div>
+                </div>
+              </div>
+              <div class="customer-card">
+                <div class="card-header">
+                  <span class="badge badge-p">P</span>
+                  <div>
+                    <div class="card-name">Privatkunde</div>
+                    <div class="card-addr">Privatstr. 1</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="ref">Tab „Listenkunden“ + Counts. Badge „L“. Ergebnisanzahl. Filter-Chips + „Filter zurücksetzen“. Listenkunden: TourSlot-Info, nächster Termin. Optional Status-Badges.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Bulk-Mode -->
+  <section class="section">
+    <h2>2. Bulk-Modus (Nachher klarer)</h2>
+    <div class="comparison">
+      <div class="panel">
+        <div class="panel-title vorher">Vorher</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status-bar">9:41</div>
+            <div class="app-bar">Kunden · Export · Auswählen · +</div>
+            <div class="tabs"><span class="tab">Gewerblich</span><span class="tab">Privat</span><span class="tab active">Tour</span></div>
+            <div class="search-row"><div class="search-box">Suchen…</div></div>
+            <div class="customer-list">
+              <div class="customer-card" style="border-left: 3px solid var(--accent);">
+                <div class="card-header"><span class="badge badge-t">T</span><div><div class="card-name">Kunde A</div></div> ☑</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="ref">Auswahl aktiv, aber TopBar unverändert.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-title nachher">Nachher</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status-bar">9:41</div>
+            <div class="app-bar bulk">3 ausgewählt · Alle wählen · Auswahl löschen</div>
+            <div class="tabs"><span class="tab">Gewerblich</span><span class="tab">Privat</span><span class="tab active">Listenkunden</span></div>
+            <div class="search-row"><div class="search-box">Suchen…</div></div>
+            <div class="customer-list">
+              <div class="customer-card" style="border-left: 3px solid var(--accent);">
+                <div class="card-header"><span class="badge badge-l">L</span><div><div class="card-name">Kunde A</div></div> ☑</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="ref">TopBar zeigt „X ausgewählt“, „Alle (gefiltert) auswählen“, „Auswahl löschen“.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Kunden-Detail / Formulare -->
+  <section class="section">
+    <h2>3. Kunden-Detail & Formulare – Kundenart</h2>
+    <div class="comparison">
+      <div class="panel">
+        <div class="panel-title vorher">Vorher</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status-bar">9:41</div>
+            <div class="app-bar">Kunde bearbeiten</div>
+            <div style="padding: 16px;">
+              <div class="form-label">Kundenart</div>
+              <div class="chips">
+                <span class="chip-btn">Gewerblich</span>
+                <span class="chip-btn">Privat</span>
+                <span class="chip-btn active">Tour</span>
+              </div>
+              <div style="margin-top: 16px; font-size: 0.8rem; color: var(--text-muted);">Typ-Badge in Kopf: <strong style="color: var(--badge-t);">T</strong></div>
+            </div>
+          </div>
+        </div>
+        <p class="ref">label_type_tour = „Tour“, label_type_t_letter = „T“</p>
+      </div>
+      <div class="panel">
+        <div class="panel-title nachher">Nachher</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status-bar">9:41</div>
+            <div class="app-bar">Kunde bearbeiten</div>
+            <div style="padding: 16px;">
+              <div class="form-label">Kundenart</div>
+              <div class="chips">
+                <span class="chip-btn">Gewerblich</span>
+                <span class="chip-btn">Privat</span>
+                <span class="chip-btn active">Listenkunden</span>
+              </div>
+              <div style="margin-top: 16px; font-size: 0.8rem; color: var(--text-muted);">Typ-Badge in Kopf: <strong style="color: var(--badge-l);">L</strong></div>
+            </div>
+          </div>
+        </div>
+        <p class="ref">„Listenkunden“, label_type_l_letter = „L“</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Liste erstellen -->
+  <section class="section">
+    <h2>4. Liste erstellen – Listen-Art</h2>
+    <div class="comparison">
+      <div class="panel">
+        <div class="panel-title vorher">Vorher</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status-bar">9:41</div>
+            <div class="app-bar">Liste erstellen</div>
+            <div style="padding: 16px;">
+              <div class="form-label">Tour Art:</div>
+              <div class="chips">
+                <span class="chip-btn active">Tour</span>
+                <span class="chip-btn">Gewerblich</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="ref">label_list_type = „Tour Art:“</p>
+      </div>
+      <div class="panel">
+        <div class="panel-title nachher">Nachher</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status-bar">9:41</div>
+            <div class="app-bar">Liste erstellen</div>
+            <div style="padding: 16px;">
+              <div class="form-label">Listen-Art:</div>
+              <div class="chips">
+                <span class="chip-btn active">Listenkunden</span>
+                <span class="chip-btn">Gewerblich</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="ref">„Listen-Art:“ oder „Art der Liste:“, Anzeige „Listenkunden“</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Liste bearbeiten – Kunde in Liste -->
+  <section class="section">
+    <h2>5. Liste bearbeiten – Kunde in Liste</h2>
+    <div class="comparison">
+      <div class="panel">
+        <div class="panel-title vorher">Vorher</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status-bar">9:41</div>
+            <div class="app-bar">Liste bearbeiten</div>
+            <div class="customer-list">
+              <div class="customer-card">
+                <div class="card-header">
+                  <span class="badge badge-t">T</span>
+                  <div>
+                    <div class="card-name">Kunde in Liste</div>
+                    <div class="card-addr">Gehört zu Tour-Liste: Nord-Stadt</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="ref">Badge „T“, label_gehoert_zu_tour_liste</p>
+      </div>
+      <div class="panel">
+        <div class="panel-title nachher">Nachher</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status-bar">9:41</div>
+            <div class="app-bar">Liste bearbeiten</div>
+            <div class="customer-list">
+              <div class="customer-card">
+                <div class="card-header">
+                  <span class="badge badge-l">L</span>
+                  <div>
+                    <div class="card-name">Kunde in Liste</div>
+                    <div class="card-addr">Gehört zu Liste: Nord-Stadt</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="ref">Badge „L“, „Gehört zu Liste: …“ / „Gehört zu Listenliste: …“</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Empty-State (Nachher) -->
+  <section class="section">
+    <h2>6. Empty-State (Nachher)</h2>
+    <div class="comparison">
+      <div class="panel">
+        <div class="panel-title vorher">Vorher</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status-bar">9:41</div>
+            <div class="app-bar">Kunden</div>
+            <div class="tabs"><span class="tab">Gewerblich</span><span class="tab">Privat</span><span class="tab active">Tour</span></div>
+            <div class="search-row"><div class="search-box">Suchen…</div></div>
+            <div class="customer-list">
+              <div style="padding: 40px 20px; text-align: center; color: var(--text-muted);">Keine Kunden</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title nachher">Nachher</div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="status-bar">9:41</div>
+            <div class="app-bar">Kunden</div>
+            <div class="tabs"><span class="tab">Gewerblich</span><span class="tab">Privat</span><span class="tab active">Listenkunden</span></div>
+            <div class="search-row"><div class="search-box">Suchen…</div></div>
+            <div class="result-count">0 Treffer</div>
+            <div class="filter-chips"><span class="chip active">Ohne Tour ×</span><span class="reset">Filter zurücksetzen</span></div>
+            <div class="empty-state">
+              Keine Listenkunden ohne TourSlot.
+              <br><button>Filter zurücksetzen</button> oder <button style="background: var(--surface);">Neuer Kunde</button>
+            </div>
+          </div>
+        </div>
+        <p class="ref">Sinnvoller Empty-State mit einer Aktion (Filter zurücksetzen / Neuer Kunde).</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Zusammenfassung (aus Plan)</h2>
+    <ul style="color: var(--text-muted); font-size: 0.9rem;">
+      <li><strong>Festlegung:</strong> Tab „Tour“ → „Listenkunden“, Badge „T“ → „L“ (G / P / L) überall.</li>
+      <li><strong>Strings:</strong> label_type_tour → „Listenkunden“, label_type_t_letter → „L“, label_list_type → „Listen-Art:“, label_gehoert_zu_tour_liste → „Gehört zu Liste: …“, label_listen_termine_hint → „… dieser Listenliste.“, label_keine_termine_nur → „… (Listenkunden)“.</li>
+      <li><strong>Vorschläge (visuell):</strong> Tab-Counts, Ergebnisanzahl, Filter-Chips + „Filter zurücksetzen“, Bulk-Mode TopBar, Listenkunden-Karte mit TourSlot + nächster Termin, Status-Badges, Empty-State mit Aktion.</li>
+    </ul>
+  </section>
+</body>
+</html>

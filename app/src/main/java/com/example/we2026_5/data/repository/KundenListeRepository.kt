@@ -82,7 +82,9 @@ class KundenListeRepository(
         return KundenListe(
             id = snapshot.child("id").getValue(String::class.java) ?: snapshot.key ?: "",
             name = snapshot.child("name").getValue(String::class.java) ?: "",
-            listeArt = (snapshot.child("listeArt").getValue(String::class.java) ?: "Gewerbe").let { if (it == "Liste") "Tour" else it },
+            listeArt = (snapshot.child("listeArt").getValue(String::class.java) ?: "Gewerbe").let { raw ->
+                when (raw) { "Liste", "Tour" -> "Listenkunden"; else -> raw }
+            },
             wochentag = safeInt(snapshot.child("wochentag").getValue()).coerceIn(-1, 6),
             intervalle = intervalle.ifEmpty { listOf(ListeIntervall()) },
             erstelltAm = safeLong(snapshot.child("erstelltAm").getValue()).takeIf { it > 0 } ?: System.currentTimeMillis(),
@@ -131,6 +133,19 @@ class KundenListeRepository(
         snapshot.children.forEach { child ->
             val id = child.key ?: return@forEach
             if (child.child("listeArt").getValue(String::class.java) == "Liste") ids.add(id)
+        }
+        return ids
+    }
+
+    /**
+     * Liefert Listen-IDs, bei denen in Firebase noch listeArt "Tour" steht (für Migration Tour→Listenkunden).
+     */
+    suspend fun getListenIdsWithListeArtTour(): List<String> {
+        val snapshot = listenRef.get().await()
+        val ids = mutableListOf<String>()
+        snapshot.children.forEach { child ->
+            val id = child.key ?: return@forEach
+            if (child.child("listeArt").getValue(String::class.java) == "Tour") ids.add(id)
         }
         return ids
     }

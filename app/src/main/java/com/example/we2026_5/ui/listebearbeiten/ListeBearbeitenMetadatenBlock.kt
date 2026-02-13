@@ -72,7 +72,7 @@ fun ListeBearbeitenMetadatenBlock(
                 Text(stringResource(R.string.label_type_privat), color = textPrimary)
             }
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(selected = editListeArt == "Tour", onClick = { onListeArtChange("Tour") })
+                RadioButton(selected = editListeArt == "Listenkunden", onClick = { onListeArtChange("Listenkunden") })
                 Text(stringResource(R.string.label_type_tour), color = textPrimary)
             }
         }

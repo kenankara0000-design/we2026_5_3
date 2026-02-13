@@ -62,7 +62,7 @@ Das Manifest ergänzt sie um Ziele und Scope; es ersetzt sie nicht.
 - **articles** – Artikel (z. B. nach SevDesk-Import)
 - **waschErfassungen** – Erfassungen (Kunde, Positionen, Datum)
 - **kundenPreise** – Kundenpreise pro Kunde/Artikel (customerId → articleId → priceNet, priceGross)
-- **tourPreise** – Einheitliche **Preisliste Tour / Privat** (articleId → priceNet, priceGross); kann bei der Erfassung für **Tour- und Privat-Kunden** genutzt werden (Fallback, wenn keine Kundenpreise hinterlegt sind)
+- **standardPreise** – Einheitliche **Standardpreisliste** (Listenkunden + Privat) (articleId → priceNet, priceGross); kann bei der Erfassung genutzt werden (Fallback, wenn keine Kundenpreise hinterlegt sind)
 - Fotos: Firebase Storage (Pfade in Customer.fotoUrls)
 
 ---
@@ -137,7 +137,7 @@ Hinweis: Strings für „Regel-Vorlagen“ (main_btn_termin_regeln) existieren; 
 
 ## 11. Migrations und Start
 
-- Beim Start (MainActivity): runListeToTourMigration, runListeArtToTourMigration, runListeIntervalleMigration, runRemoveDeprecatedFieldsMigration, runPauseExpiredReset (Hintergrund).
+- Beim Start (MainActivity): runListeToTourMigration, runListeArtToTourMigration, runTourToListenkundenMigration, runListeArtTourToListenkundenMigration, runStandardPreisMigration, runListeIntervalleMigration, runRemoveDeprecatedFieldsMigration, runPauseExpiredReset (Hintergrund).
 
 ---
 

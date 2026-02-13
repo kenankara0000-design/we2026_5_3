@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UX/UI Visuelle Mockups - Vorher/Nachher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .screen-comparison {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .screen-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .mockup-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+        
+        .mockup-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .mockup-label {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        
+        .before-label {
+            background: #fff5f5;
+            color: #c53030;
+            border: 2px solid #fc8181;
+        }
+        
+        .after-label {
+            background: #f0fff4;
+            color: #2f855a;
+            border: 2px solid #68d391;
+        }
+        
+        /* Mobile Phone Frame */
+        .phone {
+            width: 360px;
+            height: 640px;
+            border: 12px solid #333;
+            border-radius: 36px;
+            background: #fff;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .phone::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 6px;
+            background: #444;
+            border-radius: 3px;
+            z-index: 100;
+        }
+        
+        .screen {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+        
+        /* TopAppBar */
+        .topbar {
+            background: #667eea;
+            color: white;
+            padding: 45px 16px 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .topbar-title {
+            font-size: 20px;
+            font-weight: 600;
+            flex: 1;
+            margin-left: 12px;
+        }
+        
+        .icon-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        .icon-button:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        /* Content Area */
+        .content {
+            padding: 16px;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab .badge {
+            background: #e0e0e0;
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 4px;
+        }
+        
+        .tab.active .badge {
+            background: #667eea;
+            color: white;
+        }
+        
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .card-subtitle {
+            font-size: 13px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .card-info {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        /* Badges */
+        .badge-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-pausiert {
+            background: #fee;
+            color: #c53030;
+        }
+        
+        .badge-ohne-tour {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-privat {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .badge-gewerbe {
+            background: #f3e5f5;
+            color: #6a1b9a;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .fab {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            cursor: pointer;
+        }
+        
+        /* Filter Chips */
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .chip {
+            padding: 6px 12px;
+            background: #f0f0f0;
+            border-radius: 16px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+        
+        .chip.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .chip-close {
+            font-size: 16px;
+            opacity: 0.7;
+        }
+        
+        /* Search Bar */
+        .search-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .search-bar input {
+            border: none;
+            outline: none;
+            flex: 1;
+            font-size: 15px;
+        }
+        
+        /* Section Header */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: white;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .section-count {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+        
+        .empty-state-text {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 24px;
+        }
+        
+        /* Loading State */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Bottom Sheet Preview */
+        .bottom-sheet {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 24px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+            max-height: 60%;
+            overflow-y: auto;
+        }
+        
+        .bottom-sheet-handle {
+            width: 40px;
+            height: 4px;
+            background: #ccc;
+            border-radius: 2px;
+            margin: 0 auto 20px;
+        }
+        
+        .bottom-sheet-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .bottom-sheet-option {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .bottom-sheet-option:hover {
+            background: #f5f5f5;
+        }
+        
+        .option-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .option-desc {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        /* Info Banner */
+        .info-banner {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .warning-banner {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .edit-banner {
+            background: #f3e5f5;
+            color: #6a1b9a;
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .quick-action-btn {
+            flex: 1;
+            padding: 8px;
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .quick-action-btn:hover {
+            background: #e0e0e0;
+        }
+        
+        /* Sticky Bottom Bar */
+        .bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .bottom-bar .btn {
+            flex: 1;
+        }
+        
+        /* Highlight changes */
+        .highlight-new {
+            position: relative;
+        }
+        
+        .highlight-new::after {
+            content: '✨ NEU';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #4caf50;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 1024px) {
+            .mockup-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Notes */
+        .change-notes {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 16px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+        
+        .change-notes h4 {
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+        
+        .change-notes ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .change-notes li {
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .change-notes li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📱 Visuelle UI Mockups</h1>
+            <p>Vorher/Nachher Vergleiche der wichtigsten Screens</p>
+        </header>
+        
+        <!-- 1. Kundenübersicht -->
+        <div class="screen-comparison">
+            <h2 class="screen-title">1️⃣ Kundenübersicht (CustomerManagerScreen)</h2>
+            
+            <div class="mockup-container">
+                <!-- VORHER -->
+                <div class="mockup-wrapper">
+                    <div class="mockup-label before-label">❌ VORHER</div>
+                    <div class="phone">
+                        <div class="screen">
+                            <div class="topbar">
+                                <div class="icon-button">←</div>
+                                <div class="topbar-title">Kunden</div>
+                                <div class="icon-button">⋮</div>
+                            </div>
+                            
+                            <div class="tabs">
+                                <div class="tab">Gewerblich</div>
+                                <div class="tab active">Privat</div>
+                                <div class="tab">Tour</div>
+                            </div>
+                            
+                            <div class="content">
+                                <div class="search-bar">
+                                    <span>🔍</span>
+                                    <input type="text" placeholder="Kunden suchen...">
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div>
+                                            <div class="card-title">Schmidt GmbH</div>
+                                            <div class="card-subtitle">Hauptstraße 123</div>
+                                        </div>
+                                        <span class="badge-status badge-pausiert">PAUSIERT</span>
+                                    </div>
+                                    <div class="card-info">
+                                        Montag, Zeitfenster 1
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div>
+                                            <div class="card-title">Müller Textil</div>
+                                            <div class="card-subtitle">Bahnhofstr. 45</div>
+                                        </div>
+                                        <span class="badge-status badge-ohne-tour">OHNE TOUR</span>
+                                    </div>
+                                    <div class="card-info">
+                                        Dienstag
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div>
+                                            <div class="card-title">Weber Service</div>
+                                            <div class="card-subtitle">Gartenweg 8</div>
+                                        </div>
+                                    </div>
+                                    <div class="card-info">
+                                        Mittwoch, Zeitfenster 2
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="fab">+</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- NACHHER -->
+                <div class="mockup-wrapper">
+                    <div class="mockup-label after-label">✅ NACHHER</div>
+                    <div class="phone">
+                        <div class="screen">
+                            <div class="topbar">
+                                <div class="icon-button">←</div>
+                                <div class="topbar-title">Kunden</div>
+                                <div class="icon-button">⋮</div>
+                            </div>
+                            
+                            <div class="tabs">
+                                <div class="tab">
+                                    Gewerblich
+                                    <span class="badge">124</span>
+                                </div>
+                                <div class="tab active">
+                                    Privat
+                                    <span class="badge">87</span>
+                                </div>
+                                <div class="tab">
+                                    Tour-Kunden
+                                    <span class="badge">156</span>
+                                </div>
+                            </div>
+                            
+                            <div class="content">
+                                <div class="search-bar">
+                                    <span>🔍</span>
+                                    <input type="text" placeholder="Kunden suchen...">
+                                    <span>⚙️</span>
+                                </div>
+                                
+                                <div class="filter-chips highlight-new">
+                                    <div class="chip active">
+                                        Pausiert
+                                        <span class="chip-close">×</span>
+                                    </div>
+                                    <div class="chip">Ohne Tour</div>
+                                    <div class="chip">↕️ Nächster Termin</div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div>
+                                            <div class="card-title">Schmidt GmbH</div>
+                                            <div class="card-subtitle">Hauptstraße 123 • 12345</div>
+                                        </div>
+                                        <span class="badge-status badge-pausiert">PAUSIERT</span>
+                                    </div>
+                                    <div class="card-info">
+                                        <strong>Nächster Termin:</strong> 15.02.2026 (Mo)<br>
+                                        Tour: Montag, Zeitfenster 1
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div>
+                                            <div class="card-title">Müller Textil</div>
+                                            <div class="card-subtitle">Bahnhofstr. 45 • 12347</div>
+                                        </div>
+                                        <span class="badge-status badge-ohne-tour">OHNE TOUR</span>
+                                    </div>
+                                    <div class="card-info">
+                                        <strong>Nächster Termin:</strong> 18.02.2026 (Di)<br>
+                                        ⚠️ TourSlot fehlt
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div>
+                                            <div class="card-title">Weber Service</div>
+                                            <div class="card-subtitle">Gartenweg 8 • 12346</div>
+                                        </div>
+                                        <span class="badge-status badge-gewerbe">AUF ABRUF</span>
+                                    </div>
+                                    <div class="card-info">
+                                        <strong>Letzter Termin:</strong> 01.02.2026<br>
+                                        Tour: Mittwoch, Zeitfenster 2
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="fab">+</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="change-notes">
+                <h4>🎯 Hauptänderungen:</h4>
+                <ul>
+                    <li>Tab-Titel mit Counts/Badges („Privat (87)")</li>
+                    <li>Aktive Filter als Chips sichtbar mit „×" zum Entfernen</li>
+                    <li>Status-Badges: PAUSIERT / OHNE TOUR / AUF ABRUF</li>
+                    <li>Karten zeigen „Nächster relevanter Termin" statt nur Wochentag</li>
+                    <li>PLZ in Adresse für bessere Orientierung</li>
+                    <li>Sortierung-Chip direkt sichtbar</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 2. Tourenplaner -->
+        <div class="screen-comparison">
+            <h2 class="screen-title">2️⃣ Tourenplaner (TourPlannerScreen)</h2>
+            
+            <div class="mockup-container">
+                <!-- VORHER -->
+                <div class="mockup-wrapper">
+                    <div class="mockup-label before-label">❌ VORHER</div>
+                    <div class="phone">
+                        <div class="screen">
+                            <div class="topbar">
+                                <div class="icon-button">←</div>
+                                <div class="icon-button">◀</div>
+                                <div class="topbar-title">13.02.2026</div>
+                                <div class="icon-button">▶</div>
+                                <div class="icon-button">📅</div>
+                                <div class="icon-button">🗺️</div>
+                                <div class="icon-button">🔄</div>
+                                <div class="icon-button">✓</div>
+                            </div>
+                            
+                            <div class="content">
+                                <div style="background: #ffebee; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; color: #c62828;">
+                                    <strong>Überfällig</strong>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div>
+                                            <div class="card-title">Bäckerei Meier</div>
+                                            <div class="card-subtitle">Marktplatz 5</div>
+                                        </div>
+                                        <span class="badge-status" style="background: #ffebee; color: #c62828;">ÜBERFÄLLIG</span>
+                                    </div>
+                                    <div class="card-info">
+                                        Letzter Termin: 05.02.2026
+                                    </div>
+                                </div>
+                                
+                                <div style="background: #e8f5e9; padding: 12px; border-radius: 8px; margin: 16px 0; font-size: 14px; color: #2e7d32;">
+                                    <strong>Heute (4)</strong>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div>
+                                            <div class="card-title">Restaurant Sonne</div>
+                                            <div class="card-subtitle">Hauptstraße 88</div>
+                                        </div>
+                                    </div>
+                                    <div class="card-info">
+                                        Abholung + Lieferung<br>
+                                        09:00 - 11:00
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div>
+                                            <div class="card-title">Hotel am Park</div>
+                                            <div class="card-subtitle">Parkstraße 12</div>
+                                        </div>
+                                    </div>
+                                    <div class="card-info">
+                                        Abholung<br>
+                                        10:00 - 12:00
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- NACHHER -->
+                <div class="mockup-wrapper">
+                    <div class="mockup-label after-label">✅ NACHHER</div>
+                    <div class="phone">
+                        <div class="screen">
+                            <div class="topbar">
+                                <div class="icon-button">←</div>
+                                <div class="icon-button">◀</div>
+                                <div class="topbar-title">13.02.2026</div>
+                                <div class="icon-button">▶</div>
+                                <div class="icon-button">📅</div>
+                                <div class="icon-button">🗺️</div>
+                                <div class="icon-button">⋮</div>
+                            </div>
+                            
+                            <div class="content">
+                                <div class="filter-chips highlight-new">
+                                    <div class="chip">Alle Listen</div>
+                                    <div class="chip">Stadt: Alle</div>
+                                    <div class="chip active">Nur Gewerbe</div>
+                                </div>
+                                
+                                <div class="section-header">
+                                    <div>
+                                        <span style="color: #c62828;">⚠️</span> Überfällig
+                                    </div>
+                                    <span class="section-count">1</span>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div>
+                                            <div class="card-title">Bäckerei Meier</div>
+                                            <div class="card-subtitle">Marktplatz 5 • 12345</div>
+                                        </div>
+                                        <span class="badge-status" style="background: #ffebee; color: #c62828;">ÜBERFÄLLIG</span>
+                                    </div>
+                                    <div class="card-info">
+                                        <strong>Heute:</strong> Abholung + Lieferung<br>
+                                        Letzter Termin: 05.02.2026 (8 Tage)
+                                    </div>
+                                    <div class="quick-actions highlight-new">
+                                        <div class="quick-action-btn">📞 Anrufen</div>
+                                        <div class="quick-action-btn">🗺️ Navigation</div>
+                                        <div class="quick-action-btn">✓ Erledigt</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="section-header">
+                                    <div>
+                                        📅 Heute
+                                        <span style="margin-left: 8px; font-size: 12px; color: #666;">▼ Einklappen</span>
+                                    </div>
+                                    <span class="section-count">4</span>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div>
+                                            <div class="card-title">Restaurant Sonne</div>
+                                            <div class="card-subtitle">Hauptstraße 88 • 12346</div>
+                                        </div>
+                                        <span class="badge-status badge-gewerbe">G</span>
+                                    </div>
+                                    <div class="card-info">
+                                        <strong>Heute:</strong> Abholung + Lieferung<br>
+                                        09:00 - 11:00 • Zeitfenster 1
+                                    </div>
+                                    <div class="quick-actions">
+                                        <div class="quick-action-btn">📞 Anrufen</div>
+                                        <div class="quick-action-btn">🗺️ Navigation</div>
+                                        <div class="quick-action-btn">✓ Erledigt</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="change-notes">
+                <h4>🎯 Hauptänderungen:</h4>
+                <ul>
+                    <li>Sekundäraktionen (Refresh, Erledigt) in Overflow-Menü (⋮)</li>
+                    <li>Filter-Chips: nach Kundenart, Liste, Stadt</li>
+                    <li>Sektion-Header mit Counts und Expand/Collapse</li>
+                    <li>Quick-Actions direkt an Karte: Anrufen, Navigation, Erledigt</li>
+                    <li>PLZ und erweiterte Termininfo in Karten</li>
+                    <li>Weniger überladene TopBar</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 3. Login Screen -->
+        <div class="screen-comparison">
+            <h2 class="screen-title">3️⃣ Login (LoginScreenContent)</h2>
+            
+            <div class="mockup-container">
+                <!-- VORHER -->
+                <div class="mockup-wrapper">
+                    <div class="mockup-label before-label">❌ VORHER</div>
+                    <div class="phone">
+                        <div class="screen">
+                            <div class="content" style="display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center;">
+                                <div style="font-size: 48px; margin-bottom: 24px;">🔐</div>
+                                <h2 style="margin-bottom: 32px; color: #333;">Wäscherei Manager</h2>
+                                
+                                <div style="max-width: 280px; margin: 0 auto;">
+                                    <button class="btn btn-primary" style="width: 100%; margin-bottom: 16px;">
+                                        Anmelden
+                                    </button>
+                                    
+                                    <div style="margin-top: 120px; padding: 16px; background: #ffebee; border-radius: 8px; color: #c62828; font-size: 14px;">
+                                        Fehler beim Anmelden
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- NACHHER -->
+                <div class="mockup-wrapper">
+                    <div class="mockup-label after-label">✅ NACHHER</div>
+                    <div class="phone">
+                        <div class="screen">
+                            <div class="content" style="display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center;">
+                                <div style="font-size: 48px; margin-bottom: 24px;">🔐</div>
+                                <h2 style="margin-bottom: 32px; color: #333;">Wäscherei Manager</h2>
+                                
+                                <div style="max-width: 280px; margin: 0 auto;">
+                                    <button class="btn btn-primary" style="width: 100%; margin-bottom: 16px; opacity: 0.6;" disabled>
+                                        Anmelden...
+                                    </button>
+                                    
+                                    <div class="info-banner" style="text-align: left; margin-top: 24px;">
+                                        <span>ℹ️</span>
+                                        <span style="font-size: 13px;">
+                                            <strong>Offline-Hinweis:</strong><br>
+                                            Anmeldung erfordert Internetverbindung
+                                        </span>
+                                    </div>
+                                    
+                                    <div style="margin-top: 24px; padding: 16px; background: #ffebee; border-radius: 8px; color: #c62828; font-size: 14px; text-align: left;">
+                                        <strong>Netzwerkfehler</strong><br>
+                                        <span style="font-size: 13px;">Verbindung zum Server fehlgeschlagen</span>
+                                        <button class="btn btn-secondary" style="width: 100%; margin-top: 12px; font-size: 13px;">
+                                            Erneut versuchen
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="change-notes">
+                <h4>🎯 Hauptänderungen:</h4>
+                <ul>
+                    <li>Button disabled + Label „Anmelden…" während Verarbeitung</li>
+                    <li>Konkrete Fehlermeldung (Netzwerk vs. Auth)</li>
+                    <li>CTA „Erneut versuchen" direkt bei Fehler</li>
+                    <li>Offline-Hinweis als Info-Banner</li>
+                    <li>Besseres visuelles Feedback</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 4. Kundendetail mit Tabs -->
+        <div class="screen-comparison">
+            <h2 class="screen-title">4️⃣ Kundendetail (CustomerDetailScreen - Termine Tab)</h2>
+            
+            <div class="mockup-container">
+                <!-- VORHER -->
+                <div class="mockup-wrapper">
+                    <div class="mockup-label before-label">❌ VORHER</div>
+                    <div class="phone">
+                        <div class="screen">
+                            <div class="topbar">
+                                <div class="icon-button">←</div>
+                                <div class="topbar-title">Schmidt GmbH</div>
+                                <div class="icon-button">✏️</div>
+                            </div>
+                            
+                            <div class="tabs">
+                                <div class="tab">Stammdaten</div>
+                                <div class="tab active">Termine</div>
+                                <div class="tab">Belege</div>
+                            </div>
+                            
+                            <div class="content">
+                                <button class="btn btn-primary" style="width: 100%; margin-bottom: 16px;">
+                                    + Neuer Termin
+                                </button>
+                                
+                                <div class="card">
+                                    <div class="card-title">Regelmäßige Termine</div>
+                                    <div class="card-info" style="margin-top: 12px;">
+                                        <div style="padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                                            Montag • Abholung + Lieferung
+                                        </div>
+                                        <div style="padding: 8px 0;">
+                                            Intervall: 14 Tage
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-title">Einmalige Termine</div>
+                                    <div class="card-info" style="margin-top: 12px;">
+                                        <div style="padding: 8px 0;">
+                                            15.02.2026 • Abholung
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="fab">+</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- NACHHER -->
+                <div class="mockup-wrapper">
+                    <div class="mockup-label after-label">✅ NACHHER</div>
+                    <div class="phone">
+                        <div class="screen">
+                            <div class="topbar">
+                                <div class="icon-button">←</div>
+                                <div class="topbar-title">Schmidt GmbH</div>
+                                <div class="icon-button">✏️</div>
+                            </div>
+                            
+                            <div class="tabs">
+                                <div class="tab">
+                                    Stammdaten
+                                </div>
+                                <div class="tab active">
+                                    Termine
+                                    <span class="badge">8</span>
+                                </div>
+                                <div class="tab">
+                                    Belege
+                                    <span class="badge">12</span>
+                                </div>
+                            </div>
+                            
+                            <div class="content">
+                                <div class="info-banner highlight-new">
+                                    <span>ℹ️</span>
+                                    <div style="flex: 1; font-size: 13px;">
+                                        <strong>Tour-Kontext:</strong><br>
+                                        Gehört zu Tour-Liste „Montag Innenstadt"
+                                    </div>
+                                </div>
+                                
+                                <div class="warning-banner highlight-new" style="display: flex; align-items: center; gap: 12px;">
+                                    <span>⚠️</span>
+                                    <div style="flex: 1; font-size: 13px;">
+                                        <strong>TourSlot fehlt</strong><br>
+                                        Zeitfenster zuweisen für Tour-Optimierung
+                                    </div>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">
+                                        Setzen
+                                    </button>
+                                </div>
+                                
+                                <button class="btn btn-primary" style="width: 100%; margin-bottom: 16px;">
+                                    + Neuer Termin
+                                </button>
+                                
+                                <div class="card">
+                                    <div class="card-title">Regelmäßige Termine (2)</div>
+                                    <div class="card-info" style="margin-top: 12px;">
+                                        <div style="padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                                            <strong>Montag</strong> • Abholung + Lieferung<br>
+                                            <span style="font-size: 12px; color: #666;">
+                                                Intervall: 14 Tage • Nächster: 17.02.2026
+                                            </span>
+                                        </div>
+                                        <div style="padding: 8px 0;">
+                                            <strong>Freitag</strong> • Nur Abholung<br>
+                                            <span style="font-size: 12px; color: #666;">
+                                                Intervall: 7 Tage • Nächster: 14.02.2026
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-title">Einmalige Termine (1)</div>
+                                    <div class="card-info" style="margin-top: 12px;">
+                                        <div style="padding: 8px 0;">
+                                            <strong>15.02.2026</strong> • Abholung<br>
+                                            <span style="font-size: 12px; color: #666;">Sonder-Abholung</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="fab">+</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="change-notes">
+                <h4>🎯 Hauptänderungen:</h4>
+                <ul>
+                    <li>Tab-Titel mit Counts („Termine (8)", „Belege (12)")</li>
+                    <li>Tour-Kontext prominent angezeigt</li>
+                    <li>TourSlot-Warnung mit direkter Aktion „Setzen"</li>
+                    <li>Counts in Abschnittstiteln (Regelmäßige Termine (2))</li>
+                    <li>Mehr Details zu jedem Termin (Nächster Termin, Intervall)</li>
+                    <li>Info-Banner für wichtige Kontextinformationen</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 5. Liste bearbeiten mit Edit-Modus -->
+        <div class="screen-comparison">
+            <h2 class="screen-title">5️⃣ Liste bearbeiten (ListeBearbeitenScreen)</h2>
+            
+            <div class="mockup-container">
+                <!-- VORHER -->
+                <div class="mockup-wrapper">
+                    <div class="mockup-label before-label">❌ VORHER</div>
+                    <div class="phone">
+                        <div class="screen">
+                            <div class="topbar">
+                                <div class="icon-button">←</div>
+                                <div class="topbar-title">Montag Innenstadt</div>
+                                <div class="icon-button">✏️</div>
+                                <div class="icon-button">🗑️</div>
+                            </div>
+                            
+                            <div class="content">
+                                <div class="card">
+                                    <div class="card-title">Metadaten</div>
+                                    <div style="margin-top: 12px;">
+                                        <div style="margin-bottom: 12px;">
+                                            <label style="font-size: 12px; color: #666; display: block; margin-bottom: 4px;">Name</label>
+                                            <input type="text" value="Montag Innenstadt" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                        </div>
+                                        <div style="margin-bottom: 12px;">
+                                            <label style="font-size: 12px; color: #666; display: block; margin-bottom: 4px;">Art</label>
+                                            <select style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                                <option>Tour-Liste</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                        <div class="card-title">Kunden (12)</div>
+                                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">
+                                            + Hinzufügen
+                                        </button>
+                                    </div>
+                                    
+                                    <div style="border-top: 1px solid #f0f0f0; padding-top: 12px;">
+                                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center;">
+                                            <span>Schmidt GmbH</span>
+                                            <span style="color: #c62828; cursor: pointer;">×</span>
+                                        </div>
+                                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center;">
+                                            <span>Müller Textil</span>
+                                            <span style="color: #c62828; cursor: pointer;">×</span>
+                                        </div>
+                                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center;">
+                                            <span>Weber Service</span>
+                                            <span style="color: #c62828; cursor: pointer;">×</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- NACHHER -->
+                <div class="mockup-wrapper">
+                    <div class="mockup-label after-label">✅ NACHHER</div>
+                    <div class="phone">
+                        <div class="screen">
+                            <div class="topbar">
+                                <div class="icon-button">←</div>
+                                <div class="topbar-title">Montag Innenstadt</div>
+                                <div class="icon-button">✏️</div>
+                                <div class="icon-button">⋮</div>
+                            </div>
+                            
+                            <div class="content" style="padding-bottom: 80px;">
+                                <div class="edit-banner highlight-new" style="display: flex; align-items: center; gap: 12px;">
+                                    <span>✏️</span>
+                                    <div style="flex: 1; font-size: 14px;">
+                                        <strong>Bearbeiten aktiv</strong>
+                                    </div>
+                                </div>
+                                
+                                <div class="section-header">
+                                    <div><strong>📝 Metadaten</strong></div>
+                                    <span style="font-size: 12px; color: #666;">▼</span>
+                                </div>
+                                
+                                <div class="card">
+                                    <div style="margin-bottom: 12px;">
+                                        <label style="font-size: 12px; color: #666; display: block; margin-bottom: 4px;">Name *</label>
+                                        <input type="text" value="Montag Innenstadt" style="width: 100%; padding: 10px; border: 2px solid #667eea; border-radius: 6px;">
+                                    </div>
+                                    <div style="margin-bottom: 12px;">
+                                        <label style="font-size: 12px; color: #666; display: block; margin-bottom: 4px;">Art</label>
+                                        <select style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                            <option>Tour-Liste</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; color: #666; display: block; margin-bottom: 4px;">Wochentag</label>
+                                        <select style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                            <option>Montag</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="section-header">
+                                    <div><strong>📅 Termine</strong></div>
+                                    <span class="section-count">24</span>
+                                </div>
+                                
+                                <div class="card">
+                                    <button class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;">
+                                        + Termin hinzufügen
+                                    </button>
+                                    <button class="btn" style="width: 100%; background: #ffebee; color: #c62828;">
+                                        Alle Termine löschen
+                                    </button>
+                                </div>
+                                
+                                <div class="section-header">
+                                    <div><strong>👥 Kunden</strong></div>
+                                    <span class="section-count">12</span>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="search-bar highlight-new" style="margin-bottom: 12px;">
+                                        <span>🔍</span>
+                                        <input type="text" placeholder="Kunde suchen...">
+                                    </div>
+                                    
+                                    <div class="filter-chips highlight-new" style="margin-bottom: 12px;">
+                                        <div class="chip active">Alle</div>
+                                        <div class="chip">Gewerblich</div>
+                                        <div class="chip">Privat</div>
+                                    </div>
+                                    
+                                    <button class="btn btn-secondary" style="width: 100%; margin-bottom: 12px;">
+                                        + Kunden hinzufügen
+                                    </button>
+                                </div>
+                                
+                                <div class="card">
+                                    <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0;">
+                                        <div>
+                                            <strong>Schmidt GmbH</strong><br>
+                                            <span style="font-size: 12px; color: #666;">Hauptstraße 123</span>
+                                        </div>
+                                        <span style="color: #c62828; cursor: pointer; font-size: 20px;">×</span>
+                                    </div>
+                                    <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0;">
+                                        <div>
+                                            <strong>Müller Textil</strong><br>
+                                            <span style="font-size: 12px; color: #666;">Bahnhofstr. 45</span>
+                                        </div>
+                                        <span style="color: #c62828; cursor: pointer; font-size: 20px;">×</span>
+                                    </div>
+                                    <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <strong>Weber Service</strong><br>
+                                            <span style="font-size: 12px; color: #666;">Gartenweg 8</span>
+                                        </div>
+                                        <span style="color: #c62828; cursor: pointer; font-size: 20px;">×</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bottom-bar highlight-new">
+                                <button class="btn btn-secondary">
+                                    Abbrechen
+                                </button>
+                                <button class="btn btn-primary">
+                                    Übernehmen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="change-notes">
+                <h4>🎯 Hauptänderungen:</h4>
+                <ul>
+                    <li>Edit-Banner „Bearbeiten aktiv" für klaren Kontext</li>
+                    <li>3 klare Sektionen: Metadaten / Termine / Kunden</li>
+                    <li>Section-Header mit Counts</li>
+                    <li>Kunden hinzufügen: Suchfeld + Filter nach Kundenart</li>
+                    <li>Getrennte CTAs für Termine (Hinzufügen vs. Löschen)</li>
+                    <li>Sticky Bottom-Bar: „Abbrechen" / „Übernehmen"</li>
+                    <li>Mehr Informationen pro Kunde (Adresse)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 6. Neuer Termin BottomSheet -->
+        <div class="screen-comparison">
+            <h2 class="screen-title">6️⃣ Neuer Termin Auswahl (BottomSheet)</h2>
+            
+            <div class="mockup-container">
+                <!-- VORHER -->
+                <div class="mockup-wrapper">
+                    <div class="mockup-label before-label">❌ VORHER</div>
+                    <div class="phone">
+                        <div class="screen">
+                            <div class="topbar">
+                                <div class="icon-button">←</div>
+                                <div class="topbar-title">Schmidt GmbH</div>
+                            </div>
+                            
+                            <div class="content" style="padding-top: 40px;">
+                                <button class="btn btn-primary" style="width: 100%; margin-bottom: 12px;">
+                                    Regelmäßiger Termin
+                                </button>
+                                <button class="btn btn-secondary" style="width: 100%; margin-bottom: 12px;">
+                                    Monatlicher Termin
+                                </button>
+                                <button class="btn btn-secondary" style="width: 100%; margin-bottom: 12px;">
+                                    Einmaliger Termin
+                                </button>
+                                <button class="btn btn-secondary" style="width: 100%;">
+                                    Urlaub
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- NACHHER -->
+                <div class="mockup-wrapper">
+                    <div class="mockup-label after-label">✅ NACHHER</div>
+                    <div class="phone">
+                        <div class="screen" style="background: rgba(0,0,0,0.3);">
+                            <div class="topbar">
+                                <div class="icon-button">←</div>
+                                <div class="topbar-title">Schmidt GmbH</div>
+                            </div>
+                            
+                            <div class="bottom-sheet highlight-new">
+                                <div class="bottom-sheet-handle"></div>
+                                <div class="bottom-sheet-title">Neuer Termin</div>
+                                
+                                <div class="bottom-sheet-option">
+                                    <div class="option-title">📅 Regelmäßiger Termin</div>
+                                    <div class="option-desc">Wiederkehrender Termin (z.B. jeden Montag). Ideal für feste Touren.</div>
+                                </div>
+                                
+                                <div class="bottom-sheet-option">
+                                    <div class="option-title">📆 Monatlicher Termin</div>
+                                    <div class="option-desc">Termin an bestimmtem Tag im Monat (z.B. jeden 1. Montag). Für monatliche Zyklen.</div>
+                                </div>
+                                
+                                <div class="bottom-sheet-option">
+                                    <div class="option-title">📌 Einmaliger Termin</div>
+                                    <div class="option-desc">Einmalige Abholung/Lieferung an einem bestimmten Datum.</div>
+                                </div>
+                                
+                                <div class="bottom-sheet-option">
+                                    <div class="option-title">🏖️ Urlaub</div>
+                                    <div class="option-desc">Zeitraum markieren, in dem Kunde keine Termine hat.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="change-notes">
+                <h4>🎯 Hauptänderungen:</h4>
+                <ul>
+                    <li>BottomSheet statt Vollbild-Buttons</li>
+                    <li>Jede Option mit Icon und Erklärtext</li>
+                    <li>„Wann nutzen?" Information direkt sichtbar</li>
+                    <li>Bessere UX durch kontextuelle Hilfe</li>
+                    <li>Visuell ansprechender mit Handle und Backdrop</li>
+                </ul>
+            </div>
+        </div>
+        
+    </div>
+    
+    <script>
+        // Smooth scroll to sections
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

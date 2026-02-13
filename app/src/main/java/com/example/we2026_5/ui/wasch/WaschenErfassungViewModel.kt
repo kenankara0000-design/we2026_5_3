@@ -16,7 +16,7 @@ import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.ErfassungRepository
 import com.example.we2026_5.data.repository.KundenPreiseRepository
-import com.example.we2026_5.data.repository.TourPreiseRepository
+import com.example.we2026_5.data.repository.StandardPreiseRepository
 import com.example.we2026_5.wasch.Article
 import com.example.we2026_5.wasch.ErfassungPosition
 import com.example.we2026_5.wasch.WaschErfassung
@@ -105,7 +105,7 @@ class WaschenErfassungViewModel(
     private val articleRepository: ArticleRepository,
     private val erfassungRepository: ErfassungRepository,
     private val kundenPreiseRepository: KundenPreiseRepository,
-    private val tourPreiseRepository: TourPreiseRepository
+    private val standardPreiseRepository: StandardPreiseRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<WaschenErfassungUiState>(WaschenErfassungUiState.KundeSuchen())
@@ -241,7 +241,7 @@ class WaschenErfassungViewModel(
                     val kunden = kundenPreiseRepository.getKundenPreiseForCustomer(customer.id)
                         .associate { it.articleId to it.priceGross }
                     if (kunden.isNotEmpty()) kunden
-                    else tourPreiseRepository.getTourPreise().associate { it.articleId to it.priceGross }
+                    else standardPreiseRepository.getStandardPreise().associate { it.articleId to it.priceGross }
                 }
                 _belegPreiseGross.value = map
             }
@@ -292,8 +292,8 @@ class WaschenErfassungViewModel(
             }
         }
         preislisteJob = viewModelScope.launch {
-            tourPreiseRepository.getTourPreiseFlow().collect { tourPreise ->
-                _preislisteGrossForErfassung.value = tourPreise.associate { it.articleId to it.priceGross }
+            standardPreiseRepository.getStandardPreiseFlow().collect { standardPreise ->
+                _preislisteGrossForErfassung.value = standardPreise.associate { it.articleId to it.priceGross }
             }
         }
         _uiState.value = WaschenErfassungUiState.Erfassen(

@@ -28,7 +28,7 @@ data class Customer(
     val plz: String = "",
     val tags: List<String> = emptyList(),
     // Kunden-Art und Liste
-    val kundenArt: String = "Gewerblich", // "Privat" oder "Gewerblich"
+    val kundenArt: String = "Gewerblich", // "Gewerblich", "Privat" oder "Listenkunden"
     val listeId: String = "", // ID der Liste (nur für Privat-Kunden)
     // Termine - NEUE STRUKTUR: Mehrere Intervalle pro Kunde
     val intervalle: List<CustomerIntervall> = emptyList(), // Liste der Intervalle (für Gewerblich-Kunden)
