@@ -6,92 +6,116 @@
 
 ---
 
+## Teilweise umgesetzt (Stand: Feb 2026)
+
+*Diese Punkte sind in der App bereits angelegt oder an einigen Stellen eingeführt; vollständig umgesetzt sind sie nicht. Rest-Arbeit steht weiter unten unter „Ideen & Vorschläge“.*
+
+### Technik & Infrastruktur
+
+1. **Offline-Anzeige:** NetworkMonitor und Sync-Hinweise (MainScreen, TourPlanner-, Kundenmanager-TopBar) vorhanden. Noch offen: Echtzeit-Sync-Status („X Änderungen ausstehend“ / Fortschrittsbalken).
+2. **FirebaseRetryHelper:** Existiert, wird z. B. im CustomerRepository genutzt – noch nicht in allen Repositories.
+3. **AppNavigation:** Wird in MainActivity, CustomerDetailActivity, SettingsActivity genutzt – noch nicht in allen Activities.
+4. **AppLogger:** Existiert (mit TODO für BuildConfig.DEBUG), wird an einigen Stellen genutzt – noch nicht überall statt Log/printStackTrace.
+5. **ComposeDialogHelper:** Wird z. B. in SettingsScreen, SevDeskImportScreen, StandardPreislisteScreen genutzt – noch nicht in allen Dialogen.
+6. **BaseViewModel:** Klasse vorhanden – wird von keinem ViewModel genutzt (nur als Vorlage).
+
+### Features
+
+7. **Tour-Reihenfolge:** Firebase-Knoten `tourReihenfolge` und TourOrderRepository (Speichern/Lesen pro Wochentag) vorhanden. Noch offen: Drag-&-Drop-UI im Tourenplaner, Weitergabe der Reihenfolge an die Karten-App.
+8. **Export:** CustomerExportHelper mit Kunden-Export (CSV/Text) im Kundenmanager vorhanden. Noch offen: Monatliche Berichte (PDF/CSV), Export für Buchhaltung, Tour-Last-Anzeige.
+9. **Accessibility:** An vielen Stellen contentDescription gesetzt – noch nicht für alle Icons; 48 dp Touch-Targets und Kontrast nicht systematisch geprüft.
+10. **OCR/Wäscheliste:** ML Kit (On-Device) fürs Wäscheliste-Formular umgesetzt. Noch offen: Cloud-OCR, Bildvorverarbeitung.
+
+### Noch nicht wie gewünscht
+
+11. **AgentDebugLog:** Wird genutzt, ist aber **nicht** an BuildConfig.DEBUG gekoppelt (läuft auch in Release). Soll nur in Debug aktiv sein.
+12. **LoadState:** Sealed Class existiert, wird in der App kaum genutzt; die meisten ViewModels haben weiter ad-hoc isLoading/errorMessage.
+13. **AppErrorMapper:** Existiert, Texte noch fest im Code – noch nicht in strings.xml ausgelagert.
+
+---
+
 ## Ideen & Vorschläge (noch nicht umgesetzt)
 
 *Einträge werden hier ergänzt, sobald bei einer Umsetzung „Zukunftsplan“ gesagt wird.*
 
 ### Bereits als „Zukunft“ markiert
 
-- **Kalender-Export:** Termine in Gerätekalender exportieren (iCal/CalDAV)
-- **Onboarding:** Bei leerer App kurze Anleitung „Erstelle deine erste Kundenliste“ mit Navigation
+14. **Kalender-Export:** Termine in Gerätekalender exportieren (iCal/CalDAV)
+15. **Onboarding:** Bei leerer App kurze Anleitung „Erstelle deine erste Kundenliste“ mit Navigation
 
 ### Login & Nutzer
 
-- **Benutzer und Rollen (3 Rollen, vordefinierte Benutzer):**
-  - 3 Benutzer anlegen: 1 = Admin, 2 = Wäscherei, 3 = Fahrer. Vordefiniert (nicht erst zur Laufzeit anlegen).
-  - Jeder Benutzer bekommt ein Kennwort (Login mit E-Mail/Name + Passwort).
-  - Rollenbasierte Sicht und Bearbeitung: Admin = vollen Zugriff; Wäscherei = Erledigungen, Termine (evtl. keine Stammdaten); Fahrer = Tourenplaner, Erledigungen, Karte (evtl. keine Stammdaten/Termin-Regeln).
-  - Konkrete Rechte pro Rolle bei Umsetzung festlegen.
+16. **Benutzer und Rollen (3 Rollen, vordefinierte Benutzer):** 3 Benutzer anlegen (Admin, Wäscherei, Fahrer); Kennwort; rollenbasierte Sicht und Bearbeitung; konkrete Rechte bei Umsetzung festlegen.
 
 ### Optionale Features
 
-- **Echte Karten-UI:** In-App mit Markern/Route statt nur Maps-Intent.
-- **Tour-Reihenfolge:** Drag & Drop speichern und an Karten-App übergeben (Wegpunkte in Reihenfolge).
-- **Benachrichtigungen:** Push „Morgen X Kunden fällig“; Erinnerung für pausierte Kunden („Kunde X ist seit Y Tagen pausiert“).
-- **Paging im Kundenmanager:** Ab ~500 Kunden (Seitengröße 50–100; Suche/Filter mit Paging).
+17. **Echte Karten-UI:** In-App mit Markern/Route statt nur Maps-Intent.
+18. **Tour-Reihenfolge (UI):** Drag & Drop speichern und an Karten-App übergeben (Wegpunkte in Reihenfolge).
+19. **Benachrichtigungen:** Push „Morgen X Kunden fällig“; Erinnerung für pausierte Kunden („Kunde X ist seit Y Tagen pausiert“).
+20. **Paging im Kundenmanager:** Ab ~500 Kunden (Seitengröße 50–100; Suche/Filter mit Paging).
 
 ### History-Log & Backlog
 
-- **History-Log für Kunden:** Alle Änderungen protokollieren (wer, wann, was). Empfehlung: zentrales Log für alle Kunden, jeder Eintrag mit Kunden-ID – pro Kunde filterbar, global zeitlich sortiert.
+21. **History-Log für Kunden:** Alle Änderungen protokollieren (wer, wann, was). Empfehlung: zentrales Log für alle Kunden, jeder Eintrag mit Kunden-ID – pro Kunde filterbar, global zeitlich sortiert.
 
 ### Berichte & Export
 
-- Monatliche Berichte (PDF/CSV)
-- Export für Buchhaltung: Liste erledigter Abholungen/Auslieferungen
-- Tour-Last-Anzeige (Kapazität pro Tag)
+22. Monatliche Berichte (PDF/CSV)
+23. Export für Buchhaltung: Liste erledigter Abholungen/Auslieferungen
+24. Tour-Last-Anzeige (Kapazität pro Tag)
 
 ### Technik & UX
 
-- **Performance:** Lazy Loading, Pagination bei vielen Kunden (>500).
-- **Accessibility:** contentDescription für alle Icons, Mindest-Touch-Target 48dp, Kontrast prüfen.
-- **Dark Mode:** Optional aktivierbar (derzeit global deaktiviert).
-- **Offline-Anzeige:** Hinweis wenn keine Verbindung, Änderungen werden synchronisiert (bereits vorhanden; optional: Echtzeit-Sync-Status „X Änderungen ausstehend“ oder Fortschrittsbalken).
-- **LoadState durchgängig:** ViewModels mit LoadState&lt;T&gt; (Loading/Success/Error) statt ad-hoc isLoading/errorMessage.
-- **AgentDebugLog:** Nur in Debug-Build aktivieren (nicht in Release).
-- **LoginActivity:** Sichtbare Login-UI in Compose (aktuell [ ]).
+25. **Performance:** Lazy Loading, Pagination bei vielen Kunden (>500).
+26. **Accessibility:** contentDescription für alle Icons, Mindest-Touch-Target 48dp, Kontrast prüfen.
+27. **Dark Mode:** Optional aktivierbar (derzeit global deaktiviert).
+28. **Offline-Anzeige:** Echtzeit-Sync-Status „X Änderungen ausstehend“ oder Fortschrittsbalken (Hinweis „Änderungen werden synchronisiert“ bereits vorhanden).
+29. **LoadState durchgängig:** ViewModels mit LoadState&lt;T&gt; (Loading/Success/Error) statt ad-hoc isLoading/errorMessage.
+30. **AgentDebugLog:** Nur in Debug-Build aktivieren (nicht in Release).
+31. **LoginActivity:** Sichtbare Login-UI in Compose (aktuell [ ]).
 
 ### Technische Refactorings
 
-- Alle Repositories auf FirebaseRetryHelper umstellen
-- Alle Activities auf AppNavigation umstellen
-- Alle Log/printStackTrace → AppLogger ersetzen
-- Weitere ViewModels von BaseViewModel erben
-- Crashlytics in AppLogger integrieren
-- AppErrorMapper-Texte in strings.xml auslagern
-- Dateigröße/Wartbarkeit: Sehr große Screens/ViewModels in kleinere Teile aufteilen
+32. Alle Repositories auf FirebaseRetryHelper umstellen
+33. Alle Activities auf AppNavigation umstellen
+34. Alle Log/printStackTrace → AppLogger ersetzen
+35. Weitere ViewModels von BaseViewModel erben
+36. Crashlytics in AppLogger integrieren
+37. AppErrorMapper-Texte in strings.xml auslagern
+38. Dateigröße/Wartbarkeit: Sehr große Screens/ViewModels in kleinere Teile aufteilen
 
 ### Termin-Logik & Domain
 
-- **Vollständige Termin-Quelle:** Zentrale API für alle Termine (inkl. kundenTermine, ausnahmeTermine); alle Fälligkeitsstellen darauf umstellen (REFERENZ_ANALYSEN_UND_BERICHTE.md Abschn. 2 und 9).
-- **Termin-Logik vereinfachen:** Einheitliches „Termin-Datum + Typ (A/L)“-Modell (z. B. TerminInfo mit Quelle); ein Dialog „Termin hinzufügen“ (Regelmäßig / Einmalig / Ausnahme); Listen: „Listen-Termin hinzufügen“ mit Datum + A+L.
-- **Termin-Regeln erweitern:** Feiertage, Schließtage, „jeden 2. Montag im Monat“.
-- **Listen-Vorlagen:** Vorgefertigte Regeln für typische Listen (z. B. „Wöchentlich Mo/Do“) mit einem Klick anwenden.
-- **Filter im Tourenplaner:** Nach Kundenart/Liste/Region/PLZ.
-- **Erledigungsquote pro Zeitraum:** Woche/Monat, nicht nur „heute“.
+39. **Vollständige Termin-Quelle:** Zentrale API für alle Termine (inkl. kundenTermine, ausnahmeTermine); alle Fälligkeitsstellen darauf umstellen (REFERENZ_ANALYSEN_UND_BERICHTE.md Abschn. 2 und 9).
+40. **Termin-Logik vereinfachen:** Einheitliches „Termin-Datum + Typ (A/L)“-Modell (z. B. TerminInfo mit Quelle); ein Dialog „Termin hinzufügen“ (Regelmäßig / Einmalig / Ausnahme); Listen: „Listen-Termin hinzufügen“ mit Datum + A+L.
+41. **Termin-Regeln erweitern:** Feiertage, Schließtage, „jeden 2. Montag im Monat“.
+42. **Listen-Vorlagen:** Vorgefertigte Regeln für typische Listen (z. B. „Wöchentlich Mo/Do“) mit einem Klick anwenden.
+43. **Filter im Tourenplaner:** Nach Kundenart/Liste/Region/PLZ.
+44. **Erledigungsquote pro Zeitraum:** Woche/Monat, nicht nur „heute“.
 
 ### Domain & Erweiterungen
 
-- **Auftrags-/Mengenverwaltung:** Pro Termin Mengen (Säcke, Kilo) oder Checkliste; Auswertung in Statistiken.
-- **Rechnungsrelevanz:** Markierung „abgerechnet“, Verknüpfung zu Belegen; Export für Buchhaltung.
-- **Kunden-Kommunikation:** E-Mail/SMS-Erinnerung an Kunden vor Abholung (optional mit Opt-in).
-- **Check-in am Kunden:** Beim Erledigen optional „Angekommen“- und „Fertig“-Zeitpunkt (Zeiterfassung pro Tour).
+45. **Auftrags-/Mengenverwaltung:** Pro Termin Mengen (Säcke, Kilo) oder Checkliste; Auswertung in Statistiken.
+46. **Rechnungsrelevanz:** Markierung „abgerechnet“, Verknüpfung zu Belegen; Export für Buchhaltung.
+47. **Kunden-Kommunikation:** E-Mail/SMS-Erinnerung an Kunden vor Abholung (optional mit Opt-in).
+48. **Check-in am Kunden:** Beim Erledigen optional „Angekommen“- und „Fertig“-Zeitpunkt (Zeiterfassung pro Tour).
 
 ### Sonstiges
 
-- Vertragsende/Kündigungsdatum: Kunde auto-pausieren ab Datum
-- Bulk-Import von Kunden (CSV/Excel)
-- Adress-Validierung (Geocoding)
-- Mehrsprachigkeit
+49. Vertragsende/Kündigungsdatum: Kunde auto-pausieren ab Datum
+50. Bulk-Import von Kunden (CSV/Excel)
+51. Adress-Validierung (Geocoding)
+52. Mehrsprachigkeit
 
 ### OCR / Wäscheliste
 
-- **Cloud-OCR:** Für bessere Handschrift-Erkennung Optionen prüfen: Google Vision API, Document AI, AWS Textract, Azure Document Intelligence, OCR.space. Datenschutz (DSGVO) beachten. Details: REFERENZ_ANALYSEN_UND_BERICHTE.md Abschn. 8.
-- **Bildvorverarbeitung:** Kontrast, Begradigung, Ausschnitt zur Verbesserung der On-Device-OCR.
+53. **Cloud-OCR:** Für bessere Handschrift-Erkennung Optionen prüfen: Google Vision API, Document AI, AWS Textract, Azure Document Intelligence, OCR.space. Datenschutz (DSGVO) beachten. Details: REFERENZ_ANALYSEN_UND_BERICHTE.md Abschn. 8.
+54. **Bildvorverarbeitung:** Kontrast, Begradigung, Ausschnitt zur Verbesserung der On-Device-OCR.
 
 ### Qualität & Infrastruktur
 
-- **Crashlytics/Analytics konsequent:** Alle catch-Blöcke und optional Nutzungs-Analytics nutzen.
-- **Echtzeit-Sync-Status:** „X Änderungen ausstehend“ oder Fortschrittsbalken bei großer Sync-Queue.
+55. **Crashlytics/Analytics konsequent:** Alle catch-Blöcke und optional Nutzungs-Analytics nutzen.
+56. **Echtzeit-Sync-Status:** „X Änderungen ausstehend“ oder Fortschrittsbalken bei großer Sync-Queue.
 
 ---
 
@@ -99,10 +123,10 @@
 
 *Ziel: Beleg drucken = Klebestreifen mit Kunden-Alias und Endpreis (keine Rechnungen). Rechnungen kommen später.*
 
-- **Thermo-Etikettendrucker (Bluetooth, schmal):** 58 mm oder 40 mm Breite. Bluetooth direkt vom Handy. ESC/POS – viele Drucker verstehen diesen Befehlssatz.
-- **Typen (Beispiele):** 58-mm-Thermo-Drucker, Etiketten-Drucker 40/58 mm; Marken: Epson TM-Serie, Star Micronics, Bixolon, Sunmi, No-Name mit ESC/POS.
-- **Wichtig:** ESC/POS-Unterstützung (Library z. B. DantSu ESC/POS-ThermalPrinter-Android), Bluetooth, Papier/Etiketten in gewünschter Breite.
-- **Für die App:** ESC/POS-Library einbinden, Text (Alias, Zeilen/Summen, Endpreis) als Beleg an den Drucker senden. Siehe auch PROJECT_MANIFEST.md Abschn. 16.
+57. **Thermo-Etikettendrucker (Bluetooth, schmal):** 58 mm oder 40 mm Breite. Bluetooth direkt vom Handy. ESC/POS – viele Drucker verstehen diesen Befehlssatz.
+58. **Typen (Beispiele):** 58-mm-Thermo-Drucker, Etiketten-Drucker 40/58 mm; Marken: Epson TM-Serie, Star Micronics, Bixolon, Sunmi, No-Name mit ESC/POS.
+59. **Wichtig:** ESC/POS-Unterstützung (Library z. B. DantSu ESC/POS-ThermalPrinter-Android), Bluetooth, Papier/Etiketten in gewünschter Breite.
+60. **Für die App:** ESC/POS-Library einbinden, Text (Alias, Zeilen/Summen, Endpreis) als Beleg an den Drucker senden. Siehe auch PROJECT_MANIFEST.md Abschn. 16.
 
 ---
 
