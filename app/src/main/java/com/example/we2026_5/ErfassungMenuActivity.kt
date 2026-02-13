@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import com.example.we2026_5.ui.main.ErfassungMenuScreen
+import com.example.we2026_5.ui.theme.AppTheme
 
 /**
  * Untermenü für Erfassung: „Erfassung starten“ und „Artikel verwalten“.
@@ -14,6 +15,7 @@ class ErfassungMenuActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            AppTheme {
             ErfassungMenuScreen(
                 onErfassungStarten = {
                     startActivity(Intent(this, WaschenErfassungActivity::class.java))
@@ -23,6 +25,7 @@ class ErfassungMenuActivity : AppCompatActivity() {
                 },
                 onBack = { finish() }
             )
+            }
         }
     }
 }

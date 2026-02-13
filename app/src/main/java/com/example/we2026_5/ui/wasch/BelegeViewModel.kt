@@ -51,6 +51,9 @@ class BelegeViewModel(
     private val listenPrivatKundenpreiseRepository: ListenPrivatKundenpreiseRepository
 ) : ViewModel() {
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     private val _uiState = MutableStateFlow<BelegeUiState>(BelegeUiState.AlleBelege())
 
     /** Brutto-Preise pro Artikel für Beleg-Detail (Tour- oder Kundenpreise), für Gesamtpreis-Anzeige. */
@@ -109,6 +112,7 @@ class BelegeViewModel(
         viewModelScope.launch {
             val customers = customerRepository.getAllCustomers()
             _customersCache.value = customers.associateBy { it.id }
+            _isLoading.value = false
         }
         viewModelScope.launch {
             erfassungRepository.getAllErfassungenFlow().collect { list ->

@@ -18,8 +18,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import com.example.we2026_5.ui.common.AppTopBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.theme.AppColors
 import com.example.we2026_5.util.ComposeDialogHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,10 +65,8 @@ fun SevDeskImportScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.sevdesk_import_title), color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold) },
-                navigationIcon = { },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue)
+            AppTopBar(
+                title = stringResource(R.string.sevdesk_import_title)
             )
         }
     ) { paddingValues ->
@@ -82,7 +80,7 @@ fun SevDeskImportScreen(
             if (!isOnline) {
                 Text(
                     stringResource(R.string.sevdesk_offline_hinweis),
-                    color = Color(0xFFD32F2F),
+                    color = AppColors.ErrorRed,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(bottom = 8.dp)

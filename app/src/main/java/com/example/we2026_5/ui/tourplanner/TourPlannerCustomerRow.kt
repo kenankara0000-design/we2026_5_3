@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.theme.AppColors
 import com.example.we2026_5.ui.CustomerTypeButtonHelper
 import com.example.we2026_5.ui.common.AlWochentagText
 
@@ -44,7 +45,7 @@ private val CustomerBadgeFixedWidth = 100.dp
 private val CustomerButtonTextSp = 17.sp
 private val CustomerButtonMinHeight = 44.dp
 
-private val ErledigtBadgeGreen = Color(0xFF388E3C)
+private val ErledigtBadgeGreen = AppColors.StatusDone
 
 @Composable
 internal fun TourCustomerRow(

@@ -1,0 +1,21 @@
+# Regel: Analyse-Kontext (Stand Feb 2026)
+
+**Bevor du an UX, Design, Code-Architektur, Performance oder Maßnahmen arbeitest:**
+
+1. **Lies `.cursor/plans/ANALYSE-INDEX.md`** – das ist die zentrale Übersicht aller 9 Analysen und des Maßnahmenplans.
+
+2. **Aktueller Stand:**
+   - **Alle 9 Analysen abgeschlossen** (Design, Code, Kompatibilität, UX/Layout, User-Flow, Informationsarchitektur, Offline, Fehlerbehandlung, Performance).
+   - **Konsolidierter Maßnahmenplan** liegt vor: `2026-02-13_21-47.massnahmenplan.md` (73 Aufgaben, 8 Phasen, ~12–18 Wochen).
+   - **Keine Umsetzung ohne ausdrückliche Freigabe.**
+
+3. **Dateien im `.cursor/plans/`-Ordner:**
+   - `ANALYSE-INDEX.md` → Einstiegspunkt (Status, Top-Befunde, Reihenfolge)
+   - `analyse-01` bis `analyse-09` → Befunde pro Thema
+   - `2026-02-13_21-47.massnahmenplan.md` → **Aktueller** konsolidierter Maßnahmenplan
+   - `2026-02-13_21-02.plan.md` → Original-Tiefenanalyse (Befunde Abschn. 1–16; Maßnahmenteil Abschn. 17 ersetzt)
+   - `2026-02-13_21-44.plan.md` → Alter Einzelplan 04–09 (ersetzt)
+
+4. **Wenn der Nutzer „Phase 1 starten" o.ä. sagt:** Lies zuerst den Maßnahmenplan (`2026-02-13_21-47.massnahmenplan.md`), dann die betroffenen Analyse-Dateien, dann erst umsetzen.
+
+Diese Regel gilt immer.

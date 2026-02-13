@@ -14,6 +14,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.theme.AppColors
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
 import com.example.we2026_5.ui.addcustomer.CustomerStammdatenForm
 import com.example.we2026_5.ui.common.DetailUiConstants
@@ -84,7 +86,7 @@ fun CustomerDetailStammdatenTab(
                 text = fullAddress.ifEmpty { stringResource(R.string.label_not_set) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFE0E0E0))
+                    .background(AppColors.LightGray)
                     .padding(12.dp)
                     .clickable(onClick = onAdresseClick),
                 color = if (fullAddress.isNotEmpty()) textPrimary else textSecondary,
@@ -101,7 +103,7 @@ fun CustomerDetailStammdatenTab(
                 text = customer.telefon.ifEmpty { stringResource(R.string.label_not_set) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFE0E0E0))
+                    .background(AppColors.LightGray)
                     .padding(12.dp)
                     .clickable(onClick = onTelefonClick),
                 color = if (customer.telefon.isNotEmpty()) textPrimary else textSecondary,
@@ -116,7 +118,7 @@ fun CustomerDetailStammdatenTab(
             )
             Text(
                 text = customer.notizen.ifEmpty { stringResource(R.string.label_not_set) },
-                modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp),
+                modifier = Modifier.fillMaxWidth().background(AppColors.LightGray).padding(12.dp),
                 color = if (customer.notizen.isNotEmpty()) textPrimary else textSecondary,
                 fontSize = DetailUiConstants.BodySp
             )
@@ -166,6 +168,19 @@ fun CustomerDetailStammdatenTab(
             }
         }
         Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+
+        // Pending-Uploads aus WorkManager abfragen
+        val context = androidx.compose.ui.platform.LocalContext.current
+        val pendingUploads = remember { androidx.compose.runtime.mutableIntStateOf(0) }
+        androidx.compose.runtime.LaunchedEffect(Unit) {
+            try {
+                val workInfos = androidx.work.WorkManager.getInstance(context)
+                    .getWorkInfosByTag(com.example.we2026_5.util.StorageUploadManager.WORK_TAG_UPLOAD)
+                    .get()
+                pendingUploads.intValue = workInfos.count { !it.state.isFinished }
+            } catch (_: Exception) { /* WorkManager nicht verfügbar */ }
+        }
+
         CustomerDetailFotosSection(
             fotoUrls = customer.fotoUrls,
             fotoThumbUrls = customer.fotoThumbUrls,
@@ -173,7 +188,8 @@ fun CustomerDetailStammdatenTab(
             textPrimary = textPrimary,
             onPhotoClick = onPhotoClick,
             onTakePhoto = onTakePhoto,
-            onDeletePhoto = onDeletePhoto
+            onDeletePhoto = onDeletePhoto,
+            pendingUploadCount = pendingUploads.intValue
         )
     }
 }

@@ -5,9 +5,9 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.ui.wasch.ArtikelVerwaltungScreen
 import com.example.we2026_5.ui.wasch.ArtikelVerwaltungViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -19,10 +19,14 @@ class ArtikelVerwaltungActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
+            AppTheme {
                 val articles by viewModel.articles.collectAsState(initial = emptyList())
+                val isLoading by viewModel.isLoading.collectAsState()
+                val errorMessage by viewModel.errorMessage.collectAsState()
                 ArtikelVerwaltungScreen(
                     articles = articles,
+                    isLoading = isLoading,
+                    errorMessage = errorMessage,
                     onBack = { finish() },
                     onDeleteArticle = { article ->
                         AlertDialog.Builder(this@ArtikelVerwaltungActivity)

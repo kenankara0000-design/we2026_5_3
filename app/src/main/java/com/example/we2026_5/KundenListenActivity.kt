@@ -6,10 +6,10 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.ui.kundenlisten.KundenListenScreen
 import com.example.we2026_5.ui.kundenlisten.KundenListenState
@@ -29,7 +29,7 @@ class KundenListenActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
+            AppTheme {
                 val state by viewModel.state.collectAsState(initial = KundenListenState.Loading)
                 KundenListenScreen(
                     state = state,

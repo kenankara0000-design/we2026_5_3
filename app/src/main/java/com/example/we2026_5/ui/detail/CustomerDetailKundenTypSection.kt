@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.ui.common.DetailUiConstants
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.theme.AppColors
 
 @Composable
 fun CustomerDetailKundenTypSection(
@@ -41,7 +42,7 @@ fun CustomerDetailKundenTypSection(
             )
             Text(
                 text = typeLabel,
-                modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp),
+                modifier = Modifier.fillMaxWidth().background(AppColors.LightGray).padding(12.dp),
                 color = textPrimary,
                 fontSize = DetailUiConstants.BodySp
             )
@@ -59,7 +60,7 @@ fun CustomerDetailKundenTypSection(
                     KundenTyp.UNREGELMAESSIG -> stringResource(R.string.label_kunden_typ_unregelmaessig)
                     KundenTyp.AUF_ABRUF -> stringResource(R.string.label_kunden_typ_auf_abruf)
                 },
-                modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp),
+                modifier = Modifier.fillMaxWidth().background(AppColors.LightGray).padding(12.dp),
                 color = textPrimary,
                 fontSize = DetailUiConstants.BodySp
             )
@@ -76,7 +77,7 @@ fun CustomerDetailKundenTypSection(
                 val l = effectiveAuslieferungWochentage.map { wochen[it] }.joinToString(", ").takeIf { it.isNotEmpty() }?.let { "$it L" } ?: ""
                 Text(
                     text = listOf(a, l).filter { it.isNotEmpty() }.joinToString(" / "),
-                    modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp),
+                    modifier = Modifier.fillMaxWidth().background(AppColors.LightGray).padding(12.dp),
                     color = textPrimary,
                     fontSize = DetailUiConstants.BodySp
                 )
@@ -92,7 +93,7 @@ fun CustomerDetailKundenTypSection(
                 )
                 Text(
                     text = "–",
-                    modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(12.dp),
+                    modifier = Modifier.fillMaxWidth().background(AppColors.LightGray).padding(12.dp),
                     color = textPrimary,
                     fontSize = DetailUiConstants.BodySp
                 )

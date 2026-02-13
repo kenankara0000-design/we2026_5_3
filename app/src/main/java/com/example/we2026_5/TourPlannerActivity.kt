@@ -23,6 +23,7 @@ import com.example.we2026_5.ui.tourplanner.TourPlannerViewModel
 import com.example.we2026_5.tourplanner.ErledigungSheetState
 import com.example.we2026_5.tourplanner.TerminCache
 import com.example.we2026_5.tourplanner.TourPlannerCoordinator
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.util.AgentDebugLog
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.tageAzuLOrDefault
@@ -76,6 +77,7 @@ class TourPlannerActivity : AppCompatActivity() {
         networkMonitor.startMonitoring()
 
         setContent {
+            AppTheme {
             val tourItems by viewModel.tourItems.observeAsState(initial = emptyList())
             val erledigtCount by viewModel.erledigtCount.observeAsState(initial = 0)
             val erledigtSheetContent by viewModel.erledigtSheetContent.observeAsState(initial = null)
@@ -310,6 +312,7 @@ class TourPlannerActivity : AppCompatActivity() {
                 onReihenfolgeBearbeiten = { reihenfolgeBearbeitenMode = true },
                 onReihenfolgeFertig = { reihenfolgeBearbeitenMode = false }
             )
+            }
         }
 
         // #region agent log

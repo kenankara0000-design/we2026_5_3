@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.we2026_5.KundenTermin
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.theme.AppColors
 import com.example.we2026_5.ui.common.WochentagChipRowFromResources
 import com.example.we2026_5.util.DateFormatter
 
@@ -134,22 +135,22 @@ fun ListeBearbeitenListenTermineSection(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFFE8F0FE))
+                                .background(AppColors.InfoBlueBg)
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(stringResource(R.string.badge_abholung_short), modifier = Modifier
-                                .background(Color(0xFF1976D2).copy(alpha = 0.2f))
+                                .background(AppColors.PrimaryBlue.copy(alpha = 0.2f))
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
-                                color = Color(0xFF1976D2), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                                color = AppColors.PrimaryBlue, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                             Text(DateFormatter.formatDateWithWeekday(aTermin.datum),
                                 modifier = Modifier.padding(start = 8.dp, end = 12.dp),
                                 color = textPrimary, fontSize = 13.sp)
                             Text("·", modifier = Modifier.padding(horizontal = 4.dp), color = textSecondary, fontSize = 13.sp)
                             Text(stringResource(R.string.badge_auslieferung_short), modifier = Modifier
-                                .background(Color(0xFF388E3C).copy(alpha = 0.2f))
+                                .background(AppColors.StatusDone.copy(alpha = 0.2f))
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
-                                color = Color(0xFF388E3C), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                                color = AppColors.StatusDone, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                             Text(DateFormatter.formatDateWithWeekday(lTermin.datum),
                                 modifier = Modifier.padding(start = 8.dp),
                                 color = textPrimary, fontSize = 13.sp)
@@ -166,14 +167,14 @@ fun ListeBearbeitenListenTermineSection(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFFE8F0FE))
+                                .background(AppColors.InfoBlueBg)
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(stringResource(R.string.badge_abholung_short), modifier = Modifier
-                                .background(Color(0xFF1976D2).copy(alpha = 0.2f))
+                                .background(AppColors.PrimaryBlue.copy(alpha = 0.2f))
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
-                                color = Color(0xFF1976D2), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                                color = AppColors.PrimaryBlue, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                             Text(DateFormatter.formatDateWithWeekday(aTermin.datum),
                                 modifier = Modifier.padding(start = 8.dp, end = 12.dp),
                                 color = textPrimary, fontSize = 13.sp)
@@ -190,14 +191,14 @@ fun ListeBearbeitenListenTermineSection(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFFE8F0FE))
+                                .background(AppColors.InfoBlueBg)
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(stringResource(R.string.badge_auslieferung_short), modifier = Modifier
-                                .background(Color(0xFF388E3C).copy(alpha = 0.2f))
+                                .background(AppColors.StatusDone.copy(alpha = 0.2f))
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
-                                color = Color(0xFF388E3C), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                                color = AppColors.StatusDone, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                             Text(DateFormatter.formatDateWithWeekday(lTermin.datum),
                                 modifier = Modifier.padding(start = 8.dp, end = 12.dp),
                                 color = textPrimary, fontSize = 13.sp)
@@ -229,7 +230,7 @@ fun ListeBearbeitenListenTermineSection(
                         terminLToDeleteWithA = null
                     }
                 ) {
-                    Text(stringResource(R.string.dialog_urlaub_delete_entry), color = Color(0xFFD32F2F))
+                    Text(stringResource(R.string.dialog_urlaub_delete_entry), color = AppColors.ErrorRed)
                 }
             },
             dismissButton = {

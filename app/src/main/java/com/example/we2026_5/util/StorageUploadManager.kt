@@ -22,6 +22,9 @@ data class PhotoUploadResult(val fullUrl: String, val thumbUrl: String?)
 
 object StorageUploadManager {
 
+    /** Tag für WorkManager-Requests, um ausstehende Uploads abfragen zu können. */
+    const val WORK_TAG_UPLOAD = "photo_upload"
+
     /**
      * Lädt ein Bild hoch (Vollbild + Thumbnail für Listen); bei Offline Queue.
      * onSuccess: fullUrl, thumbUrl (null wenn Thumbnail-Erstellung fehlschlug).
@@ -75,6 +78,7 @@ object StorageUploadManager {
             val uploadWork = OneTimeWorkRequestBuilder<ImageUploadWorker>()
                 .setConstraints(constraints)
                 .setInputData(inputData)
+                .addTag(WORK_TAG_UPLOAD)
                 .build()
             WorkManager.getInstance(context).enqueue(uploadWork)
             Log.d("StorageUploadManager", "Upload queued for later execution")

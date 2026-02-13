@@ -6,11 +6,11 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import com.example.we2026_5.ui.mapview.MapViewScreen
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.ui.mapview.MapViewState
 import com.example.we2026_5.ui.mapview.MapViewViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -33,7 +33,7 @@ class MapViewActivity : AppCompatActivity() {
             return
         }
         setContent {
-            MaterialTheme {
+            AppTheme {
                 val state by viewModel.state.observeAsState(initial = MapViewState.Loading)
                 MapViewScreen(
                     state = state,

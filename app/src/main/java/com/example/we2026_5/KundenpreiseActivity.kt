@@ -3,9 +3,9 @@ package com.example.we2026_5
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.ui.wasch.KundenpreiseScreen
 import com.example.we2026_5.ui.wasch.KundenpreiseUiState
 import com.example.we2026_5.ui.wasch.KundenpreiseViewModel
@@ -18,14 +18,16 @@ class KundenpreiseActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
+            AppTheme {
                 val state by viewModel.uiState.collectAsState()
                 val kundenPreise by viewModel.kundenPreiseList.collectAsState(initial = emptyList())
                 val articles by viewModel.articles.collectAsState(initial = emptyList())
+                val isLoadingPreise by viewModel.isLoadingPreise.collectAsState()
                 KundenpreiseScreen(
                     state = state,
                     kundenPreise = kundenPreise,
                     articles = articles,
+                    isLoadingPreise = isLoadingPreise,
                     onBack = {
                         when (state) {
                             is KundenpreiseUiState.KundeSuchen -> finish()

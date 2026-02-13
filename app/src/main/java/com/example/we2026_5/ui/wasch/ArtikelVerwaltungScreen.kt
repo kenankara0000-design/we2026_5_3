@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -23,46 +22,37 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.common.AppEmptyView
+import com.example.we2026_5.ui.common.AppErrorView
+import com.example.we2026_5.ui.common.AppLoadingView
+import com.example.we2026_5.ui.common.AppTopBar
 import com.example.we2026_5.wasch.Article
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArtikelVerwaltungScreen(
     articles: List<Article>,
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
     onBack: () -> Unit,
     onDeleteArticle: (Article) -> Unit
 ) {
-    val context = LocalContext.current
-    val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
     val textSecondary = colorResource(R.color.text_secondary)
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.wasch_artikel_verwalten),
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = { },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue)
+            AppTopBar(
+                title = stringResource(R.string.wasch_artikel_verwalten)
             )
         },
         containerColor = colorResource(R.color.background_light)
@@ -73,12 +63,14 @@ fun ArtikelVerwaltungScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            if (articles.isEmpty()) {
-                Text(
-                    stringResource(R.string.wasch_keine_artikel),
-                    fontSize = 14.sp,
-                    color = textSecondary,
-                    modifier = Modifier.padding(vertical = 24.dp)
+            if (isLoading) {
+                AppLoadingView(text = stringResource(R.string.stat_loading))
+            } else if (errorMessage != null) {
+                AppErrorView(message = errorMessage)
+            } else if (articles.isEmpty()) {
+                AppEmptyView(
+                    title = stringResource(R.string.artikel_empty),
+                    emoji = "📦"
                 )
             } else {
                 LazyColumn(

@@ -20,8 +20,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.common.AppTopBar
 import com.example.we2026_5.util.ComposeDialogHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,15 +45,13 @@ fun SettingsScreen(
     onAbmelden: () -> Unit,
     onBack: () -> Unit
 ) {
-    val primaryBlue = colorResource(R.color.primary_blue)
     val textSecondary = colorResource(R.color.text_secondary)
     var menuExpanded by remember { mutableStateOf(false) }
     var showResetConfirm by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings_title), fontWeight = FontWeight.Bold) },
-                navigationIcon = { },
+            AppTopBar(
+                title = stringResource(R.string.settings_title),
                 actions = {
                     IconButton(onClick = { menuExpanded = true }) {
                         Icon(
@@ -75,8 +72,7 @@ fun SettingsScreen(
                             }
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue, titleContentColor = Color.White)
+                }
             )
         }
     ) { paddingValues ->

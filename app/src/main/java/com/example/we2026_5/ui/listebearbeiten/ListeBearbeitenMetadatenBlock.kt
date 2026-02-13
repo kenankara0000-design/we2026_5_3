@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.theme.AppColors
 
 @Composable
 fun ListeBearbeitenMetadatenBlock(
@@ -43,10 +44,10 @@ fun ListeBearbeitenMetadatenBlock(
         ) { Text(stringResource(R.string.label_list_edit)) }
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = stringResource(R.string.label_list_name_field), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
-        Text(text = displayName, modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(8.dp), color = textPrimary)
+        Text(text = displayName, modifier = Modifier.fillMaxWidth().background(AppColors.LightGray).padding(8.dp), color = textPrimary)
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = stringResource(R.string.label_list_type), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
-        Text(text = displayListeArt, modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(8.dp), color = textPrimary)
+        Text(text = displayListeArt, modifier = Modifier.fillMaxWidth().background(AppColors.LightGray).padding(8.dp), color = textPrimary)
     } else {
         Text(text = stringResource(R.string.label_list_name_field), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
         OutlinedTextField(

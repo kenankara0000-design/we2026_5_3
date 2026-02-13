@@ -25,7 +25,7 @@ object AppLogger {
      * Logging aktiviert (true für Debug-Builds, false für Release).
      * In der Release-Variante sollte dies auf `false` gesetzt werden.
      */
-    private const val ENABLED = true // TODO: Set to BuildConfig.DEBUG in Production
+    private val ENABLED = com.example.we2026_5.BuildConfig.DEBUG
     
     /**
      * App-weiter Log-Tag Prefix.

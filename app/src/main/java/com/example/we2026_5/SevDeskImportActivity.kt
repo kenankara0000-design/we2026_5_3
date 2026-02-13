@@ -3,12 +3,12 @@ package com.example.we2026_5
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.lifecycleScope
 import com.example.we2026_5.ui.sevdesk.SevDeskImportScreen
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.ui.sevdesk.SevDeskImportViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
@@ -23,7 +23,7 @@ class SevDeskImportActivity : AppCompatActivity() {
         networkMonitor = NetworkMonitor(this, lifecycleScope)
         networkMonitor.startMonitoring()
         setContent {
-            MaterialTheme {
+            AppTheme {
                 val state by viewModel.state.collectAsState()
                 val isOnline by networkMonitor.isOnline.observeAsState(initial = true)
                 SevDeskImportScreen(

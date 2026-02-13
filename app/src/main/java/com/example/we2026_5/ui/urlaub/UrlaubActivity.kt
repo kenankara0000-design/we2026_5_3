@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.util.DialogBaseHelper
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
@@ -33,6 +34,7 @@ class UrlaubActivity : AppCompatActivity() {
         }
 
         setContent {
+            AppTheme {
             val customer by viewModel.customer.collectAsState(initial = null)
             val isSaving by viewModel.isSaving.collectAsState(initial = false)
             val errorMessage by viewModel.errorMessage.collectAsState(initial = null)
@@ -54,6 +56,7 @@ class UrlaubActivity : AppCompatActivity() {
                 onUrlaubAendern = { index -> customer?.let { openUrlaubDatePicker(it, index) } },
                 onUrlaubEintragLoeschen = { index -> confirmDeleteUrlaub(index) }
             )
+            }
         }
     }
 

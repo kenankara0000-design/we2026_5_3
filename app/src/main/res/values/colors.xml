@@ -6,9 +6,6 @@
     <color name="primary_blue_light">#42A5F5</color> <!-- Material Blue 400 -->
     <color name="button_blue">#2196F3</color> <!-- Material Blue 500 -->
     
-    <!-- Alte Primärfarbe (für Kompatibilität) -->
-    <color name="purple_500">#1976D2</color>
-    
     <!-- Status-Farben - Verbesserte Kontraste -->
     <color name="status_overdue">#D32F2F</color> <!-- Material Red 700 -->
     <color name="status_done">#388E3C</color> <!-- Material Green 700 -->
@@ -16,11 +13,11 @@
     <color name="status_info">#1976D2</color> <!-- Material Blue 700 -->
     <color name="status_ausnahme">#F9A825</color> <!-- Gelb für Ausnahme-Termin (A-A / A-L) -->
     <color name="status_offline_yellow">#FFEB3B</color> <!-- Material Yellow A400 für Offline-Anzeige -->
-    <color name="error_red">#D32F2F</color>
+    <color name="error_red">@color/status_overdue</color> <!-- Alias → status_overdue (#D32F2F) -->
     
     <!-- Button-Farben - Modernisiert -->
     <color name="button_abholung">#1976D2</color> <!-- Blau für Abholung -->
-    <color name="button_auslieferung">#388E3C</color> <!-- Grün für Auslieferung -->
+    <color name="button_auslieferung">@color/status_done</color> <!-- Alias → status_done (#388E3C) -->
     <color name="button_verschieben">#D32F2F</color> <!-- Rot für Verschieben (Material Red 700) -->
     <color name="button_urlaub">#E65100</color> <!-- Orange für Urlaub (Option 1: warm/Ferien) -->
     <color name="button_rueckgaengig">#D32F2F</color> <!-- Rot für Rückgängig -->

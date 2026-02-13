@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.theme.AppColors
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.TerminFilterUtils
 
@@ -78,7 +79,7 @@ fun UrlaubWindowContent(
                         color = textPrimary,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp))
+                            .background(AppColors.SurfaceLight, RoundedCornerShape(8.dp))
                             .padding(12.dp)
                     )
                     Spacer(Modifier.height(8.dp))
@@ -90,7 +91,7 @@ fun UrlaubWindowContent(
                     color = textSecondary,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp))
+                        .background(AppColors.SurfaceLight, RoundedCornerShape(8.dp))
                         .padding(12.dp)
                 )
             }

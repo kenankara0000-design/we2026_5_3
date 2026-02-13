@@ -10,8 +10,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import com.example.we2026_5.ui.common.AppTopBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,22 +31,12 @@ fun MapViewScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
     val textSecondary = Color(ContextCompat.getColor(context, R.color.text_secondary))
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.map_title),
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = { },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue)
+            AppTopBar(
+                title = stringResource(R.string.map_title)
             )
         }
     ) { paddingValues ->

@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.theme.AppColors
 
 private val WOCHENTAG_SHORT_RES = listOf(
     R.string.label_weekday_short_mo,
@@ -79,7 +80,7 @@ fun AlWochentagText(customer: Customer, color: Color) {
 }
 
 /** Hellgrau für Mo–Fr, hellrot für Sa/So (Standard Abhol-/Auslieferungstage). */
-private val CHIP_BG_WEEKDAY = Color(0xFFE0E0E0)
+private val CHIP_BG_WEEKDAY = AppColors.LightGray
 
 /**
  * Einzeilige Chip-Row für einen Wochentag (Single-Select).
@@ -186,7 +187,7 @@ fun WochentagListenMenue(
 ) {
     val weekendColor = colorResource(R.color.status_overdue)
     val weekendColorLight = weekendColor.copy(alpha = 0.25f)
-    val weekdayColorLight = Color(0xFFE0E0E0)
+    val weekdayColorLight = AppColors.LightGray
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(2.dp)

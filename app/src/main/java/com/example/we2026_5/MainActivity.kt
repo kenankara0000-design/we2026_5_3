@@ -25,6 +25,7 @@ import com.example.we2026_5.util.runPauseExpiredReset
 import com.example.we2026_5.util.runRemoveDeprecatedFieldsMigration
 import com.example.we2026_5.util.runListenPrivatKundenpreiseMigration
 import com.example.we2026_5.util.runTourToListenkundenMigration
+import com.example.we2026_5.ui.theme.AppTheme
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import org.koin.android.ext.android.inject
@@ -65,27 +66,29 @@ class MainActivity : AppCompatActivity() {
 
         window.decorView.setBackgroundColor(ContextCompat.getColor(this, R.color.background_light))
         setContent {
-            val tourCount by viewModel.tourFälligCount.observeAsState(0)
-            val isOnline by networkMonitor.isOnline.observeAsState(true)
-            val isSyncing by networkMonitor.isSyncing.observeAsState(false)
-            val slotVorschlaege by viewModel.slotVorschlaege.observeAsState(emptyList())
-            val isAdmin = adminChecker.isAdmin()
+            AppTheme {
+                val tourCount by viewModel.tourFälligCount.observeAsState(0)
+                val isOnline by networkMonitor.isOnline.observeAsState(true)
+                val isSyncing by networkMonitor.isSyncing.observeAsState(false)
+                val slotVorschlaege by viewModel.slotVorschlaege.observeAsState(emptyList())
+                val isAdmin = adminChecker.isAdmin()
 
-            MainScreen(
-                isAdmin = isAdmin,
-                isOffline = !isOnline,
-                isSyncing = isSyncing,
-                tourCount = tourCount,
-                slotVorschlaege = slotVorschlaege,
-                onNeuKunde = { startActivity(AppNavigation.toAddCustomer(this@MainActivity)) },
-                onKunden = { startActivity(AppNavigation.toCustomerManager(this@MainActivity)) },
-                onTouren = { startActivity(AppNavigation.toTourPlanner(this@MainActivity)) },
-                onKundenListen = { startActivity(AppNavigation.toKundenListen(this@MainActivity)) },
-                onStatistiken = { startActivity(AppNavigation.toStatistics(this@MainActivity)) },
-                onErfassung = { startActivity(AppNavigation.toErfassungMenu(this@MainActivity)) },
-                onSettings = { startActivity(AppNavigation.toSettings(this@MainActivity)) },
-                onSlotSelected = { slot -> handleSlotSelection(slot) }
-            )
+                MainScreen(
+                    isAdmin = isAdmin,
+                    isOffline = !isOnline,
+                    isSyncing = isSyncing,
+                    tourCount = tourCount,
+                    slotVorschlaege = slotVorschlaege,
+                    onNeuKunde = { startActivity(AppNavigation.toAddCustomer(this@MainActivity)) },
+                    onKunden = { startActivity(AppNavigation.toCustomerManager(this@MainActivity)) },
+                    onTouren = { startActivity(AppNavigation.toTourPlanner(this@MainActivity)) },
+                    onKundenListen = { startActivity(AppNavigation.toKundenListen(this@MainActivity)) },
+                    onStatistiken = { startActivity(AppNavigation.toStatistics(this@MainActivity)) },
+                    onErfassung = { startActivity(AppNavigation.toErfassungMenu(this@MainActivity)) },
+                    onSettings = { startActivity(AppNavigation.toSettings(this@MainActivity)) },
+                    onSlotSelected = { slot -> handleSlotSelection(slot) }
+                )
+            }
         }
     }
 

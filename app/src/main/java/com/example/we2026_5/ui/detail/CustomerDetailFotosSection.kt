@@ -44,7 +44,8 @@ fun CustomerDetailFotosSection(
     textPrimary: androidx.compose.ui.graphics.Color,
     onPhotoClick: (String) -> Unit,
     onTakePhoto: () -> Unit,
-    onDeletePhoto: ((String) -> Unit)? = null
+    onDeletePhoto: ((String) -> Unit)? = null,
+    pendingUploadCount: Int = 0
 ) {
     Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
     Text(
@@ -53,6 +54,25 @@ fun CustomerDetailFotosSection(
         fontWeight = FontWeight.Bold,
         color = textPrimary
     )
+    if (pendingUploadCount > 0) {
+        Spacer(Modifier.height(4.dp))
+        androidx.compose.foundation.layout.Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            androidx.compose.material3.CircularProgressIndicator(
+                modifier = Modifier.size(14.dp),
+                strokeWidth = 2.dp,
+                color = com.example.we2026_5.ui.theme.AppColors.StatusWarning
+            )
+            Text(
+                text = if (pendingUploadCount == 1) stringResource(R.string.foto_upload_pending_singular)
+                else stringResource(R.string.foto_upload_pending, pendingUploadCount),
+                fontSize = 12.sp,
+                color = com.example.we2026_5.ui.theme.AppColors.StatusWarning
+            )
+        }
+    }
     Spacer(Modifier.height(8.dp))
     if (fotoUrls.isNotEmpty()) {
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

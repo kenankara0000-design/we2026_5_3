@@ -6,7 +6,6 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -19,6 +18,7 @@ import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.TourSlot
 import com.example.we2026_5.Zeitfenster
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.util.TerminAusKundeUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -37,7 +37,7 @@ class AddCustomerActivity : AppCompatActivity() {
         val initialName = intent.getStringExtra("CUSTOMER_NAME").orEmpty()
 
         setContent {
-            MaterialTheme {
+            AppTheme {
                 val state by viewModel.state.observeAsState(initial = AddCustomerState())
                 LaunchedEffect(Unit) {
                     if (initialName.isNotEmpty()) viewModel.setInitialName(initialName)

@@ -32,6 +32,12 @@ class KundenpreiseViewModel(
     private val _kundenPreiseList = MutableStateFlow<List<KundenPreis>>(emptyList())
     val kundenPreiseList: StateFlow<List<KundenPreis>> = _kundenPreiseList.asStateFlow()
 
+    private val _isLoadingPreise = MutableStateFlow(false)
+    val isLoadingPreise: StateFlow<Boolean> = _isLoadingPreise.asStateFlow()
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
     private var preiseJob: Job? = null
     /** Cache für Kunde-Suche: nur bei Eingabe Treffer anzeigen, nicht alle Kunden beim Start. */
     private var customersSearchCache: List<Customer>? = null
@@ -68,12 +74,18 @@ class KundenpreiseViewModel(
 
     fun kundeGewaehlt(customer: Customer) {
         preiseJob?.cancel()
+        _isLoadingPreise.value = true
         _uiState.value = KundenpreiseUiState.KundenpreiseList(customer)
         preiseJob = viewModelScope.launch {
             kundenPreiseRepository.getKundenPreiseForCustomerFlow(customer.id).collect {
+                _isLoadingPreise.value = false
                 _kundenPreiseList.value = it
             }
         }
+    }
+
+    fun clearError() {
+        _errorMessage.value = null
     }
 
     fun backToKundeSuchen() {

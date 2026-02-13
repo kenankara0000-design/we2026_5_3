@@ -28,8 +28,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import com.example.we2026_5.ui.common.AppTopBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.delay
@@ -43,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.theme.AppColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +57,6 @@ fun ListeErstellenScreen(
     onFinish: () -> Unit
 ) {
     val context = LocalContext.current
-    val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
     val backgroundLight = Color(ContextCompat.getColor(context, R.color.background_light))
     val textPrimary = Color(ContextCompat.getColor(context, R.color.text_primary))
     val textSecondary = Color(ContextCompat.getColor(context, R.color.text_secondary))
@@ -78,17 +77,8 @@ fun ListeErstellenScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.list_create_title),
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = { },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue)
+            AppTopBar(
+                title = stringResource(R.string.list_create_title)
             )
         },
         containerColor = backgroundLight
@@ -209,7 +199,7 @@ private fun WeekdaySelector(
     val context = LocalContext.current
     val primaryBlue = Color(ContextCompat.getColor(context, R.color.primary_blue))
     val weekdays = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
-    val chipBg = Color(0xFFE0E0E0)
+    val chipBg = AppColors.LightGray
     Column {
         Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
         Spacer(modifier = Modifier.height(4.dp))

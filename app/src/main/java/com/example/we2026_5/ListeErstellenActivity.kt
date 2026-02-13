@@ -3,10 +3,10 @@ package com.example.we2026_5
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import com.example.we2026_5.ui.liste.ListeErstellenScreen
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.ui.liste.ListeErstellenState
 import com.example.we2026_5.ui.liste.ListeErstellenViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -20,7 +20,7 @@ class ListeErstellenActivity : AppCompatActivity() {
         @Suppress("UNUSED_EXPRESSION")
         viewModel
         setContent {
-            MaterialTheme {
+            AppTheme {
                 val state by viewModel.state.observeAsState(initial = ListeErstellenState())
                 ListeErstellenScreen(
                     state = state,

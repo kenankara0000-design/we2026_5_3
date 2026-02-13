@@ -10,7 +10,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.MaterialTheme
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -21,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.ui.wasch.WaschenErfassungScreen
 import com.example.we2026_5.ui.wasch.WaschenErfassungUiState
 import com.example.we2026_5.ui.wasch.WaschenErfassungViewModel
@@ -96,7 +96,7 @@ class WaschenErfassungActivity : AppCompatActivity() {
             }
         }
         setContent {
-            MaterialTheme {
+            AppTheme {
                 val state by viewModel.uiState.collectAsState()
                 val articles by viewModel.articles.collectAsState(initial = emptyList())
                 val erfassungen by viewModel.erfassungenList.collectAsState(initial = emptyList())

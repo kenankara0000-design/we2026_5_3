@@ -870,4 +870,17 @@
     <string name="sevdesk_offline_hinweis">Kein Internet – Import nicht möglich.</string>
     <string name="offline_hinweis_daten_sync">Offline – Daten werden bei Verbindung synchronisiert.</string>
     <string name="kundenpreise_anderen_kunden">Anderen Kunden wählen</string>
+
+    <!-- Phase 3: Loading/Error/Empty States -->
+    <string name="error_artikel_laden">Fehler beim Laden der Artikel.</string>
+    <string name="error_kundenpreise_laden">Fehler beim Laden der Kundenpreise.</string>
+    <string name="error_belege_laden">Fehler beim Laden der Belege.</string>
+    <string name="error_kunde_laden">Fehler beim Laden der Kundendaten.</string>
+    <string name="error_speichern_detail">Fehler beim Speichern: %1$s</string>
+    <string name="error_loeschen_detail">Fehler beim Löschen: %1$s</string>
+    <string name="error_netzwerk">Keine Internetverbindung. Bitte prüfen und erneut versuchen.</string>
+    <string name="error_daten_laden">Daten konnten nicht geladen werden.</string>
+    <string name="artikel_empty">Keine Artikel vorhanden. Artikel über SevDesk importieren.</string>
+    <string name="foto_upload_pending">%d Foto(s) warten auf Upload</string>
+    <string name="foto_upload_pending_singular">1 Foto wartet auf Upload</string>
 </resources>

@@ -23,6 +23,7 @@ fun BelegeScreen(
     belegPreiseGross: Map<String, Double> = emptyMap(),
     alleBelegEintraegeErledigt: List<BelegEintrag> = emptyList(),
     belegMonateErledigt: List<BelegMonat> = emptyList(),
+    isLoading: Boolean = false,
     onBack: () -> Unit,
     onCustomerSearchQueryChange: (String) -> Unit,
     onKundeWaehlen: (com.example.we2026_5.Customer) -> Unit,
@@ -51,6 +52,12 @@ fun BelegeScreen(
         containerColor = backgroundLight
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            if (isLoading) {
+                com.example.we2026_5.ui.common.AppLoadingView(
+                    text = androidx.compose.ui.res.stringResource(R.string.stat_loading)
+                )
+                return@Scaffold
+            }
             when (state) {
                 is BelegeUiState.AlleBelege -> {
                     WaschenErfassungAlleBelegeContent(

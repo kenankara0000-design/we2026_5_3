@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import com.example.we2026_5.sevdesk.SevDeskDeletedIds
 import com.example.we2026_5.ui.main.SettingsScreen
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.util.AppNavigation
 import com.google.firebase.auth.FirebaseAuth
 
@@ -18,6 +19,7 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            AppTheme {
             SettingsScreen(
                 onOpenPreise = {
                     startActivity(AppNavigation.toPreise(this))
@@ -36,6 +38,7 @@ class SettingsActivity : AppCompatActivity() {
                 },
                 onBack = { finish() }
             )
+            }
         }
     }
 

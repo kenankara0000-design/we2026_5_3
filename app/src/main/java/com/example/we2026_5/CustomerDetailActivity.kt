@@ -25,6 +25,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.example.we2026_5.auth.AdminChecker
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.detail.CustomerPhotoManager
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.ui.detail.CustomerDetailScreen
 import com.example.we2026_5.ui.detail.CustomerDetailViewModel
 import com.example.we2026_5.ui.urlaub.UrlaubActivity
@@ -84,6 +85,7 @@ class CustomerDetailActivity : AppCompatActivity() {
         )
 
         setContent {
+            AppTheme {
             val customer by viewModel.currentCustomer.collectAsState(initial = null)
             val isInEditMode by viewModel.isInEditMode.collectAsState(initial = false)
             val editIntervalle by viewModel.editIntervalle.collectAsState(initial = emptyList())
@@ -285,6 +287,7 @@ class CustomerDetailActivity : AppCompatActivity() {
                         .putExtra("BELEG_MONTH_KEY", beleg.monthKey))
                 }
             )
+            }
         }
 
         lifecycleScope.launch {

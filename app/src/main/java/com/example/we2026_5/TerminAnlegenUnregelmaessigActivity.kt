@@ -8,8 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,6 +16,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.we2026_5.KundenTyp
+import com.example.we2026_5.ui.common.AppTopBar
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.TourPlanRepository
 import com.example.we2026_5.util.DateFormatter
@@ -48,6 +48,7 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
         }
 
         setContent {
+            AppTheme {
             val scope = rememberCoroutineScope()
             var customer by remember { mutableStateOf<Customer?>(null) }
             var vorschlaege by remember { mutableStateOf<List<TerminSlotVorschlag>>(emptyList()) }
@@ -88,9 +89,8 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
 
             Scaffold(
                 topBar = {
-                    TopAppBar(
-                        title = { Text(stringResource(R.string.dialog_termin_anlegen_title)) },
-                        navigationIcon = { }
+                    AppTopBar(
+                        title = stringResource(R.string.dialog_termin_anlegen_title)
                     )
                 }
             ) { padding ->
@@ -258,6 +258,7 @@ class TerminAnlegenUnregelmaessigActivity : AppCompatActivity() {
                         }
                     }
                 }
+            }
             }
         }
     }

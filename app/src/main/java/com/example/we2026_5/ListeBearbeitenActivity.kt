@@ -9,6 +9,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.example.we2026_5.data.repository.CustomerRepository
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.liste.ListeBearbeitenCallbacks
 import com.example.we2026_5.ui.listebearbeiten.ListeBearbeitenScreen
@@ -34,6 +35,7 @@ class ListeBearbeitenActivity : AppCompatActivity() {
         }
 
         setContent {
+            AppTheme {
             val state by viewModel.state.collectAsState()
             val callbacks = remember(viewModel) {
                 ListeBearbeitenCallbacks(
@@ -147,6 +149,7 @@ class ListeBearbeitenActivity : AppCompatActivity() {
                     }
                 }
             )
+            }
         }
     }
 }

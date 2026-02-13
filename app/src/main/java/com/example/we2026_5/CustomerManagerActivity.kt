@@ -21,6 +21,7 @@ import com.example.we2026_5.ui.customermanager.CustomerManagerScreen
 import com.example.we2026_5.ui.customermanager.CustomerManagerViewModel
 import com.example.we2026_5.Customer
 import com.example.we2026_5.customermanager.CustomerExportHelper
+import com.example.we2026_5.ui.theme.AppTheme
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -76,6 +77,7 @@ class CustomerManagerActivity : AppCompatActivity() {
         exportHelper = CustomerExportHelper(this, repository)
 
         setContent {
+            AppTheme {
             val customers by viewModel.filteredCustomers.observeAsState(initial = emptyList())
             val selectedTab by viewModel.selectedTab.collectAsState(initial = 0)
             val kundenTypFilter by viewModel.kundenTypFilter.collectAsState(initial = 0)
@@ -155,6 +157,7 @@ class CustomerManagerActivity : AppCompatActivity() {
                     viewModel.loadCustomers()
                 }
             )
+            }
         }
     }
 

@@ -3,6 +3,7 @@ package com.example.we2026_5.util
 import android.app.DatePickerDialog
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
+import com.example.we2026_5.R
 import java.util.Calendar
 
 /**
@@ -18,8 +19,8 @@ object DialogBaseHelper {
         context: Context,
         title: String,
         message: String,
-        positiveButtonText: String = "Ja",
-        negativeButtonText: String = "Abbrechen",
+        positiveButtonText: String = context.getString(R.string.dialog_yes),
+        negativeButtonText: String = context.getString(R.string.btn_cancel),
         onPositive: () -> Unit,
         onNegative: (() -> Unit)? = null
     ): AlertDialog {
@@ -39,8 +40,8 @@ object DialogBaseHelper {
         context: Context,
         title: String,
         message: String,
-        positiveButtonText: String = "Ja",
-        negativeButtonText: String = "Abbrechen",
+        positiveButtonText: String = context.getString(R.string.dialog_yes),
+        negativeButtonText: String = context.getString(R.string.btn_cancel),
         onPositive: () -> Unit,
         onNegative: (() -> Unit)? = null
     ) {
@@ -115,7 +116,7 @@ object DialogBaseHelper {
         title: String,
         items: Array<String>,
         onItemSelected: (Int) -> Unit,
-        negativeButtonText: String = "Abbrechen"
+        negativeButtonText: String = context.getString(R.string.btn_cancel)
     ): AlertDialog {
         val builder = AlertDialog.Builder(context)
             .setTitle(title)
@@ -133,7 +134,7 @@ object DialogBaseHelper {
         title: String,
         items: Array<String>,
         onItemSelected: (Int) -> Unit,
-        negativeButtonText: String = "Abbrechen"
+        negativeButtonText: String = context.getString(R.string.btn_cancel)
     ) {
         createSelectionDialog(
             context = context,

@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.AusnahmeTermin
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.theme.AppColors
 import com.example.we2026_5.ui.common.DetailUiConstants
 import com.example.we2026_5.ui.common.ExpandableSection
 import com.example.we2026_5.util.DateFormatter
@@ -56,7 +57,7 @@ fun CustomerDetailAusnahmeTermineSection(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFFE0E0E0))
+                            .background(AppColors.LightGray)
                             .padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -99,7 +100,7 @@ fun CustomerDetailAusnahmeTermineSection(
                         terminToDelete = null
                     }
                 ) {
-                    Text(stringResource(R.string.dialog_urlaub_delete_entry), color = Color(0xFFD32F2F))
+                    Text(stringResource(R.string.dialog_urlaub_delete_entry), color = AppColors.ErrorRed)
                 }
             },
             dismissButton = {

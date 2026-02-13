@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.example.we2026_5.ui.common.DetailUiConstants
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.theme.AppColors
 
 @Composable
 fun CustomerDetailNaechsterTermin(
@@ -41,7 +42,7 @@ fun CustomerDetailNaechsterTermin(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFE0E0E0))
+            .background(AppColors.LightGray)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

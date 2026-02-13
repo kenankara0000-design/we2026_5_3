@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.theme.AppColors
 
 /** Arten von Terminen, die angelegt werden können. */
 enum class NeuerTerminArt {
@@ -38,7 +39,7 @@ private val colorMonatlichText = Color(0xFF0D47A1)
 private val colorKundenBg = Color(0x40258E3C)     // Grün
 private val colorKundenText = Color(0xFF1B5E20)
 private val colorAusnahmeBg = Color(0x59F9A825)   // Gelb/Amber
-private val colorAusnahmeText = Color(0xFFE65100)
+private val colorAusnahmeText = AppColors.ButtonUrlaub
 private val colorUrlaubBg = Color(0x4DEF6C00)     // Orange
 private val colorUrlaubText = Color(0xFFBF360C)
 

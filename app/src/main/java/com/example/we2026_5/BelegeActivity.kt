@@ -7,9 +7,9 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.ui.wasch.BelegeScreen
 import com.example.we2026_5.ui.wasch.BelegeUiState
 import com.example.we2026_5.ui.wasch.BelegeViewModel
@@ -22,7 +22,7 @@ class BelegeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
+            AppTheme {
                 val state by viewModel.uiState.collectAsState()
                 val belegMonate by viewModel.belegMonate.collectAsState(initial = emptyList())
                 val alleBelegEintraege by viewModel.alleBelegEintraege.collectAsState(initial = emptyList())
@@ -30,6 +30,7 @@ class BelegeActivity : AppCompatActivity() {
                 val belegPreiseGross by viewModel.belegPreiseGross.collectAsState(initial = emptyMap())
                 val alleBelegEintraegeErledigt by viewModel.alleBelegEintraegeErledigt.collectAsState(initial = emptyList())
                 val belegMonateErledigt by viewModel.belegMonateErledigt.collectAsState(initial = emptyList())
+                val isLoading by viewModel.isLoading.collectAsState()
 
                 val handleBack: () -> Unit = {
                     when (state) {
@@ -49,6 +50,7 @@ class BelegeActivity : AppCompatActivity() {
                     belegPreiseGross = belegPreiseGross,
                     alleBelegEintraegeErledigt = alleBelegEintraegeErledigt,
                     belegMonateErledigt = belegMonateErledigt,
+                    isLoading = isLoading,
                     onBack = { handleBack() },
                     onCustomerSearchQueryChange = { viewModel.setCustomerSearchQuery(it) },
                     onKundeWaehlen = { viewModel.kundeGewaehlt(it) },

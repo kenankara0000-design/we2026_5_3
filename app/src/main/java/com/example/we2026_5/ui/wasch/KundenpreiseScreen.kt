@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.TextButton
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.common.AppLoadingView
 import com.example.we2026_5.wasch.Article
 import com.example.we2026_5.wasch.KundenPreis
 
@@ -30,6 +31,7 @@ fun KundenpreiseScreen(
     state: KundenpreiseUiState,
     kundenPreise: List<KundenPreis>,
     articles: List<Article>,
+    isLoadingPreise: Boolean = false,
     onBack: () -> Unit,
     onCustomerSearchQueryChange: (String) -> Unit,
     onKundeWaehlen: (com.example.we2026_5.Customer) -> Unit,
@@ -80,7 +82,9 @@ fun KundenpreiseScreen(
                             color = textSecondary,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
-                        if (kundenPreise.isEmpty()) {
+                        if (isLoadingPreise) {
+                            AppLoadingView(text = stringResource(R.string.stat_loading))
+                        } else if (kundenPreise.isEmpty()) {
                             Text(
                                 stringResource(R.string.wasch_keine_kundenpreise),
                                 fontSize = 14.sp,

@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.we2026_5.KundenTermin
 import com.example.we2026_5.R
+import com.example.we2026_5.ui.theme.AppColors
 import com.example.we2026_5.ui.common.DetailUiConstants
 import com.example.we2026_5.ui.common.ExpandableSection
 import com.example.we2026_5.util.DateFormatter
@@ -58,7 +59,7 @@ fun CustomerDetailKundenTermineSection(
             Button(
                 onClick = onAddAbholungTermin,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+                colors = ButtonDefaults.buttonColors(containerColor = AppColors.ButtonBlue)
             ) {
                 Text(stringResource(R.string.label_neu_termin), color = Color.White)
             }
@@ -74,16 +75,16 @@ if (kundenTermine.isNotEmpty()) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFFE8F0FE))
+                            .background(AppColors.InfoBlueBg)
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "A",
                             modifier = Modifier
-                                .background(Color(0xFF1976D2).copy(alpha = 0.2f))
+                                .background(AppColors.PrimaryBlue.copy(alpha = 0.2f))
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
-                            color = Color(0xFF1976D2),
+                            color = AppColors.PrimaryBlue,
                             fontSize = DetailUiConstants.BodySp,
                             fontWeight = FontWeight.Medium
                         )
@@ -102,9 +103,9 @@ if (kundenTermine.isNotEmpty()) {
                         Text(
                             text = "L",
                             modifier = Modifier
-                                .background(Color(0xFF388E3C).copy(alpha = 0.2f))
+                                .background(AppColors.StatusDone.copy(alpha = 0.2f))
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
-                            color = Color(0xFF388E3C),
+                            color = AppColors.StatusDone,
                             fontSize = DetailUiConstants.BodySp,
                             fontWeight = FontWeight.Medium
                         )
@@ -134,7 +135,7 @@ if (kundenTermine.isNotEmpty()) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFFE8F0FE))
+                            .background(AppColors.InfoBlueBg)
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -155,7 +156,7 @@ if (kundenTermine.isNotEmpty()) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFFE8F0FE))
+                            .background(AppColors.InfoBlueBg)
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -191,7 +192,7 @@ if (kundenTermine.isNotEmpty()) {
                         terminLToDeleteWithA = null
                     }
                 ) {
-                    Text(stringResource(R.string.dialog_urlaub_delete_entry), color = Color(0xFFD32F2F))
+                    Text(stringResource(R.string.dialog_urlaub_delete_entry), color = AppColors.ErrorRed)
                 }
             },
             dismissButton = {

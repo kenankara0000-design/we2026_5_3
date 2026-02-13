@@ -5,10 +5,10 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import com.example.we2026_5.ui.statistics.StatisticsScreen
+import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.ui.statistics.StatisticsViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -38,7 +38,7 @@ class StatisticsActivity : AppCompatActivity() {
         viewModel
 
         setContent {
-            MaterialTheme {
+            AppTheme {
                 val state by viewModel.state.observeAsState(initial = null)
                 StatisticsScreen(
                     state = state,
