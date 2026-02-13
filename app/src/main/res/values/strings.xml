@@ -863,4 +863,11 @@
     <string name="waescheliste_ocr_laden">Wird ausgewertet…</string>
     <string name="dialog_manuell_erfassen_title">Manuell erfassen</string>
     <string name="dialog_manuell_erfassen_subtitle">Wie möchten Sie erfassen?</string>
+
+    <!-- Phase 1: Sofort-Fixes -->
+    <string name="error_keine_aktion_verfuegbar">Keine Aktionen für diesen Kunden verfügbar.</string>
+    <string name="error_kunden_id_nicht_gesetzt">Kunden-ID nicht gesetzt. Bitte erneut öffnen.</string>
+    <string name="sevdesk_offline_hinweis">Kein Internet – Import nicht möglich.</string>
+    <string name="offline_hinweis_daten_sync">Offline – Daten werden bei Verbindung synchronisiert.</string>
+    <string name="kundenpreise_anderen_kunden">Anderen Kunden wählen</string>
 </resources>

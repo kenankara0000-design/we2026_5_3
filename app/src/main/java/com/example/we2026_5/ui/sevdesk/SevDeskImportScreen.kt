@@ -41,6 +41,7 @@ import com.example.we2026_5.util.ComposeDialogHelper
 @Composable
 fun SevDeskImportScreen(
     state: SevDeskImportState,
+    isOnline: Boolean = true,
     onBack: () -> Unit,
     onTokenChange: (String) -> Unit,
     onSaveToken: () -> Unit,
@@ -57,6 +58,7 @@ fun SevDeskImportScreen(
     val textSecondary = colorResource(R.color.text_secondary)
     val isBusy = state.isImportingContacts || state.isImportingArticles || state.isImportingPrices
         || state.isDeletingSevDeskContacts || state.isDeletingSevDeskArticles
+    val buttonsDisabled = isBusy || !isOnline
     var showDeleteContactsConfirm by remember { mutableStateOf(false) }
     var showDeleteArticlesConfirm by remember { mutableStateOf(false) }
     var showClearReimportConfirm by remember { mutableStateOf(false) }
@@ -77,6 +79,15 @@ fun SevDeskImportScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            if (!isOnline) {
+                Text(
+                    stringResource(R.string.sevdesk_offline_hinweis),
+                    color = Color(0xFFD32F2F),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
             if (isBusy) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth(),
@@ -103,7 +114,7 @@ fun SevDeskImportScreen(
                 OutlinedButton(
                     onClick = { showDeleteContactsConfirm = true },
                     modifier = Modifier.weight(1f),
-                    enabled = !isBusy,
+                    enabled = !buttonsDisabled,
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(if (state.isDeletingSevDeskContacts) "…" else stringResource(R.string.sevdesk_delete_contacts))
@@ -111,7 +122,7 @@ fun SevDeskImportScreen(
                 OutlinedButton(
                     onClick = { showDeleteArticlesConfirm = true },
                     modifier = Modifier.weight(1f),
-                    enabled = !isBusy,
+                    enabled = !buttonsDisabled,
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(if (state.isDeletingSevDeskArticles) "…" else stringResource(R.string.sevdesk_delete_articles))
@@ -120,7 +131,7 @@ fun SevDeskImportScreen(
             OutlinedButton(
                 onClick = { showClearReimportConfirm = true },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isBusy,
+                enabled = !buttonsDisabled,
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(stringResource(R.string.sevdesk_clear_reimport_list))
@@ -131,7 +142,7 @@ fun SevDeskImportScreen(
             Button(
                 onClick = onImportContacts,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isBusy,
+                enabled = !buttonsDisabled,
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(if (state.isImportingContacts) "…" else stringResource(R.string.sevdesk_import_contacts))
@@ -140,7 +151,7 @@ fun SevDeskImportScreen(
             Button(
                 onClick = onImportArticles,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isBusy,
+                enabled = !buttonsDisabled,
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(if (state.isImportingArticles) "…" else stringResource(R.string.sevdesk_import_articles))
@@ -149,7 +160,7 @@ fun SevDeskImportScreen(
             Button(
                 onClick = onImportPrices,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isBusy,
+                enabled = !buttonsDisabled,
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(if (state.isImportingPrices) "…" else stringResource(R.string.sevdesk_import_prices))

@@ -67,9 +67,10 @@ fun CustomerManagerTopBar(
             navigationIcon = { },
             actions = {
                 if (isOffline) {
+                    val offlineYellow = colorResource(R.color.status_offline_yellow)
                     Row(
                         modifier = Modifier
-                            .background(Color(0xFFFFEB3B).copy(alpha = 0.3f), RoundedCornerShape(4.dp))
+                            .background(offlineYellow.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -77,11 +78,11 @@ fun CustomerManagerTopBar(
                             painter = painterResource(R.drawable.ic_offline),
                             contentDescription = null,
                             modifier = Modifier.size(14.dp),
-                            tint = Color(0xFFFFEB3B)
+                            tint = offlineYellow
                         )
                         Text(
                             stringResource(R.string.main_offline),
-                            color = Color(0xFFFFEB3B),
+                            color = offlineYellow,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(start = 4.dp)

@@ -1,13 +1,26 @@
 package com.example.we2026_5.ui.wasch
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
 import com.example.we2026_5.wasch.Article
@@ -54,7 +67,8 @@ fun WaschenErfassungScreen(
     onFormularSonstigesChange: (String) -> Unit = {},
     onFormularKameraFoto: () -> Unit = {},
     onFormularAbbrechen: () -> Unit = {},
-    onFormularSpeichern: () -> Unit = {}
+    onFormularSpeichern: () -> Unit = {},
+    isOffline: Boolean = false
 ) {
     val primaryBlue = colorResource(R.color.primary_blue)
     val backgroundLight = colorResource(R.color.background_light)
@@ -68,6 +82,30 @@ fun WaschenErfassungScreen(
         containerColor = backgroundLight
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            if (isOffline) {
+                val offlineYellow = colorResource(R.color.status_offline_yellow)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(offlineYellow.copy(alpha = 0.15f))
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_offline),
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = offlineYellow
+                    )
+                    Spacer(Modifier.size(6.dp))
+                    Text(
+                        stringResource(R.string.offline_hinweis_daten_sync),
+                        color = colorResource(R.color.text_secondary),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
             when (state) {
             is WaschenErfassungUiState.KundeSuchen -> {
                 WaschenErfassungKundeSuchenContent(

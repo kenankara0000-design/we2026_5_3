@@ -13,6 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.Lifecycle
 import com.example.we2026_5.CustomerStatus
 import com.example.we2026_5.KundenTyp
@@ -41,6 +42,7 @@ class CustomerDetailActivity : AppCompatActivity() {
     private val repository: CustomerRepository by inject()
     private val adminChecker: AdminChecker by inject()
 
+    private lateinit var networkMonitor: NetworkMonitor
     private var photoManager: CustomerPhotoManager? = null
 
     private val takePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
@@ -64,6 +66,9 @@ class CustomerDetailActivity : AppCompatActivity() {
         }
 
         viewModel.setCustomerId(id)
+
+        networkMonitor = NetworkMonitor(this, lifecycleScope)
+        networkMonitor.startMonitoring()
 
         val showSaveAndNext = false
         val nextCustomerIndex = intent.getIntExtra(NextCustomerHelper.EXTRA_CURRENT_INDEX, -1)
@@ -89,6 +94,7 @@ class CustomerDetailActivity : AppCompatActivity() {
             val terminePairs365 by viewModel.terminePairs365.collectAsState(initial = emptyList())
             val belegMonateForCustomer by viewModel.belegMonateForCustomer.collectAsState(initial = emptyList())
             val belegMonateErledigtForCustomer by viewModel.belegMonateErledigtForCustomer.collectAsState(initial = emptyList())
+            val isOnline by networkMonitor.isOnline.observeAsState(initial = true)
 
             CustomerDetailScreen(
                 isAdmin = adminChecker.isAdmin(),
@@ -99,6 +105,7 @@ class CustomerDetailActivity : AppCompatActivity() {
                 onUpdateEditFormState = { viewModel.updateEditFormState(it) },
                 isLoading = isLoading,
                 isUploading = isUploading,
+                isOffline = !isOnline,
                 onBack = { finish() },
                 onEdit = { viewModel.setEditMode(true, customer) },
                 onSave = { updates, newIntervalle, tageAzuL ->
@@ -389,6 +396,7 @@ class CustomerDetailActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        networkMonitor.stopMonitoring()
         photoManager = null
         super.onDestroy()
     }

@@ -117,8 +117,17 @@ class CustomerManagerViewModel(
     // Für Kompatibilität: customers ohne Filter
     val customers: LiveData<List<Customer>> = customersFlow.asLiveData()
     
-    private val _isLoading = MutableLiveData<Boolean>()
+    private val _isLoading = MutableLiveData<Boolean>(true)
     val isLoading: LiveData<Boolean> = _isLoading
+
+    init {
+        // Loading-State beenden, sobald customersFlow erstmals emittiert
+        viewModelScope.launch {
+            customersFlow.collect {
+                if (_isLoading.value == true) _isLoading.postValue(false)
+            }
+        }
+    }
     
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> = _error

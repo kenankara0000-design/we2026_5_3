@@ -156,12 +156,12 @@ fun TourPlannerTopBar(
                     painter = painterResource(R.drawable.ic_offline),
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = Color(0xFFFFEB3B)
+                    tint = colorResource(R.color.status_offline_yellow)
                 )
                 Spacer(Modifier.size(4.dp))
                 Text(
                     stringResource(R.string.main_offline),
-                    color = Color(0xFFFFEB3B),
+                    color = colorResource(R.color.status_offline_yellow),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold
                 )

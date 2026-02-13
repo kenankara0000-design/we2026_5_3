@@ -22,7 +22,41 @@ Keine Änderung am Verhalten (Bug-Fix) ohne ausdrückliche Freigabe (vgl. `.curs
 
 ---
 
-## Behoben
+## Behoben (Phase 1 – 2026-02-13)
+
+### _isLoading nie auf true gesetzt (TourPlanner + CustomerManager) (Behoben 2026-02-13)
+- **War:** `_isLoading` wurde nie auf `true` gesetzt → Ladeindikator nie sichtbar.
+- **Fix:** Initialwert `true`, wird auf `false` gesetzt sobald Daten-Flow emittiert.
+
+### Stiller Fehler: „Aktionen" tut nichts wenn kein Datum/Sheet (Behoben 2026-02-13)
+- **War:** TourPlanner: `getSheetState == null` → kein Feedback.
+- **Fix:** Toast „Keine Aktionen für diesen Kunden verfügbar."
+
+### Stiller Fehler: saveCustomer bricht ab ohne Meldung (Behoben 2026-02-13)
+- **War:** CustomerDetail: `_customerId ?: return` in `saveCustomer`/`deleteCustomer` → keine Meldung.
+- **Fix:** Error-State + Fehlermeldung an UI.
+
+### KundenpreiseScreen: Zurück zur Suche nicht sichtbar (Behoben 2026-02-13)
+- **War:** `onBackToKundeSuchen` existierte, war aber in der UI nicht als Button sichtbar.
+- **Fix:** „Anderen Kunden wählen"-Link in der KundenpreiseList-Ansicht.
+
+### SevDesk-Import: kein Offline-Hinweis (Behoben 2026-02-13)
+- **War:** Import-Buttons aktiv ohne Internet; kein Hinweis.
+- **Fix:** NetworkMonitor, Offline-Banner, Buttons deaktiviert bei Offline.
+
+### Kundendetail: kein Offline-Badge (Behoben 2026-02-13)
+- **War:** NetworkMonitor nicht genutzt im Kundendetail.
+- **Fix:** Offline-Badge in TopBar.
+
+### Erfassung: kein Offline-Hinweis (Behoben 2026-02-13)
+- **War:** Erfassung funktioniert offline, aber kein Hinweis.
+- **Fix:** Offline-Banner „Daten werden bei Verbindung synchronisiert."
+
+### Offline-Farbe hardcodiert (Behoben 2026-02-13)
+- **War:** `Color(0xFFFFEB3B)` an mehreren Stellen.
+- **Fix:** Zentralisiert auf `colorResource(R.color.status_offline_yellow)`.
+
+## Behoben (Früher)
 
 ### Belege: Android-Zurück vom Beleg-Detail ging ins Erfassungs-Menü (Behoben 2026-02-13)
 

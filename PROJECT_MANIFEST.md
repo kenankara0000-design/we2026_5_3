@@ -234,4 +234,26 @@ Dort werden Symptom, Ursache und relevante Code-Stellen geführt. Keine Änderun
 
 ---
 
+## 18. Tiefenanalyse & Maßnahmenplan (Stand Feb 2026)
+
+- **Analyse-Index:** `.cursor/plans/ANALYSE-INDEX.md` – Übersicht aller 9 Analysen (alle ✅ erledigt)
+- **Konsolidierter Maßnahmenplan:** `.cursor/plans/2026-02-13_21-47.massnahmenplan.md` – 73 Aufgaben, 8 Phasen (~12–18 Wochen)
+- **Status:** Phase 1 (Sofort-Fixes) umgesetzt (9/9 Aufgaben, 2026-02-13). Phase 2+ noch offen. Keine Änderung ohne Freigabe.
+
+**Analysen im Überblick:**
+
+| Nr. | Thema | Datei |
+|-----|-------|-------|
+| 01 | Design-Konsistenz | `analyse-01-design-konsistenz.md` |
+| 02 | Code-Architektur | `analyse-02-code-architektur.md` |
+| 03 | Kompatibilität | `analyse-03-kompatibilitaet.md` |
+| 04 | UX/Layout (24 Screens) | `analyse-04-ux-layout.md` |
+| 05 | User-Flow (15 Klick-Pfade) | `analyse-05-user-flow.md` |
+| 06 | Informationsarchitektur | `analyse-06-informationsarchitektur.md` |
+| 07 | Offline-Verhalten | `analyse-07-offline-verhalten.md` |
+| 08 | Fehlerbehandlung UX | `analyse-08-fehlerbehandlung-ux.md` |
+| 09 | Performance | `analyse-09-performance.md` |
+
+---
+
 **Letzte Aktualisierung:** Feb 2026

@@ -39,6 +39,7 @@ fun CustomerDetailTopBar(
     typeColor: androidx.compose.ui.graphics.Color,
     displayName: String,
     isInEditMode: Boolean,
+    isOffline: Boolean = false,
     statusOverdue: androidx.compose.ui.graphics.Color,
     onBack: () -> Unit,
     onDelete: () -> Unit,
@@ -79,6 +80,17 @@ fun CustomerDetailTopBar(
         },
         navigationIcon = { },
         actions = {
+            if (isOffline) {
+                Text(
+                    stringResource(R.string.main_offline),
+                    color = colorResource(R.color.status_offline_yellow),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .background(colorResource(R.color.status_offline_yellow).copy(alpha = 0.3f), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
             if (isInEditMode && onSave != null) {
                 TextButton(onClick = onSave) {
                     Text(stringResource(R.string.btn_save), color = Color.White)

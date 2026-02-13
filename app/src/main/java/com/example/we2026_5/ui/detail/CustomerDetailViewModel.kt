@@ -165,7 +165,12 @@ class CustomerDetailViewModel(
      * Nach Abschluss wird onComplete(success) auf dem Main-Thread aufgerufen.
      */
     fun saveCustomer(updates: Map<String, Any>, newIntervalle: List<CustomerIntervall>? = null, newTageAzuLFromForm: Int? = null, onComplete: ((Boolean) -> Unit)? = null) {
-        val id = _customerId.value ?: return
+        val id = _customerId.value
+        if (id == null) {
+            _errorMessage.value = "Kunden-ID nicht gesetzt. Bitte erneut öffnen."
+            onComplete?.invoke(false)
+            return
+        }
         val oldCustomer = currentCustomer.value
         var finalUpdates = updates
         if (oldCustomer != null && oldCustomer.kundenTermine.isNotEmpty()) {
@@ -204,7 +209,11 @@ class CustomerDetailViewModel(
     }
 
     fun deleteCustomer() {
-        val id = _customerId.value ?: return
+        val id = _customerId.value
+        if (id == null) {
+            _errorMessage.value = "Kunden-ID nicht gesetzt. Bitte erneut öffnen."
+            return
+        }
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null

@@ -196,6 +196,8 @@ class TourPlannerActivity : AppCompatActivity() {
                     val state: ErledigungSheetState? = helper.getSheetState(customer)
                     if (state != null) {
                         erledigungSheet = ErledigungSheetArgs(customer, ts, state)
+                    } else {
+                        Toast.makeText(this@TourPlannerActivity, getString(R.string.error_keine_aktion_verfuegbar), Toast.LENGTH_SHORT).show()
                     }
                 },
                 onDismissErledigungSheet = { erledigungSheet = null },

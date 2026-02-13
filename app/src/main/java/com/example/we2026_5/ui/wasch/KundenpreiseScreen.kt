@@ -19,6 +19,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.TextButton
 import com.example.we2026_5.R
 import com.example.we2026_5.wasch.Article
 import com.example.we2026_5.wasch.KundenPreis
@@ -64,8 +65,15 @@ fun KundenpreiseScreen(
                             state.customer.displayName,
                             fontSize = 18.sp,
                             color = textPrimary,
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            modifier = Modifier.padding(bottom = 4.dp)
                         )
+                        TextButton(onClick = onBackToKundeSuchen) {
+                            Text(
+                                stringResource(R.string.kundenpreise_anderen_kunden),
+                                fontSize = 13.sp,
+                                color = primaryBlue
+                            )
+                        }
                         Text(
                             stringResource(R.string.erfassung_menu_kundenpreise),
                             fontSize = 14.sp,

@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.livedata.observeAsState
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.ui.wasch.WaschenErfassungScreen
 import com.example.we2026_5.ui.wasch.WaschenErfassungUiState
@@ -36,6 +37,7 @@ class WaschenErfassungActivity : AppCompatActivity() {
 
     private val viewModel: WaschenErfassungViewModel by viewModel()
     private val customerRepository: CustomerRepository by inject()
+    private lateinit var networkMonitor: NetworkMonitor
 
     private var formularCameraTmpUri: Uri? = null
 
@@ -84,6 +86,8 @@ class WaschenErfassungActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        networkMonitor = NetworkMonitor(this, lifecycleScope)
+        networkMonitor.startMonitoring()
         val customerId = intent.getStringExtra("CUSTOMER_ID")
         if (customerId != null) {
             CoroutineScope(Dispatchers.Main).launch {
@@ -102,6 +106,7 @@ class WaschenErfassungActivity : AppCompatActivity() {
                 val belegPreiseGross by viewModel.belegPreiseGross.collectAsState(initial = emptyMap())
                 val belegMonateErledigt by viewModel.belegMonateErledigt.collectAsState(initial = emptyList())
                 val requestFormularCameraOnOpen by viewModel.requestFormularCameraOnOpen.collectAsState(initial = false)
+                val isOnline by networkMonitor.isOnline.observeAsState(initial = true)
                 var belegMonthKeyHandled by remember { mutableStateOf(false) }
                 LaunchedEffect(state, requestFormularCameraOnOpen) {
                     if (state is WaschenErfassungUiState.Formular && requestFormularCameraOnOpen) {
@@ -155,6 +160,7 @@ class WaschenErfassungActivity : AppCompatActivity() {
                     belegMonate = belegMonate,
                     erfassungArticles = erfassungArticles,
                     showAllgemeinePreiseHint = showAllgemeinePreiseHint,
+                    isOffline = !isOnline,
                     onBack = {
                         handleBack()
                     },
@@ -268,5 +274,10 @@ class WaschenErfassungActivity : AppCompatActivity() {
                 )
             }
         }
+    }
+
+    override fun onDestroy() {
+        networkMonitor.stopMonitoring()
+        super.onDestroy()
     }
 }
