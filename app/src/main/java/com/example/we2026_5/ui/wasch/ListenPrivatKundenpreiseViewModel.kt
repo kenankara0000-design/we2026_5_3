@@ -5,9 +5,9 @@ import androidx.lifecycle.ViewModel
 import com.example.we2026_5.R
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.data.repository.ArticleRepository
-import com.example.we2026_5.data.repository.StandardPreiseRepository
+import com.example.we2026_5.data.repository.ListenPrivatKundenpreiseRepository
 import com.example.we2026_5.wasch.Article
-import com.example.we2026_5.wasch.StandardPreis
+import com.example.we2026_5.wasch.ListenPrivatKundenpreis
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class StandardPreislisteUiState(
-    val standardPreise: List<StandardPreis> = emptyList(),
+data class ListenPrivatKundenpreiseUiState(
+    val listenPrivatKundenpreise: List<ListenPrivatKundenpreis> = emptyList(),
     val addDialogOpen: Boolean = false,
     val selectedArticleForAdd: Article? = null,
     val addArticleSearchQuery: String = "",
@@ -26,22 +26,22 @@ data class StandardPreislisteUiState(
     val message: String? = null
 )
 
-class StandardPreislisteViewModel(
+class ListenPrivatKundenpreiseViewModel(
     private val context: Context,
-    private val standardPreiseRepository: StandardPreiseRepository,
+    private val listenPrivatKundenpreiseRepository: ListenPrivatKundenpreiseRepository,
     private val articleRepository: ArticleRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(StandardPreislisteUiState())
-    val uiState: StateFlow<StandardPreislisteUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(ListenPrivatKundenpreiseUiState())
+    val uiState: StateFlow<ListenPrivatKundenpreiseUiState> = _uiState.asStateFlow()
 
     val articles: StateFlow<List<Article>> = articleRepository.getAllArticlesFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         viewModelScope.launch {
-            standardPreiseRepository.getStandardPreiseFlow().collect { preise ->
-                _uiState.value = _uiState.value.copy(standardPreise = preise)
+            listenPrivatKundenpreiseRepository.getListenPrivatKundenpreiseFlow().collect { preise ->
+                _uiState.value = _uiState.value.copy(listenPrivatKundenpreise = preise)
             }
         }
     }
@@ -87,7 +87,7 @@ class StandardPreislisteViewModel(
         _uiState.value = _uiState.value.copy(addPriceGross = value)
     }
 
-    fun saveStandardPreis() {
+    fun saveListenPrivatKundenpreis() {
         val s = _uiState.value
         val article = s.selectedArticleForAdd ?: return
         val net = s.addPriceNet.toDoubleOrNull() ?: 0.0
@@ -98,8 +98,8 @@ class StandardPreislisteViewModel(
         }
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSaving = true, message = null)
-            val preis = StandardPreis(articleId = article.id, priceNet = net, priceGross = gross)
-            val ok = standardPreiseRepository.setStandardPreis(preis)
+            val preis = ListenPrivatKundenpreis(articleId = article.id, priceNet = net, priceGross = gross)
+            val ok = listenPrivatKundenpreiseRepository.setListenPrivatKundenpreis(preis)
             _uiState.value = _uiState.value.copy(
                 isSaving = false,
                 addDialogOpen = !ok,
@@ -112,9 +112,9 @@ class StandardPreislisteViewModel(
         }
     }
 
-    fun removeStandardPreis(articleId: String) {
+    fun removeListenPrivatKundenpreis(articleId: String) {
         viewModelScope.launch {
-            standardPreiseRepository.removeStandardPreis(articleId)
+            listenPrivatKundenpreiseRepository.removeListenPrivatKundenpreis(articleId)
         }
     }
 }

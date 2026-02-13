@@ -20,7 +20,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,13 +45,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.R
 import com.example.we2026_5.wasch.Article
-import com.example.we2026_5.wasch.StandardPreis
+import com.example.we2026_5.wasch.ListenPrivatKundenpreis
 import com.example.we2026_5.util.ComposeDialogHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StandardPreislisteScreen(
-    state: StandardPreislisteUiState,
+fun ListenPrivatKundenpreiseScreen(
+    state: ListenPrivatKundenpreiseUiState,
     articles: List<Article>,
     onBack: () -> Unit,
     onAddClick: () -> Unit,
@@ -61,8 +60,8 @@ fun StandardPreislisteScreen(
     onArticleSearchQueryChange: (String) -> Unit,
     onPriceNetChange: (String) -> Unit,
     onPriceGrossChange: (String) -> Unit,
-    onSaveStandardPreis: () -> Unit,
-    onRemoveStandardPreis: (String) -> Unit
+    onSaveListenPrivatKundenpreis: () -> Unit,
+    onRemoveListenPrivatKundenpreis: (String) -> Unit
 ) {
     val primaryBlue = colorResource(R.color.primary_blue)
     val textPrimary = colorResource(R.color.text_primary)
@@ -72,7 +71,7 @@ fun StandardPreislisteScreen(
     var deleteConfirmOpen by remember { mutableStateOf(false) }
     var deleteArticleId by remember { mutableStateOf<String?>(null) }
     var deleteArticleName by remember { mutableStateOf<String?>(null) }
-    val articleIdsWithPreis = state.standardPreise.map { it.articleId }.toSet()
+    val articleIdsWithPreis = state.listenPrivatKundenpreise.map { it.articleId }.toSet()
     val articlesWithoutPreis = articles.filter { it.id !in articleIdsWithPreis }
     val articleSearchQuery = state.addArticleSearchQuery.trim()
     val filteredArticles = if (articleSearchQuery.isBlank()) emptyList()
@@ -110,7 +109,7 @@ fun StandardPreislisteScreen(
                 color = textSecondary,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            if (state.standardPreise.isEmpty()) {
+            if (state.listenPrivatKundenpreise.isEmpty()) {
                 Text(
                     stringResource(R.string.standard_preis_leer),
                     fontSize = 14.sp,
@@ -119,7 +118,7 @@ fun StandardPreislisteScreen(
                 )
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(state.standardPreise) { preis ->
+                    items(state.listenPrivatKundenpreise) { preis ->
                         val name = articlesMap[preis.articleId]?.name ?: preis.articleId
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -260,7 +259,7 @@ fun StandardPreislisteScreen(
         confirmText = if (state.isSaving) "…" else stringResource(R.string.wasch_speichern),
         confirmEnabled = state.selectedArticleForAdd != null && !state.isSaving,
         onDismiss = onCloseAddDialog,
-        onConfirm = onSaveStandardPreis
+        onConfirm = onSaveListenPrivatKundenpreis
     )
 
     ComposeDialogHelper.ConfirmDialog(
@@ -276,7 +275,7 @@ fun StandardPreislisteScreen(
         },
         onConfirm = {
             val id = deleteArticleId
-            if (id != null) onRemoveStandardPreis(id)
+            if (id != null) onRemoveListenPrivatKundenpreis(id)
             deleteArticleId = null
             deleteArticleName = null
         }

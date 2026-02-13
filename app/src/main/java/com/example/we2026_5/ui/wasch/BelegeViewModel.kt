@@ -7,7 +7,7 @@ import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.ErfassungRepository
 import com.example.we2026_5.data.repository.KundenPreiseRepository
-import com.example.we2026_5.data.repository.StandardPreiseRepository
+import com.example.we2026_5.data.repository.ListenPrivatKundenpreiseRepository
 import com.example.we2026_5.wasch.WaschErfassung
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,7 +48,7 @@ class BelegeViewModel(
     private val erfassungRepository: ErfassungRepository,
     private val articleRepository: ArticleRepository,
     private val kundenPreiseRepository: KundenPreiseRepository,
-    private val standardPreiseRepository: StandardPreiseRepository
+    private val listenPrivatKundenpreiseRepository: ListenPrivatKundenpreiseRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<BelegeUiState>(BelegeUiState.AlleBelege())
@@ -214,7 +214,7 @@ class BelegeViewModel(
                 val kunden = kundenPreiseRepository.getKundenPreiseForCustomer(customer.id)
                     .associate { it.articleId to it.priceGross }
                 if (kunden.isNotEmpty()) kunden
-                else standardPreiseRepository.getStandardPreise().associate { it.articleId to it.priceGross }
+                else listenPrivatKundenpreiseRepository.getListenPrivatKundenpreise().associate { it.articleId to it.priceGross }
             }
             _belegPreiseGross.value = map
         }

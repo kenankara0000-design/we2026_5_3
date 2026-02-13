@@ -12,7 +12,7 @@ class PreiseActivity : AppCompatActivity() {
         setContent {
             PreiseScreen(
                 onKundenpreise = { startActivity(Intent(this, KundenpreiseActivity::class.java)) },
-                onStandardPreisliste = { startActivity(Intent(this, StandardPreislisteActivity::class.java)) },
+                onListenPrivatKundenpreise = { startActivity(Intent(this, ListenPrivatKundenpreiseActivity::class.java)) },
                 onArtikelVerwalten = { startActivity(Intent(this, ArtikelVerwaltungActivity::class.java)) },
                 onBack = { finish() }
             )

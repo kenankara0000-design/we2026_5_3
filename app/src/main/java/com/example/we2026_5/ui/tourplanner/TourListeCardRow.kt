@@ -36,7 +36,8 @@ import com.example.we2026_5.util.TerminFilterUtils
 @Composable
 internal fun TourListeCardRow(
     liste: KundenListe,
-    kunden: List<Pair<Customer, Boolean>>,
+    /** Customer, isOverdue, overdueAlSuffix („A“/„L“/„AL“ oder null) */
+    kunden: List<Triple<Customer, Boolean, String?>>,
     aCount: Int = 0,
     lCount: Int = 0,
     viewDateMillis: Long,
@@ -124,7 +125,7 @@ internal fun TourListeCardRow(
             }
             if (expanded) {
                 Spacer(modifier = Modifier.height(8.dp))
-                kunden.forEachIndexed { index, (customer, isOverdue) ->
+                kunden.forEachIndexed { index, (customer, isOverdue, overdueAlSuffix) ->
                 val isInUrlaub = TerminFilterUtils.istTerminInUrlaubEintraege(viewDateMillis, customer)
                 val viewStart = TerminBerechnungUtils.getStartOfDay(viewDateMillis)
                 val urlaubInfo = if (isInUrlaub) {
@@ -151,6 +152,7 @@ internal fun TourListeCardRow(
                     isOverdue = isOverdue,
                     isInUrlaub = isInUrlaub,
                     statusBadgeText = getStatusBadgeText(customer),
+                    overdueAlSuffix = overdueAlSuffix,
                     viewDateMillis = viewDateMillis,
                     onCustomerClick = { onCustomerClick(payload) },
                     onAktionenClick = { onAktionenClick(customer) }

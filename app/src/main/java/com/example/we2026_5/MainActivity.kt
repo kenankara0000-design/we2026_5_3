@@ -23,7 +23,7 @@ import com.example.we2026_5.util.runListeIntervalleMigration
 import com.example.we2026_5.util.runListeToTourMigration
 import com.example.we2026_5.util.runPauseExpiredReset
 import com.example.we2026_5.util.runRemoveDeprecatedFieldsMigration
-import com.example.we2026_5.util.runStandardPreisMigration
+import com.example.we2026_5.util.runListenPrivatKundenpreiseMigration
 import com.example.we2026_5.util.runTourToListenkundenMigration
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
             runListeArtToTourMigration(this@MainActivity, listeRepository)
             runTourToListenkundenMigration(this@MainActivity, customerRepository)
             runListeArtTourToListenkundenMigration(this@MainActivity, listeRepository)
-            runStandardPreisMigration(this@MainActivity, database)
+            runListenPrivatKundenpreiseMigration(this@MainActivity, database)
             runListeIntervalleMigration(this@MainActivity, customerRepository, listeRepository)
             runRemoveDeprecatedFieldsMigration(this@MainActivity, customerRepository)
             runPauseExpiredReset(customerRepository)

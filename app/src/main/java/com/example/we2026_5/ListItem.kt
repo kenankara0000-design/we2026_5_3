@@ -8,6 +8,8 @@ sealed class ListItem {
         val customer: Customer,
         val statusBadgeText: String = "",
         val isOverdue: Boolean = false,
+        /** Bei isOverdue: „A“, „L“ oder „AL“ für Badge neben Überfällig */
+        val overdueAlSuffix: String? = null,
         val isVerschobenAmFaelligkeitstag: Boolean = false,
         val verschobenInfo: String? = null,
         /** Am neuen Tag: "Verschoben von [Datum]" */
@@ -33,7 +35,8 @@ sealed class ListItem {
     /** Listen-Card (ohne Wochentag): Eine äußere Card mit Kunden-Karten darin. Nur Listen mit wochentag !in 0..6. */
     data class TourListeCard(
         val liste: KundenListe,
-        val kunden: List<Pair<Customer, Boolean>>, // Customer + isOverdue
+        /** Customer, isOverdue, overdueAlSuffix („A“/„L“/„AL“ oder null) */
+        val kunden: List<Triple<Customer, Boolean, String?>>,
         val aCount: Int = 0,
         val lCount: Int = 0
     ) : ListItem()

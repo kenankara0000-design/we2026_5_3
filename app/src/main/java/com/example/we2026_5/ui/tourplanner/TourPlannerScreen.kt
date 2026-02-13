@@ -409,6 +409,7 @@ private fun TourPlannerListContent(
                         verschobenInfo = item.verschobenInfo,
                         verschobenVonInfo = item.verschobenVonInfo,
                         statusBadgeText = item.statusBadgeText,
+                        overdueAlSuffix = item.overdueAlSuffix,
                         viewDateMillis = viewDate,
                         onCustomerClick = { onCustomerClick(payload) },
                         onAktionenClick = { onAktionenClick(item.customer) },

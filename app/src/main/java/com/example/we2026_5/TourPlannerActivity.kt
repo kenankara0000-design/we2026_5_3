@@ -120,7 +120,7 @@ class TourPlannerActivity : AppCompatActivity() {
             val allCustomersFromItems = tourItems.flatMap { item ->
                 when (item) {
                     is ListItem.CustomerItem -> listOf(item.customer)
-                    is ListItem.TourListeCard -> item.kunden.map { (c, _) -> c }
+                    is ListItem.TourListeCard -> item.kunden.map { (c, _, _) -> c }
                     else -> emptyList()
                 }
             }

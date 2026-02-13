@@ -9,38 +9,34 @@ Keine Änderung am Verhalten (Bug-Fix) ohne ausdrückliche Freigabe (vgl. `.curs
 
 ## Offen
 
-### Standardpreisliste: Löschen ohne Bestätigung (historisch)
+### Listen- und Privat-Kundenpreise: Löschen ohne Bestätigung (nur historischer Hinweis, kein aktueller Bug)
 
-- **Hinweis:** Die „Preisliste Tour / Privat“ wurde in **Standardpreisliste** umbenannt (`StandardPreislisteScreen.kt`). Im neuen Screen wird beim Löschen ein Bestätigungsdialog angezeigt (`ConfirmDialog`). Falls in einer älteren Version noch ohne Dialog gelöscht wurde, betrifft das die alte TourPreisliste; die aktuelle Standardpreisliste hat einen Lösch-Dialog.
-- **Relevante Stelle:** `ui/wasch/StandardPreislisteScreen.kt` (Delete → ConfirmDialog, dann `onRemoveStandardPreis`).
+- **Hinweis:** In der App heißt der Eintrag **„Listen- und Privat-Kundenpreise“**. Beim Löschen wird dort ein Bestätigungsdialog angezeigt. Dieser Eintrag dient nur der Dokumentation: Falls in einer älteren Version ohne Dialog gelöscht wurde, betraf das die alte Preisliste; die heutige hat den Lösch-Dialog.
+- **Relevante Stelle:** Screen für Listen- und Privat-Kundenpreise (Delete → ConfirmDialog).
 
 ### Erfassung-Menü: „Kamera / Foto“ wirkt „kaputt“ (öffnet nicht sofort Kamera/Formular)
 
-- **Symptom:** In `Erfassung` (Menü) führt „Kamera / Foto“ nicht direkt wie im Kundendetail-Tab „Belege“ in den Kamera/Formular-Flow; es ist zuerst eine Kundenauswahl nötig, erst danach öffnet sich das Formular inkl. Kamera/Foto.
-- **Ursache:** `WaschenErfassungActivity` kann das Wäscheliste-Formular nur für einen ausgewählten Kunden öffnen. Das Intent-Flag `OPEN_FORMULAR_WITH_CAMERA` wird erst verarbeitet, sobald der UI-State `ErfassungenListe(customer)` erreicht ist.
-- **Relevante Stellen:** `ErfassungMenuActivity.kt` (Extra `OPEN_FORMULAR_WITH_CAMERA`), `WaschenErfassungActivity.kt` (`openFormularWithCameraWhenReady` + `LaunchedEffect`), `WaschenErfassungViewModel.openFormularWithCamera()`.
-
-### Erfassung: Android-Zurück beendet Screen statt 1x zurück zur Kunden-Ansicht
-
-- **Symptom:** Nach Kundenauswahl → „Neue Erfassung“ → Art wählen (Formular/Manuell): Beim Drücken der Android-Zurück-Taste landet man wieder „unter Erfassung“ (Activity wird beendet) statt erst zurück zur Kunden-Ansicht (Belege-Liste).
-- **Ursache:** System-Back wurde nicht auf die Compose-State-Navigation gemappt; dadurch griff das Default-Back-Verhalten der Activity.
-- **Fix:** `BackHandler` in `WaschenErfassungActivity.kt` hinzugefügt, der identisch zum TopBar-Back durch die UI-States navigiert.
-- **Relevante Stellen:** `WaschenErfassungActivity.kt` (BackHandler/handleBack), `WaschenErfassungScreen` Back-Callback.
-
-### Tourenplaner: Überfällige Listenkunden aus Listen ohne Wochentag erscheinen nicht in der Sektion „Überfällig“
-
-- **Symptom:** Kunde (z. B. Lutze Rötha) mit Fälligkeit 12.02. wird am 12.02. als überfällig angezeigt, am 13.02. (heute, keine Termine für heute) aber nicht in der Sektion „Überfällig“. Erwartung: Überfällige sollen am Fälligkeitstag und am heutigen Tag immer erscheinen, bis erledigt.
-- **Ursache:** Die zentrale Sektion „Überfällig“ oben im Tourenplaner wird nur aus (1) Kunden ohne Liste (Gewerblich/Privat ohne listeId) und (2) Kunden aus **Wochentagslisten** (Listen mit wochentag 0..6) befüllt. **Listenkunden aus Listen ohne Wochentag** (wochentag z. B. -1) werden dort nie eingetragen; sie erscheinen nur in ihrer Listen-Karte. Wenn am angezeigten Tag keine anderen Fälligen in der Liste sind, wirkt die Überfällig-Anzeige „weg“.
-- **Hinweis:** Hat nichts mit Zeitzone zu tun (Berlin ist überall gesetzt). Die Einzel-Logik „sollUeberfaelligAnzeigen“ (Fälligkeitstag + heutiger Tag) ist korrekt; die Zuordnung zur Sektion „Überfällig“ berücksichtigt Kunden aus Listen ohne Wochentag nicht.
-- **Relevante Stellen:** `tourplanner/TourDataProcessor.kt` (Befüllung `alleUeberfaelligeKunden` nur über overdueGewerblich + Wochentagslisten; Listen ohne Wochentag werden ausgelassen).
-
-### Tourenplaner: Kunde mit A erledigt, L offen/überfällig erscheint nicht als überfällig
-
-- **Symptom:** Erledigung A ist korrekt (z. B. Abholung 12.02 erledigt). Am heutigen Tag (13.02) wird der Kunde trotzdem nicht als überfällig angezeigt. Regel „Erledigung darf nur am Datum Heute“: Ein Termin von gestern kann man heute nicht mehr erledigen – dadurch entsteht ein Konflikt, wenn der Kunde dann auch nicht mehr in der Überfällig-Liste erscheint.
-- **Ursache:** Die Überfällig-Prüfung behandelt den Kunden als „erledigt“, sobald **entweder** A **oder** L erledigt ist. Wenn A erledigt ist, wird der Kunde nie in die Sektion „Überfällig“ aufgenommen – auch wenn L noch offen oder überfällig ist. Er erscheint also nicht mehr, obwohl noch etwas offen ist; ein Nachholen der Erledigung am Folgetag ist durch die Regel „nur am Datum Heute“ ohnehin nicht vorgesehen.
-- **Erwartung:** Überfällig anzeigen, sobald **irgendein** überfälliger Termin (A oder L) noch nicht erledigt ist. Kunde mit A erledigt, L überfällig → weiterhin als überfällig anzeigen (für L).
-- **Relevante Stelle:** `tourplanner/TourDataFilter.kt` (`istKundeUeberfaellig`: Abbruch bei `abholungErfolgt || auslieferungErfolgt`; sollte pro Termin-Typ prüfen, ob noch ein überfälliger A oder L offen ist).
+- **Symptom:** Im Erfassung-Menü führt „Kamera / Foto“ nicht direkt in den Kamera/Formular-Flow wie im Kundendetail-Tab „Belege“; es ist zuerst eine Kundenauswahl nötig, danach öffnet sich das Formular inkl. Kamera/Foto.
+- **Ursache:** Die WaschenErfassungActivity kann das Wäscheliste-Formular nur für einen bereits ausgewählten Kunden öffnen. Das Intent-Flag für „Kamera sofort“ wird erst verarbeitet, sobald der Zustand „ErfassungenListe (Kunde)“ erreicht ist.
+- **Relevante Stellen:** ErfassungMenuActivity, WaschenErfassungActivity, WaschenErfassungViewModel.
 
 ---
 
-*Behobene Fehler werden hier entfernt (oder mit Behoben-Datum versehen und dann aus der Liste genommen).*
+## Behoben
+
+### Erfassung: Android-Zurück beendete Screen (Behoben)
+
+- **War:** Nach Kundenauswahl → „Neue Erfassung“ → Art wählen: Android-Zurück beendete die Activity statt einmal zurück zur Kunden-Ansicht zu gehen.
+- **Fix:** BackHandler in WaschenErfassungActivity navigiert nun mit handleBack durch die UI-States wie das TopBar-Back.
+
+### Tourenplaner: Überfällige Listenkunden aus Listen ohne Wochentag (Behoben 2026-02-13)
+
+- Überfällige Kunden aus Listen ohne Wochentag werden nun ebenfalls in die Sektion „Überfällig“ aufgenommen (TourDataProcessor).
+
+### Tourenplaner: Kunde mit A erledigt, L offen/überfällig (Behoben 2026-02-13)
+
+- Überfällig wird pro Termin-Typ (A/L) geprüft: Kunde erscheint weiter in „Überfällig“, solange mindestens ein überfälliger A- oder L-Termin noch nicht erledigt ist (TourDataFilter, istKundeUeberfaellig).
+
+---
+
+*Behobene Fehler können aus der Liste genommen werden, sobald nicht mehr benötigt.*

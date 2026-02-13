@@ -16,7 +16,7 @@
 2. **FirebaseRetryHelper:** Existiert, wird z. B. im CustomerRepository genutzt – noch nicht in allen Repositories.
 3. **AppNavigation:** Wird in MainActivity, CustomerDetailActivity, SettingsActivity genutzt – noch nicht in allen Activities.
 4. **AppLogger:** Existiert (mit TODO für BuildConfig.DEBUG), wird an einigen Stellen genutzt – noch nicht überall statt Log/printStackTrace.
-5. **ComposeDialogHelper:** Wird z. B. in SettingsScreen, SevDeskImportScreen, StandardPreislisteScreen genutzt – noch nicht in allen Dialogen.
+5. **ComposeDialogHelper:** Wird z. B. in SettingsScreen, SevDeskImportScreen, Listen- und Privat-Kundenpreise-Screen genutzt – noch nicht in allen Dialogen.
 6. **BaseViewModel:** Klasse vorhanden – wird von keinem ViewModel genutzt (nur als Vorlage).
 
 ### Features

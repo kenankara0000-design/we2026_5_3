@@ -16,7 +16,7 @@ import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.ErfassungRepository
 import com.example.we2026_5.data.repository.KundenPreiseRepository
-import com.example.we2026_5.data.repository.StandardPreiseRepository
+import com.example.we2026_5.data.repository.ListenPrivatKundenpreiseRepository
 import com.example.we2026_5.wasch.Article
 import com.example.we2026_5.wasch.ErfassungPosition
 import com.example.we2026_5.wasch.WaschErfassung
@@ -105,7 +105,7 @@ class WaschenErfassungViewModel(
     private val articleRepository: ArticleRepository,
     private val erfassungRepository: ErfassungRepository,
     private val kundenPreiseRepository: KundenPreiseRepository,
-    private val standardPreiseRepository: StandardPreiseRepository
+    private val listenPrivatKundenpreiseRepository: ListenPrivatKundenpreiseRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<WaschenErfassungUiState>(WaschenErfassungUiState.KundeSuchen())
@@ -127,9 +127,9 @@ class WaschenErfassungViewModel(
     private var erfassungenErledigtJob: Job? = null
 
     private val _kundenPreiseForErfassung = MutableStateFlow<List<com.example.we2026_5.wasch.KundenPreis>>(emptyList())
-    /** Brutto-Preise aus der globalen Preisliste (Tour / Privat), für Preis-Labels in der Erfassung. */
+    /** Brutto-Preise aus Listen- und Privat-Kundenpreisen, für Preis-Labels in der Erfassung. */
     private val _preislisteGrossForErfassung = MutableStateFlow<Map<String, Double>>(emptyMap())
-    /** Brutto-Preise pro Artikel für Beleg-Detail (Tour- oder Kundenpreise), für Gesamtpreis-Anzeige. */
+    /** Brutto-Preise pro Artikel für Beleg-Detail (Listen- und Privat-Kundenpreise oder Kundenpreise), für Gesamtpreis-Anzeige. */
     private val _belegPreiseGross = MutableStateFlow<Map<String, Double>>(emptyMap())
     val belegPreiseGross: StateFlow<Map<String, Double>> = _belegPreiseGross.asStateFlow()
     private var kundenPreiseJob: Job? = null
@@ -145,7 +145,7 @@ class WaschenErfassungViewModel(
     val articles = articleRepository.getAllArticlesFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    /** Artikel für Erfassung: alle Artikel, mit Preis-Label aus Kundenpreisen oder (Fallback) Preisliste Tour/Privat. */
+    /** Artikel für Erfassung: alle Artikel, mit Preis-Label aus Kundenpreisen oder (Fallback) Listen- und Privat-Kundenpreise. */
     val erfassungArticles: StateFlow<List<ArticleDisplay>> = combine(
         articles,
         _kundenPreiseForErfassung,
@@ -225,7 +225,7 @@ class WaschenErfassungViewModel(
         _uiState.value = WaschenErfassungUiState.KundeSuchen(customerSearchQuery = "", customers = emptyList())
     }
 
-    /** Von ErfassungenListe: Beleg (Monat) öffnen. Lädt Brutto-Preise für Gesamtpreis-Anzeige (Tour- oder Kundenpreise). */
+    /** Von ErfassungenListe: Beleg (Monat) öffnen. Lädt Brutto-Preise für Gesamtpreis-Anzeige (Listen- und Privat-Kundenpreise oder Kundenpreise). */
     fun openBelegDetail(beleg: BelegMonat) {
         val s = _uiState.value
         if (s is WaschenErfassungUiState.ErfassungenListe) {
@@ -241,7 +241,7 @@ class WaschenErfassungViewModel(
                     val kunden = kundenPreiseRepository.getKundenPreiseForCustomer(customer.id)
                         .associate { it.articleId to it.priceGross }
                     if (kunden.isNotEmpty()) kunden
-                    else standardPreiseRepository.getStandardPreise().associate { it.articleId to it.priceGross }
+                    else listenPrivatKundenpreiseRepository.getListenPrivatKundenpreise().associate { it.articleId to it.priceGross }
                 }
                 _belegPreiseGross.value = map
             }
@@ -292,8 +292,8 @@ class WaschenErfassungViewModel(
             }
         }
         preislisteJob = viewModelScope.launch {
-            standardPreiseRepository.getStandardPreiseFlow().collect { standardPreise ->
-                _preislisteGrossForErfassung.value = standardPreise.associate { it.articleId to it.priceGross }
+            listenPrivatKundenpreiseRepository.getListenPrivatKundenpreiseFlow().collect { preise ->
+                _preislisteGrossForErfassung.value = preise.associate { it.articleId to it.priceGross }
             }
         }
         _uiState.value = WaschenErfassungUiState.Erfassen(

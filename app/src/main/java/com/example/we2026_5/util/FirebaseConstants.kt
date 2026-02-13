@@ -19,7 +19,8 @@ object FirebaseConstants {
     const val ARTICLES = "articles"
     const val KUNDEN_PREISE = "kundenPreise"
     const val TOUR_PREISE = "tourPreise"
-    const val STANDARD_PREISE = "standardPreise"
+    /** Listen- und Privat-Kundenpreise (Firebase-Pfad unverändert für Kompatibilität). */
+    const val LISTEN_PRIVAT_KUNDENPREISE = "standardPreise"
     const val WASCH_ERFASSUNGEN = "waschErfassungen"
     
     // Customer-Felder (für Updates)

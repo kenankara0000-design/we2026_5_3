@@ -6,12 +6,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.example.we2026_5.ui.wasch.StandardPreislisteScreen
+import com.example.we2026_5.ui.wasch.ListenPrivatKundenpreiseScreen
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class StandardPreislisteActivity : AppCompatActivity() {
+class ListenPrivatKundenpreiseActivity : AppCompatActivity() {
 
-    private val viewModel: com.example.we2026_5.ui.wasch.StandardPreislisteViewModel by viewModel()
+    private val viewModel: com.example.we2026_5.ui.wasch.ListenPrivatKundenpreiseViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,7 +19,7 @@ class StandardPreislisteActivity : AppCompatActivity() {
             MaterialTheme {
                 val state by viewModel.uiState.collectAsState()
                 val articles by viewModel.articles.collectAsState(initial = emptyList())
-                StandardPreislisteScreen(
+                ListenPrivatKundenpreiseScreen(
                     state = state,
                     articles = articles,
                     onBack = { finish() },
@@ -29,8 +29,8 @@ class StandardPreislisteActivity : AppCompatActivity() {
                     onArticleSearchQueryChange = { viewModel.setAddArticleSearchQuery(it) },
                     onPriceNetChange = { viewModel.setAddPriceNet(it) },
                     onPriceGrossChange = { viewModel.setAddPriceGross(it) },
-                    onSaveStandardPreis = { viewModel.saveStandardPreis() },
-                    onRemoveStandardPreis = { viewModel.removeStandardPreis(it) }
+                    onSaveListenPrivatKundenpreis = { viewModel.saveListenPrivatKundenpreis() },
+                    onRemoveListenPrivatKundenpreis = { viewModel.removeListenPrivatKundenpreis(it) }
                 )
             }
         }

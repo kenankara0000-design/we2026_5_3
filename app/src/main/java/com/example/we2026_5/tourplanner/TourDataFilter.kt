@@ -3,6 +3,7 @@ package com.example.we2026_5.tourplanner
 import com.example.we2026_5.Customer
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListeIntervall
+import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.TerminFilterUtils
 import com.example.we2026_5.util.firstIntervallOrNull
@@ -73,6 +74,7 @@ class TourDataFilter(
     
     /**
      * Prüft, ob ein Kunde überfällig ist.
+     * Pro Termin-Typ (A/L): Kunde ist überfällig, wenn mindestens ein überfälliger A-Termin oder ein überfälliger L-Termin noch nicht erledigt ist.
      */
     fun istKundeUeberfaellig(
         customer: Customer,
@@ -80,15 +82,10 @@ class TourDataFilter(
         viewDateStart: Long,
         heuteStart: Long
     ): Boolean {
-        val customerDone = customer.abholungErfolgt || customer.auslieferungErfolgt
-        val isDone = customerDone
-        if (isDone) return false
-        
+        if (viewDateStart > heuteStart) return false
+
         // Term-Daten nur aus Kunde (liste nur Gruppierung).
         if (customer.firstIntervallOrNull() != null || customer.listeId.isNotEmpty()) {
-            if (viewDateStart > heuteStart) {
-                return false
-            }
             val passendeListe = if (liste != null && customer.listeId == liste.id) liste else null
             // 3-Tage-Fenster + 60 Tage Überfällig (PLAN_TOURPLANNER_PERFORMANCE_3TAGE)
             val termine = termincache.getTermineInRange(
@@ -97,7 +94,7 @@ class TourDataFilter(
                 tageVoraus = 63,
                 liste = passendeListe
             )
-            
+
             return termine.any { termin ->
                 val terminStart = categorizer.getStartOfDay(termin.datum)
                 val istUeberfaellig = terminStart < heuteStart
@@ -107,7 +104,12 @@ class TourDataFilter(
                     anzeigeDatum = viewDateStart,
                     aktuellesDatum = heuteStart
                 )
-                istUeberfaellig && sollAnzeigen
+                if (!istUeberfaellig || !sollAnzeigen) return@any false
+                // Pro Typ prüfen: überfälliger A noch nicht erledigt oder überfälliger L noch nicht erledigt
+                when (termin.typ) {
+                    TerminTyp.ABHOLUNG -> !customer.abholungErfolgt
+                    TerminTyp.AUSLIEFERUNG -> !customer.auslieferungErfolgt
+                }
             }
         }
         return false

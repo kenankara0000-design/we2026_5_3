@@ -55,6 +55,8 @@ internal fun TourCustomerRow(
     verschobenInfo: String? = null,
     verschobenVonInfo: String? = null,
     statusBadgeText: String,
+    /** Bei isOverdue: „A“, „L“ oder „AL“ für Badge neben Überfällig (z. B. „Ü A“). */
+    overdueAlSuffix: String? = null,
     viewDateMillis: Long = 0L,
     showErledigtBadge: Boolean = false,
     onCustomerClick: () -> Unit,
@@ -83,7 +85,7 @@ internal fun TourCustomerRow(
         else -> colorResource(R.color.button_privat_glossy)
     }
     val badgeText = when {
-        isOverdue -> stringResource(R.string.status_badge_overdue)
+        isOverdue -> if (!overdueAlSuffix.isNullOrEmpty()) "Ü $overdueAlSuffix" else stringResource(R.string.status_badge_overdue)
         isInUrlaub -> stringResource(R.string.label_urlaub)
         isVerschobenAmFaelligkeitstag -> stringResource(R.string.badge_verschoben)
         else -> statusBadgeText

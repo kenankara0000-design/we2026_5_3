@@ -32,7 +32,7 @@ import com.example.we2026_5.R
 @Composable
 fun PreiseScreen(
     onKundenpreise: () -> Unit,
-    onStandardPreisliste: () -> Unit,
+    onListenPrivatKundenpreise: () -> Unit,
     onArtikelVerwalten: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -70,7 +70,7 @@ fun PreiseScreen(
                 Text(stringResource(R.string.erfassung_menu_kundenpreise), fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
             OutlinedButton(
-                onClick = onStandardPreisliste,
+                onClick = onListenPrivatKundenpreise,
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {

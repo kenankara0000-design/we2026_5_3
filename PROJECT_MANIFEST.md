@@ -31,7 +31,7 @@ Diese Datei muss gepflegt werden. Wenn sich Ziele, Scope oder Planung ändern: H
 - **Termin-Regeln, Intervalle, Listen:** Kunden-Intervalle (inkl. monatlich/Wochentag), KundenListen mit Listenintervallen; Tour-Slots (tourPlaene); Termin-Regeln am Kunden (Regel-Vorlagen-Strings in UI, kein eigener Haupt-Einstieg)
 - **Statistiken, MapView:** Statistiken-Screen; MapView für Kunden/Adressen
 - **Offline-Fähigkeit:** Firebase Realtime DB Persistence; NetworkMonitor; Sync-Hinweise in UI
-- **Erfassung:** Waschen/Artikel erfassen (Kunde, Positionen); Artikelverwaltung; SevDesk-Artikel-Import als Quelle. Belege pro Kunde (Tab „Belege“ in Kundendetail); Wäscheliste-Formular zur Beleg-Erstellung (Kundendaten, Artikl-Mengen, Kamera/Foto für OCR, Stammdaten-Ergänzung nach Bestätigung). **OCR:** Aktuell ML Kit Text Recognition (On-Device); Optionen für Cloud-OCR siehe REFERENZ_ANALYSEN_UND_BERICHTE.md (Abschnitt 8).
+- **Erfassung:** Waschen/Artikel erfassen (Kunde, Positionen); Belege pro Kunde (Tab „Belege“ in Kundendetail, BelegeActivity); Wäscheliste-Formular (Kundendaten, Artikl-Mengen, Kamera/Foto für OCR, Stammdaten-Ergänzung). **Preise:** Kundenpreise pro Kunde/Artikel; Listen- und Privat-Kundenpreise (standardPreise) als Fallback bei Erfassung. Artikelverwaltung; SevDesk-Artikel-Import als Quelle. **OCR:** ML Kit Text Recognition (On-Device); Cloud-Optionen siehe REFERENZ_ANALYSEN_UND_BERICHTE.md (Abschnitt 8).
 
 ---
 
@@ -44,10 +44,13 @@ Das Manifest ergänzt sie um Ziele und Scope; es ersetzt sie nicht.
 
 ## 5. Technik
 
+- **Application:** FirebaseConfig (setzt Persistence, Koin, Dark Mode deaktiviert)
 - **Datenbank:** Firebase Realtime Database (nicht Firestore)
-- **Auth:** Firebase Auth (LoginActivity als Launcher; MainActivity nach Login). Nur **anonymer Login**; alle angemeldeten Nutzer haben volle Rechte (keine Admin/Anonymous-Trennung).
-- **Storage:** Firebase Storage (Fotos; ImageUploadWorker, StorageUploadManager)
+- **Auth:** Firebase Auth (LoginActivity als Launcher; MainActivity nach Login). Aktuell **nur anonymer Login** („Anonym weiter“); AdminChecker prüft E-Mail für Debug/Test. Alle angemeldeten Nutzer haben volle Rechte (keine Admin/Anonymous-Trennung).
+- **Storage:** Firebase Storage (Fotos; ImageUploadWorker, StorageUploadManager, WorkManager)
+- **Offline:** Firebase Persistence, NetworkMonitor (isOnline, isSyncing), Sync-Hinweise in UI
 - **UI:** Jetpack Compose (Migration abgeschlossen); schwere Screens mit ViewModel + Coordinator (siehe REFERENZ_ANALYSEN_UND_BERICHTE.md Abschnitte 1 und 3)
+- **Navigation:** AppNavigation (Intent-Factory für typ-sichere Activity-Navigation)
 - **DI:** Koin (appModule: Repositories, ViewModels)
 
 ---
@@ -62,7 +65,7 @@ Das Manifest ergänzt sie um Ziele und Scope; es ersetzt sie nicht.
 - **articles** – Artikel (z. B. nach SevDesk-Import)
 - **waschErfassungen** – Erfassungen (Kunde, Positionen, Datum)
 - **kundenPreise** – Kundenpreise pro Kunde/Artikel (customerId → articleId → priceNet, priceGross)
-- **standardPreise** – Einheitliche **Standardpreisliste** (Listenkunden + Privat) (articleId → priceNet, priceGross); kann bei der Erfassung genutzt werden (Fallback, wenn keine Kundenpreise hinterlegt sind)
+- **standardPreise** – **Listen- und Privat-Kundenpreise** (Listenkunden + Privat) (articleId → priceNet, priceGross); kann bei der Erfassung genutzt werden (Fallback, wenn keine Kundenpreise hinterlegt sind)
 - Fotos: Firebase Storage (Pfade in Customer.fotoUrls)
 
 ---
@@ -70,11 +73,11 @@ Das Manifest ergänzt sie um Ziele und Scope; es ersetzt sie nicht.
 ## 7. SevDesk-Anbindung
 
 - **Nur Lesen:** Die App nutzt die SevDesk-API ausschließlich zum **Lesen** (GET). Es werden keine Daten in SevDesk erstellt, geändert oder gelöscht. Import = Kontakte/Artikel in die App übernehmen.
-- **SevDesk Import:** Erreichbar über **Einstellungen** (Hauptbildschirm → Einstellungen → SevDesk Import). SevDeskImportActivity mit SevDeskImportScreen.
+- **SevDesk Import:** Erreichbar über **Einstellungen → Data Import → SevDesk Import**. DataImportActivity zeigt DataImportScreen mit SevDesk-Button; öffnet SevDeskImportActivity.
 
 ### SevDesk Kundenpreise (Artikel ↔ Kunde)
 
-In SevDesk gibt es unter **Kontakte → Kunde → Tab „Kunden Preise“** die Möglichkeit, pro Kunde kundenspezifische Preise für Artikel aus der allgemeinen Artikelliste zu hinterlegen. Andere Kunden bekommen die Standardpreise aus der Artikelliste.
+In SevDesk gibt es unter **Kontakte → Kunde → Tab „Kunden Preise“** die Möglichkeit, pro Kunde kundenspezifische Preise für Artikel aus der allgemeinen Artikelliste zu hinterlegen. Andere Kunden bekommen die Listen- und Privat-Kundenpreise aus der Artikelliste.
 
 - **API-Modell:** **PartContactPrice** (nicht ContactPartPrice, PartUnitPrice oder PartPrice – diese liefern 400 „Model not found“).
 - **Endpunkte (my.sevdesk.de/api/v1):**
@@ -90,11 +93,11 @@ In SevDesk gibt es unter **Kontakte → Kunde → Tab „Kunden Preise“** die 
 
 | Activity | Zweck | UI (Compose) |
 |----------|--------|--------------|
-| LoginActivity | Launcher; Firebase Auth | (eigenes Layout) |
+| LoginActivity | Launcher; Firebase Auth (anonym) | LoginScreenContent (Compose) |
 | MainActivity | Hauptbildschirm nach Login | MainScreen |
 | AddCustomerActivity | Neuer Kunde | AddCustomerScreen, CustomerStammdatenForm |
 | CustomerManagerActivity | Kundenliste, Suche, Filter, Mehrfachauswahl | CustomerManagerScreen (+ TopBar, Cards, StateViews) |
-| CustomerDetailActivity | Kunde anzeigen/bearbeiten, Termine, Fotos, Urlaub | CustomerDetailScreen (StammdatenTab, TermineTab, …) |
+| CustomerDetailActivity | Kunde anzeigen/bearbeiten, Termine, Fotos, Urlaub | CustomerDetailScreen (StammdatenTab, TermineTab, BelegeTab) |
 | TourPlannerActivity | Tourenplaner (Tag, Überfällig/Heute/Erledigt) | TourPlannerScreen (+ ErledigungSheet, TopBar, …) |
 | KundenListenActivity | Listen übersicht | KundenListenScreen |
 | ListeErstellenActivity | Neue Liste | ListeErstellenScreen |
@@ -102,13 +105,18 @@ In SevDesk gibt es unter **Kontakte → Kunde → Tab „Kunden Preise“** die 
 | TerminAnlegenUnregelmaessigActivity | Einzel-/Ausnahme-Termine anlegen | (Compose) |
 | UrlaubActivity | Urlaub (von/bis, Einträge) | UrlaubScreen |
 | WaschenErfassungActivity | Erfassung starten (Kunde, Positionen); Belege pro Monat; Wäscheliste-Formular, manuell | WaschenErfassungScreen |
+| BelegeActivity | Belege-Übersicht (Monatsauswahl, Kundenfilter) | (Compose) |
 | ArtikelVerwaltungActivity | Artikel verwalten | ArtikelVerwaltungScreen |
-| SevDeskImportActivity | SevDesk Import | SevDeskImportScreen |
-| ErfassungMenuActivity | Erfassung → „Erfassung starten“ / „Artikel verwalten“ | ErfassungMenuScreen |
-| SettingsActivity | Einstellungen (SevDesk, Abmelden) | SettingsScreen |
+| ErfassungMenuActivity | Erfassung → „Erfassung starten“ / „Belege“ | ErfassungMenuScreen |
+| PreiseActivity | Preis-Menü: Kundenpreise, Listen-/Privat-Kundenpreise, Artikel | PreiseScreen |
+| KundenpreiseActivity | Kundenpreise pro Kunde/Artikel | KundenpreiseScreen |
+| ListenPrivatKundenpreiseActivity | Listen- und Privat-Kundenpreise (standardPreise) | ListenPrivatKundenpreiseScreen |
+| DataImportActivity | Datenimport-Menü (SevDesk Import) | DataImportScreen |
+| SevDeskImportActivity | SevDesk Import (Kontakte, Artikel, Preise) | SevDeskImportScreen |
+| SettingsActivity | Einstellungen (Preise, Data Import, App-Daten zurücksetzen, Abmelden) | SettingsScreen |
 | StatisticsActivity | Statistiken | StatisticsScreen |
-| MapViewActivity | Kartenansicht | MapViewScreen |
-| AusnahmeTerminActivity | Ausnahme-Termine (A/L) | (vorhanden) |
+| MapViewActivity | Kartenansicht (Trampolin zu Google Maps) | MapViewScreen |
+| AusnahmeTerminActivity | Ausnahme-Termine (A/L) | (Compose) |
 
 ---
 
@@ -118,7 +126,8 @@ In SevDesk gibt es unter **Kontakte → Kunde → Tab „Kunden Preise“** die 
 - Zeile: **Kunden** | **+ Neu Kunde**
 - Großer Button: **Tour Planner** (mit Fälligkeitsanzahl)
 - 2×2: **Kunden Listen**, **Statistiken** | **Erfassung**, **Einstellungen**
-- **Erfassung** öffnet ErfassungMenuActivity: „Erfassung starten“, „Artikel verwalten“
+- **Erfassung** öffnet ErfassungMenuActivity: „Erfassung starten“, „Belege“.
+- **Einstellungen** öffnet SettingsActivity: Buttons „Preise“, „Data Import“; Menü: App-Daten zurücksetzen, Abmelden. Preise → PreiseActivity (Kundenpreise, Listen-/Privat-Kundenpreise, Artikel verwalten). Data Import → DataImportActivity (SevDesk Import).
 - **Ad-hoc Termin-Slots:** Vorschläge für die nächsten möglichen Termine bei Kunden mit Ad-hoc-Regel; Tipp öffnet Kundendetail
 
 Hinweis: Strings für „Regel-Vorlagen“ (main_btn_termin_regeln) existieren; ein eigener Einstieg vom Hauptbildschirm ist aktuell nicht umgesetzt. Termin-Regeln werden am Kunden (Detail, Termin anlegen) und über Intervalle/Regel-Zuordnung genutzt.
@@ -131,19 +140,20 @@ Hinweis: Strings für „Regel-Vorlagen“ (main_btn_termin_regeln) existieren; 
 - **CustomerIntervall:** Abholung/Auslieferung, wiederholen, intervallTage, terminRegelId, regelTyp (WEEKLY, FLEXIBLE_CYCLE, ADHOC, MONTHLY_WEEKDAY), …
 - **KundenListe:** name, listeArt, wochentag, intervalle (ListeIntervall)
 - **TourSlot:** wochentag, stadt, zeitfenster (Zeitfenster)
-- **Repositories:** CustomerRepository, KundenListeRepository, TourPlanRepository, ArticleRepository, ErfassungRepository (alle Koin, Firebase Realtime DB)
+- **ListenPrivatKundenpreis:** articleId, priceNet, priceGross (Firebase-Pfad: standardPreise)
+- **Repositories:** CustomerRepository, KundenListeRepository, TourPlanRepository, TourOrderRepository (tourReihenfolge), ArticleRepository, ErfassungRepository, KundenPreiseRepository, ListenPrivatKundenpreiseRepository (alle Koin, Firebase Realtime DB)
 
 ---
 
 ## 11. Migrations und Start
 
-- Beim Start (MainActivity): runListeToTourMigration, runListeArtToTourMigration, runTourToListenkundenMigration, runListeArtTourToListenkundenMigration, runStandardPreisMigration, runListeIntervalleMigration, runRemoveDeprecatedFieldsMigration, runPauseExpiredReset (Hintergrund).
+- Beim Start (MainActivity): runListeToTourMigration, runListeArtToTourMigration, runTourToListenkundenMigration, runListeArtTourToListenkundenMigration, runListenPrivatKundenpreiseMigration, runListeIntervalleMigration, runRemoveDeprecatedFieldsMigration, runPauseExpiredReset (Hintergrund).
 
 ---
 
 ## 12. Berechtigungen
 
-- INTERNET, CAMERA, WRITE_EXTERNAL_STORAGE (maxSdkVersion 32). FileProvider für Fotos.
+- INTERNET, CAMERA, WRITE_EXTERNAL_STORAGE (maxSdkVersion 32). FileProvider für Fotos (Kamera, Galerie-Auswahl). `queries` für Google Maps (resolveActivity).
 
 ---
 

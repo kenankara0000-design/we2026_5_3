@@ -202,7 +202,7 @@ AusnahmeTermin und KundenTermin sind strukturell identisch (datum, typ "A"/"L");
 
 ## 7.1 Umgesetzt
 
-- **ComposeDialogHelper:** ConfirmDialog, InfoDialog, CustomDialog, DialogState (SettingsScreen, SevDeskImportScreen, TourPreislisteScreen).
+- **ComposeDialogHelper:** ConfirmDialog, InfoDialog, CustomDialog, DialogState (SettingsScreen, SevDeskImportScreen, Listen- und Privat-Kundenpreise-Screen).
 - **AppNavigation:** Typ-sichere Intents für alle Activities; Keys (CUSTOMER_ID, TOUR_ID, LISTE_ID, BELEG_MONTH_KEY, …). MainActivity, SettingsActivity, CustomerDetailActivity exemplarisch refactored.
 - **Result<T>:** Erweitert um Loading, onLoading(), isLoading().
 - **FirebaseRetryHelper:** executeWithRetry, setValueWithRetry, updateChildrenWithRetry, removeValueWithRetry. CustomerRepository updateCustomerResult/deleteCustomerResult.

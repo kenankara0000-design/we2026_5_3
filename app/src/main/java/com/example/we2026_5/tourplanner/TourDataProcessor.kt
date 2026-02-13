@@ -163,8 +163,16 @@ class TourDataProcessor(
         // Nur Kunden OHNE Liste ohne Wochentag (listeId.isEmpty); Listenkunden aus Listen ohne Wochentag bleiben in ihrer Listen-Card
         val alleUeberfaelligeKunden = mutableListOf<Customer>()
         alleUeberfaelligeKunden.addAll(overdueGewerblich)
-        // Überfällige aus Wochentagslisten (nicht Listen ohne Wochentag) – Listenkunden aus Listen ohne Wochentag werden in TourListeCard angezeigt
+        // Überfällige aus Wochentagslisten
         allListen.filter { it.wochentag in 0..6 }.forEach { liste ->
+            listenMitKunden[liste.id]?.forEach { customer ->
+                if (filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)) {
+                    alleUeberfaelligeKunden.add(customer)
+                }
+            }
+        }
+        // Überfällige aus Listen ohne Wochentag (Listenkunden-Listen) – erscheinen ebenfalls in Sektion „Überfällig“
+        allListen.filter { it.wochentag !in 0..6 }.forEach { liste ->
             listenMitKunden[liste.id]?.forEach { customer ->
                 if (filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)) {
                     alleUeberfaelligeKunden.add(customer)
@@ -189,7 +197,8 @@ class TourDataProcessor(
         // 1. Überfällige Kunden ganz oben – einzeln mit Überfällig-Design (kein Container)
         overdueOhneListen.forEach { c ->
             val liste = allListen.find { it.id == c.listeId }
-            items.add(ListItem.CustomerItem(c, statusBadgeText = TourPlannerStatusBadge.compute(c, viewDateStart, heuteStart, null, liste), isOverdue = true))
+            val overdueSuffix = getOverdueAlSuffix(c, viewDateStart, heuteStart, allListen)
+            items.add(ListItem.CustomerItem(c, statusBadgeText = TourPlannerStatusBadge.compute(c, viewDateStart, heuteStart, null, liste), isOverdue = true, overdueAlSuffix = overdueSuffix))
         }
         // Ein Kunde pro Tag nur einmal: bereits in Überfällig angezeigte nicht nochmal in Listen/Normal
         val bereitsAngezeigtCustomerIds = overdueOhneListen.map { it.id }.toSet().toMutableSet()
@@ -231,7 +240,7 @@ class TourDataProcessor(
             allListen.filter { it.wochentag !in 0..6 }.sortedBy { it.name }.forEach { liste ->
                 val kundenInListe = listenMitKunden[liste.id] ?: return@forEach
                 if (kundenInListe.isNotEmpty()) {
-                    val nichtErledigteKunden = mutableListOf<Pair<Customer, Boolean>>()
+                    val nichtErledigteKunden = mutableListOf<Triple<Customer, Boolean, String?>>()
                     val erledigteKundenInListe = mutableListOf<Customer>()
                     kundenInListe.forEach { customer ->
                         val istUeberfaellig = filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)
@@ -247,13 +256,16 @@ class TourDataProcessor(
                             wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTagListe, hatAuslieferungAmTagListe, kwErledigtAmTagListe) || warUeberfaelligUndErledigtAmDatum
                         } else false
                         if (sollAlsErledigtAnzeigen) erledigteKundenInListe.add(customer)
-                        else nichtErledigteKunden.add(customer to istUeberfaellig)
+                        else {
+                            val suffix = if (istUeberfaellig) getOverdueAlSuffix(customer, viewDateStart, heuteStart, allListen) else null
+                            nichtErledigteKunden.add(Triple(customer, istUeberfaellig, suffix))
+                        }
                     }
-                    val kundenWithOverdue = nichtErledigteKunden.sortedBy { (c, _) -> c.name }
+                    val kundenWithOverdue = nichtErledigteKunden.sortedBy { (c, _, _) -> c.name }
                     if (kundenWithOverdue.isNotEmpty()) {
                         var aCount = 0
                         var lCount = 0
-                        kundenWithOverdue.forEach { (c, _) ->
+                        kundenWithOverdue.forEach { (c, _, _) ->
                             bereitsAngezeigtCustomerIds.add(c.id)
                             val termine = berechneAlleTermineFuerKunde(c, allListen, viewDateStart, heuteStart)
                             val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
@@ -437,6 +449,19 @@ class TourDataProcessor(
             val istAuslieferung = termin.typ == TerminTyp.AUSLIEFERUNG
             val istNichtErledigt = !customer.auslieferungErfolgt
             istAuslieferung && istNichtErledigt && istTerminUeberfaellig(terminStart, viewDateStart, heuteStart)
+        }
+    }
+
+    /** Liefert für überfällige Kunden den Badge-Suffix „A“, „L“ oder „AL“; sonst null. */
+    private fun getOverdueAlSuffix(customer: Customer, viewDateStart: Long, heuteStart: Long, allListen: List<KundenListe>): String? {
+        val alleTermine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
+        val hatA = hatUeberfaelligeAbholung(customer, alleTermine, viewDateStart, heuteStart)
+        val hatL = hatUeberfaelligeAuslieferung(customer, alleTermine, viewDateStart, heuteStart)
+        return when {
+            hatA && hatL -> "AL"
+            hatA -> "A"
+            hatL -> "L"
+            else -> null
         }
     }
 
