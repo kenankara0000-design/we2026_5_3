@@ -65,12 +65,6 @@ class TourPlannerViewModel(
                 tourOrderUpdateTrigger.value = tourOrderUpdateTrigger.value + 1
             }
         }
-        // Loading-State beenden, sobald processResultFlow erstmals emittiert
-        viewModelScope.launch {
-            processResultFlow.collect {
-                if (_isLoading.value == true) _isLoading.postValue(false)
-            }
-        }
     }
     
     // StateFlow für ausgewähltes Datum (Single Source of Truth für Tourenplaner-Datum)
@@ -139,6 +133,15 @@ class TourPlannerViewModel(
     
     private val _isLoading = MutableLiveData<Boolean>(true)
     val isLoading: LiveData<Boolean> = _isLoading
+
+    // Loading-State beenden, sobald processResultFlow erstmals emittiert (muss nach processResultFlow-Deklaration stehen)
+    init {
+        viewModelScope.launch {
+            processResultFlow.collect {
+                if (_isLoading.value == true) _isLoading.postValue(false)
+            }
+        }
+    }
     
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> = _error
