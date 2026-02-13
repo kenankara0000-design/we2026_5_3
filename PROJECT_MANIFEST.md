@@ -25,7 +25,7 @@ Diese Datei muss gepflegt werden. Wenn sich Ziele, Scope oder Planung ändern: H
 
 ## 3. Kernfunktionen (geplant / vorhanden)
 
-- **Kundenstamm:** Gewerblich, Privat, Listen; Stammdaten, Intervalle, Termin-Regeln, Status (Aktiv/Pausiert/Ad-hoc), Urlaub, Fotos
+- **Kundenstamm:** Gewerblich, Privat, Listenkunden; Stammdaten, Intervalle, Termin-Regeln, Status (Aktiv/Pausiert/Ad-hoc), Urlaub, Fotos
 - **Tourenplaner:** Tagesansicht (Überfällig, Heute, Erledigt); Erledigung (A/L/KW), Verschieben, Urlaub, Einzeltermin aussetzen
 - **Abholung / Auslieferung / KW:** Erfassen im Tourenplaner; Listen mit A/L-Wochentag und Intervallen
 - **Termin-Regeln, Intervalle, Listen:** Kunden-Intervalle (inkl. monatlich/Wochentag), KundenListen mit Listenintervallen; Tour-Slots (tourPlaene); Termin-Regeln am Kunden (Regel-Vorlagen-Strings in UI, kein eigener Haupt-Einstieg)
@@ -155,7 +155,7 @@ Hinweis: Strings für „Regel-Vorlagen“ (main_btn_termin_regeln) existieren; 
 |------|--------|-----------|
 | Abholung und Auslieferung von Wäsche bei Kunden | ✅ | Erfassen im Tourenplaner (A/L/KW), Erledigung-Sheet |
 | Planung und Abarbeitung von Touren (tagesbezogen: überfällig, heute, erledigt) | ✅ | TourPlannerActivity, Sektionen Überfällig/Heute/Erledigt |
-| Kundenstamm (Gewerblich, Privat, Listen) mit Adresse, Telefon, Notizen, Fotos | ✅ | Customer, KundenListe; CustomerDetail mit Fotos |
+| Kundenstamm (Gewerblich, Privat, Listenkunden) mit Adresse, Telefon, Notizen, Fotos | ✅ | Customer, KundenListe; CustomerDetail mit Fotos |
 | Termin-Regeln (wöchentlich, flexibel, wochentagsbasiert, monatlich, Ad-hoc) | ✅ | Am Kunden/Listen umgesetzt; Intervalle, regelTyp; **kein** eigener „Termin-Regeln“-Einstieg auf Hauptbildschirm |
 | Listen mit mehreren Intervallen und zugeordneten Privat-Kunden | ✅ | KundenListen, ListeBearbeiten, ListeIntervall |
 | Statistiken (heute/Woche/Monat fällig, überfällig, erledigt, Erledigungsquote, Gesamtkunden) | ✅ | StatisticsActivity, StatisticsScreen |

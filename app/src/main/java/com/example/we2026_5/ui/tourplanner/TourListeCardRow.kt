@@ -30,7 +30,7 @@ import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.TerminFilterUtils
 
 /**
- * Tour-Liste Card: Äußere Card mit Listen-Name, darin jede Kunde als eigene Karte.
+ * Listen-Card (ohne Wochentag): Äußere Card mit Listen-Name, darin jede Kunde als eigene Karte.
  * Bei A-Terminen: A-Farbe und A-Badge; bei L-Terminen: L-Farbe und L-Badge.
  */
 @Composable

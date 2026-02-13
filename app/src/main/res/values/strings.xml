@@ -378,6 +378,9 @@
     <string name="tour_btn_map">Karte</string>
     <string name="tour_btn_today">Heute</string>
     <string name="tour_btn_erledigte">Erledigte (%d)</string>
+    <string name="tour_reihenfolge_bearbeiten">Reihenfolge bearbeiten</string>
+    <string name="tour_reihenfolge_fertig">Fertig</string>
+    <string name="tour_reihenfolge_bearbeiten_hinweis">Reihenfolge bearbeiten – Ziehen zum Umsortieren</string>
     <string name="tour_erledigt_empty">Keine erledigten Termine an diesem Tag.</string>
     <string name="tour_empty_title">Keine Touren für diesen Tag</string>
     <string name="tour_empty_subtitle">Für diesen Wochentag sind keine Kunden eingetragen.</string>

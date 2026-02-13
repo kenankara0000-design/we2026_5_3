@@ -7,7 +7,7 @@ import com.example.we2026_5.util.TerminBerechnungUtils
 import java.util.concurrent.TimeUnit
 
 /**
- * Implementierung: Tour-Listen (listeId), Kunden mit zugeordneter Liste, fällig oder erledigt am Tag.
+ * Implementierung: Listen ohne Wochentag (listeId), Kunden mit zugeordneter Liste, fällig oder erledigt am Tag.
  */
 class TourListenProcessorImpl(
     private val categorizer: TourDataCategorizer,

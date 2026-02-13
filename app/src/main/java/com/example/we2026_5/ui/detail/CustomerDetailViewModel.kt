@@ -71,7 +71,7 @@ class CustomerDetailViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    /** Name der Tour-Liste, zu der der Kunde gehört (nur wenn listeId gesetzt und Liste ist Tour-Liste, wochentag !in 0..6). Für Hinweis „Gehört zu Tour-Liste: …“. */
+    /** Name der Liste, zu der der Kunde gehört (nur wenn listeId gesetzt und Liste ist Liste ohne Wochentag, wochentag !in 0..6). Für Hinweis „Gehört zu Liste: …“. */
     @OptIn(ExperimentalCoroutinesApi::class)
     val tourListenName: StateFlow<String?> = currentCustomer
         .flatMapLatest { customer ->

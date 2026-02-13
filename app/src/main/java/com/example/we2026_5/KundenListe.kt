@@ -27,9 +27,9 @@ data class KundenListe(
     /** Listen-Termine: A/L-Termine für die gesamte Liste (gilt für alle Kunden in dieser Liste). Struktur wie KundenTermin. */
     val listenTermine: List<KundenTermin> = emptyList(),
 
-    /** Für Tour-Listen (wochentag !in 0..6): Wochentag A (0=Mo..6=So). Bei Termin anlegen wird nächster A an diesem Tag berechnet. */
+    /** Für Listen ohne Wochentag (wochentag !in 0..6): Wochentag A (0=Mo..6=So). Bei Termin anlegen wird nächster A an diesem Tag berechnet. */
     val wochentagA: Int? = null,
-    /** Für Tour-Listen: Tage zwischen A und L (L = A + tageAzuL). */
+    /** Für Listen ohne Wochentag: Tage zwischen A und L (L = A + tageAzuL). */
     val tageAzuL: Int = 7
 ) {
     // Rückwärtskompatibilität: Alte Felder für Migration

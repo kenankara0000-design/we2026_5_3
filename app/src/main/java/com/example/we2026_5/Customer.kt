@@ -117,7 +117,7 @@ data class Customer(
     @Exclude
     val kundenTermine: List<KundenTermin> = emptyList(),
 
-    /** Termine von der Tour-Liste (listenTermine) auf den Kunden übertragen. Bei Änderung der Liste werden alle Kunden der Liste aktualisiert; beim Verlassen der Liste geleert. @Exclude, manuell lesen/schreiben. */
+    /** Termine von der Liste ohne Wochentag (listenTermine) auf den Kunden übertragen. Bei Änderung der Liste werden alle Kunden der Liste aktualisiert; beim Verlassen der Liste geleert. @Exclude, manuell lesen/schreiben. */
     @Exclude
     val termineVonListe: List<KundenTermin> = emptyList(),
 

@@ -27,6 +27,20 @@ Keine Änderung am Verhalten (Bug-Fix) ohne ausdrückliche Freigabe (vgl. `.curs
 - **Fix:** `BackHandler` in `WaschenErfassungActivity.kt` hinzugefügt, der identisch zum TopBar-Back durch die UI-States navigiert.
 - **Relevante Stellen:** `WaschenErfassungActivity.kt` (BackHandler/handleBack), `WaschenErfassungScreen` Back-Callback.
 
+### Tourenplaner: Überfällige Listenkunden aus Listen ohne Wochentag erscheinen nicht in der Sektion „Überfällig“
+
+- **Symptom:** Kunde (z. B. Lutze Rötha) mit Fälligkeit 12.02. wird am 12.02. als überfällig angezeigt, am 13.02. (heute, keine Termine für heute) aber nicht in der Sektion „Überfällig“. Erwartung: Überfällige sollen am Fälligkeitstag und am heutigen Tag immer erscheinen, bis erledigt.
+- **Ursache:** Die zentrale Sektion „Überfällig“ oben im Tourenplaner wird nur aus (1) Kunden ohne Liste (Gewerblich/Privat ohne listeId) und (2) Kunden aus **Wochentagslisten** (Listen mit wochentag 0..6) befüllt. **Listenkunden aus Listen ohne Wochentag** (wochentag z. B. -1) werden dort nie eingetragen; sie erscheinen nur in ihrer Listen-Karte. Wenn am angezeigten Tag keine anderen Fälligen in der Liste sind, wirkt die Überfällig-Anzeige „weg“.
+- **Hinweis:** Hat nichts mit Zeitzone zu tun (Berlin ist überall gesetzt). Die Einzel-Logik „sollUeberfaelligAnzeigen“ (Fälligkeitstag + heutiger Tag) ist korrekt; die Zuordnung zur Sektion „Überfällig“ berücksichtigt Kunden aus Listen ohne Wochentag nicht.
+- **Relevante Stellen:** `tourplanner/TourDataProcessor.kt` (Befüllung `alleUeberfaelligeKunden` nur über overdueGewerblich + Wochentagslisten; Listen ohne Wochentag werden ausgelassen).
+
+### Tourenplaner: Kunde mit A erledigt, L offen/überfällig erscheint nicht als überfällig
+
+- **Symptom:** Erledigung A ist korrekt (z. B. Abholung 12.02 erledigt). Am heutigen Tag (13.02) wird der Kunde trotzdem nicht als überfällig angezeigt. Regel „Erledigung darf nur am Datum Heute“: Ein Termin von gestern kann man heute nicht mehr erledigen – dadurch entsteht ein Konflikt, wenn der Kunde dann auch nicht mehr in der Überfällig-Liste erscheint.
+- **Ursache:** Die Überfällig-Prüfung behandelt den Kunden als „erledigt“, sobald **entweder** A **oder** L erledigt ist. Wenn A erledigt ist, wird der Kunde nie in die Sektion „Überfällig“ aufgenommen – auch wenn L noch offen oder überfällig ist. Er erscheint also nicht mehr, obwohl noch etwas offen ist; ein Nachholen der Erledigung am Folgetag ist durch die Regel „nur am Datum Heute“ ohnehin nicht vorgesehen.
+- **Erwartung:** Überfällig anzeigen, sobald **irgendein** überfälliger Termin (A oder L) noch nicht erledigt ist. Kunde mit A erledigt, L überfällig → weiterhin als überfällig anzeigen (für L).
+- **Relevante Stelle:** `tourplanner/TourDataFilter.kt` (`istKundeUeberfaellig`: Abbruch bei `abholungErfolgt || auslieferungErfolgt`; sollte pro Termin-Typ prüfen, ob noch ein überfälliger A oder L offen ist).
+
 ---
 
 *Behobene Fehler werden hier entfernt (oder mit Behoben-Datum versehen und dann aus der Liste genommen).*

@@ -4,7 +4,7 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.KundenListe
 
 /**
- * Füllt Tour-Listen (listeId): Kunden mit zugeordneter Liste, fällig oder erledigt am Tag.
+ * Füllt Listen ohne Wochentag (listeId): Kunden mit zugeordneter Liste, fällig oder erledigt am Tag.
  */
 interface TourListenProcessor {
     fun fill(

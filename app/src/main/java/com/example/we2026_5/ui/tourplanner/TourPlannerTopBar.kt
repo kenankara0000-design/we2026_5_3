@@ -2,6 +2,7 @@ package com.example.we2026_5.ui.tourplanner
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,8 +13,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -22,6 +26,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,23 +50,30 @@ fun TourPlannerTopBar(
     isOffline: Boolean,
     pressedHeaderButton: String?,
     erledigtCount: Int,
+    isReihenfolgeBearbeiten: Boolean,
     onBack: () -> Unit,
     onPrevDay: () -> Unit,
     onNextDay: () -> Unit,
     onToday: () -> Unit,
     onMap: () -> Unit,
     onRefresh: () -> Unit,
-    onErledigtClick: () -> Unit
+    onErledigtClick: () -> Unit,
+    onReihenfolgeBearbeiten: () -> Unit,
+    onReihenfolgeFertig: () -> Unit
 ) {
     val primaryBlue = colorResource(R.color.primary_blue)
     val buttonBlue = colorResource(R.color.button_blue)
     val statusWarning = colorResource(R.color.status_warning)
+    var kebabExpanded by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.background(primaryBlue)) {
+    Column(modifier = Modifier.background(if (isReihenfolgeBearbeiten) colorResource(R.color.status_warning) else primaryBlue)) {
         TopAppBar(
             title = { },
             navigationIcon = { },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryBlue, navigationIconContentColor = Color.White),
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = if (isReihenfolgeBearbeiten) colorResource(R.color.status_warning) else primaryBlue,
+                navigationIconContentColor = Color.White
+            ),
             actions = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onPrevDay) {
@@ -88,6 +103,37 @@ fun TourPlannerTopBar(
                             contentDescription = stringResource(R.string.label_refresh),
                             tint = Color.White
                         )
+                    }
+                    Box {
+                        IconButton(onClick = { kebabExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.Filled.MoreVert,
+                                contentDescription = stringResource(R.string.content_desc_more_options),
+                                tint = Color.White
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = kebabExpanded,
+                            onDismissRequest = { kebabExpanded = false }
+                        ) {
+                            if (isReihenfolgeBearbeiten) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.tour_reihenfolge_fertig)) },
+                                    onClick = {
+                                        kebabExpanded = false
+                                        onReihenfolgeFertig()
+                                    }
+                                )
+                            } else {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.tour_reihenfolge_bearbeiten)) },
+                                    onClick = {
+                                        kebabExpanded = false
+                                        onReihenfolgeBearbeiten()
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(6.dp))
@@ -121,6 +167,21 @@ fun TourPlannerTopBar(
                 )
             }
         }
+        if (isReihenfolgeBearbeiten) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.tour_reihenfolge_bearbeiten_hinweis),
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -130,6 +191,22 @@ fun TourPlannerTopBar(
             val headerButtonHeight = 40.dp
             val headerButtonShape = RoundedCornerShape(8.dp)
             val headerContentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)
+            if (isReihenfolgeBearbeiten) {
+                Button(
+                    onClick = onReihenfolgeFertig,
+                    modifier = Modifier.weight(1f).height(headerButtonHeight),
+                    shape = headerButtonShape,
+                    contentPadding = headerContentPadding,
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryBlue)
+                ) {
+                    Text(
+                        stringResource(R.string.tour_reihenfolge_fertig),
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
             Button(
                 onClick = onMap,
                 modifier = Modifier.weight(1f).height(headerButtonHeight),

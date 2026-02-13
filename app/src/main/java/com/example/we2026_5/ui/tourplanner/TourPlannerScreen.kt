@@ -2,6 +2,7 @@ package com.example.we2026_5.ui.tourplanner
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
@@ -84,7 +86,10 @@ fun TourPlannerScreen(
     erledigtSheetContent: ErledigtSheetContent? = null,
     onErledigtClick: () -> Unit = {},
     onDismissErledigtSheet: () -> Unit = {},
-    onReorder: (List<String>) -> Unit = {}
+    onReorder: (List<String>) -> Unit = {},
+    isReihenfolgeBearbeiten: Boolean = false,
+    onReihenfolgeBearbeiten: () -> Unit = {},
+    onReihenfolgeFertig: () -> Unit = {}
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -147,13 +152,16 @@ fun TourPlannerScreen(
                 isOffline = isOffline,
                 pressedHeaderButton = pressedHeaderButton,
                 erledigtCount = erledigtCount,
+                isReihenfolgeBearbeiten = isReihenfolgeBearbeiten,
                 onBack = onBack,
                 onPrevDay = onPrevDay,
                 onNextDay = onNextDay,
                 onToday = onToday,
                 onMap = onMap,
                 onRefresh = onRefresh,
-                onErledigtClick = onErledigtClick
+                onErledigtClick = onErledigtClick,
+                onReihenfolgeBearbeiten = onReihenfolgeBearbeiten,
+                onReihenfolgeFertig = onReihenfolgeFertig
             )
         }
     ) { paddingValues ->
@@ -188,7 +196,10 @@ fun TourPlannerScreen(
                     sectionOverdueBg = sectionOverdueBg,
                     sectionOverdueText = sectionOverdueText,
                     sectionDoneBg = sectionDoneBg,
-                    sectionDoneText = sectionDoneText
+                    sectionDoneText = sectionDoneText,
+                    reihenfolgeBearbeiten = isReihenfolgeBearbeiten,
+                    onSwipeToPrevDay = onPrevDay,
+                    onSwipeToNextDay = onNextDay
                 )
             }
             if (erledigtSheetVisible && erledigtSheetContent != null) {
@@ -219,9 +230,14 @@ private fun TourPlannerListContent(
     sectionOverdueBg: androidx.compose.ui.graphics.Color,
     sectionOverdueText: androidx.compose.ui.graphics.Color,
     sectionDoneBg: androidx.compose.ui.graphics.Color,
-    sectionDoneText: androidx.compose.ui.graphics.Color
+    sectionDoneText: androidx.compose.ui.graphics.Color,
+    reihenfolgeBearbeiten: Boolean = false,
+    onSwipeToPrevDay: () -> Unit = {},
+    onSwipeToNextDay: () -> Unit = {}
 ) {
     val lazyListState = rememberLazyListState()
+    val density = LocalDensity.current
+    val swipeThresholdPx = with(density) { 60.dp.toPx() }
     var displayItems by remember { mutableStateOf(tourItems) }
 
     val dragState = remember(lazyListState) {
@@ -240,13 +256,19 @@ private fun TourPlannerListContent(
             onDragEnd = {
                 val ids = displayItems.filterIsInstance<ListItem.CustomerItem>().map { it.customer.id }
                 if (ids.isNotEmpty()) onReorder(ids)
-                displayItems = tourItems
             }
         )
     }
 
-    if (dragState.currentIndexOfDraggedItem == null && tourItems !== displayItems) {
+    if (!reihenfolgeBearbeiten && dragState.currentIndexOfDraggedItem == null && tourItems !== displayItems) {
         displayItems = tourItems
+    }
+    androidx.compose.runtime.LaunchedEffect(reihenfolgeBearbeiten) {
+        if (reihenfolgeBearbeiten) displayItems = tourItems
+        else displayItems = tourItems
+    }
+    androidx.compose.runtime.LaunchedEffect(tourItems) {
+        if (!reihenfolgeBearbeiten) displayItems = tourItems
     }
 
     val scope = rememberCoroutineScope()
@@ -257,22 +279,43 @@ private fun TourPlannerListContent(
             .fillMaxSize()
             .background(colorResource(R.color.background_light))
             .padding(16.dp)
-            .pointerInput(Unit) {
-                detectDragGesturesAfterLongPress(
-                    onDragStart = { offset: Offset -> dragState.onDragStart(offset) },
-                    onDrag = { change: PointerInputChange, offset: Offset ->
-                        change.consume()
-                        dragState.onDrag(dragAmount = offset)
-                        dragState.checkForOverScroll().takeIf { it != 0f }?.let { delta ->
-                            scope.launch {
-                                lazyListState.scroll { scrollBy(delta) }
+            .then(
+                if (reihenfolgeBearbeiten) {
+                    Modifier.pointerInput(Unit) {
+                        detectDragGesturesAfterLongPress(
+                            onDragStart = { offset: Offset -> dragState.onDragStart(offset) },
+                            onDrag = { change: PointerInputChange, offset: Offset ->
+                                change.consume()
+                                dragState.onDrag(dragAmount = offset)
+                                dragState.checkForOverScroll().takeIf { it != 0f }?.let { delta ->
+                                    scope.launch {
+                                        lazyListState.scroll { scrollBy(delta) }
+                                    }
+                                }
+                            },
+                            onDragEnd = { dragState.onDragInterrupted() },
+                            onDragCancel = { dragState.onDragInterrupted() }
+                        )
+                    }
+                } else {
+                    Modifier.pointerInput(Unit) {
+                        var totalDragX = 0f
+                        detectHorizontalDragGestures(
+                            onDragStart = { totalDragX = 0f },
+                            onHorizontalDrag = { change, dragAmount ->
+                                change.consume()
+                                totalDragX += dragAmount
+                            },
+                            onDragEnd = {
+                                when {
+                                    totalDragX > swipeThresholdPx -> onSwipeToNextDay()
+                                    totalDragX < -swipeThresholdPx -> onSwipeToPrevDay()
+                                }
                             }
-                        }
-                    },
-                    onDragEnd = { dragState.onDragInterrupted() },
-                    onDragCancel = { dragState.onDragInterrupted() }
-                )
-            },
+                        )
+                    }
+                }
+            ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         itemsIndexed(

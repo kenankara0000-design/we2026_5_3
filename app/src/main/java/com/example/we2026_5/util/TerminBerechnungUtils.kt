@@ -390,7 +390,7 @@ object TerminBerechnungUtils {
             alleTermine.addAll(fromWeekdays)
         }
 
-        // Termine von der Tour-Liste: auf Kunden übertragen (termineVonListe); Erledigen etc. funktioniert ohne Liste
+        // Termine von der Liste ohne Wochentag: auf Kunden übertragen (termineVonListe); Erledigen etc. funktioniert ohne Liste
         if (customer.termineVonListe.isNotEmpty()) {
             val start = getStartOfDay(startDatum)
             val end = start + TimeUnit.DAYS.toMillis(tageVoraus.toLong())

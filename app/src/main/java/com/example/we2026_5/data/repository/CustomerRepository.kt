@@ -209,7 +209,7 @@ class CustomerRepository(
         "defaultAbholungWochentag", "defaultAuslieferungWochentag", "defaultAbholungWochentage", "defaultAuslieferungWochentage"
     )
 
-    /** Kunden, die der angegebenen Tour-Liste zugeordnet sind (für Sync der listenTermine → termineVonListe). */
+    /** Kunden, die der angegebenen Liste ohne Wochentag zugeordnet sind (für Sync der listenTermine → termineVonListe). */
     suspend fun getCustomersByListeId(listeId: String): List<Customer> =
         getAllCustomers().filter { it.listeId == listeId }
 

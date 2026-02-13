@@ -49,7 +49,7 @@ class TourDataProcessor(
         val listenMitKunden = mutableMapOf<String, List<Customer>>()
         wochentagslistenProcessor.fill(allCustomers, allListen, listenMitKunden, viewDateStart, heuteStart)
         tourListenProcessor.fill(kundenNachListen, allListen, listenMitKunden, viewDateStart, heuteStart)
-        // Sammle Kunden-IDs: nur Tour-Listen (listeId), NICHT Wochentagslisten – G/P in Wochentagslisten gehen in Erledigt
+        // Sammle Kunden-IDs: nur Listen ohne Wochentag (listeId), NICHT Wochentagslisten – G/P in Wochentagslisten gehen in Erledigt
         val alleKundenInListenIds = kundenNachListen.values.flatten().map { it.id }.toSet()
         val kundenInListenIds = listenMitKunden.values.flatten().map { it.id }.toSet()
         
@@ -160,10 +160,10 @@ class TourDataProcessor(
         // REIHENFOLGE: 1. Überfällig (unsichtbar), 2. Listen, 3. Normal, 4. Erledigt
         
         // 1. Überfällige Kunden (unsichtbarer Bereich) - GANZ OBEN
-        // Nur Kunden OHNE Tour-Liste (listeId.isEmpty); Tour-Listen-Kunden bleiben in ihrer Tour-Liste-Card
+        // Nur Kunden OHNE Liste ohne Wochentag (listeId.isEmpty); Listenkunden aus Listen ohne Wochentag bleiben in ihrer Listen-Card
         val alleUeberfaelligeKunden = mutableListOf<Customer>()
         alleUeberfaelligeKunden.addAll(overdueGewerblich)
-        // Überfällige aus Wochentagslisten (nicht Tour-Listen) – Tour-Listen-Kunden werden in TourListeCard angezeigt
+        // Überfällige aus Wochentagslisten (nicht Listen ohne Wochentag) – Listenkunden aus Listen ohne Wochentag werden in TourListeCard angezeigt
         allListen.filter { it.wochentag in 0..6 }.forEach { liste ->
             listenMitKunden[liste.id]?.forEach { customer ->
                 if (filter.istKundeUeberfaellig(customer, liste, viewDateStart, heuteStart)) {
@@ -196,7 +196,7 @@ class TourDataProcessor(
 
         val istVergangenheit = viewDateStart < heuteStart
 
-        // 2. Kunden nach Listen: zuerst Tour-Listen (unter Überfällige, oberhalb normale Kunden), dann Wochentagslisten
+        // 2. Kunden nach Listen: zuerst Listen ohne Wochentag (unter Überfällige, oberhalb normale Kunden), dann Wochentagslisten
         // Vergangenheit: keine „normalen“ Listen-Karten (nur Überfällig/Erledigt), aber Erledigt-Daten für Sheet brauchen wir immer
         val tourListenErledigt = mutableListOf<Pair<KundenListe, List<Customer>>>()
         val bereitsAngezeigtWochentag = mutableSetOf<Pair<Int, String>>()
@@ -227,7 +227,7 @@ class TourDataProcessor(
         }
 
         if (!istVergangenheit) {
-            // 2a. Tour-Listen (wochentag !in 0..6) – direkt unter Überfällige
+            // 2a. Listen ohne Wochentag (wochentag !in 0..6) – direkt unter Überfällige
             allListen.filter { it.wochentag !in 0..6 }.sortedBy { it.name }.forEach { liste ->
                 val kundenInListe = listenMitKunden[liste.id] ?: return@forEach
                 if (kundenInListe.isNotEmpty()) {
@@ -267,7 +267,7 @@ class TourDataProcessor(
                     }
                 }
             }
-            // 2b. Wochentagslisten (wochentag in 0..6) – unter Tour-Listen, oberhalb normale Kunden
+            // 2b. Wochentagslisten (wochentag in 0..6) – unter Listen ohne Wochentag, oberhalb normale Kunden
             allListen.filter { it.wochentag in 0..6 }.sortedBy { it.name }.forEach { liste ->
                 val kundenInListe = listenMitKunden[liste.id] ?: return@forEach
                 if (kundenInListe.isNotEmpty()) {

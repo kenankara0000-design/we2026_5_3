@@ -93,7 +93,8 @@ Die ursprünglichen Einzeldateien können nach Prüfung entfernt werden; der Inh
 | Kunden-Termine | Customer.kundenTermine | datum, typ "A"/"L" |
 | Ausnahme-Termine | Customer.ausnahmeTermine | datum, typ "A"/"L" |
 | Listen-Termine | KundenListe.listenTermine | A/L für die ganze Liste |
-| Tour-Listen (Wochentag) | KundenListe wochentag 0..6 | wochentagA, tageAzuL |
+| Wochentagslisten | KundenListe wochentag 0..6 | wochentagA, tageAzuL |
+| Listen ohne Wochentag (Listenkunden) | KundenListe wochentag z. B. -1 | listenTermine, wochentagA, tageAzuL |
 
 AusnahmeTermin und KundenTermin sind strukturell identisch (datum, typ "A"/"L"); Vereinheitlichung z. B. Einzeltermin(datum, typ, quelle: AUSNAHME | KUNDE) möglich.
 

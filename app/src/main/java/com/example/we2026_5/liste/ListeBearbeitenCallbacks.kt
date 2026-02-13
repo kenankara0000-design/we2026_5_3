@@ -50,7 +50,7 @@ class ListeBearbeitenCallbacks(
                 }
                 map
             } else {
-                // Tour-Liste: listeId leeren und von der Liste übernommene Termine entfernen
+                // Liste ohne Wochentag: listeId leeren und von der Liste übernommene Termine entfernen
                 mapOf(
                     "listeId" to "",
                     "termineVonListe" to CustomerSnapshotParser.serializeKundenTermine(emptyList())
@@ -98,7 +98,7 @@ class ListeBearbeitenCallbacks(
                     )
                 }
             } else {
-                // Tour-Liste: listeId setzen; Listen-Termine auf Kunden übertragen (termineVonListe)
+                // Liste ohne Wochentag: listeId setzen; Listen-Termine auf Kunden übertragen (termineVonListe)
                 val base = mutableMapOf<String, Any>("listeId" to liste.id)
                 base["termineVonListe"] = CustomerSnapshotParser.serializeKundenTermine(liste.listenTermine)
                 if (liste.intervalle.isNotEmpty()) {
@@ -248,7 +248,7 @@ class ListeBearbeitenCallbacks(
     }
 
     /**
-     * Überträgt die Listen-Termine auf alle Kunden dieser Tour-Liste (termineVonListe).
+     * Überträgt die Listen-Termine auf alle Kunden dieser Liste ohne Wochentag (termineVonListe).
      */
     private fun syncTermineVonListeToKunden(listeId: String, newTermine: List<KundenTermin>) {
         CoroutineScope(Dispatchers.Main).launch {
@@ -262,7 +262,7 @@ class ListeBearbeitenCallbacks(
     }
 
     /**
-     * Aktualisiert Tour-Listen-Einstellungen (wochentagA, tageAzuL).
+     * Aktualisiert Einstellungen der Liste ohne Wochentag (wochentagA, tageAzuL).
      */
     fun updateListenTourEinstellungen(
         liste: KundenListe,

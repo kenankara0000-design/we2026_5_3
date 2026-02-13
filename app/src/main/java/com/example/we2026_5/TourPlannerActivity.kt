@@ -49,6 +49,7 @@ class TourPlannerActivity : AppCompatActivity() {
     private var overviewPayload by mutableStateOf<CustomerOverviewPayload?>(null)
     private var overviewRegelNamen by mutableStateOf<String?>(null)
     private var erledigtSheetVisible by mutableStateOf(false)
+    private var reihenfolgeBearbeitenMode by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // #region agent log
@@ -302,7 +303,10 @@ class TourPlannerActivity : AppCompatActivity() {
                     viewModel.getSelectedTimestamp()?.let { ts ->
                         viewModel.setTourOrder(ts, ids)
                     }
-                }
+                },
+                isReihenfolgeBearbeiten = reihenfolgeBearbeitenMode,
+                onReihenfolgeBearbeiten = { reihenfolgeBearbeitenMode = true },
+                onReihenfolgeFertig = { reihenfolgeBearbeitenMode = false }
             )
         }
 

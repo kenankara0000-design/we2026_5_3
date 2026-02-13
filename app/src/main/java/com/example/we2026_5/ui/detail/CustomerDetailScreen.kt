@@ -70,7 +70,7 @@ fun CustomerDetailScreen(
     onAddAusnahmeTermin: (Customer) -> Unit = {},
     /** A/L-Paare für „Alle Termine“-Block (Termine-Tab). */
     terminePairs365: List<Pair<Long, Long>> = emptyList(),
-    /** Name der Tour-Liste, zu der der Kunde gehört (nur bei Tour-Kunden). Hinweis „Gehört zu Tour-Liste: …“. */
+    /** Name der Liste (ohne Wochentag), zu der der Kunde gehört (nur bei Listenkunden). Hinweis „Gehört zu Liste: …“. */
     tourListenName: String? = null,
     onDeleteNextTermin: (Long) -> Unit = {},
     onDeleteAusnahmeTermin: (com.example.we2026_5.AusnahmeTermin) -> Unit = {},

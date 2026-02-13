@@ -67,7 +67,7 @@ class ListeBearbeitenViewModel(
                     activeKunden.filter { it.listeId.isEmpty() && it.kundenArt == "Listenkunden" }.sortedBy { it.displayName }
                 }
                 val intervalle = if (_state.value.isInEditMode) _state.value.intervalle else geladeneListe.intervalle
-                // Backfill: Bestehende Tour-Listen-Kunden ohne termineVonListe mit listenTermine füllen
+                // Backfill: Bestehende Listenkunden (aus Listen ohne Wochentag) ohne termineVonListe mit listenTermine füllen
                 if (geladeneListe.wochentag !in 0..6 && geladeneListe.listenTermine.isNotEmpty()) {
                     inListe.filter { it.termineVonListe.isEmpty() }.forEach { c ->
                         customerRepository.updateCustomer(c.id, mapOf("termineVonListe" to CustomerSnapshotParser.serializeKundenTermine(geladeneListe.listenTermine)))
