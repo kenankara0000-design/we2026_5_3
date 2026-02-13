@@ -33,7 +33,10 @@ fun TourPlannerErledigtSheet(
     getStatusBadgeText: (Customer) -> String,
     onCustomerClick: (CustomerOverviewPayload) -> Unit,
     onAktionenClick: (Customer) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    cardShowAddress: Boolean = true,
+    cardShowPhone: Boolean = false,
+    cardShowNotes: Boolean = false
 ) {
     if (!visible || content == null) return
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -101,7 +104,10 @@ fun TourPlannerErledigtSheet(
                     viewDateMillis = viewDate,
                     showErledigtBadge = true,
                     onCustomerClick = { onCustomerClick(payload) },
-                    onAktionenClick = { onAktionenClick(customer) }
+                    onAktionenClick = { onAktionenClick(customer) },
+                    showAddress = cardShowAddress,
+                    showPhone = cardShowPhone,
+                    showNotes = cardShowNotes
                 )
             }
             content.tourListenErledigt.forEach { (listeName, kunden) ->
@@ -111,7 +117,10 @@ fun TourPlannerErledigtSheet(
                     viewDateMillis = viewDateMillis,
                     getStatusBadgeText = getStatusBadgeText,
                     onCustomerClick = onCustomerClick,
-                    onAktionenClick = onAktionenClick
+                    onAktionenClick = onAktionenClick,
+                    cardShowAddress = cardShowAddress,
+                    cardShowPhone = cardShowPhone,
+                    cardShowNotes = cardShowNotes
                 )
             }
         }

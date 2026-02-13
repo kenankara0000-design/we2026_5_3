@@ -28,7 +28,10 @@ internal fun TourListeErledigtRow(
     viewDateMillis: Long?,
     getStatusBadgeText: (Customer) -> String,
     onCustomerClick: (CustomerOverviewPayload) -> Unit,
-    onAktionenClick: (Customer) -> Unit
+    onAktionenClick: (Customer) -> Unit,
+    cardShowAddress: Boolean = true,
+    cardShowPhone: Boolean = false,
+    cardShowNotes: Boolean = false
 ) {
     val sectionDoneBg = colorResource(R.color.section_done_bg)
     val sectionDoneText = colorResource(R.color.section_done_text)
@@ -82,7 +85,10 @@ internal fun TourListeErledigtRow(
                 viewDateMillis = viewDate,
                 showErledigtBadge = true,
                 onCustomerClick = { onCustomerClick(payload) },
-                onAktionenClick = { onAktionenClick(customer) }
+                onAktionenClick = { onAktionenClick(customer) },
+                showAddress = cardShowAddress,
+                showPhone = cardShowPhone,
+                showNotes = cardShowNotes
             )
             Spacer(Modifier.height(8.dp))
         }

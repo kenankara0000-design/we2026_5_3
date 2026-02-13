@@ -43,7 +43,10 @@ internal fun TourListeCardRow(
     viewDateMillis: Long,
     getStatusBadgeText: (Customer) -> String,
     onCustomerClick: (com.example.we2026_5.ui.tourplanner.CustomerOverviewPayload) -> Unit,
-    onAktionenClick: (Customer) -> Unit
+    onAktionenClick: (Customer) -> Unit,
+    cardShowAddress: Boolean = true,
+    cardShowPhone: Boolean = false,
+    cardShowNotes: Boolean = false
 ) {
     var expanded by remember { mutableStateOf(false) }
     val surfaceBg = colorResource(R.color.termin_regel_card_bg)
@@ -155,7 +158,10 @@ internal fun TourListeCardRow(
                     overdueAlSuffix = overdueAlSuffix,
                     viewDateMillis = viewDateMillis,
                     onCustomerClick = { onCustomerClick(payload) },
-                    onAktionenClick = { onAktionenClick(customer) }
+                    onAktionenClick = { onAktionenClick(customer) },
+                    showAddress = cardShowAddress,
+                    showPhone = cardShowPhone,
+                    showNotes = cardShowNotes
                 )
                 if (index < kunden.size - 1) Spacer(modifier = Modifier.height(8.dp))
                 }

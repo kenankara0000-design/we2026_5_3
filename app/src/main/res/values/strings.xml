@@ -883,4 +883,16 @@
     <string name="artikel_empty">Keine Artikel vorhanden. Artikel über SevDesk importieren.</string>
     <string name="foto_upload_pending">%d Foto(s) warten auf Upload</string>
     <string name="foto_upload_pending_singular">1 Foto wartet auf Upload</string>
+
+    <!-- Phase 4: Karten-Infos + User-Flow -->
+    <string name="settings_section_card_display">Kartenanzeige</string>
+    <string name="settings_card_show_address">Adresse auf Karte anzeigen</string>
+    <string name="settings_card_show_phone">Telefonnummer auf Karte anzeigen</string>
+    <string name="settings_card_show_notes">Notizen auf Karte anzeigen</string>
+    <string name="settings_section_features">Funktionen</string>
+    <string name="settings_feature_save_and_next">Speichern \u0026 nächster Kunde</string>
+    <string name="settings_feature_save_and_next_hint">Button im Kundendetail zum schnellen Durcharbeiten</string>
+    <string name="customer_overdue_hint">Überfällig – nächster Termin ist abgelaufen</string>
+    <string name="customer_status_badge_pausiert">Pausiert</string>
+    <string name="customer_status_badge_adhoc">Ad-hoc</string>
 </resources>

@@ -23,6 +23,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Icon
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
 import com.example.we2026_5.ui.theme.AppColors
@@ -52,13 +58,42 @@ fun CustomerDetailStammdatenTab(
     onTakePhoto: () -> Unit,
     onPhotoClick: (String) -> Unit,
     onDeletePhoto: ((String) -> Unit)? = null,
-    isUploading: Boolean = false
+    isUploading: Boolean = false,
+    /** Phase 4: Zeigt Überfällig-Hinweis am Anfang des Tabs. */
+    isOverdue: Boolean = false
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
     ) {
+        // Phase 4: Überfällig-Hinweis
+        if (isOverdue && !isInEditMode) {
+            val overdueColor = colorResource(R.color.status_overdue)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(overdueColor.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
+                    .padding(12.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = overdueColor,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.customer_overdue_hint),
+                    color = overdueColor,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+            Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+        }
         if (!isInEditMode) {
             if (isAdmin) {
                 CustomerDetailActionsRow(

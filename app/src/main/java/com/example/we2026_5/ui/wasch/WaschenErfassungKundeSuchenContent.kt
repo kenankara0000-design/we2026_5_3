@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.example.we2026_5.Customer
 import com.example.we2026_5.R
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun WaschenErfassungKundeSuchenContent(
@@ -65,11 +66,36 @@ fun WaschenErfassungKundeSuchenContent(
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text(
-                            customer.displayName,
-                            modifier = Modifier.padding(16.dp),
-                            fontSize = 16.sp
-                        )
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                customer.displayName,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            // Phase 4: Alias (wenn abweichend) und Adresse anzeigen
+                            val aliasHint = if (customer.alias.isNotBlank() && customer.alias.trim() != customer.name.trim())
+                                customer.name.trim() else null
+                            if (aliasHint != null) {
+                                Text(
+                                    text = aliasHint,
+                                    fontSize = 13.sp,
+                                    color = textSecondary
+                                )
+                            }
+                            val fullAddr = buildString {
+                                if (customer.adresse.isNotBlank()) append(customer.adresse.trim())
+                                val plzStadt = listOf(customer.plz.trim(), customer.stadt.trim()).filter { it.isNotEmpty() }.joinToString(" ")
+                                if (plzStadt.isNotEmpty()) { if (isNotEmpty()) append(", "); append(plzStadt) }
+                            }.trim()
+                            if (fullAddr.isNotEmpty()) {
+                                Text(
+                                    text = fullAddr,
+                                    fontSize = 13.sp,
+                                    color = textSecondary,
+                                    maxLines = 1
+                                )
+                            }
+                        }
                     }
                 }
             }

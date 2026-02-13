@@ -89,7 +89,11 @@ fun TourPlannerScreen(
     onReorder: (List<String>) -> Unit = {},
     isReihenfolgeBearbeiten: Boolean = false,
     onReihenfolgeBearbeiten: () -> Unit = {},
-    onReihenfolgeFertig: () -> Unit = {}
+    onReihenfolgeFertig: () -> Unit = {},
+    /** Phase 4: Kartenanzeige-Optionen. */
+    cardShowAddress: Boolean = true,
+    cardShowPhone: Boolean = false,
+    cardShowNotes: Boolean = false
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -199,7 +203,10 @@ fun TourPlannerScreen(
                     sectionDoneText = sectionDoneText,
                     reihenfolgeBearbeiten = isReihenfolgeBearbeiten,
                     onSwipeToPrevDay = onPrevDay,
-                    onSwipeToNextDay = onNextDay
+                    onSwipeToNextDay = onNextDay,
+                    cardShowAddress = cardShowAddress,
+                    cardShowPhone = cardShowPhone,
+                    cardShowNotes = cardShowNotes
                 )
             }
             if (erledigtSheetVisible && erledigtSheetContent != null) {
@@ -210,7 +217,10 @@ fun TourPlannerScreen(
                     getStatusBadgeText = getStatusBadgeText,
                     onCustomerClick = onCustomerClick,
                     onAktionenClick = onAktionenClick,
-                    onDismiss = onDismissErledigtSheet
+                    onDismiss = onDismissErledigtSheet,
+                    cardShowAddress = cardShowAddress,
+                    cardShowPhone = cardShowPhone,
+                    cardShowNotes = cardShowNotes
                 )
             }
         }
@@ -233,7 +243,10 @@ private fun TourPlannerListContent(
     sectionDoneText: androidx.compose.ui.graphics.Color,
     reihenfolgeBearbeiten: Boolean = false,
     onSwipeToPrevDay: () -> Unit = {},
-    onSwipeToNextDay: () -> Unit = {}
+    onSwipeToNextDay: () -> Unit = {},
+    cardShowAddress: Boolean = true,
+    cardShowPhone: Boolean = false,
+    cardShowNotes: Boolean = false
 ) {
     val lazyListState = rememberLazyListState()
     val density = LocalDensity.current
@@ -365,7 +378,10 @@ private fun TourPlannerListContent(
                     viewDateMillis = viewDateMillis ?: 0L,
                     getStatusBadgeText = getStatusBadgeText,
                     onCustomerClick = onCustomerClick,
-                    onAktionenClick = onAktionenClick
+                    onAktionenClick = onAktionenClick,
+                    cardShowAddress = cardShowAddress,
+                    cardShowPhone = cardShowPhone,
+                    cardShowNotes = cardShowNotes
                 )
                 is ListItem.TourListeErledigt -> {
                     TourListeErledigtRow(
@@ -413,7 +429,10 @@ private fun TourPlannerListContent(
                         viewDateMillis = viewDate,
                         onCustomerClick = { onCustomerClick(payload) },
                         onAktionenClick = { onAktionenClick(item.customer) },
-                        isDragging = index == dragState.currentIndexOfDraggedItem
+                        isDragging = index == dragState.currentIndexOfDraggedItem,
+                        showAddress = cardShowAddress,
+                        showPhone = cardShowPhone,
+                        showNotes = cardShowNotes
                     )
                 }
             }

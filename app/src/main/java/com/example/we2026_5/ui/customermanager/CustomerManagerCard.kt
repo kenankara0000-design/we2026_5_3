@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.we2026_5.Customer
+import com.example.we2026_5.CustomerStatus
 import com.example.we2026_5.R
 import com.example.we2026_5.ui.common.formatALWochentag
 
@@ -106,6 +107,27 @@ internal fun CustomerManagerCard(
                         fontWeight = FontWeight.Bold,
                         color = textPrimary
                     )
+                    // Phase 4: Status-Badge (Pausiert / Ad-hoc)
+                    if (customer.status == CustomerStatus.PAUSIERT || customer.status == CustomerStatus.ADHOC) {
+                        Spacer(Modifier.size(6.dp))
+                        val badgeColor = if (customer.status == CustomerStatus.PAUSIERT)
+                            colorResource(R.color.status_warning)
+                        else
+                            colorResource(R.color.status_info)
+                        val badgeLabel = if (customer.status == CustomerStatus.PAUSIERT)
+                            stringResource(R.string.customer_status_badge_pausiert)
+                        else
+                            stringResource(R.string.customer_status_badge_adhoc)
+                        Text(
+                            text = badgeLabel,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White,
+                            modifier = Modifier
+                                .background(badgeColor, RoundedCornerShape(6.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
                 }
                 Text(
                     customer.adresse,

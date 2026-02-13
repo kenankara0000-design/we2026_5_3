@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 4 – Karten-Infos &amp; User-Flow – Vorher / Nachher</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f0f2f5; color: #1a1a1a; }
+
+  header { background: linear-gradient(135deg, #1565C0, #1976D2); color: #fff; padding: 32px 24px; text-align: center; }
+  header h1 { font-size: 28px; margin-bottom: 8px; }
+  header p { opacity: 0.85; font-size: 15px; }
+
+  .legend { display: flex; justify-content: center; gap: 32px; padding: 20px; background: #fff; border-bottom: 1px solid #e0e0e0; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+  .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
+  .legend-dot.before { background: #ef5350; }
+  .legend-dot.after { background: #43A047; }
+
+  .toc { max-width: 900px; margin: 24px auto; background: #fff; border-radius: 12px; padding: 24px 32px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .toc h2 { font-size: 18px; margin-bottom: 12px; color: #1565C0; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin-bottom: 6px; }
+  .toc a { color: #1976D2; text-decoration: none; font-size: 14px; }
+  .toc a:hover { text-decoration: underline; }
+  .toc .prio { display: inline-block; font-size: 11px; border-radius: 4px; padding: 1px 6px; margin-left: 6px; font-weight: 700; }
+  .toc .prio-y { background: #FFF3E0; color: #E65100; }
+  .toc .prio-g { background: #E8F5E9; color: #2E7D32; }
+
+  section { max-width: 1100px; margin: 32px auto; }
+  section > h2 { font-size: 22px; color: #1565C0; margin-bottom: 20px; padding: 0 8px; border-left: 4px solid #1976D2; padding-left: 12px; }
+
+  .comparison { display: flex; gap: 24px; margin-bottom: 32px; flex-wrap: wrap; justify-content: center; }
+  .phone { width: 375px; min-height: 500px; border-radius: 32px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.18); border: 3px solid #222; background: #fff; position: relative; flex-shrink: 0; }
+  .phone-notch { width: 150px; height: 28px; background: #222; border-radius: 0 0 16px 16px; margin: 0 auto; position: relative; z-index: 10; }
+  .phone-label { text-align: center; font-size: 13px; font-weight: 700; padding: 6px 0; letter-spacing: 1px; text-transform: uppercase; }
+  .phone-label.before { background: #FFEBEE; color: #C62828; }
+  .phone-label.after { background: #E8F5E9; color: #2E7D32; }
+  .screen { padding: 0; overflow-y: auto; max-height: 550px; }
+
+  .topbar { padding: 12px 16px; display: flex; align-items: center; gap: 12px; background: #1976D2; }
+  .topbar-title { font-size: 20px; font-weight: 700; color: #fff; }
+  .topbar-back { font-size: 18px; color: #fff; }
+
+  /* Annotations */
+  .anno { position: relative; }
+  .anno::after { content: attr(data-anno); position: absolute; right: -8px; top: 50%; transform: translateY(-50%); background: #43A047; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 8px; white-space: nowrap; z-index: 20; }
+  .anno-left::after { right: auto; left: -8px; }
+  .highlight-new { outline: 2px solid #43A047; outline-offset: 2px; border-radius: 4px; }
+
+  /* Tour Card */
+  .tour-card { margin: 8px 12px; border-radius: 12px; padding: 12px 14px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .tour-card.overdue { background: #FFEBEE; }
+  .tour-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .tour-badge { font-size: 12px; font-weight: 700; color: #fff; border-radius: 4px; padding: 2px 8px; }
+  .tour-badge.g { background: #1565C0; }
+  .tour-badge.p { background: #E65100; }
+  .tour-badge.l { background: #5D4037; }
+  .tour-name { font-size: 17px; font-weight: 600; color: #212121; flex: 1; }
+  .tour-status { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 4px; min-width: 36px; text-align: center; }
+  .tour-status.a { background: #E3F2FD; color: #1976D2; }
+  .tour-status.l { background: #E8F5E9; color: #388E3C; }
+  .tour-status.ue { background: #FFEBEE; color: #D32F2F; }
+  .tour-status.al { background: #E8F5E9; color: #388E3C; }
+  .tour-sub { font-size: 13px; color: #757575; margin-top: 2px; }
+  .tour-sub-new { font-size: 12px; color: #757575; margin-top: 2px; }
+  .tour-address-new { font-size: 12px; color: #555; margin-top: 1px; }
+  .tour-phone-new { font-size: 12px; color: #1976D2; margin-top: 1px; cursor: pointer; }
+  .tour-btn { display: block; width: 100%; margin-top: 8px; padding: 10px; background: #1976D2; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
+
+  /* Customer Manager Card */
+  .cm-card { margin: 6px 12px; border-radius: 12px; padding: 12px 14px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; }
+  .cm-photo { width: 40px; height: 40px; border-radius: 8px; background: #E0E0E0; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #999; flex-shrink: 0; }
+  .cm-info { flex: 1; }
+  .cm-name { font-size: 16px; font-weight: 700; color: #212121; }
+  .cm-address { font-size: 13px; color: #757575; margin-top: 2px; }
+  .cm-al { font-size: 12px; color: #757575; }
+  .cm-badges { display: flex; gap: 4px; align-items: center; margin-top: 3px; }
+  .cm-status-badge { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; }
+  .cm-status-badge.pausiert { background: #FFF3E0; color: #E65100; }
+  .cm-status-badge.adhoc { background: #E3F2FD; color: #1976D2; }
+
+  /* Detail Stammdaten */
+  .detail-section { padding: 16px; }
+  .detail-field { margin-bottom: 12px; }
+  .detail-label { font-size: 13px; font-weight: 600; color: #757575; margin-bottom: 4px; }
+  .detail-value { font-size: 15px; color: #212121; background: #F5F5F5; padding: 10px 12px; border-radius: 8px; }
+  .detail-overdue-banner { background: #FFEBEE; border: 1px solid #FFCDD2; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .detail-overdue-icon { font-size: 18px; }
+  .detail-overdue-text { font-size: 14px; color: #C62828; font-weight: 600; }
+  .detail-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; border: 1px solid #E0E0E0; background: #fff; font-size: 13px; font-weight: 600; cursor: pointer; color: #1976D2; }
+  .detail-btn-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+
+  /* Erledigung Flow */
+  .flow-diagram { padding: 16px 24px; }
+  .flow-step { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .flow-box { padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; flex: 1; text-align: center; }
+  .flow-box.action { background: #E3F2FD; color: #1565C0; border: 2px solid #1976D2; }
+  .flow-box.screen { background: #fff; color: #212121; border: 2px solid #E0E0E0; }
+  .flow-box.dialog { background: #FFF3E0; color: #E65100; border: 2px dashed #F57C00; }
+  .flow-arrow { font-size: 20px; color: #999; flex-shrink: 0; }
+
+  /* Suche Ergebnisse */
+  .search-field { margin: 12px 16px; padding: 10px 14px; border: 2px solid #E0E0E0; border-radius: 8px; font-size: 14px; width: calc(100% - 32px); color: #757575; background: #fff; }
+  .search-result { margin: 4px 16px; padding: 12px 14px; background: #fff; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+  .search-name { font-size: 15px; font-weight: 600; color: #212121; }
+  .search-sub { font-size: 12px; color: #757575; margin-top: 2px; }
+  .search-alias { font-size: 11px; color: #1976D2; font-style: italic; margin-top: 1px; }
+
+  /* Belege Tab Shortcut */
+  .belege-shortcut { margin: 8px 16px; padding: 10px 14px; background: #E3F2FD; border-radius: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .belege-shortcut-icon { font-size: 16px; }
+  .belege-shortcut-text { font-size: 13px; font-weight: 600; color: #1565C0; }
+
+  /* Next Customer */
+  .save-next-btn { display: block; width: calc(100% - 32px); margin: 8px 16px; padding: 12px; background: #fff; color: #1976D2; border: 2px solid #1976D2; border-radius: 8px; font-size: 14px; font-weight: 600; text-align: center; cursor: pointer; }
+
+  .info-box { margin: 16px 24px; padding: 14px 16px; background: #E8F5E9; border-radius: 8px; font-size: 13px; color: #2E7D32; line-height: 1.5; }
+  .info-box strong { color: #1B5E20; }
+
+  .note { text-align: center; font-size: 13px; color: #757575; margin: 8px 0 16px; font-style: italic; }
+
+  @media (max-width: 800px) {
+    .comparison { flex-direction: column; align-items: center; }
+    .phone { width: 340px; min-height: 440px; }
+    .screen { max-height: 480px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Phase 4 – Karten-Infos &amp; User-Flow</h1>
+  <p>Vorher / Nachher – 8 Aufgaben &middot; TourPlaner 2026</p>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot before"></div> Vorher (aktuell)</div>
+  <div class="legend-item"><div class="legend-dot after"></div> Nachher (Phase 4)</div>
+</div>
+
+<!-- Table of Contents -->
+<div class="toc">
+  <h2>Inhalt</h2>
+  <ol>
+    <li><a href="#s1">4.01 Tour-Karte: Adresse anzeigen</a> <span class="prio prio-y">Mittel</span></li>
+    <li><a href="#s2">4.02 Kundenliste: Status-Badge</a> <span class="prio prio-y">Mittel</span></li>
+    <li><a href="#s3">4.03 Kundendetail: Überfällig-Hinweis</a> <span class="prio prio-y">Mittel</span></li>
+    <li><a href="#s4">4.04 Erledigung: Direkter Zugang</a> <span class="prio prio-y">Mittel</span></li>
+    <li><a href="#s5">4.05 Erfassung: Adresse/Alias in Suche</a> <span class="prio prio-g">Niedrig</span></li>
+    <li><a href="#s6">4.06 Tour-Karte: Telefon anzeigen</a> <span class="prio prio-g">Niedrig</span></li>
+    <li><a href="#s7">4.07 Kundendetail: „Nächster Kunde"</a> <span class="prio prio-g">Niedrig</span></li>
+    <li><a href="#s8">4.08 Erfassung: Shortcut aus Kundendetail</a> <span class="prio prio-g">Niedrig</span></li>
+  </ol>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 4.01 Tour-Karte: Adresse anzeigen -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="s1">
+  <h2>4.01 Tour-Karte: Adresse anzeigen</h2>
+  <p class="note">Fahrer sieht auf einen Blick, wohin er fahren muss – ohne die Karte öffnen zu müssen.</p>
+  <div class="comparison">
+
+    <!-- VORHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label before">VORHER</div>
+      <div class="screen">
+        <div class="topbar">
+          <span class="topbar-back">←</span>
+          <span class="topbar-title">Tour Planner</span>
+        </div>
+        <!-- Karte 1 -->
+        <div class="tour-card">
+          <div class="tour-card-header">
+            <span class="tour-badge g">G</span>
+            <span class="tour-name">Müller Wäscherei</span>
+            <span class="tour-status a">A</span>
+          </div>
+          <div class="tour-sub">A: Mo · L: Mi</div>
+          <button class="tour-btn">Aktionen</button>
+        </div>
+        <!-- Karte 2 (überfällig) -->
+        <div class="tour-card overdue">
+          <div class="tour-card-header">
+            <span class="tour-badge p">P</span>
+            <span class="tour-name">Schmidt, Hans</span>
+            <span class="tour-status ue">Ü</span>
+          </div>
+          <div class="tour-sub">A: Di · L: Do</div>
+          <button class="tour-btn">Aktionen</button>
+        </div>
+        <!-- Karte 3 -->
+        <div class="tour-card">
+          <div class="tour-card-header">
+            <span class="tour-badge l">L</span>
+            <span class="tour-name">Hotel Sonnenschein</span>
+            <span class="tour-status al">AL</span>
+          </div>
+          <div class="tour-sub">A: Mo · L: Mo</div>
+          <button class="tour-btn">Aktionen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NACHHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label after">NACHHER</div>
+      <div class="screen">
+        <div class="topbar">
+          <span class="topbar-back">←</span>
+          <span class="topbar-title">Tour Planner</span>
+        </div>
+        <!-- Karte 1 -->
+        <div class="tour-card">
+          <div class="tour-card-header">
+            <span class="tour-badge g">G</span>
+            <span class="tour-name">Müller Wäscherei</span>
+            <span class="tour-status a">A</span>
+          </div>
+          <div class="tour-sub-new">A: Mo · L: Mi</div>
+          <div class="tour-address-new highlight-new anno" data-anno="NEU">📍 Hauptstraße 12, 04103 Leipzig</div>
+          <button class="tour-btn">Aktionen</button>
+        </div>
+        <!-- Karte 2 (überfällig) -->
+        <div class="tour-card overdue">
+          <div class="tour-card-header">
+            <span class="tour-badge p">P</span>
+            <span class="tour-name">Schmidt, Hans</span>
+            <span class="tour-status ue">Ü</span>
+          </div>
+          <div class="tour-sub-new">A: Di · L: Do</div>
+          <div class="tour-address-new highlight-new">📍 Marktplatz 5, 04552 Borna</div>
+          <button class="tour-btn">Aktionen</button>
+        </div>
+        <!-- Karte 3 -->
+        <div class="tour-card">
+          <div class="tour-card-header">
+            <span class="tour-badge l">L</span>
+            <span class="tour-name">Hotel Sonnenschein</span>
+            <span class="tour-status al">AL</span>
+          </div>
+          <div class="tour-sub-new">A: Mo · L: Mo</div>
+          <div class="tour-address-new highlight-new">📍 Bahnhofstr. 22, 04808 Wurzen</div>
+          <button class="tour-btn">Aktionen</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="info-box">
+    <strong>Änderung:</strong> 1 Zeile Adresse unter dem Kundennamen. Fahrer sieht sofort wohin – kein Öffnen der Karte nötig.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 4.02 Kundenliste: Status-Badge -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="s2">
+  <h2>4.02 Kundenliste: Status-Badge (Pausiert / Ad-hoc)</h2>
+  <p class="note">Pausierte und Ad-hoc-Kunden sind sofort erkennbar – ohne Kundendetail öffnen zu müssen.</p>
+  <div class="comparison">
+
+    <!-- VORHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label before">VORHER</div>
+      <div class="screen">
+        <div class="topbar">
+          <span class="topbar-back">←</span>
+          <span class="topbar-title">Kunden</span>
+        </div>
+        <div class="cm-card">
+          <div class="cm-photo">📷</div>
+          <div class="cm-info">
+            <div style="display:flex;align-items:center;gap:6px"><span class="tour-badge g" style="font-size:11px">G</span> <span class="cm-name">Müller Wäscherei</span></div>
+            <div class="cm-address">Hauptstraße 12, Leipzig</div>
+            <div class="cm-al">A: Mo · L: Mi</div>
+          </div>
+        </div>
+        <div class="cm-card">
+          <div class="cm-photo" style="background:#E3F2FD">🏢</div>
+          <div class="cm-info">
+            <div style="display:flex;align-items:center;gap:6px"><span class="tour-badge p" style="font-size:11px">P</span> <span class="cm-name">Schmidt, Hans</span></div>
+            <div class="cm-address">Marktplatz 5, Borna</div>
+            <div class="cm-al">A: Di · L: Do</div>
+          </div>
+        </div>
+        <div class="cm-card">
+          <div class="cm-photo">📷</div>
+          <div class="cm-info">
+            <div style="display:flex;align-items:center;gap:6px"><span class="tour-badge g" style="font-size:11px">G</span> <span class="cm-name">Pension Waldblick</span></div>
+            <div class="cm-address">Waldweg 3, Grimma</div>
+            <div class="cm-al">A: Fr · L: Fr</div>
+          </div>
+        </div>
+        <div class="cm-card">
+          <div class="cm-photo">📷</div>
+          <div class="cm-info">
+            <div style="display:flex;align-items:center;gap:6px"><span class="tour-badge l" style="font-size:11px">L</span> <span class="cm-name">Gasthof zur Linde</span></div>
+            <div class="cm-address">Lindenstr. 8, Wurzen</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NACHHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label after">NACHHER</div>
+      <div class="screen">
+        <div class="topbar">
+          <span class="topbar-back">←</span>
+          <span class="topbar-title">Kunden</span>
+        </div>
+        <div class="cm-card">
+          <div class="cm-photo">📷</div>
+          <div class="cm-info">
+            <div style="display:flex;align-items:center;gap:6px"><span class="tour-badge g" style="font-size:11px">G</span> <span class="cm-name">Müller Wäscherei</span></div>
+            <div class="cm-address">Hauptstraße 12, Leipzig</div>
+            <div class="cm-al">A: Mo · L: Mi</div>
+          </div>
+        </div>
+        <div class="cm-card">
+          <div class="cm-photo" style="background:#E3F2FD">🏢</div>
+          <div class="cm-info">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="tour-badge p" style="font-size:11px">P</span>
+              <span class="cm-name">Schmidt, Hans</span>
+              <span class="cm-status-badge pausiert highlight-new anno" data-anno="NEU">⏸ Pausiert</span>
+            </div>
+            <div class="cm-address">Marktplatz 5, Borna</div>
+            <div class="cm-al">A: Di · L: Do</div>
+          </div>
+        </div>
+        <div class="cm-card">
+          <div class="cm-photo">📷</div>
+          <div class="cm-info">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="tour-badge g" style="font-size:11px">G</span>
+              <span class="cm-name">Pension Waldblick</span>
+              <span class="cm-status-badge adhoc highlight-new anno" data-anno="NEU">📞 Ad-hoc</span>
+            </div>
+            <div class="cm-address">Waldweg 3, Grimma</div>
+            <div class="cm-al">A: Fr · L: Fr</div>
+          </div>
+        </div>
+        <div class="cm-card">
+          <div class="cm-photo">📷</div>
+          <div class="cm-info">
+            <div style="display:flex;align-items:center;gap:6px"><span class="tour-badge l" style="font-size:11px">L</span> <span class="cm-name">Gasthof zur Linde</span></div>
+            <div class="cm-address">Lindenstr. 8, Wurzen</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="info-box">
+    <strong>Änderung:</strong> Status-Badge neben dem Kundennamen: „⏸ Pausiert" (orange) und „📞 Ad-hoc" (blau). Aktive Kunden ohne Badge.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 4.03 Kundendetail: Überfällig-Hinweis -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="s3">
+  <h2>4.03 Kundendetail Stammdaten-Tab: Überfällig-Hinweis</h2>
+  <p class="note">Überfälliger Termin wird oben im Stammdaten-Tab angezeigt, obwohl die Daten bereits vorhanden sind.</p>
+  <div class="comparison">
+
+    <!-- VORHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label before">VORHER</div>
+      <div class="screen">
+        <div class="topbar">
+          <span class="topbar-back">←</span>
+          <span class="topbar-title">Müller Wäscherei</span>
+        </div>
+        <div style="display:flex;gap:0;border-bottom:2px solid #1976D2">
+          <div style="flex:1;text-align:center;padding:10px;font-size:13px;font-weight:700;color:#1976D2;border-bottom:3px solid #1976D2">Stammdaten</div>
+          <div style="flex:1;text-align:center;padding:10px;font-size:13px;color:#757575">Termine</div>
+          <div style="flex:1;text-align:center;padding:10px;font-size:13px;color:#757575">Belege</div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-btn-row">
+            <button class="detail-btn">🏖 Urlaub</button>
+            <button class="detail-btn">✏️ Bearbeiten</button>
+          </div>
+          <div class="detail-field">
+            <div class="detail-label">Adresse:</div>
+            <div class="detail-value">Hauptstraße 12, 04103 Leipzig</div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-label">Telefon:</div>
+            <div class="detail-value">0341 1234567</div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-label">Notizen:</div>
+            <div class="detail-value">Hintereingang benutzen</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NACHHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label after">NACHHER</div>
+      <div class="screen">
+        <div class="topbar">
+          <span class="topbar-back">←</span>
+          <span class="topbar-title">Müller Wäscherei</span>
+        </div>
+        <div style="display:flex;gap:0;border-bottom:2px solid #1976D2">
+          <div style="flex:1;text-align:center;padding:10px;font-size:13px;font-weight:700;color:#1976D2;border-bottom:3px solid #1976D2">Stammdaten</div>
+          <div style="flex:1;text-align:center;padding:10px;font-size:13px;color:#757575">Termine</div>
+          <div style="flex:1;text-align:center;padding:10px;font-size:13px;color:#757575">Belege</div>
+        </div>
+        <div class="detail-section">
+          <!-- NEU: Überfällig-Banner -->
+          <div class="detail-overdue-banner highlight-new anno" data-anno="NEU">
+            <span class="detail-overdue-icon">⚠️</span>
+            <span class="detail-overdue-text">Überfällig: A seit 05.02.2026 · L seit 07.02.2026</span>
+          </div>
+          <div class="detail-btn-row">
+            <button class="detail-btn">🏖 Urlaub</button>
+            <button class="detail-btn">✏️ Bearbeiten</button>
+          </div>
+          <div class="detail-field">
+            <div class="detail-label">Adresse:</div>
+            <div class="detail-value">Hauptstraße 12, 04103 Leipzig</div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-label">Telefon:</div>
+            <div class="detail-value">0341 1234567</div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-label">Notizen:</div>
+            <div class="detail-value">Hintereingang benutzen</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="info-box">
+    <strong>Änderung:</strong> Rotes Überfällig-Banner oben im Stammdaten-Tab. Zeigt A- und L-Überfälligkeitsdatum. Daten kommen aus dem bereits vorhandenen <code>statusOverdue</code>-Parameter.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 4.04 Erledigung: Direkter Zugang -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="s4">
+  <h2>4.04 Erledigung: Direkter Zugang ohne Zwischen-Dialog</h2>
+  <p class="note">Häufigste Aktion wird zum schnellsten Weg: 1 Tipp statt 2.</p>
+  <div class="comparison">
+
+    <!-- VORHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label before">VORHER – 2 Schritte</div>
+      <div class="screen" style="padding: 20px 12px;">
+        <div class="flow-diagram">
+          <div class="flow-step">
+            <div class="flow-box action" style="flex:none;width:120px">Karte tippen</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box screen">"Aktionen" Button sichtbar</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-box action" style="flex:none;width:120px">"Aktionen" tippen</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box dialog">Bottom Sheet öffnet</div>
+          </div>
+          <div class="flow-step">
+            <span style="font-size:13px;color:#757575;text-align:center;flex:1">= 2 Tipps bis zum Aktionen-Sheet</span>
+          </div>
+        </div>
+        <div style="margin: 16px 12px; padding: 16px; background: #FFEBEE; border-radius: 8px;">
+          <div style="font-size: 14px; font-weight: 700; color: #C62828; margin-bottom: 6px;">Problem:</div>
+          <div style="font-size: 13px; color: #757575;">
+            Der „Aktionen"-Button auf der Karte ist immer sichtbar, wird aber erst nach Tippen der Karte ausgelöst. Häufigste Aktion (A/L erledigen) erfordert 2 Schritte.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NACHHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label after">NACHHER – 1 Schritt</div>
+      <div class="screen" style="padding: 20px 12px;">
+        <div class="flow-diagram">
+          <div class="flow-step">
+            <div class="flow-box action highlight-new" style="flex:none;width:120px">Karte tippen</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box dialog highlight-new">Bottom Sheet öffnet <strong>direkt</strong></div>
+          </div>
+          <div class="flow-step">
+            <span style="font-size:13px;color:#2E7D32;text-align:center;flex:1;font-weight:600">= 1 Tipp bis zum Aktionen-Sheet ✓</span>
+          </div>
+          <div style="height: 16px"></div>
+          <div class="flow-step">
+            <div class="flow-box screen" style="flex:none;width:120px">Lang drücken</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box screen">Kunden-Detail öffnet</div>
+          </div>
+          <div class="flow-step">
+            <span style="font-size:13px;color:#757575;text-align:center;flex:1">Übersicht/Detail weiterhin über Long-Press erreichbar</span>
+          </div>
+        </div>
+        <div style="margin: 16px 0; padding: 16px; background: #E8F5E9; border-radius: 8px;">
+          <div style="font-size: 14px; font-weight: 700; color: #2E7D32; margin-bottom: 6px;">Verbesserung:</div>
+          <div style="font-size: 13px; color: #555;">
+            <strong>Tipp</strong> auf Karte → direkt Aktionen-Sheet (Erledigung, Verschieben, …).<br>
+            <strong>Lang drücken</strong> → Kundendetail öffnen (selten benötigt).
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="info-box">
+    <strong>Änderung:</strong> Karte-Klick öffnet direkt das Aktionen-Sheet. Long-Press für Kundendetail. Häufigste Aktion in 1 statt 2 Tipps.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 4.05 Erfassung: Adresse/Alias in Suche -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="s5">
+  <h2>4.05 Erfassung Kunden-Suche: Adresse/Alias anzeigen</h2>
+  <p class="note">Bei ähnlichen Kundennamen den richtigen sofort erkennen.</p>
+  <div class="comparison">
+
+    <!-- VORHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label before">VORHER</div>
+      <div class="screen">
+        <div class="topbar">
+          <span class="topbar-back">←</span>
+          <span class="topbar-title">Erfassung</span>
+        </div>
+        <div class="search-field">Müller</div>
+        <div class="search-result">
+          <div class="search-name">Müller Wäscherei</div>
+        </div>
+        <div class="search-result">
+          <div class="search-name">Müller GmbH</div>
+        </div>
+        <div class="search-result">
+          <div class="search-name">Müller, Thomas</div>
+        </div>
+        <div style="margin:16px;padding:12px;background:#FFEBEE;border-radius:8px;font-size:12px;color:#C62828">
+          ⚠️ Welcher Müller? Kein Unterscheidungsmerkmal sichtbar.
+        </div>
+      </div>
+    </div>
+
+    <!-- NACHHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label after">NACHHER</div>
+      <div class="screen">
+        <div class="topbar">
+          <span class="topbar-back">←</span>
+          <span class="topbar-title">Erfassung</span>
+        </div>
+        <div class="search-field">Müller</div>
+        <div class="search-result highlight-new">
+          <div class="search-name">Müller Wäscherei</div>
+          <div class="search-sub anno" data-anno="NEU">📍 Hauptstraße 12, Leipzig</div>
+        </div>
+        <div class="search-result highlight-new">
+          <div class="search-name">Müller GmbH</div>
+          <div class="search-sub">📍 Industriestr. 44, Borna</div>
+          <div class="search-alias">Alias: Müller Textilpflege</div>
+        </div>
+        <div class="search-result highlight-new">
+          <div class="search-name">Müller, Thomas</div>
+          <div class="search-sub">📍 Gartenweg 7, Grimma</div>
+        </div>
+        <div style="margin:16px;padding:12px;background:#E8F5E9;border-radius:8px;font-size:12px;color:#2E7D32">
+          ✅ Adresse und ggf. Alias helfen bei der Unterscheidung.
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="info-box">
+    <strong>Änderung:</strong> Adresse und Alias unter dem Kundennamen in der Suche. Vermeidet Verwechslungen bei ähnlichen Namen.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 4.06 Tour-Karte: Telefon anzeigen -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="s6">
+  <h2>4.06 Tour-Karte: Telefon anzeigen (optional)</h2>
+  <p class="note">Schnellanruf direkt aus der Tour – ohne Karte öffnen.</p>
+  <div class="comparison">
+
+    <!-- VORHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label before">VORHER</div>
+      <div class="screen">
+        <div class="topbar">
+          <span class="topbar-back">←</span>
+          <span class="topbar-title">Tour Planner</span>
+        </div>
+        <div class="tour-card">
+          <div class="tour-card-header">
+            <span class="tour-badge g">G</span>
+            <span class="tour-name">Müller Wäscherei</span>
+            <span class="tour-status a">A</span>
+          </div>
+          <div class="tour-sub">A: Mo · L: Mi</div>
+          <button class="tour-btn">Aktionen</button>
+        </div>
+        <div style="margin:16px;padding:12px;background:#FFF3E0;border-radius:8px;font-size:12px;color:#E65100">
+          📞 Telefonnummer nur im Aktionen-Sheet unter „Details" sichtbar.
+        </div>
+      </div>
+    </div>
+
+    <!-- NACHHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label after">NACHHER</div>
+      <div class="screen">
+        <div class="topbar">
+          <span class="topbar-back">←</span>
+          <span class="topbar-title">Tour Planner</span>
+        </div>
+        <div class="tour-card">
+          <div class="tour-card-header">
+            <span class="tour-badge g">G</span>
+            <span class="tour-name">Müller Wäscherei</span>
+            <span class="tour-status a">A</span>
+          </div>
+          <div class="tour-sub-new">A: Mo · L: Mi</div>
+          <div class="tour-address-new">📍 Hauptstraße 12, Leipzig</div>
+          <div class="tour-phone-new highlight-new anno" data-anno="NEU">📞 0341 1234567</div>
+          <button class="tour-btn">Aktionen</button>
+        </div>
+        <div style="margin:16px;padding:12px;background:#E8F5E9;border-radius:8px;font-size:12px;color:#2E7D32">
+          ✅ Telefonnummer klickbar → Direktanruf ohne Umweg.
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="info-box">
+    <strong>Änderung:</strong> Klickbare Telefonnummer unter der Adresse. Fahrer kann direkt anrufen, wenn der Kunde z. B. nicht da ist.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 4.07 Kundendetail: Nächster Kunde -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="s7">
+  <h2>4.07 Kundendetail: „Nächster Kunde" reaktivieren</h2>
+  <p class="note">Schneller durch die Kundenliste navigieren nach dem Speichern.</p>
+  <div class="comparison">
+
+    <!-- VORHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label before">VORHER</div>
+      <div class="screen">
+        <div class="topbar">
+          <span class="topbar-back">←</span>
+          <span class="topbar-title">Müller Wäscherei</span>
+        </div>
+        <div class="detail-section">
+          <div style="font-size:14px;color:#757575;margin-bottom:12px">Stammdaten-Felder…</div>
+          <div class="detail-field">
+            <div class="detail-value" style="text-align:center;background:#1976D2;color:#fff;font-weight:700;cursor:pointer">💾 Speichern</div>
+          </div>
+          <div style="margin-top:12px;padding:12px;background:#FFF3E0;border-radius:8px;font-size:12px;color:#E65100">
+            ⚠️ Nur „Speichern" – kein „Speichern und nächster Kunde" (deaktiviert: <code>showSaveAndNext = false</code>).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NACHHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label after">NACHHER</div>
+      <div class="screen">
+        <div class="topbar">
+          <span class="topbar-back">←</span>
+          <span class="topbar-title">Müller Wäscherei</span>
+        </div>
+        <div class="detail-section">
+          <div style="font-size:14px;color:#757575;margin-bottom:12px">Stammdaten-Felder…</div>
+          <div class="detail-field">
+            <div class="detail-value" style="text-align:center;background:#1976D2;color:#fff;font-weight:700;cursor:pointer">💾 Speichern</div>
+          </div>
+          <div class="save-next-btn highlight-new anno" data-anno="NEU">
+            💾 Speichern und nächster Kunde →
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="info-box">
+    <strong>Änderung:</strong> „Speichern und nächster Kunde"-Button reaktiviert. Ermöglicht schnelles Durcharbeiten mehrerer Kunden nacheinander.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 4.08 Erfassung: Shortcut aus Kundendetail -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="s8">
+  <h2>4.08 Erfassung: Shortcut aus Kundendetail Belege-Tab</h2>
+  <p class="note">Direkt aus dem Belege-Tab in die Erfassung springen – ohne Umweg über das Hauptmenü.</p>
+  <div class="comparison">
+
+    <!-- VORHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label before">VORHER</div>
+      <div class="screen">
+        <div class="topbar">
+          <span class="topbar-back">←</span>
+          <span class="topbar-title">Müller Wäscherei</span>
+        </div>
+        <div style="display:flex;gap:0;border-bottom:2px solid #1976D2">
+          <div style="flex:1;text-align:center;padding:10px;font-size:13px;color:#757575">Stammdaten</div>
+          <div style="flex:1;text-align:center;padding:10px;font-size:13px;color:#757575">Termine</div>
+          <div style="flex:1;text-align:center;padding:10px;font-size:13px;font-weight:700;color:#1976D2;border-bottom:3px solid #1976D2">Belege</div>
+        </div>
+        <div style="padding:16px;">
+          <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:8px;">Belege</div>
+          <div class="search-result">
+            <div class="search-name">Beleg Januar 2026</div>
+            <div class="search-sub">3 Erfassungen</div>
+          </div>
+          <div class="search-result">
+            <div class="search-name">Beleg Februar 2026</div>
+            <div class="search-sub">1 Erfassung</div>
+          </div>
+        </div>
+        <div style="margin:8px 16px;padding:12px;background:#FFF3E0;border-radius:8px;font-size:12px;color:#E65100">
+          ⚠️ Keine Möglichkeit, direkt in die Erfassung zu springen. Nutzer muss zurück → Hauptmenü → Erfassung → Kunde suchen.
+        </div>
+      </div>
+    </div>
+
+    <!-- NACHHER -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-label after">NACHHER</div>
+      <div class="screen">
+        <div class="topbar">
+          <span class="topbar-back">←</span>
+          <span class="topbar-title">Müller Wäscherei</span>
+        </div>
+        <div style="display:flex;gap:0;border-bottom:2px solid #1976D2">
+          <div style="flex:1;text-align:center;padding:10px;font-size:13px;color:#757575">Stammdaten</div>
+          <div style="flex:1;text-align:center;padding:10px;font-size:13px;color:#757575">Termine</div>
+          <div style="flex:1;text-align:center;padding:10px;font-size:13px;font-weight:700;color:#1976D2;border-bottom:3px solid #1976D2">Belege</div>
+        </div>
+        <div style="padding:16px;">
+          <!-- NEU: Shortcut -->
+          <div class="belege-shortcut highlight-new anno" data-anno="NEU">
+            <span class="belege-shortcut-icon">📝</span>
+            <span class="belege-shortcut-text">Neue Erfassung für Müller Wäscherei</span>
+          </div>
+          <div style="font-size:14px;font-weight:700;color:#212121;margin-bottom:8px;margin-top:12px;">Belege</div>
+          <div class="search-result">
+            <div class="search-name">Beleg Januar 2026</div>
+            <div class="search-sub">3 Erfassungen</div>
+          </div>
+          <div class="search-result">
+            <div class="search-name">Beleg Februar 2026</div>
+            <div class="search-sub">1 Erfassung</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="info-box">
+    <strong>Änderung:</strong> Blauer Shortcut-Button oben im Belege-Tab: „Neue Erfassung für [Kundenname]". Öffnet direkt die Erfassung mit dem Kunden vorausgewählt – kein Umweg über Hauptmenü.
+  </div>
+</section>
+
+<!-- Footer -->
+<div style="text-align: center; padding: 40px 24px 32px; color: #999; font-size: 13px;">
+  TourPlaner 2026 – Phase 4 Vorher/Nachher &middot; Erstellt: 13. Feb 2026<br>
+  <span style="color:#1976D2;font-weight:600">8 Aufgaben</span> &middot; 4× Mittel 🟡 &middot; 4× Niedrig 🟢
+</div>
+
+</body>
+</html>

@@ -91,6 +91,14 @@ fun CustomerDetailScreen(
     val surfaceWhite = colorResource(R.color.surface_white)
     val statusOverdue = colorResource(R.color.status_overdue)
 
+    // Phase 4: Überfällig-Hinweis berechnen
+    val isCustomerOverdue = remember(customer?.id) {
+        if (customer != null) {
+            val faellig = com.example.we2026_5.util.TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
+            faellig > 0 && faellig < com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+        } else false
+    }
+
     var formState by remember(customer?.id, isInEditMode) {
         mutableStateOf(
             if (customer != null) {
@@ -308,7 +316,8 @@ fun CustomerDetailScreen(
                         onTakePhoto = onTakePhoto,
                         onPhotoClick = onPhotoClick,
                         onDeletePhoto = onDeletePhoto,
-                        isUploading = isUploading
+                        isUploading = isUploading,
+                        isOverdue = isCustomerOverdue
                     )
                     1 -> CustomerDetailTermineTab(
                         isAdmin = isAdmin,

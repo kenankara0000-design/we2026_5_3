@@ -69,7 +69,11 @@ internal fun TourCustomerRow(
     /** Muss mit cardDragModifier zusammen verwendet werden (gleiche Instance wie beim Handle). */
     cardInteractionSource: MutableInteractionSource? = null,
     /** true wenn die Karte gerade gezogen wird (Long-Press Drag) – visueller Hinweis. */
-    isDragging: Boolean = false
+    isDragging: Boolean = false,
+    /** Phase 4: Kartenanzeige-Optionen aus AppPreferences. */
+    showAddress: Boolean = true,
+    showPhone: Boolean = false,
+    showNotes: Boolean = false
 ) {
     val isDeaktiviert = isVerschobenAmFaelligkeitstag
     val cardBg = when {
@@ -139,6 +143,24 @@ internal fun TourCustomerRow(
                         color = nameColor,
                         fontWeight = FontWeight.SemiBold
                     )
+                }
+                // Phase 4: Adresse, Telefon, Notizen (konfigurierbar)
+                val secondaryColor = colorResource(R.color.text_secondary)
+                if (showAddress) {
+                    val fullAddr = buildString {
+                        if (customer.adresse.isNotBlank()) append(customer.adresse.trim())
+                        val plzStadt = listOf(customer.plz.trim(), customer.stadt.trim()).filter { it.isNotEmpty() }.joinToString(" ")
+                        if (plzStadt.isNotEmpty()) { if (isNotEmpty()) append(", "); append(plzStadt) }
+                    }.trim()
+                    if (fullAddr.isNotEmpty()) {
+                        Text(text = fullAddr, fontSize = 13.sp, color = secondaryColor, maxLines = 1)
+                    }
+                }
+                if (showPhone && customer.telefon.isNotBlank()) {
+                    Text(text = customer.telefon.trim(), fontSize = 13.sp, color = secondaryColor, maxLines = 1)
+                }
+                if (showNotes && customer.notizen.isNotBlank()) {
+                    Text(text = customer.notizen.trim(), fontSize = 12.sp, color = secondaryColor, maxLines = 1)
                 }
                 AlWochentagText(customer = customer, color = colorResource(R.color.text_secondary))
                 val infoToShow = verschobenInfo ?: verschobenVonInfo

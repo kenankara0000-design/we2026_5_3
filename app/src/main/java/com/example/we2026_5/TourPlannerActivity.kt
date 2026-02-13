@@ -25,6 +25,7 @@ import com.example.we2026_5.tourplanner.TerminCache
 import com.example.we2026_5.tourplanner.TourPlannerCoordinator
 import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.util.AgentDebugLog
+import com.example.we2026_5.util.AppPreferences
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.tageAzuLOrDefault
 import kotlinx.coroutines.Dispatchers
@@ -45,6 +46,7 @@ class TourPlannerActivity : AppCompatActivity() {
     private lateinit var coordinator: TourPlannerCoordinator
     private lateinit var networkMonitor: NetworkMonitor
 
+    private val appPrefs by lazy { AppPreferences(this) }
     private var pressedHeaderButton by mutableStateOf<String?>(null)
     private var erledigungSheet by mutableStateOf<ErledigungSheetArgs?>(null)
     private var overviewPayload by mutableStateOf<CustomerOverviewPayload?>(null)
@@ -310,7 +312,10 @@ class TourPlannerActivity : AppCompatActivity() {
                 },
                 isReihenfolgeBearbeiten = reihenfolgeBearbeitenMode,
                 onReihenfolgeBearbeiten = { reihenfolgeBearbeitenMode = true },
-                onReihenfolgeFertig = { reihenfolgeBearbeitenMode = false }
+                onReihenfolgeFertig = { reihenfolgeBearbeitenMode = false },
+                cardShowAddress = appPrefs.showAddressOnCard,
+                cardShowPhone = appPrefs.showPhoneOnCard,
+                cardShowNotes = appPrefs.showNotesOnCard
             )
             }
         }

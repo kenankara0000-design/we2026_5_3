@@ -238,7 +238,7 @@ Dort werden Symptom, Ursache und relevante Code-Stellen geführt. Keine Änderun
 
 - **Analyse-Index:** `.cursor/plans/ANALYSE-INDEX.md` – Übersicht aller 9 Analysen (alle ✅ erledigt)
 - **Konsolidierter Maßnahmenplan:** `.cursor/plans/2026-02-13_21-47.massnahmenplan.md` – 73 Aufgaben, 8 Phasen (~12–18 Wochen)
-- **Status:** Phase 1 (Sofort-Fixes) umgesetzt (9/9 Aufgaben, 2026-02-13). Phase 2 (Design-System) umgesetzt (10/10 Aufgaben, 2026-02-13). Phase 3 (Composables + Error-Handling) umgesetzt (11/11 Aufgaben, 2026-02-13). Phase 4+ noch offen. Keine Änderung ohne Freigabe.
+- **Status:** Phase 1 (Sofort-Fixes) umgesetzt (9/9 Aufgaben, 2026-02-13). Phase 2 (Design-System) umgesetzt (10/10 Aufgaben, 2026-02-13). Phase 3 (Composables + Error-Handling) umgesetzt (11/11 Aufgaben, 2026-02-13). Phase 4 (Karten-Infos + User-Flow) umgesetzt (8/8 Aufgaben, 2026-02-13). Phase 5+ noch offen. Keine Änderung ohne Freigabe.
 
 **Analysen im Überblick:**
 

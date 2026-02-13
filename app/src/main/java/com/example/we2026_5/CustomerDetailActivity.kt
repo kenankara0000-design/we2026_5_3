@@ -18,6 +18,7 @@ import androidx.lifecycle.Lifecycle
 import com.example.we2026_5.CustomerStatus
 import com.example.we2026_5.KundenTyp
 import com.example.we2026_5.util.AppNavigation
+import com.example.we2026_5.util.AppPreferences
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.DialogBaseHelper
 import androidx.lifecycle.lifecycleScope
@@ -71,7 +72,8 @@ class CustomerDetailActivity : AppCompatActivity() {
         networkMonitor = NetworkMonitor(this, lifecycleScope)
         networkMonitor.startMonitoring()
 
-        val showSaveAndNext = false
+        // Phase 4: „Nächster Kunde" aus Einstellungen lesen (Standard: aus)
+        val showSaveAndNext = AppPreferences(this).showSaveAndNext
         val nextCustomerIndex = intent.getIntExtra(NextCustomerHelper.EXTRA_CURRENT_INDEX, -1)
 
         photoManager = CustomerPhotoManager(
