@@ -25,7 +25,18 @@ object AppLogger {
      * Logging aktiviert (true für Debug-Builds, false für Release).
      * In der Release-Variante sollte dies auf `false` gesetzt werden.
      */
-    private val ENABLED = com.example.we2026_5.BuildConfig.DEBUG
+    /**
+     * Logging aktiviert basierend auf dem Build-Typ.
+     * Wird beim ersten Aufruf per Application-Flags geprüft (debuggable-Flag).
+     * Fallback: true (lieber zu viel loggen als zu wenig).
+     */
+    @Volatile
+    private var ENABLED: Boolean = true
+
+    /** Einmalig aus Application.onCreate() oder bei erstem Log aufrufen. */
+    fun init(context: android.content.Context) {
+        ENABLED = (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
+    }
     
     /**
      * App-weiter Log-Tag Prefix.

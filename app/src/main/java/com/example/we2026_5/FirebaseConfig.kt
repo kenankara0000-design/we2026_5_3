@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import com.example.we2026_5.di.appModule
 import com.example.we2026_5.util.AgentDebugLog
+import com.example.we2026_5.util.AppLogger
 import com.google.firebase.database.FirebaseDatabase
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -16,6 +17,9 @@ class FirebaseConfig : Application() {
         val logFile = getExternalFilesDir(null)?.let { File(it, "agent_debug.ndjson") }
             ?: File(filesDir, "agent_debug.ndjson")
         AgentDebugLog.setLogFile(logFile)
+        
+        // Logger: nur in Debug-Builds aktiv
+        AppLogger.init(this)
         
         // Dunkelmodus global deaktivieren
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)

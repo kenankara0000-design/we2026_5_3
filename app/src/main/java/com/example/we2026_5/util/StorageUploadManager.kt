@@ -13,6 +13,9 @@ import com.example.we2026_5.work.ImageUploadWorker
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.io.File
@@ -24,6 +27,10 @@ object StorageUploadManager {
 
     /** Tag für WorkManager-Requests, um ausstehende Uploads abfragen zu können. */
     const val WORK_TAG_UPLOAD = "photo_upload"
+
+    /** Zählt ausstehende (in Queue gelegte) Uploads in der aktuellen Session. */
+    private val _pendingUploadCount = MutableStateFlow(0)
+    val pendingUploadCount: StateFlow<Int> = _pendingUploadCount.asStateFlow()
 
     /**
      * Lädt ein Bild hoch (Vollbild + Thumbnail für Listen); bei Offline Queue.
@@ -81,7 +88,8 @@ object StorageUploadManager {
                 .addTag(WORK_TAG_UPLOAD)
                 .build()
             WorkManager.getInstance(context).enqueue(uploadWork)
-            Log.d("StorageUploadManager", "Upload queued for later execution")
+            _pendingUploadCount.value++
+            Log.d("StorageUploadManager", "Upload queued for later execution (pending=${_pendingUploadCount.value})")
         } catch (e: Exception) {
             Log.e("StorageUploadManager", "Error in uploadImage", e)
             onError(e)

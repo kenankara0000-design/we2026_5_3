@@ -14,7 +14,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
@@ -169,17 +170,10 @@ fun CustomerDetailStammdatenTab(
         }
         Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
 
-        // Pending-Uploads aus WorkManager abfragen
-        val context = androidx.compose.ui.platform.LocalContext.current
-        val pendingUploads = remember { androidx.compose.runtime.mutableIntStateOf(0) }
-        androidx.compose.runtime.LaunchedEffect(Unit) {
-            try {
-                val workInfos = androidx.work.WorkManager.getInstance(context)
-                    .getWorkInfosByTag(com.example.we2026_5.util.StorageUploadManager.WORK_TAG_UPLOAD)
-                    .get()
-                pendingUploads.intValue = workInfos.count { !it.state.isFinished }
-            } catch (_: Exception) { /* WorkManager nicht verfügbar */ }
-        }
+        // Pending-Uploads aus StorageUploadManager abfragen
+        val pendingUploads by com.example.we2026_5.util.StorageUploadManager
+            .pendingUploadCount
+            .collectAsState()
 
         CustomerDetailFotosSection(
             fotoUrls = customer.fotoUrls,
@@ -189,7 +183,7 @@ fun CustomerDetailStammdatenTab(
             onPhotoClick = onPhotoClick,
             onTakePhoto = onTakePhoto,
             onDeletePhoto = onDeletePhoto,
-            pendingUploadCount = pendingUploads.intValue
+            pendingUploadCount = pendingUploads
         )
     }
 }
