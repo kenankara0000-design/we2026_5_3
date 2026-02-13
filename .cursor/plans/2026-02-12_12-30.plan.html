@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kundenübersicht – Design-Vorschau</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    /* AppBar */
+    .app-bar {
+      background: #1976d2;
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .app-bar h1 { font-size: 1.25rem; font-weight: 600; }
+    .app-bar-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .app-bar-actions button {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .app-bar-actions button:hover { background: rgba(255,255,255,0.3); }
+
+    /* Tabs mit Counts */
+    .tabs {
+      background: white;
+      display: flex;
+      padding: 0 16px;
+      gap: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .tab {
+      padding: 14px 20px;
+      font-size: 0.95rem;
+      border: none;
+      background: none;
+      color: #666;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+    }
+    .tab:hover { color: #1976d2; }
+    .tab.active {
+      color: #1976d2;
+      font-weight: 600;
+      border-bottom-color: #1976d2;
+    }
+    .tab .count {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-left: 4px;
+    }
+
+    /* Suche + Filter-Bereich */
+    .search-area {
+      background: white;
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: #f5f5f5;
+      border-radius: 12px;
+      padding: 10px 16px;
+      gap: 8px;
+    }
+    .search-box input {
+      flex: 1;
+      border: none;
+      background: none;
+      font-size: 1rem;
+      outline: none;
+    }
+    .search-box input::placeholder { color: #999; }
+
+    .search-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .result-count {
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .sort-btn {
+      font-size: 0.85rem;
+      color: #1976d2;
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Filter-Chips (immer sichtbar) */
+    .chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .chip {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      border: 1px solid #ddd;
+      background: white;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chip:hover { background: #f5f5f5; }
+    .chip.active {
+      background: #e3f2fd;
+      border-color: #1976d2;
+      color: #1976d2;
+    }
+    .chip .remove { cursor: pointer; font-weight: bold; opacity: 0.7; }
+    .chip-reset {
+      color: #d32f2f;
+      font-size: 0.8rem;
+      padding: 4px 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* Kundenliste */
+    .content {
+      padding: 16px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .customer-card {
+      background: white;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+      position: relative;
+    }
+    .customer-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+    .type-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .type-g { background: #e8f5e9; color: #2e7d32; }
+    .type-p { background: #e3f2fd; color: #1565c0; }
+    .type-t { background: #fff3e0; color: #e65100; }
+    .status-badges {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .status-badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-pausiert { background: #ffebee; color: #c62828; }
+    .status-ohne-tour { background: #fff8e1; color: #f57f17; }
+    .status-keine-termine { background: #fce4ec; color: #ad1457; }
+    .status-auf-abruf { background: #e8eaf6; color: #3949ab; }
+
+    .card-name {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+    .card-address {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .card-termine {
+      font-size: 0.85rem;
+      color: #1976d2;
+      font-weight: 500;
+    }
+    .card-termine.overdue { color: #d32f2f; }
+
+    /* Tour-Karte (andere Infos) */
+    .card-tourslot {
+      font-size: 0.85rem;
+      color: #e65100;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* FAB */
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 28px;
+      background: #1976d2;
+      color: white;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(25,118,210,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .fab:hover { background: #1565c0; transform: scale(1.05); }
+
+    /* Hinweis */
+    .hint {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.85rem;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+<!-- AppBar -->
+<header class="app-bar">
+  <h1>Kundenübersicht</h1>
+  <div class="app-bar-actions">
+    <button>Export</button>
+    <button>Auswählen</button>
+  </div>
+</header>
+
+<!-- Tabs mit Counts -->
+<nav class="tabs">
+  <button class="tab">Gewerblich <span class="count">(128)</span></button>
+  <button class="tab">Privat <span class="count">(45)</span></button>
+  <button class="tab active">Tour-Kunden <span class="count">(23)</span></button>
+</nav>
+
+<!-- Suche + Filter -->
+<section class="search-area">
+  <div class="search-box">
+    <span>🔍</span>
+    <input type="text" placeholder="Kunden suchen...">
+  </div>
+  <div class="search-meta">
+    <span class="result-count">23 Kunden</span>
+    <button class="sort-btn">▾ Sortierung: Wochentag</button>
+  </div>
+  <div class="chips-row">
+    <span class="chip">Regelmäßig</span>
+    <span class="chip">Unregelmäßig</span>
+    <span class="chip">Auf Abruf</span>
+    <span class="chip active">Pausiert: Aus <span class="remove">×</span></span>
+    <span class="chip">Ohne Tour</span>
+    <span class="chip">Keine Termine</span>
+    <button class="chip-reset">Filter zurücksetzen</button>
+  </div>
+</section>
+
+<!-- Kundenliste -->
+<main class="content">
+  <article class="customer-card">
+    <div class="card-header">
+      <span class="type-badge type-t">T</span>
+      <div class="status-badges">
+        <span class="status-badge status-ohne-tour">Ohne Tour</span>
+      </div>
+    </div>
+    <div class="card-name">Metallbau Schmidt GmbH</div>
+    <div class="card-address">Musterstraße 42, 10115 Berlin</div>
+    <div class="card-tourslot">Di 08–12 Uhr · Berlin Mitte</div>
+  </article>
+
+  <article class="customer-card">
+    <div class="card-header">
+      <span class="type-badge type-t">T</span>
+      <div class="status-badges"></div>
+    </div>
+    <div class="card-name">Recycling Hof Nord</div>
+    <div class="card-address">Industrieweg 8, 10115 Berlin</div>
+    <div class="card-termine">Nächste Abholung: Di 18.02</div>
+    <div class="card-tourslot">Di 14–16 Uhr · Berlin Nord</div>
+  </article>
+
+  <article class="customer-card">
+    <div class="card-header">
+      <span class="type-badge type-g">G</span>
+      <div class="status-badges">
+        <span class="status-badge status-pausiert">Pausiert</span>
+      </div>
+    </div>
+    <div class="card-name">Bäckerei Müller</div>
+    <div class="card-address">Hauptstr. 12, 10178 Berlin</div>
+    <div class="card-termine overdue">Überfällig seit 10.02</div>
+  </article>
+
+  <article class="customer-card">
+    <div class="card-header">
+      <span class="type-badge type-p">P</span>
+      <div class="status-badges">
+        <span class="status-badge status-auf-abruf">Auf Abruf</span>
+      </div>
+    </div>
+    <div class="card-name">Familie Weber</div>
+    <div class="card-address">Gartenweg 3, 10245 Berlin</div>
+    <div class="card-termine">Nächste Abholung: Fr 21.02</div>
+  </article>
+</main>
+
+<!-- FAB -->
+<button class="fab" title="Neuer Kunde">+</button>
+
+<p class="hint">← Design-Vorschau gemäß Plan 2026-02-12_12-30</p>
+
+</body>
+</html>

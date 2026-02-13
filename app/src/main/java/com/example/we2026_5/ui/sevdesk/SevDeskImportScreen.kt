@@ -15,11 +15,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -37,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.we2026_5.R
+import com.example.we2026_5.util.ComposeDialogHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -126,66 +125,7 @@ fun SevDeskImportScreen(
             ) {
                 Text(stringResource(R.string.sevdesk_clear_reimport_list))
             }
-            if (showDeleteContactsConfirm) {
-                AlertDialog(
-                    onDismissRequest = { showDeleteContactsConfirm = false },
-                    title = { Text(stringResource(R.string.sevdesk_delete_contacts)) },
-                    text = { Text(stringResource(R.string.sevdesk_delete_contacts_confirm)) },
-                    confirmButton = {
-                        Button(onClick = {
-                            showDeleteContactsConfirm = false
-                            onDeleteSevDeskContacts()
-                        }, shape = RoundedCornerShape(8.dp)) {
-                            Text(stringResource(R.string.sevdesk_delete_confirm_ok))
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showDeleteContactsConfirm = false }) {
-                            Text(stringResource(R.string.btn_cancel))
-                        }
-                    }
-                )
-            }
-            if (showDeleteArticlesConfirm) {
-                AlertDialog(
-                    onDismissRequest = { showDeleteArticlesConfirm = false },
-                    title = { Text(stringResource(R.string.sevdesk_delete_articles)) },
-                    text = { Text(stringResource(R.string.sevdesk_delete_articles_confirm)) },
-                    confirmButton = {
-                        Button(onClick = {
-                            showDeleteArticlesConfirm = false
-                            onDeleteSevDeskArticles()
-                        }, shape = RoundedCornerShape(8.dp)) {
-                            Text(stringResource(R.string.sevdesk_delete_confirm_ok))
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showDeleteArticlesConfirm = false }) {
-                            Text(stringResource(R.string.btn_cancel))
-                        }
-                    }
-                )
-            }
-            if (showClearReimportConfirm) {
-                AlertDialog(
-                    onDismissRequest = { showClearReimportConfirm = false },
-                    title = { Text(stringResource(R.string.sevdesk_clear_reimport_list)) },
-                    text = { Text(stringResource(R.string.sevdesk_clear_reimport_list_confirm)) },
-                    confirmButton = {
-                        Button(onClick = {
-                            showClearReimportConfirm = false
-                            onClearReimportList()
-                        }, shape = RoundedCornerShape(8.dp)) {
-                            Text(stringResource(R.string.sevdesk_clear_reimport_list))
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showClearReimportConfirm = false }) {
-                            Text(stringResource(R.string.btn_cancel))
-                        }
-                    }
-                )
-            }
+
             Spacer(Modifier.height(24.dp))
 
             Button(
@@ -224,4 +164,34 @@ fun SevDeskImportScreen(
             }
         }
     }
+
+    ComposeDialogHelper.ConfirmDialog(
+        visible = showDeleteContactsConfirm,
+        title = stringResource(R.string.sevdesk_delete_contacts),
+        message = stringResource(R.string.sevdesk_delete_contacts_confirm),
+        confirmText = stringResource(R.string.sevdesk_delete_confirm_ok),
+        isDestructive = true,
+        onDismiss = { showDeleteContactsConfirm = false },
+        onConfirm = onDeleteSevDeskContacts
+    )
+
+    ComposeDialogHelper.ConfirmDialog(
+        visible = showDeleteArticlesConfirm,
+        title = stringResource(R.string.sevdesk_delete_articles),
+        message = stringResource(R.string.sevdesk_delete_articles_confirm),
+        confirmText = stringResource(R.string.sevdesk_delete_confirm_ok),
+        isDestructive = true,
+        onDismiss = { showDeleteArticlesConfirm = false },
+        onConfirm = onDeleteSevDeskArticles
+    )
+
+    ComposeDialogHelper.ConfirmDialog(
+        visible = showClearReimportConfirm,
+        title = stringResource(R.string.sevdesk_clear_reimport_list),
+        message = stringResource(R.string.sevdesk_clear_reimport_list_confirm),
+        confirmText = stringResource(R.string.sevdesk_clear_reimport_list),
+        isDestructive = false,
+        onDismiss = { showClearReimportConfirm = false },
+        onConfirm = onClearReimportList
+    )
 }

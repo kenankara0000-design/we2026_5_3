@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import com.example.we2026_5.sevdesk.SevDeskDeletedIds
 import com.example.we2026_5.ui.main.SettingsScreen
+import com.example.we2026_5.util.AppNavigation
 import com.google.firebase.auth.FirebaseAuth
 
 /**
@@ -19,10 +20,10 @@ class SettingsActivity : AppCompatActivity() {
         setContent {
             SettingsScreen(
                 onOpenPreise = {
-                    startActivity(Intent(this, PreiseActivity::class.java))
+                    startActivity(AppNavigation.toPreise(this))
                 },
                 onOpenDataImport = {
-                    startActivity(Intent(this, DataImportActivity::class.java))
+                    startActivity(AppNavigation.toDataImport(this))
                 },
                 onResetAppData = {
                     resetAppData(applicationContext)
@@ -30,7 +31,7 @@ class SettingsActivity : AppCompatActivity() {
                 },
                 onAbmelden = {
                     FirebaseAuth.getInstance().signOut()
-                    startActivity(Intent(this, LoginActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK })
+                    startActivity(AppNavigation.toLogin(this, clearTask = true))
                     finish()
                 },
                 onBack = { finish() }

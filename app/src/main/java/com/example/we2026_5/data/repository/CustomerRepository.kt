@@ -5,8 +5,12 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.KundenTermin
 import com.example.we2026_5.tourplanner.TerminCache
 import com.example.we2026_5.util.AppErrorMapper
+import com.example.we2026_5.util.AppLogger
+import com.example.we2026_5.util.FirebaseConstants
+import com.example.we2026_5.util.FirebaseRetryHelper
 import com.example.we2026_5.util.Result
 import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.onSuccess
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -28,8 +32,8 @@ class CustomerRepository(
     private val database: FirebaseDatabase,
     private val termincache: TerminCache
 ) : CustomerRepositoryInterface {
-    private val customersRef: DatabaseReference = database.reference.child("customers")
-    private val customersForTourRef: DatabaseReference = database.reference.child("customers_for_tour")
+    private val customersRef: DatabaseReference = database.reference.child(FirebaseConstants.CUSTOMERS)
+    private val customersForTourRef: DatabaseReference = database.reference.child(FirebaseConstants.CUSTOMERS_FOR_TOUR)
     private val tourIndexBackfillDone = AtomicBoolean(false)
 
     /** Wartet auf Task oder gibt bei Timeout (Offline) true zurück – Realtime DB speichert lokal. */
@@ -187,8 +191,7 @@ class CustomerRepository(
             termincache.invalidate(customer.id)
             true
         } catch (e: Exception) {
-            // Nur echte Fehler werden als Fehler behandelt
-            android.util.Log.e("CustomerRepository", "Error saving customer", e)
+            AppLogger.e("CustomerRepository", "Error saving customer", e)
             false
         }
     }
@@ -285,18 +288,17 @@ class CustomerRepository(
     }
 
     override suspend fun updateCustomerResult(customerId: String, updates: Map<String, Any>): Result<Boolean> {
-        return try {
-            val filtered = withoutDeprecatedCustomerFields(updates)
-            if (filtered.isEmpty()) return Result.Success(true)
-            awaitWithTimeout { customersRef.child(customerId).updateChildren(filtered).await() }
+        val filtered = withoutDeprecatedCustomerFields(updates)
+        if (filtered.isEmpty()) return Result.Success(true)
+        
+        return FirebaseRetryHelper.updateChildrenWithRetry(
+            ref = customersRef.child(customerId),
+            updates = filtered
+        ).onSuccess {
             if ("ohneTour" in filtered || filtered.keys.any { it in tourRelevantKeys }) {
                 getCustomerById(customerId)?.let { syncTourCustomer(it) }
             }
             termincache.invalidate(customerId)
-            Result.Success(true)
-        } catch (e: Exception) {
-            android.util.Log.e("CustomerRepository", "Error updating customer", e)
-            Result.Error(AppErrorMapper.toSaveMessage(e))
         }
     }
     
@@ -316,13 +318,10 @@ class CustomerRepository(
     }
 
     override suspend fun deleteCustomerResult(customerId: String): Result<Boolean> {
-        return try {
-            awaitWithTimeout { customersRef.child(customerId).removeValue().await() }
+        return FirebaseRetryHelper.executeWithRetry {
+            customersRef.child(customerId).removeValue().await()
             customersForTourRef.child(customerId).removeValue().await()
-            Result.Success(true)
-        } catch (e: Exception) {
-            android.util.Log.e("CustomerRepository", "Error deleting customer", e)
-            Result.Error(AppErrorMapper.toDeleteMessage(e))
+            true
         }
     }
 

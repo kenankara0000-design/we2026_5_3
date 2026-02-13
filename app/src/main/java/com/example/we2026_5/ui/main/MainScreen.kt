@@ -63,6 +63,7 @@ fun MainScreen(
     val primaryBlueLight = colorResource(R.color.primary_blue_light)
     val textSecondary = colorResource(R.color.text_secondary)
     val backgroundLight = colorResource(R.color.background_light)
+    val offlineYellow = colorResource(R.color.status_offline_yellow)
 
     Column(
         modifier = Modifier
@@ -84,7 +85,7 @@ fun MainScreen(
             if (isOffline) {
                 Row(
                     modifier = Modifier
-                        .background(Color(0xFFFFEB3B).copy(alpha = 0.2f), RoundedCornerShape(4.dp))
+                        .background(offlineYellow.copy(alpha = 0.2f), RoundedCornerShape(4.dp))
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -92,9 +93,9 @@ fun MainScreen(
                         painter = painterResource(R.drawable.ic_offline),
                         contentDescription = null,
                         modifier = Modifier.padding(end = 4.dp).size(14.dp),
-                        tint = Color(0xFFFFEB3B)
+                        tint = offlineYellow
                     )
-                    Text(stringResource(R.string.main_offline), color = Color(0xFFFFEB3B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.main_offline), color = offlineYellow, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                 }
                 Spacer(Modifier.width(8.dp))
             }

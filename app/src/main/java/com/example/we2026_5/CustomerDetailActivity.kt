@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import com.example.we2026_5.CustomerStatus
 import com.example.we2026_5.KundenTyp
+import com.example.we2026_5.util.AppNavigation
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.DialogBaseHelper
 import androidx.lifecycle.lifecycleScope
@@ -195,13 +196,12 @@ class CustomerDetailActivity : AppCompatActivity() {
                 },
                 onResetToAutomatic = { viewModel.resetToAutomaticIntervall(customer, editFormState) },
                 onAddAbholungTermin = { c ->
-                    startActivity(Intent(this, AusnahmeTerminActivity::class.java)
-                        .putExtra("CUSTOMER_ID", c.id)
-                        .putExtra(AusnahmeTerminActivity.EXTRA_ADD_ABHOLUNG_MIT_LIEFERUNG, true))
+                    startActivity(AppNavigation.toAusnahmeTermin(this, customerId = c.id).apply {
+                        putExtra(AusnahmeTerminActivity.EXTRA_ADD_ABHOLUNG_MIT_LIEFERUNG, true)
+                    })
                 },
                 onAddAusnahmeTermin = { c ->
-                    startActivity(Intent(this, AusnahmeTerminActivity::class.java)
-                        .putExtra("CUSTOMER_ID", c.id))
+                    startActivity(AppNavigation.toAusnahmeTermin(this, customerId = c.id))
                 },
                 terminePairs365 = terminePairs365,
                 onPhotoClick = { url -> photoManager?.showImageInDialog(url) },
@@ -231,14 +231,10 @@ class CustomerDetailActivity : AppCompatActivity() {
                 regelNameByRegelId = emptyMap(),
                 onRegelClick = { },
                 onUrlaubStartActivity = { customerId ->
-                    startActivity(Intent(this@CustomerDetailActivity, UrlaubActivity::class.java).apply {
-                        putExtra("CUSTOMER_ID", customerId)
-                    })
+                    startActivity(AppNavigation.toUrlaub(this, customerId = customerId))
                 },
                 onErfassungClick = {
-                    startActivity(Intent(this@CustomerDetailActivity, WaschenErfassungActivity::class.java).apply {
-                        putExtra("CUSTOMER_ID", id)
-                    })
+                    startActivity(AppNavigation.toWaschenErfassung(this, customerId = id))
                 },
                 onAddMonthlyIntervall = { viewModel.addMonthlyIntervall(it) },
                 tourListenName = tourListenName,

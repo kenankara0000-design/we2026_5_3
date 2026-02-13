@@ -15,6 +15,7 @@
     <color name="status_warning">#F57C00</color> <!-- Material Orange 700 -->
     <color name="status_info">#1976D2</color> <!-- Material Blue 700 -->
     <color name="status_ausnahme">#F9A825</color> <!-- Gelb für Ausnahme-Termin (A-A / A-L) -->
+    <color name="status_offline_yellow">#FFEB3B</color> <!-- Material Yellow A400 für Offline-Anzeige -->
     <color name="error_red">#D32F2F</color>
     
     <!-- Button-Farben - Modernisiert -->

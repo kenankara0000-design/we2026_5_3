@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import com.example.we2026_5.R
 import com.example.we2026_5.wasch.Article
 import com.example.we2026_5.wasch.TourPreis
+import com.example.we2026_5.util.ComposeDialogHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -156,73 +157,71 @@ fun TourPreislisteScreen(
         }
     }
 
-    if (state.addDialogOpen) {
-        AlertDialog(
-            onDismissRequest = onCloseAddDialog,
-            title = { Text(stringResource(R.string.tour_preis_add)) },
-            text = {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    state.selectedArticleForAdd?.let { a ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            colors = CardDefaults.cardColors(containerColor = primaryBlue.copy(alpha = 0.1f))
+    ComposeDialogHelper.CustomDialog(
+        visible = state.addDialogOpen,
+        title = stringResource(R.string.tour_preis_add),
+        content = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                state.selectedArticleForAdd?.let { a ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        colors = CardDefaults.cardColors(containerColor = primaryBlue.copy(alpha = 0.1f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(a.name, color = textPrimary)
-                                TextButton(onClick = { onSelectArticle(null) }) {
-                                    Text(stringResource(R.string.btn_aendern))
-                                }
+                            Text(a.name, color = textPrimary)
+                            TextButton(onClick = { onSelectArticle(null) }) {
+                                Text(stringResource(R.string.btn_aendern))
                             }
                         }
-                    } ?: run {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            OutlinedTextField(
-                                value = state.addArticleSearchQuery,
-                                onValueChange = onArticleSearchQueryChange,
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text(stringResource(R.string.wasch_artikel_suchen), color = textSecondary) },
-                                singleLine = true
-                            )
-                            if (articleSearchQuery.isNotBlank()) {
-                                Spacer(Modifier.height(8.dp))
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(max = 200.dp)
-                                ) {
-                                    if (filteredArticles.isEmpty()) {
-                                        Text(
-                                            stringResource(R.string.tour_preis_keine_treffer),
-                                            fontSize = 12.sp,
-                                            color = textSecondary,
-                                            modifier = Modifier.padding(8.dp)
-                                        )
-                                    } else {
-                                        LazyColumn(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(180.dp),
-                                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            itemsIndexed(filteredArticles) { _, article ->
-                                                Card(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .clickable(onClick = { onSelectArticle(article) }),
-                                                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                                                ) {
-                                                    Text(
-                                                        article.name,
-                                                        modifier = Modifier.padding(12.dp),
-                                                        color = textPrimary
-                                                    )
-                                                }
+                    }
+                } ?: run {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = state.addArticleSearchQuery,
+                            onValueChange = onArticleSearchQueryChange,
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text(stringResource(R.string.wasch_artikel_suchen), color = textSecondary) },
+                            singleLine = true
+                        )
+                        if (articleSearchQuery.isNotBlank()) {
+                            Spacer(Modifier.height(8.dp))
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 200.dp)
+                            ) {
+                                if (filteredArticles.isEmpty()) {
+                                    Text(
+                                        stringResource(R.string.tour_preis_keine_treffer),
+                                        fontSize = 12.sp,
+                                        color = textSecondary,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                } else {
+                                    LazyColumn(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(180.dp),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        itemsIndexed(filteredArticles) { _, article ->
+                                            Card(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable(onClick = { onSelectArticle(article) }),
+                                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                                            ) {
+                                                Text(
+                                                    article.name,
+                                                    modifier = Modifier.padding(12.dp),
+                                                    color = textPrimary
+                                                )
                                             }
                                         }
                                     }
@@ -230,84 +229,57 @@ fun TourPreislisteScreen(
                             }
                         }
                     }
-                    Spacer(Modifier.height(16.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = state.addPriceNet,
-                            onValueChange = onPriceNetChange,
-                            label = { Text(stringResource(R.string.label_netto_eur)) },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-                        )
-                        OutlinedTextField(
-                            value = state.addPriceGross,
-                            onValueChange = onPriceGrossChange,
-                            label = { Text(stringResource(R.string.label_brutto_eur)) },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-                        )
-                    }
-                    state.message?.let { msg ->
-                        Spacer(Modifier.height(8.dp))
-                        Text(msg, fontSize = 12.sp, color = Color.Red)
-                    }
                 }
-            },
-            confirmButton = {
-                Button(
-                    onClick = onSaveTourPreis,
-                    enabled = state.selectedArticleForAdd != null && !state.isSaving
+                Spacer(Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(if (state.isSaving) "…" else stringResource(R.string.wasch_speichern))
+                    OutlinedTextField(
+                        value = state.addPriceNet,
+                        onValueChange = onPriceNetChange,
+                        label = { Text(stringResource(R.string.label_netto_eur)) },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    )
+                    OutlinedTextField(
+                        value = state.addPriceGross,
+                        onValueChange = onPriceGrossChange,
+                        label = { Text(stringResource(R.string.label_brutto_eur)) },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    )
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = onCloseAddDialog) {
-                    Text(stringResource(R.string.btn_cancel))
+                state.message?.let { msg ->
+                    Spacer(Modifier.height(8.dp))
+                    Text(msg, fontSize = 12.sp, color = Color.Red)
                 }
             }
-        )
-    }
+        },
+        confirmText = if (state.isSaving) "…" else stringResource(R.string.wasch_speichern),
+        confirmEnabled = state.selectedArticleForAdd != null && !state.isSaving,
+        onDismiss = onCloseAddDialog,
+        onConfirm = onSaveTourPreis
+    )
 
-    if (deleteConfirmOpen) {
-        val id = deleteArticleId
-        val name = deleteArticleName
-        AlertDialog(
-            onDismissRequest = {
-                deleteConfirmOpen = false
-                deleteArticleId = null
-                deleteArticleName = null
-            },
-            title = { Text(stringResource(R.string.dialog_preisliste_preis_loeschen_title)) },
-            text = { Text(stringResource(R.string.dialog_preisliste_preis_loeschen_message, name ?: "")) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        deleteConfirmOpen = false
-                        deleteArticleId = null
-                        deleteArticleName = null
-                        if (id != null) onRemoveTourPreis(id)
-                    }
-                ) {
-                    Text(stringResource(R.string.dialog_loeschen))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        deleteConfirmOpen = false
-                        deleteArticleId = null
-                        deleteArticleName = null
-                    }
-                ) {
-                    Text(stringResource(R.string.btn_cancel))
-                }
-            }
-        )
-    }
+    ComposeDialogHelper.ConfirmDialog(
+        visible = deleteConfirmOpen,
+        title = stringResource(R.string.dialog_preisliste_preis_loeschen_title),
+        message = stringResource(R.string.dialog_preisliste_preis_loeschen_message, deleteArticleName ?: ""),
+        confirmText = stringResource(R.string.dialog_loeschen),
+        isDestructive = true,
+        onDismiss = {
+            deleteConfirmOpen = false
+            deleteArticleId = null
+            deleteArticleName = null
+        },
+        onConfirm = {
+            val id = deleteArticleId
+            if (id != null) onRemoveTourPreis(id)
+            deleteArticleId = null
+            deleteArticleName = null
+        }
+    )
 }

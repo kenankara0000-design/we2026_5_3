@@ -17,10 +17,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -37,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.R
+import com.example.we2026_5.util.ComposeDialogHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -120,27 +119,13 @@ fun SettingsScreen(
         }
     }
 
-    if (showResetConfirm) {
-        AlertDialog(
-            onDismissRequest = { showResetConfirm = false },
-            title = { Text(stringResource(R.string.settings_reset_app_data)) },
-            text = { Text(stringResource(R.string.settings_reset_app_data_confirm)) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showResetConfirm = false
-                        onResetAppData()
-                    },
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(stringResource(R.string.settings_reset_app_data))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showResetConfirm = false }) {
-                    Text(stringResource(R.string.btn_cancel))
-                }
-            }
-        )
-    }
+    ComposeDialogHelper.ConfirmDialog(
+        visible = showResetConfirm,
+        title = stringResource(R.string.settings_reset_app_data),
+        message = stringResource(R.string.settings_reset_app_data_confirm),
+        confirmText = stringResource(R.string.settings_reset_app_data),
+        isDestructive = true,
+        onDismiss = { showResetConfirm = false },
+        onConfirm = onResetAppData
+    )
 }

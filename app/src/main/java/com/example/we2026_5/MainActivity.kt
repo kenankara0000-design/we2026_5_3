@@ -16,6 +16,7 @@ import com.example.we2026_5.ui.main.MainScreen
 import com.example.we2026_5.ui.main.MainViewModel
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
+import com.example.we2026_5.util.AppNavigation
 import com.example.we2026_5.util.runListeArtToTourMigration
 import com.example.we2026_5.util.runListeIntervalleMigration
 import com.example.we2026_5.util.runListeToTourMigration
@@ -39,7 +40,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         if (auth.currentUser == null) {
-            startActivity(Intent(this, LoginActivity::class.java))
+            startActivity(AppNavigation.toLogin(this))
             finish()
             return
         }
@@ -69,13 +70,13 @@ class MainActivity : AppCompatActivity() {
                 isSyncing = isSyncing,
                 tourCount = tourCount,
                 slotVorschlaege = slotVorschlaege,
-                onNeuKunde = { startActivity(Intent(this@MainActivity, AddCustomerActivity::class.java)) },
-                onKunden = { startActivity(Intent(this@MainActivity, CustomerManagerActivity::class.java)) },
-                onTouren = { startActivity(Intent(this@MainActivity, TourPlannerActivity::class.java)) },
-                onKundenListen = { startActivity(Intent(this@MainActivity, KundenListenActivity::class.java)) },
-                onStatistiken = { startActivity(Intent(this@MainActivity, StatisticsActivity::class.java)) },
-                onErfassung = { startActivity(Intent(this@MainActivity, ErfassungMenuActivity::class.java)) },
-                onSettings = { startActivity(Intent(this@MainActivity, SettingsActivity::class.java)) },
+                onNeuKunde = { startActivity(AppNavigation.toAddCustomer(this@MainActivity)) },
+                onKunden = { startActivity(AppNavigation.toCustomerManager(this@MainActivity)) },
+                onTouren = { startActivity(AppNavigation.toTourPlanner(this@MainActivity)) },
+                onKundenListen = { startActivity(AppNavigation.toKundenListen(this@MainActivity)) },
+                onStatistiken = { startActivity(AppNavigation.toStatistics(this@MainActivity)) },
+                onErfassung = { startActivity(AppNavigation.toErfassungMenu(this@MainActivity)) },
+                onSettings = { startActivity(AppNavigation.toSettings(this@MainActivity)) },
                 onSlotSelected = { slot -> handleSlotSelection(slot) }
             )
         }
@@ -104,8 +105,6 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, getString(R.string.error_customer_not_found), Toast.LENGTH_SHORT).show()
             return
         }
-        startActivity(Intent(this, CustomerDetailActivity::class.java).apply {
-            putExtra("CUSTOMER_ID", slot.customerId)
-        })
+        startActivity(AppNavigation.toCustomerDetail(this, customerId = slot.customerId))
     }
 }
