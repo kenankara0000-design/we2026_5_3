@@ -26,7 +26,7 @@ class KundenListeRepository(
             override fun onDataChange(snapshot: DataSnapshot) {
                 val listen = mutableListOf<KundenListe>()
                 snapshot.children.forEach { child ->
-                    KundenListeSnapshotParser.KundenListeSnapshotParser.parseKundenListe(child)?.let { listen.add(it) }
+                    KundenListeSnapshotParser.parseKundenListe(child)?.let { listen.add(it) }
                 }
                 listen.sortBy { it.name }
                 trySend(listen)

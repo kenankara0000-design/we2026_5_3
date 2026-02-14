@@ -78,7 +78,7 @@ class CustomerManagerActivity : AppCompatActivity() {
 
         setContent {
             AppTheme {
-            val customers by viewModel.filteredCustomers.collectAsState(initial = emptyList())
+            val customers by viewModel.filteredCustomers.collectAsState()
             val selectedTab by viewModel.selectedTab.collectAsState(initial = 0)
             val kundenTypFilter by viewModel.kundenTypFilter.collectAsState(initial = 0)
             val ohneTourFilter by viewModel.ohneTourFilter.collectAsState(initial = 0)
@@ -87,7 +87,7 @@ class CustomerManagerActivity : AppCompatActivity() {
             val isBulkMode by viewModel.isBulkMode.collectAsState(initial = false)
             val selectedIds by viewModel.selectedIds.collectAsState(initial = emptySet())
             val isLoading by viewModel.isLoading.collectAsState(initial = false)
-            val errorMessage by viewModel.error.collectAsState(initial = null)
+            val errorMessage by viewModel.error.collectAsState()
             val isOnline by networkMonitor.isOnline.observeAsState(initial = true)
 
             val displayCustomers = remember(customers, deletedCustomerIds) {

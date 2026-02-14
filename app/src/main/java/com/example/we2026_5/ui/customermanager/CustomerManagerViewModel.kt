@@ -52,7 +52,7 @@ class CustomerManagerViewModel(
     val keinetermineFilter: StateFlow<Int> = keinetermineFilterFlow.asStateFlow()
 
     // Kombiniere customers, searchQuery und selectedTab für gefilterte Liste
-    val filteredCustomers: LiveData<List<Customer>> = combine(
+    val filteredCustomers: StateFlow<List<Customer>> = combine(
         customersFlow,
         searchQueryFlow,
         selectedTabFlow,

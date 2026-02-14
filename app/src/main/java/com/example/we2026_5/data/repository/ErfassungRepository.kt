@@ -38,7 +38,7 @@ class ErfassungRepository(
         val ref = erfassungenRef.orderByChild("customerId").equalTo(customerId)
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val list = snapshot.children.mapNotNull { parseErfassung(it) }.filter { it.erledigt }
+                val list = snapshot.children.mapNotNull { ErfassungSnapshotParser.parseErfassung(it) }.filter { it.erledigt }
                 trySend(list.sortedByDescending { it.datum })
             }
             override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
@@ -69,7 +69,7 @@ class ErfassungRepository(
     fun getAllErfassungenFlowErledigt(): Flow<List<WaschErfassung>> = callbackFlow {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val list = snapshot.children.mapNotNull { parseErfassung(it) }.filter { it.erledigt }
+                val list = snapshot.children.mapNotNull { ErfassungSnapshotParser.parseErfassung(it) }.filter { it.erledigt }
                 trySend(list.sortedByDescending { it.datum })
             }
             override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
