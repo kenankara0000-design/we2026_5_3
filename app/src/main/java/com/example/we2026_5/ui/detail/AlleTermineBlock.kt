@@ -6,11 +6,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
@@ -36,10 +33,7 @@ import com.example.we2026_5.util.TerminBerechnungUtils
 /** B4: Filter für „Alle Termine“ */
 enum class AlleTermineFilter { ALLE, REGULAER, AUSNAHME, KUNDEN }
 
-/** Zeilenhöhe ca. 52dp. 6 Zeilen sichtbar. */
-private const val MAX_VISIBLE_ROWS = 6
-private val ROW_HEIGHT_DP = 52.dp
-private val MAX_HEIGHT_DP = ROW_HEIGHT_DP * MAX_VISIBLE_ROWS
+/** Zeilenhöhe ca. 52dp. */
 private val BADGE_FONT_SP = 15.sp
 private val ROW_PADDING_DP = 14.dp
 
@@ -130,12 +124,8 @@ fun AlleTermineBlock(
                     )
                 }
             }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = MAX_HEIGHT_DP)
-                    .verticalScroll(rememberScrollState())
-            ) {
+            // C5: Kein innerer Scroll – Tab scrollt als Ganzes (kein Scroll-in-Scroll)
+            Column(modifier = Modifier.fillMaxWidth()) {
                 if (filteredPairs.isEmpty()) {
                     Text(
                         text = "Keine Termine",

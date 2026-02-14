@@ -27,7 +27,7 @@
 | Datei | Inhalt |
 |-------|--------|
 | `2026-02-13_21-47.massnahmenplan.md` | **Konsolidierter Maßnahmenplan** (73 Aufgaben, 8 Phasen, ~12–18 Wochen) – AKTUELL |
-| `2026-02-13_23-29.ux-kundendetail-analyse.plan.md` | **UX Kundendetail** (3 Tabs) – Phase A ✅ erledigt, Phase B wartet auf Freigabe |
+| `2026-02-13_23-29.ux-kundendetail-analyse.plan.md` | **UX Kundendetail** (3 Tabs) – Phase A+B ✅ erledigt, Phase C/D offen |
 | `2026-02-13_21-02.plan.md` | Original-Tiefenanalyse (Befunde Abschn. 1–16, alter Maßnahmenplan Abschn. 17 → ersetzt durch konsolidierten Plan) |
 | `2026-02-13_21-44.plan.md` | Alter Maßnahmenplan 04–09 → ersetzt durch konsolidierten Plan |
 | `2026-02-13_21-02.design-vorher-nachher.html` | Visueller Vorher/Nachher-Vergleich (Design, HTML-Mockups) |
@@ -101,26 +101,24 @@ Alle Analysen wurden am 2026-02-13 durchgeführt. Screen-für-Screen-Ansatz: all
 ### Aktueller Stand
 
 - **Alle 9 Analysen erledigt** → Befunde stehen in den jeweiligen Dateien
-- **Konsolidierter Maßnahmenplan** (`2026-02-13_21-47.massnahmenplan.md`): Phasen 1–6 ✅, Phase 7 ✅ bis auf 7.04/7.05 (optional)
-- **UX Kundendetail** (`2026-02-13_23-29.ux-kundendetail-analyse.plan.md`): Phase A ✅, Phase B nachrangig
+- **Konsolidierter Maßnahmenplan** (`2026-02-13_21-47.massnahmenplan.md`): Phasen 1–8 ✅ (8.06, 8.10, 8.11 optional)
+- **UX Kundendetail** (`2026-02-13_23-29.ux-kundendetail-analyse.plan.md`): Phase A+B ✅, Phase C/D offen
 
 ### Plan-Priorität (wichtig)
 
-**Nur ein Plan pro Session.** Massnahmenplan hat Vorrang. Erst Phase 6 (Navigation + LiveData-Migration) des Massnahmenplans, dann UX Kundendetail Phase B. Sonst wird die App durch parallele Änderungen durcheinandergebracht.
+**Nur ein Plan pro Session.** Massnahmenplan hat Vorrang. UX Kundendetail Phase B ist erledigt; Phase C (Code-Duplizierung, Parameter-Reduktion) nur mit Freigabe.
 
 ### Nächster Schritt
 
-→ **Phase 8 vollständig umgesetzt** (8.01–8.17). 8.06, 8.10, 8.11 bei Gelegenheit. **Build testen.**
-
----
+→ **Build testen.** Danach optional: Massnahmenplan 8.06/8.10/8.11 oder UX Kundendetail Phase C (Freigabe erforderlich).
 
 ---
 
 ### Für neue Session
 
 1. **Einstieg:** Diese Datei (`ANALYSE-INDEX.md`) lesen.
-2. **Plan:** `2026-02-13_21-47.massnahmenplan.md` öffnen → Abschnitt **Session-Handoff** (oben).
-3. **Nächster Schritt:** Phase 8 ✅ umgesetzt. Build testen. Optional: 8.06 (Strings), 8.10 (LazyColumn), 8.11 (derivedStateOf).
-4. **Regel:** Nur ein Plan pro Session; keine parallele Arbeit an UX Kundendetail Phase B.
+2. **Pläne:** `2026-02-13_21-47.massnahmenplan.md` und `2026-02-13_23-29.ux-kundendetail-analyse.plan.md` → Abschnitt **Session-Handoff** (oben).
+3. **Nächster Schritt:** Build testen. Massnahmenplan Phase 8 optional (8.06 Strings, 8.10 LazyColumn, 8.11 derivedStateOf). UX Kundendetail Phase C nur mit Freigabe.
+4. **Regel:** Nur ein Plan pro Session; keine parallele Arbeit.
 
-*Letzte Aktualisierung: 2026-02-14 (Phase 8 vollständig)*
+*Letzte Aktualisierung: 2026-02-14 (Phase 8 + UX Phase B vollständig)*

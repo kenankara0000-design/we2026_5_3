@@ -99,39 +99,7 @@ fun CustomerDetailScreen(
         customer != null && com.example.we2026_5.util.TerminBerechnungUtils.istKundeUeberfaelligHeute(customer)
     }
 
-    var formState by remember(customer?.id, isInEditMode) {
-        mutableStateOf(
-            if (customer != null) {
-                val tageAzuL = customer.tageAzuLOrDefault(7)
-                val intervallTage = customer.intervallTageOrDefault(7)
-                AddCustomerState(
-                    name = customer.name,
-                    alias = customer.alias,
-                    adresse = customer.adresse,
-                    latitude = customer.latitude,
-                    longitude = customer.longitude,
-                    stadt = customer.stadt,
-                    plz = customer.plz,
-                    telefon = customer.telefon,
-                    notizen = customer.notizen,
-                    kundenArt = customer.kundenArt,
-                    kundenTyp = customer.kundenTyp,
-                    tageAzuL = tageAzuL,
-                    intervallTage = intervallTage,
-                    kundennummer = customer.kundennummer,
-                    abholungWochentage = customer.effectiveAbholungWochentage,
-                    auslieferungWochentage = customer.effectiveAuslieferungWochentage,
-                    defaultUhrzeit = customer.defaultUhrzeit,
-                    tagsInput = customer.tags.joinToString(", "),
-                    tourStadt = customer.tourSlot?.stadt ?: "",
-                    tourZeitStart = customer.tourSlot?.zeitfenster?.start ?: "",
-                    tourZeitEnde = customer.tourSlot?.zeitfenster?.ende ?: "",
-                    ohneTour = customer.ohneTour,
-                    erstelltAm = customer.erstelltAm
-                )
-            } else AddCustomerState()
-        )
-    }
+    // C4: Einzige State-Quelle für Formular = ViewModel (editFormState). Kein lokales formState mehr.
     var overflowMenuExpanded by remember { mutableStateOf(false) }
     var showUnsavedChangesDialog by remember { mutableStateOf(false) }
     val validationNameMissing = stringResource(R.string.validation_name_missing)
@@ -168,7 +136,7 @@ fun CustomerDetailScreen(
         }
     }
     val hasUnsavedChanges = isInEditMode && customer != null && initialFormStateFromCustomer != null &&
-        (editFormState ?: formState) != initialFormStateFromCustomer
+        editFormState != initialFormStateFromCustomer
 
     BackHandler(enabled = hasUnsavedChanges) {
         showUnsavedChangesDialog = true
@@ -193,11 +161,10 @@ fun CustomerDetailScreen(
     var selectedTabIndex by remember { mutableStateOf(0) }
     val performSave = performSave@ { andNext: Boolean ->
         val c = customer ?: return@performSave
-        val stateForSave = editFormState ?: formState
+        val stateForSave = editFormState ?: return@performSave
         val name = stateForSave.name.trim()
         if (name.isEmpty()) {
-            if (isInEditMode) onUpdateEditFormState(stateForSave.copy(errorMessage = validationNameMissing))
-            else formState = formState.copy(errorMessage = validationNameMissing)
+            onUpdateEditFormState(stateForSave.copy(errorMessage = validationNameMissing))
         } else {
             val updates = buildMap<String, Any> {
                 put("name", name)
@@ -307,9 +274,10 @@ fun CustomerDetailScreen(
             val context = LocalContext.current
             var showAddMonthlySheet by remember { mutableStateOf(false) }
             var showNeuerTerminArtSheet by remember { mutableStateOf(false) }
-            val currentFormState = editFormState ?: formState
+            // C4: Nur ViewModel-State; bei customer != null ist initialFormStateFromCustomer gesetzt
+            val currentFormState: AddCustomerState = editFormState ?: initialFormStateFromCustomer!!
             val onUpdateFormState: (AddCustomerState) -> Unit = { newState ->
-                if (isInEditMode) onUpdateEditFormState(newState) else formState = newState
+                onUpdateEditFormState(newState)
             }
             val onStartDatumClick: () -> Unit = {
                 DialogBaseHelper.showDatePickerDialog(
