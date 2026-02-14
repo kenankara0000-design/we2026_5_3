@@ -56,6 +56,14 @@ class TourPlannerDragDropState(
         }
     }
 
+    /** Startet Drag direkt mit bekanntem Index (z. B. wenn Geste auf dem Item liegt). */
+    fun onDragStartWithIndex(index: Int) {
+        if (isCustomerItem(index)) {
+            currentIndexOfDraggedItem = index
+            initiallyDraggedElement = lazyListState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
+        }
+    }
+
     fun onDragInterrupted() {
         draggedDistance = 0f
         currentIndexOfDraggedItem = null

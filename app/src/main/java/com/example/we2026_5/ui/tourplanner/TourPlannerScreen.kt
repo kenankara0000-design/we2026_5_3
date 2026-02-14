@@ -291,22 +291,7 @@ private fun TourPlannerListContent(
             .padding(16.dp)
             .then(
                 if (reihenfolgeBearbeiten) {
-                    Modifier.pointerInput(Unit) {
-                        detectDragGesturesAfterLongPress(
-                            onDragStart = { offset: Offset -> dragState.onDragStart(offset) },
-                            onDrag = { change: PointerInputChange, offset: Offset ->
-                                change.consume()
-                                dragState.onDrag(dragAmount = offset)
-                                dragState.checkForOverScroll().takeIf { it != 0f }?.let { delta ->
-                                    scope.launch {
-                                        lazyListState.scroll { scrollBy(delta) }
-                                    }
-                                }
-                            },
-                            onDragEnd = { dragState.onDragInterrupted() },
-                            onDragCancel = { dragState.onDragInterrupted() }
-                        )
-                    }
+                    Modifier
                 } else {
                     Modifier.pointerInput(Unit) {
                         var totalDragX = 0f
@@ -342,6 +327,22 @@ private fun TourPlannerListContent(
             },
             itemContent = { index, item ->
             val dragOffset = if (index == dragState.currentIndexOfDraggedItem) dragState.elementDisplacement ?: 0f else 0f
+            val cardDragModifier = if (reihenfolgeBearbeiten && item is ListItem.CustomerItem) {
+                Modifier.pointerInput(reihenfolgeBearbeiten, index) {
+                    detectDragGesturesAfterLongPress(
+                        onDragStart = { dragState.onDragStartWithIndex(index) },
+                        onDrag = { change: PointerInputChange, offset: Offset ->
+                            change.consume()
+                            dragState.onDrag(dragAmount = offset)
+                            dragState.checkForOverScroll().takeIf { it != 0f }?.let { delta ->
+                                scope.launch { lazyListState.scroll { scrollBy(delta) } }
+                            }
+                        },
+                        onDragEnd = { dragState.onDragInterrupted() },
+                        onDragCancel = { dragState.onDragInterrupted() }
+                    )
+                }
+            } else null
             Box(modifier = Modifier.graphicsLayer { translationY = dragOffset }) {
                 when (item) {
                     is ListItem.ErledigtSection -> { }
@@ -426,6 +427,10 @@ private fun TourPlannerListContent(
                         viewDateMillis = viewDate,
                         onCustomerClick = { onCustomerClick(payload) },
                         onAktionenClick = { onAktionenClick(item.customer) },
+                        dragHandleModifier = null,
+                        dragHandleContent = null,
+                        cardDragModifier = cardDragModifier,
+                        cardInteractionSource = null,
                         isDragging = index == dragState.currentIndexOfDraggedItem,
                         showAddress = cardShowAddress,
                         showPhone = cardShowPhone,
