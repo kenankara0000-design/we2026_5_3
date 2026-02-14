@@ -9,6 +9,7 @@ import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.CustomerSnapshotParser
 import com.example.we2026_5.data.repository.KundenListeRepository
+import com.example.we2026_5.util.AppErrorMapper
 import com.example.we2026_5.util.CustomerTermFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +39,11 @@ class ListeBearbeitenViewModel(
     val state: StateFlow<ListeBearbeitenState> = _state.asStateFlow()
 
     fun loadDaten(listeId: String?) {
-        val targetId = listeId ?: _state.value.liste?.id ?: return
+        val targetId = listeId ?: _state.value.liste?.id
+        if (targetId == null) {
+            _state.value = _state.value.copy(errorMessageResId = R.string.error_list_not_found)
+            return
+        }
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, errorMessageResId = null, errorMessageArg = null)
             try {
@@ -85,14 +90,18 @@ class ListeBearbeitenViewModel(
                 _state.value = _state.value.copy(
                     isLoading = false,
                     errorMessageResId = R.string.error_load_generic,
-                    errorMessageArg = e.message
+                    errorMessageArg = AppErrorMapper.toLoadMessage(e)
                 )
             }
         }
     }
 
     fun setEditMode(isEditing: Boolean) {
-        val liste = _state.value.liste ?: return
+        val liste = _state.value.liste
+        if (liste == null) {
+            _state.value = _state.value.copy(errorMessageResId = R.string.error_list_not_found)
+            return
+        }
         _state.value = _state.value.copy(
             isInEditMode = isEditing,
             intervalle = if (isEditing) liste.intervalle else _state.value.intervalle

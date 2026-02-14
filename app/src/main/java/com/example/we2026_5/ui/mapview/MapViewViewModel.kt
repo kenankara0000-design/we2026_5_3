@@ -8,6 +8,7 @@ import com.example.we2026_5.R
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
+import com.example.we2026_5.util.AppErrorMapper
 import com.example.we2026_5.util.TerminBerechnungUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -55,7 +56,7 @@ class MapViewViewModel(
                 val addresses = customersWithAddress.map { it.adresse }
                 _state.value = MapViewState.Success(addresses, filteredToToday)
             } catch (e: Exception) {
-                _state.value = MapViewState.Error(R.string.error_unknown, e.message)
+                _state.value = MapViewState.Error(R.string.error_unknown, AppErrorMapper.toLoadMessage(e))
             }
         }
     }

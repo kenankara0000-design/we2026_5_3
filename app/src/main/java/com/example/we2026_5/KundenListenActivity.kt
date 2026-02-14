@@ -1,6 +1,5 @@
 package com.example.we2026_5
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -35,13 +34,11 @@ class KundenListenActivity : AppCompatActivity() {
                     state = state,
                     onBack = { finish() },
                     onNewListe = {
-                        startActivity(Intent(this@KundenListenActivity, ListeErstellenActivity::class.java))
+                        startActivity(com.example.we2026_5.util.AppNavigation.toListeErstellen(this@KundenListenActivity))
                     },
                     onRefresh = { viewModel.loadListen() },
                     onListeClick = { liste ->
-                        startActivity(Intent(this@KundenListenActivity, ListeBearbeitenActivity::class.java).apply {
-                            putExtra("LISTE_ID", liste.id)
-                        })
+                        startActivity(com.example.we2026_5.util.AppNavigation.toListeBearbeiten(this@KundenListenActivity, liste.id))
                     },
                     onListeLoeschen = { liste -> loescheListe(liste) }
                 )

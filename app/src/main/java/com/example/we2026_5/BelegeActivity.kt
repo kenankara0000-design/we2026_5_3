@@ -60,27 +60,17 @@ class BelegeActivity : AppCompatActivity() {
                     onBackFromBelegDetail = { viewModel.backFromBelegDetail() },
                     onNeueErfassungKameraFotoFromListe = {
                         (state as? BelegeUiState.BelegListe)?.customer?.let { customer ->
-                            startActivity(Intent(this@BelegeActivity, WaschenErfassungActivity::class.java)
-                                .putExtra("CUSTOMER_ID", customer.id)
-                                .putExtra("OPEN_FORMULAR_WITH_CAMERA", true))
+                            startActivity(com.example.we2026_5.util.AppNavigation.toWaschenErfassung(this@BelegeActivity, customerId = customer.id, openFormularWithCamera = true))
                         }
                     },
                     onNeueErfassungFormularFromListe = {
                         (state as? BelegeUiState.BelegListe)?.customer?.let { customer ->
-                            startActivity(
-                                Intent(this@BelegeActivity, WaschenErfassungActivity::class.java)
-                                    .putExtra("CUSTOMER_ID", customer.id)
-                                    .putExtra("OPEN_FORMULAR", true)
-                            )
+                            startActivity(com.example.we2026_5.util.AppNavigation.toWaschenErfassung(this@BelegeActivity, customerId = customer.id, openFormular = true))
                         }
                     },
                     onNeueErfassungManuellFromListe = {
                         (state as? BelegeUiState.BelegListe)?.customer?.let { customer ->
-                            startActivity(
-                                Intent(this@BelegeActivity, WaschenErfassungActivity::class.java)
-                                    .putExtra("CUSTOMER_ID", customer.id)
-                                    .putExtra("OPEN_ERFASSEN", true)
-                            )
+                            startActivity(com.example.we2026_5.util.AppNavigation.toWaschenErfassung(this@BelegeActivity, customerId = customer.id, openErfassen = true))
                         }
                     },
                     onDeleteBeleg = {

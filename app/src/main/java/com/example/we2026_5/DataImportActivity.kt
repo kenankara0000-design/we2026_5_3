@@ -1,6 +1,5 @@
 package com.example.we2026_5
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -13,7 +12,7 @@ class DataImportActivity : AppCompatActivity() {
         setContent {
             AppTheme {
             DataImportScreen(
-                onSevDeskImport = { startActivity(Intent(this, SevDeskImportActivity::class.java)) },
+                onSevDeskImport = { startActivity(com.example.we2026_5.util.AppNavigation.toSevDeskImport(this)) },
                 onBack = { finish() }
             )
             }

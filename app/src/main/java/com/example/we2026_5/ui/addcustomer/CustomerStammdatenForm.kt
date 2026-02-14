@@ -95,24 +95,6 @@ fun CustomerStammdatenForm(
         }
         Spacer(modifier = Modifier.height(spacing))
         OutlinedTextField(
-            value = when {
-                state.latitude != null && state.longitude != null -> "${state.latitude}, ${state.longitude}"
-                else -> ""
-            },
-            onValueChange = { s ->
-                val parts = s.split(",").map { it.replace(',', '.').trim() }
-                val lat = parts.getOrNull(0)?.toDoubleOrNull()?.takeIf { it in -90.0..90.0 }
-                val lng = parts.getOrNull(1)?.toDoubleOrNull()?.takeIf { it in -180.0..180.0 }
-                onUpdate(state.copy(latitude = lat, longitude = lng))
-            },
-            label = { Text(stringResource(R.string.label_koordinaten)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            placeholder = { Text(stringResource(R.string.hint_koordinaten)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-        )
-        Spacer(modifier = Modifier.height(spacing))
-        OutlinedTextField(
             value = state.telefon,
             onValueChange = { onUpdate(state.copy(telefon = it)) },
             label = { Text(stringResource(R.string.hint_phone_optional)) },
@@ -121,6 +103,7 @@ fun CustomerStammdatenForm(
         )
         Spacer(modifier = Modifier.height(spacing))
 
+        // Koordinaten in „Weitere Angaben“ (Phase A6)
         if (showTermineTourSection) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -321,6 +304,33 @@ fun CustomerStammdatenForm(
 
         } // showTermineTourSection (Kundenart bis Wochentage)
 
+        if (!showTermineTourSection) {
+            Spacer(modifier = Modifier.height(DetailUiConstants.SectionSpacing))
+            ExpandableSection(
+                defaultExpanded = false,
+                textPrimary = textPrimary
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = when {
+                        state.latitude != null && state.longitude != null -> "${state.latitude}, ${state.longitude}"
+                        else -> ""
+                    },
+                    onValueChange = { s ->
+                        val parts = s.split(",").map { it.replace(',', '.').trim() }
+                        val lat = parts.getOrNull(0)?.toDoubleOrNull()?.takeIf { it in -90.0..90.0 }
+                        val lng = parts.getOrNull(1)?.toDoubleOrNull()?.takeIf { it in -180.0..180.0 }
+                        onUpdate(state.copy(latitude = lat, longitude = lng))
+                    },
+                    label = { Text(stringResource(R.string.label_koordinaten)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    placeholder = { Text(stringResource(R.string.hint_koordinaten)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.height(spacing))
         OutlinedTextField(
             value = state.notizen,
@@ -337,6 +347,24 @@ fun CustomerStammdatenForm(
             textPrimary = textPrimary
         ) {
             Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = when {
+                    state.latitude != null && state.longitude != null -> "${state.latitude}, ${state.longitude}"
+                    else -> ""
+                },
+                onValueChange = { s ->
+                    val parts = s.split(",").map { it.replace(',', '.').trim() }
+                    val lat = parts.getOrNull(0)?.toDoubleOrNull()?.takeIf { it in -90.0..90.0 }
+                    val lng = parts.getOrNull(1)?.toDoubleOrNull()?.takeIf { it in -180.0..180.0 }
+                    onUpdate(state.copy(latitude = lat, longitude = lng))
+                },
+                label = { Text(stringResource(R.string.label_koordinaten)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                placeholder = { Text(stringResource(R.string.hint_koordinaten)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+            )
+            Spacer(modifier = Modifier.height(spacing))
             OutlinedTextField(
                 value = state.defaultUhrzeit,
                 onValueChange = { onUpdate(state.copy(defaultUhrzeit = it)) },

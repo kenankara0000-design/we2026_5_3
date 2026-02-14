@@ -244,9 +244,6 @@ class CustomerDetailActivity : AppCompatActivity() {
                 onUrlaubStartActivity = { customerId ->
                     startActivity(AppNavigation.toUrlaub(this, customerId = customerId))
                 },
-                onErfassungClick = {
-                    startActivity(AppNavigation.toWaschenErfassung(this, customerId = id))
-                },
                 onAddMonthlyIntervall = { viewModel.addMonthlyIntervall(it) },
                 tourListenName = tourListenName,
                 onDeleteNextTermin = { terminDatum ->
@@ -269,24 +266,16 @@ class CustomerDetailActivity : AppCompatActivity() {
                 belegMonateForCustomer = belegMonateForCustomer,
                 belegMonateErledigtForCustomer = belegMonateErledigtForCustomer,
                 onNeueErfassungKameraFotoBelege = {
-                    startActivity(Intent(this@CustomerDetailActivity, WaschenErfassungActivity::class.java)
-                        .putExtra("CUSTOMER_ID", id)
-                        .putExtra("OPEN_FORMULAR_WITH_CAMERA", true))
+                    startActivity(AppNavigation.toWaschenErfassung(this@CustomerDetailActivity, customerId = id, openFormularWithCamera = true))
                 },
                 onNeueErfassungFormularBelege = {
-                    startActivity(Intent(this@CustomerDetailActivity, WaschenErfassungActivity::class.java)
-                        .putExtra("CUSTOMER_ID", id)
-                        .putExtra("OPEN_FORMULAR", true))
+                    startActivity(AppNavigation.toWaschenErfassung(this@CustomerDetailActivity, customerId = id, openFormular = true))
                 },
                 onNeueErfassungManuellBelege = {
-                    startActivity(Intent(this@CustomerDetailActivity, WaschenErfassungActivity::class.java)
-                        .putExtra("CUSTOMER_ID", id)
-                        .putExtra("OPEN_ERFASSEN", true))
+                    startActivity(AppNavigation.toWaschenErfassung(this@CustomerDetailActivity, customerId = id, openErfassen = true))
                 },
                 onBelegClick = { beleg ->
-                    startActivity(Intent(this@CustomerDetailActivity, WaschenErfassungActivity::class.java)
-                        .putExtra("CUSTOMER_ID", id)
-                        .putExtra("BELEG_MONTH_KEY", beleg.monthKey))
+                    startActivity(AppNavigation.toWaschenErfassung(this@CustomerDetailActivity, customerId = id, belegMonthKey = beleg.monthKey))
                 }
             )
             }
@@ -388,16 +377,14 @@ class CustomerDetailActivity : AppCompatActivity() {
                 }
             }
             .setNeutralButton(getString(R.string.termin_anlegen_option_ausnahme)) { _, _ ->
-                startActivity(Intent(this, AusnahmeTerminActivity::class.java).putExtra("CUSTOMER_ID", customer.id))
+                startActivity(AppNavigation.toAusnahmeTermin(this, customerId = customer.id))
             }
             .setNegativeButton(getString(R.string.btn_cancel), null)
             .show()
     }
 
     private fun startTerminAnlegenDialogUnregelmaessig(customer: Customer) {
-        startActivity(Intent(this, TerminAnlegenUnregelmaessigActivity::class.java).apply {
-            putExtra("CUSTOMER_ID", customer.id)
-        })
+        startActivity(AppNavigation.toTerminAnlegenUnregelmaessig(this, customer.id, customer.name))
     }
 
     override fun onDestroy() {

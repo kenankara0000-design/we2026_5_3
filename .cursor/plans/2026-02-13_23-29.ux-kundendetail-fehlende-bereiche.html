@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kundendetail – Fehlende Bereiche (Vorher/Nachher)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; color: #1a1a1a; }
+
+  header { background: linear-gradient(135deg, #1565C0, #1976D2); color: #fff; padding: 24px; text-align: center; }
+  header h1 { font-size: 20px; }
+  header p { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+
+  .legend { display: flex; justify-content: center; gap: 24px; padding: 12px; background: #fff; border-bottom: 1px solid #e0e0e0; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .legend-dot.before { background: #ef5350; }
+  .legend-dot.after { background: #43A047; }
+
+  .intro { max-width: 700px; margin: 20px auto; padding: 16px 24px; background: #fff3e0; border-radius: 10px; border-left: 4px solid #FF9800; font-size: 13px; color: #5d4037; }
+
+  section { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+  section > h2 { font-size: 18px; color: #1565C0; margin-bottom: 12px; padding-left: 10px; border-left: 4px solid #1976D2; }
+  section > p { font-size: 12px; color: #757575; margin-bottom: 12px; }
+
+  .comparison { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+  .phone { width: 340px; border-radius: 24px; overflow: hidden; box-shadow: 0 6px 24px rgba(0,0,0,0.12); border: 2px solid #333; background: #fff; flex-shrink: 0; }
+  .phone-label { text-align: center; font-size: 10px; font-weight: 700; padding: 4px 0; letter-spacing: 0.5px; text-transform: uppercase; }
+  .phone-label.before { background: #FFEBEE; color: #C62828; }
+  .phone-label.after { background: #E8F5E9; color: #2E7D32; }
+
+  .topbar { background: #1565C0; padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
+  .topbar-badge { width: 32px; height: 32px; background: #78909C; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 12px; }
+  .topbar-title { font-size: 16px; font-weight: 700; color: #fff; }
+  .topbar-actions { margin-left: auto; }
+  .topbar-btn { color: #fff; font-size: 13px; font-weight: 600; background: none; border: none; }
+
+  .tabs { display: flex; border-bottom: 1px solid #e0e0e0; background: #fff; }
+  .tab { flex: 1; padding: 10px 6px; text-align: center; font-size: 12px; font-weight: 600; color: #757575; border-bottom: 3px solid transparent; position: relative; }
+  .tab.active { color: #1976D2; border-bottom-color: #1976D2; }
+  .tab-badge { position: absolute; top: 2px; right: 4px; background: #E53935; color: #fff; font-size: 9px; padding: 1px 5px; border-radius: 10px; min-width: 18px; text-align: center; }
+
+  .content { padding: 12px 14px; font-size: 12px; }
+  .content-label { font-weight: 700; color: #212121; margin-bottom: 4px; font-size: 11px; }
+  .content-value { background: #f5f5f5; padding: 8px 10px; border-radius: 8px; color: #424242; margin-bottom: 10px; }
+  .info-line { background: #E3F2FD; padding: 8px 10px; border-radius: 8px; font-size: 12px; color: #1565C0; margin-bottom: 10px; }
+  .card-group { background: #fafafa; border: 1px solid #eeeeee; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+  .card-group .row { padding: 6px 0; border-bottom: 1px solid #eee; }
+  .card-group .row:last-child { border-bottom: none; }
+  .card-group .label { font-weight: 600; font-size: 11px; color: #616161; }
+  .card-group .val { font-size: 13px; margin-top: 2px; }
+  .row-buttons { display: flex; gap: 8px; margin-bottom: 12px; }
+  .btn { padding: 10px 14px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; flex: 1; }
+  .btn-orange { background: #FF9800; color: #fff; }
+  .btn-blue { background: #1976D2; color: #fff; }
+  .btn-outline { background: #fff; border: 1.5px solid #1976D2; color: #1976D2; }
+  .section-title { font-weight: 700; font-size: 13px; margin: 12px 0 6px; }
+  .input-field { border: 1px solid #bdbdbd; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; font-size: 13px; background: #fff; }
+  .input-hint { font-size: 10px; color: #757575; margin-top: 2px; }
+  .day-btns { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 8px; }
+  .day-btn { padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; background: #f5f5f5; color: #424242; border: 1px solid #e0e0e0; }
+  .day-btn.selected { background: #1976D2; color: #fff; }
+  .day-btn.compact { padding: 4px 6px; font-size: 10px; }
+  .empty-box { border: 2px dashed #e0e0e0; border-radius: 12px; padding: 24px 16px; text-align: center; color: #757575; margin-bottom: 12px; }
+  .empty-box .icon { font-size: 36px; margin-bottom: 8px; opacity: 0.5; }
+  .hint-banner { background: #FFF8E1; border: 1px solid #FFC107; border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #5d4037; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .hint-banner .icon { font-size: 18px; }
+  .expandable { padding: 8px 0; font-size: 12px; color: #616161; }
+  .photo-placeholder { width: 70px; height: 70px; background: #e0e0e0; border-radius: 8px; display: inline-block; margin-right: 6px; }
+  .note { font-size: 10px; color: #9e9e9e; margin-top: 8px; padding: 6px; background: #fafafa; border-radius: 4px; }
+
+  @media (max-width: 760px) { .comparison { flex-direction: column; align-items: center; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Kundendetail – Fehlende Bereiche (Vorher/Nachher)</h1>
+  <p>Ergänzung zu 2026-02-13_23-29.ux-kundendetail-vorher-nachher.html</p>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot before"></div> Vorher</div>
+  <div class="legend-item"><div class="legend-dot after"></div> Nachher</div>
+</div>
+
+<div class="intro">
+  Diese Datei zeigt die Bereiche, die in der Haupt-HTML fehlen: S1.1/S1.2 Card-Grouping, S1.5 Info-Zeile, S2.4 Hint-Texte, B1.2 Edit (Tab ausgegraut), B1.3 drei Buttons, T2.3 Uhrzeit/Tags sichtbar, T2.4 kompaktere Wochentage.
+</div>
+
+<!-- S1.1 + S1.2 + S1.5: Stammdaten Normal - Card + Info-Zeile -->
+<section>
+  <h2>1. Stammdaten Normal – Card-Grouping + Info-Zeile (S1.1, S1.2, S1.5)</h2>
+  <p>Vorher: Felder einzeln mit Spacern, keine Info zu Kundenart/Typ/Intervall. Nachher: Gruppierung in Card, kompakte Info-Zeile oben.</p>
+  <div class="comparison">
+    <div class="phone">
+      <div class="phone-label before">Vorher</div>
+      <div class="topbar"><div class="topbar-badge">G</div><span class="topbar-title">Abahn 1</span></div>
+      <div class="tabs"><div class="tab active">Stammdaten</div><div class="tab">Termine</div><div class="tab">Belege</div></div>
+      <div class="content">
+        <div class="row-buttons"><button class="btn btn-orange">Urlaub</button><button class="btn btn-blue">Bearbeiten</button></div>
+        <div class="content-label">Adresse:</div>
+        <div class="content-value">Am Bahnhof 78, 09477 Jöhstadt</div>
+        <div class="content-label">Telefon:</div>
+        <div class="content-value">Nicht gesetzt</div>
+        <div class="content-label">Notizen:</div>
+        <div class="content-value">Nicht gesetzt</div>
+        <div class="section-title">Fotos</div>
+        <span class="photo-placeholder"></span>
+        <div class="note">❌ Kein Grouping, viel Leerraum. Keine Info zu Kundenart/Intervall.</div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="phone-label after">Nachher</div>
+      <div class="topbar"><div class="topbar-badge">G</div><span class="topbar-title">Abahn 1</span></div>
+      <div class="tabs"><div class="tab active">Stammdaten</div><div class="tab">Termine</div><div class="tab">Belege</div></div>
+      <div class="content">
+        <div class="row-buttons"><button class="btn btn-orange">Urlaub</button><button class="btn btn-blue">Bearbeiten</button></div>
+        <div class="info-line">Gewerblich · Regelmäßig · 7-Tage-Intervall</div>
+        <div class="card-group">
+          <div class="row">
+            <div class="label">Adresse</div>
+            <div class="val">📍 Am Bahnhof 78, 09477 Jöhstadt ›</div>
+          </div>
+          <div class="row">
+            <div class="label">Telefon</div>
+            <div class="val">📞 Nicht gesetzt ›</div>
+          </div>
+          <div class="row">
+            <div class="label">Notizen</div>
+            <div class="val">Nicht gesetzt</div>
+          </div>
+        </div>
+        <div class="section-title">Fotos</div>
+        <span class="photo-placeholder"></span>
+        <div class="note">✓ Info-Zeile. Card-Grouping. Kompakter.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- S2.4: Stammdaten Edit - Klarere Hint-Texte -->
+<section>
+  <h2>2. Stammdaten Edit – Klarere Hint-Texte Name/Alias (S2.4)</h2>
+  <p>Vorher: "Name (Pflichtfeld)", "Alias". Nachher: Erklärungen für Firma vs. Kurzname.</p>
+  <div class="comparison">
+    <div class="phone">
+      <div class="phone-label before">Vorher</div>
+      <div class="topbar"><div class="topbar-badge">G</div><span class="topbar-title">Abahn 1</span><div class="topbar-actions" style="margin-left:auto"><span class="topbar-btn">Speichern</span></div></div>
+      <div class="tabs"><div class="tab active">Stammdaten</div><div class="tab">Termine</div><div class="tab">Belege</div></div>
+      <div class="content">
+        <div class="content-label">Name (Pflichtfeld)</div>
+        <div class="input-field">Eisenbahn-, Bau- & Betriebs-Gesellschaft</div>
+        <div class="content-label">Alias (Anzeigename in der App)</div>
+        <div class="input-field">Abahn 1</div>
+        <div class="note">❌ Unklar: Alias = Kurzname? Firma vs. Tour?</div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="phone-label after">Nachher</div>
+      <div class="topbar"><div class="topbar-badge">G</div><span class="topbar-title">Abahn 1</span><div class="topbar-actions" style="margin-left:auto"><span class="topbar-btn">Speichern</span></div></div>
+      <div class="tabs"><div class="tab active">Stammdaten</div><div class="tab">Termine</div><div class="tab">Belege</div></div>
+      <div class="content">
+        <div class="content-label">Voller Name (z.B. Firma) *</div>
+        <div class="input-field">Eisenbahn-, Bau- & Betriebs-Gesellschaft</div>
+        <div class="input-hint">Offizieller Firmen- oder Kundename</div>
+        <div class="content-label">Anzeigename (z.B. Kurz-Name für Tour)</div>
+        <div class="input-field">Abahn 1</div>
+        <div class="input-hint">Wird in der App und im Tourenplaner angezeigt</div>
+        <div class="note">✓ Klar getrennt: Firma vs. Kurzname für Tour.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- B1.3: Belege – 3 Buttons statt Dialog -->
+<section>
+  <h2>3. Belege – 3 Buttons statt Dialog (B1.3)</h2>
+  <p>Vorher: Ein Button „Neue Erfassung" öffnet Dialog. Nachher: 3 Buttons direkt sichtbar.</p>
+  <div class="comparison">
+    <div class="phone">
+      <div class="phone-label before">Vorher</div>
+      <div class="topbar"><div class="topbar-badge">G</div><span class="topbar-title">Abahn 1</span></div>
+      <div class="tabs"><div class="tab">Stammdaten</div><div class="tab">Termine</div><div class="tab active">Belege</div></div>
+      <div class="content">
+        <div style="display:flex;border:1px solid #e0e0e0;border-radius:10px;overflow:hidden;margin-bottom:12px">
+          <div style="flex:1;padding:10px;text-align:center;background:#E3F2FD;color:#1976D2;font-weight:600;font-size:12px">Offen</div>
+          <div style="flex:1;padding:10px;text-align:center;font-size:12px;color:#616161">Erledigt</div>
+        </div>
+        <div style="color:#757575;font-size:13px;padding:20px 0;text-align:center">Noch keine Erfassungen für diesen Kunden.</div>
+        <button class="btn btn-blue" style="width:100%">Neue Erfassung</button>
+        <div class="note">❌ Ein Button → Dialog mit 3 Optionen (mehrere Klicks).</div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="phone-label after">Nachher</div>
+      <div class="topbar"><div class="topbar-badge">G</div><span class="topbar-title">Abahn 1</span></div>
+      <div class="tabs"><div class="tab">Stammdaten</div><div class="tab">Termine</div><div class="tab active">Belege</div></div>
+      <div class="content">
+        <div style="display:flex;border:1px solid #e0e0e0;border-radius:10px;overflow:hidden;margin-bottom:12px">
+          <div style="flex:1;padding:10px;text-align:center;background:#E3F2FD;color:#1976D2;font-weight:600;font-size:12px">Offen</div>
+          <div style="flex:1;padding:10px;text-align:center;font-size:12px;color:#616161">Erledigt</div>
+        </div>
+        <div style="color:#757575;font-size:13px;padding:12px 0;text-align:center">Noch keine Erfassungen für diesen Kunden.</div>
+        <button class="btn btn-outline" style="width:100%;margin-bottom:8px">📷 Kamera/Foto erfassen</button>
+        <button class="btn btn-outline" style="width:100%;margin-bottom:8px">📋 Wäscheliste-Formular</button>
+        <button class="btn btn-outline" style="width:100%">✏️ Manuell erfassen</button>
+        <div class="note">✓ 3 Buttons direkt sichtbar. (Edit: Belege-Tab ausgegraut – B1.2)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- B1.2: Belege-Tab im Edit ausgegraut und nicht klickbar -->
+<section>
+  <h2>4. Belege im Edit-Modus – Tab ausgegraut, nicht klickbar (B1.2)</h2>
+  <p>Problem: TopBar zeigt "Speichern", Belege haben nichts zu speichern. Lösung: Belege-Tab im Bearbeitungsmodus ausgegraut und nicht klickbar.</p>
+  <div class="comparison">
+    <div class="phone">
+      <div class="phone-label before">Vorher (Edit aktiv)</div>
+      <div class="topbar"><div class="topbar-badge">G</div><span class="topbar-title">Abahn 1</span><div class="topbar-actions"><span class="topbar-btn">Speichern</span> ⋮</div></div>
+      <div class="tabs"><div class="tab">Stammdaten</div><div class="tab">Termine</div><div class="tab active">Belege</div></div>
+      <div class="content">
+        <div class="section-title">Belege</div>
+        <div style="display:flex;border:1px solid #e0e0e0;border-radius:10px;overflow:hidden;margin-bottom:12px">
+          <div style="flex:1;padding:10px;text-align:center;background:#E3F2FD;color:#1976D2;font-weight:600">Offen</div>
+          <div style="flex:1;padding:10px;text-align:center;color:#616161">Erledigt</div>
+        </div>
+        <div style="color:#757575;padding:16px 0;text-align:center;font-size:13px">Noch keine Erfassungen für diesen Kunden.</div>
+        <button class="btn btn-blue" style="width:100%">Neue Erfassung</button>
+        <div class="note">❌ Belege-Tab klickbar → Nutzer kann drauf, Speichern in TopBar irreführend.</div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="phone-label after">Nachher (Edit aktiv)</div>
+      <div class="topbar"><div class="topbar-badge">G</div><span class="topbar-title">Abahn 1</span><div class="topbar-actions"><span class="topbar-btn">Speichern</span> ⋮</div></div>
+      <div class="tabs">
+        <div class="tab active">Stammdaten</div>
+        <div class="tab">Termine</div>
+        <div class="tab" style="color:#bdbdbd;opacity:0.6;pointer-events:none;cursor:not-allowed">Belege</div>
+      </div>
+      <div class="content">
+        <div class="section-title">Stammdaten (Edit)</div>
+        <div class="input-field">Name, Adresse, …</div>
+        <div class="note">✓ Belege-Tab ausgegraut und nicht klickbar. Nutzer bleibt auf Stammdaten/Termine. Klar: Belege werden hier nicht bearbeitet.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- T2.3 + T2.4: Termine Edit - Uhrzeit/Tags sichtbar, kompaktere Wochentage -->
+<section>
+  <h2>5. Termine Edit – Uhrzeit/Tags sichtbar, kompaktere Wochentage (T2.3, T2.4)</h2>
+  <p>Vorher: Uhrzeit und Tags in "Weitere Angaben" versteckt. Wochentag-Buttons groß. Nachher: Uhrzeit/Tags sichtbar, kleinere Chips.</p>
+  <div class="comparison">
+    <div class="phone">
+      <div class="phone-label before">Vorher</div>
+      <div class="topbar"><div class="topbar-badge">G</div><span class="topbar-title">Abahn 1</span><div class="topbar-actions"><span class="topbar-btn">Speichern</span></div></div>
+      <div class="tabs"><div class="tab">Stammdaten</div><div class="tab active">Termine & Tour</div><div class="tab">Belege</div></div>
+      <div class="content">
+        <div class="content-label">Standard-Abholungstag (A)</div>
+        <div class="day-btns">
+          <span class="day-btn selected">Mo</span><span class="day-btn">Di</span><span class="day-btn">Mi</span><span class="day-btn">Do</span><span class="day-btn">Fr</span><span class="day-btn">Sa</span><span class="day-btn">So</span>
+        </div>
+        <div class="content-label">Standard-Auslieferungstag (L)</div>
+        <div class="day-btns">
+          <span class="day-btn">Mo</span><span class="day-btn selected">Di</span><span class="day-btn">Mi</span><span class="day-btn">Do</span><span class="day-btn">Fr</span><span class="day-btn">Sa</span><span class="day-btn">So</span>
+        </div>
+        <div class="expandable">▸ Weitere Angaben (Uhrzeit, Tags, Tour-Plan versteckt)</div>
+        <div class="note">❌ Uhrzeit/Tags in Weitere Angaben. Große Buttons (~120px pro Zeile).</div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="phone-label after">Nachher</div>
+      <div class="topbar"><div class="topbar-badge">G</div><span class="topbar-title">Abahn 1</span><div class="topbar-actions"><span class="topbar-btn">Speichern</span></div></div>
+      <div class="tabs"><div class="tab">Stammdaten</div><div class="tab active">Termine & Tour</div><div class="tab">Belege</div></div>
+      <div class="content">
+        <div class="content-label">Standard-Abholungstag (A)</div>
+        <div class="day-btns">
+          <span class="day-btn compact selected">Mo</span><span class="day-btn compact">Di</span><span class="day-btn compact">Mi</span><span class="day-btn compact">Do</span><span class="day-btn compact">Fr</span><span class="day-btn compact">Sa</span><span class="day-btn compact">So</span>
+        </div>
+        <div class="content-label">Standard-Auslieferungstag (L)</div>
+        <div class="day-btns">
+          <span class="day-btn compact">Mo</span><span class="day-btn compact selected">Di</span><span class="day-btn compact">Mi</span><span class="day-btn compact">Do</span><span class="day-btn compact">Fr</span><span class="day-btn compact">Sa</span><span class="day-btn compact">So</span>
+        </div>
+        <div class="content-label">Standard-Uhrzeit (optional)</div>
+        <div class="input-field" style="margin-bottom:8px">09:00</div>
+        <div class="content-label">Tags</div>
+        <div class="input-field" style="min-height:40px">z.B. Eingang links</div>
+        <div class="expandable">▸ Weitere Angaben (Kundennummer, Tour-Plan)</div>
+        <div class="note">✓ Uhrzeit + Tags sichtbar. Kleinere Wochentag-Chips. Weniger Platz.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer style="text-align:center;padding:20px;color:#757575;font-size:12px">
+  Fehlende Bereiche · UX-Plan 2026-02-13 · Ergänzung zur Haupt-Vorher-Nachher-Datei
+</footer>
+
+</body>
+</html>

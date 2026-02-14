@@ -22,6 +22,7 @@ import com.example.we2026_5.ui.customermanager.CustomerManagerViewModel
 import com.example.we2026_5.Customer
 import com.example.we2026_5.customermanager.CustomerExportHelper
 import com.example.we2026_5.ui.theme.AppTheme
+import com.example.we2026_5.util.AppNavigation
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -51,8 +52,7 @@ class CustomerManagerActivity : AppCompatActivity() {
             val nextIndex = editedIndex + 1
             if (nextIndex < ids.size) {
                 lastDetailIndex = nextIndex
-                val nextIntent: Intent = Intent(this@CustomerManagerActivity, CustomerDetailActivity::class.java).apply {
-                    putExtra("CUSTOMER_ID", ids[nextIndex])
+                val nextIntent = AppNavigation.toCustomerDetail(this@CustomerManagerActivity, ids[nextIndex]).apply {
                     NextCustomerHelper.putNextCustomerExtras(this, ids, nextIndex)
                 }
                 window.decorView.post { launchDetail(nextIntent) }
@@ -118,14 +118,13 @@ class CustomerManagerActivity : AppCompatActivity() {
                 pressedHeaderButton = pressedHeaderButton,
                 onBulkSelectClick = { pressedHeaderButton = "Auswählen"; viewModel.setBulkMode(true) },
                 onExportClick = { pressedHeaderButton = "Exportieren"; exportHelper.showExportDialog() },
-                onNewCustomerClick = { pressedHeaderButton = "NeuerKunde"; startActivity(Intent(this@CustomerManagerActivity, AddCustomerActivity::class.java)) },
+                onNewCustomerClick = { pressedHeaderButton = "NeuerKunde"; startActivity(AppNavigation.toAddCustomer(this@CustomerManagerActivity)) },
                 onCustomerClick = { customer ->
                     val ids = displayCustomers.map { it.id }
                     val index = ids.indexOf(customer.id).coerceAtLeast(0)
                     lastDetailCustomerIds = ids
                     lastDetailIndex = index
-                    val intent = Intent(this@CustomerManagerActivity, CustomerDetailActivity::class.java).apply {
-                        putExtra("CUSTOMER_ID", customer.id)
+                    val intent = AppNavigation.toCustomerDetail(this@CustomerManagerActivity, customer.id).apply {
                         NextCustomerHelper.putNextCustomerExtras(this, ids, index)
                     }
                     launchDetail(intent)

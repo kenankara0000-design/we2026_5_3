@@ -21,6 +21,10 @@ import com.example.we2026_5.wasch.Article
 import com.example.we2026_5.wasch.ErfassungPosition
 import com.example.we2026_5.wasch.WaschErfassung
 import com.example.we2026_5.wasch.WaeschelisteFormularState
+import com.example.we2026_5.util.AppErrorMapper
+import com.example.we2026_5.util.CustomerSearchHelper
+import com.example.we2026_5.util.ErfassungFlowCollector
+import com.example.we2026_5.util.PriceLoadingUtils
 import com.example.we2026_5.util.TerminBerechnungUtils
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -190,9 +194,7 @@ class WaschenErfassungViewModel(
             if (customersSearchCache == null) {
                 customersSearchCache = customerRepository.getAllCustomers().sortedBy { it.displayName }
             }
-            val filtered = customersSearchCache!!.filter {
-                it.displayName.contains(query, ignoreCase = true)
-            }
+            val filtered = CustomerSearchHelper.filterByDisplayName(customersSearchCache!!, query)
             val now = _uiState.value
             if (now is WaschenErfassungUiState.KundeSuchen && now.customerSearchQuery == query) {
                 _uiState.value = now.copy(customers = filtered)
@@ -204,16 +206,15 @@ class WaschenErfassungViewModel(
         erfassungenJob?.cancel()
         erfassungenErledigtJob?.cancel()
         _uiState.value = WaschenErfassungUiState.ErfassungenListe(customer, showErledigtTab = false)
-        erfassungenJob = viewModelScope.launch {
-            erfassungRepository.getErfassungenByCustomerFlow(customer.id).collect {
-                _erfassungenList.value = it
-            }
-        }
-        erfassungenErledigtJob = viewModelScope.launch {
-            erfassungRepository.getErfassungenByCustomerFlowErledigt(customer.id).collect {
-                _erfassungenListErledigt.value = it
-            }
-        }
+        val (jobOffen, jobErledigt) = ErfassungFlowCollector.startCollecting(
+            viewModelScope,
+            customer.id,
+            erfassungRepository,
+            { _erfassungenList.value = it },
+            { _erfassungenListErledigt.value = it }
+        )
+        erfassungenJob = jobOffen
+        erfassungenErledigtJob = jobErledigt
     }
 
     fun backToKundeSuchen() {
@@ -236,12 +237,12 @@ class WaschenErfassungViewModel(
                 erfassungen = beleg.erfassungen
             )
             viewModelScope.launch {
-                val customer = s.customer
                 val map = withContext(Dispatchers.IO) {
-                    val kunden = kundenPreiseRepository.getKundenPreiseForCustomer(customer.id)
-                        .associate { it.articleId to it.priceGross }
-                    if (kunden.isNotEmpty()) kunden
-                    else listenPrivatKundenpreiseRepository.getListenPrivatKundenpreise().associate { it.articleId to it.priceGross }
+                    PriceLoadingUtils.loadBruttoPreiseForCustomer(
+                        s.customer.id,
+                        kundenPreiseRepository,
+                        listenPrivatKundenpreiseRepository
+                    )
                 }
                 _belegPreiseGross.value = map
             }
@@ -650,7 +651,7 @@ class WaschenErfassungViewModel(
                 if (current is WaschenErfassungUiState.Formular) {
                     _uiState.value = current.copy(
                         isScanning = false,
-                        errorMessage = context.getString(R.string.waescheliste_ocr_fehler_bild)
+                        errorMessage = AppErrorMapper.toMessage(context, e)
                     )
                 }
             }

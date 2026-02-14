@@ -9,6 +9,7 @@ import com.example.we2026_5.ui.common.getWochentagFullResIds
 import com.example.we2026_5.R
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
+import com.example.we2026_5.util.AppErrorMapper
 import com.example.we2026_5.util.CustomerTermFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -98,7 +99,7 @@ class KundenListenViewModel(
                 _state.value = if (sortedListen.isEmpty()) KundenListenState.Empty
                 else KundenListenState.Success(sortedListen, kundenProListe)
             } catch (e: Exception) {
-                _state.value = KundenListenState.Error(R.string.error_load_lists, e.message)
+                _state.value = KundenListenState.Error(R.string.error_load_lists, AppErrorMapper.toLoadMessage(context, e))
             }
         }
     }

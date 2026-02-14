@@ -1,6 +1,5 @@
 package com.example.we2026_5
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -13,9 +12,9 @@ class PreiseActivity : AppCompatActivity() {
         setContent {
             AppTheme {
             PreiseScreen(
-                onKundenpreise = { startActivity(Intent(this, KundenpreiseActivity::class.java)) },
-                onListenPrivatKundenpreise = { startActivity(Intent(this, ListenPrivatKundenpreiseActivity::class.java)) },
-                onArtikelVerwalten = { startActivity(Intent(this, ArtikelVerwaltungActivity::class.java)) },
+                onKundenpreise = { startActivity(com.example.we2026_5.util.AppNavigation.toKundenpreise(this)) },
+                onListenPrivatKundenpreise = { startActivity(com.example.we2026_5.util.AppNavigation.toListenPrivatKundenpreise(this)) },
+                onArtikelVerwalten = { startActivity(com.example.we2026_5.util.AppNavigation.toArtikelVerwaltung(this)) },
                 onBack = { finish() }
             )
             }

@@ -171,11 +171,11 @@ class TourPlannerActivity : AppCompatActivity() {
                     val addresses = allCustomersFromItems
                         .map { it.adresse }
                         .filter { it.isNotBlank() }
-                    val intent = Intent(this@TourPlannerActivity, MapViewActivity::class.java)
                     if (addresses.isNotEmpty()) {
-                        intent.putStringArrayListExtra(MapViewActivity.EXTRA_ADDRESSES, ArrayList(addresses))
+                        startActivity(com.example.we2026_5.util.AppNavigation.toMapViewWithAddresses(this@TourPlannerActivity, ArrayList(addresses)))
+                    } else {
+                        startActivity(com.example.we2026_5.util.AppNavigation.toMapView(this@TourPlannerActivity))
                     }
-                    startActivity(intent)
                     pressedHeaderButton = null
                 },
                 onRefresh = { coordinator.reloadCurrentView() },
@@ -268,7 +268,7 @@ class TourPlannerActivity : AppCompatActivity() {
                     overviewRegelNamen = null
                     erledigtSheetVisible = false
                     if (customerId.isNotBlank()) {
-                        startActivity(Intent(this@TourPlannerActivity, CustomerDetailActivity::class.java).apply { putExtra("CUSTOMER_ID", customerId) })
+                        startActivity(com.example.we2026_5.util.AppNavigation.toCustomerDetail(this@TourPlannerActivity, customerId))
                     }
                 },
                 onNavigate = { customer ->

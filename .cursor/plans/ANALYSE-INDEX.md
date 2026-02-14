@@ -27,6 +27,7 @@
 | Datei | Inhalt |
 |-------|--------|
 | `2026-02-13_21-47.massnahmenplan.md` | **Konsolidierter Maßnahmenplan** (73 Aufgaben, 8 Phasen, ~12–18 Wochen) – AKTUELL |
+| `2026-02-13_23-29.ux-kundendetail-analyse.plan.md` | **UX Kundendetail** (3 Tabs) – Phase A ✅ erledigt, Phase B wartet auf Freigabe |
 | `2026-02-13_21-02.plan.md` | Original-Tiefenanalyse (Befunde Abschn. 1–16, alter Maßnahmenplan Abschn. 17 → ersetzt durch konsolidierten Plan) |
 | `2026-02-13_21-44.plan.md` | Alter Maßnahmenplan 04–09 → ersetzt durch konsolidierten Plan |
 | `2026-02-13_21-02.design-vorher-nachher.html` | Visueller Vorher/Nachher-Vergleich (Design, HTML-Mockups) |
@@ -100,13 +101,26 @@ Alle Analysen wurden am 2026-02-13 durchgeführt. Screen-für-Screen-Ansatz: all
 ### Aktueller Stand
 
 - **Alle 9 Analysen erledigt** → Befunde stehen in den jeweiligen Dateien
-- **Maßnahmenplan existiert** für Analysen 01–03 → Umsetzung erst nach Freigabe
-- **Maßnahmenplan für 04–09** → Kann jetzt erstellt werden, alle Befunde liegen vor
+- **Konsolidierter Maßnahmenplan** (`2026-02-13_21-47.massnahmenplan.md`): Phasen 1–5 ✅, **Phase 6** als Nächstes
+- **UX Kundendetail** (`2026-02-13_23-29.ux-kundendetail-analyse.plan.md`): Phase A ✅, Phase B nachrangig
+
+### Plan-Priorität (wichtig)
+
+**Nur ein Plan pro Session.** Massnahmenplan hat Vorrang. Erst Phase 6 (Navigation + LiveData-Migration) des Massnahmenplans, dann UX Kundendetail Phase B. Sonst wird die App durch parallele Änderungen durcheinandergebracht.
 
 ### Nächster Schritt
 
-→ **Konsolidierter Maßnahmenplan liegt vor** (`2026-02-13_21-47.massnahmenplan.md`). 73 Aufgaben, 8 Phasen. Umsetzung erst nach Freigabe.
+→ **Massnahmenplan Phase 6:** 6.01 ✅ erledigt. Als Nächstes: **6.02** LiveData → StateFlow in AddCustomerViewModel. Siehe `2026-02-13_21-47.massnahmenplan.md`.
 
 ---
 
-*Letzte Aktualisierung: 2026-02-13*
+---
+
+### Für neue Session
+
+1. **Einstieg:** Diese Datei (`ANALYSE-INDEX.md`) lesen.
+2. **Plan:** `2026-02-13_21-47.massnahmenplan.md` öffnen → Abschnitt **Session-Handoff** (oben).
+3. **Nächster Schritt:** Phase 6 (Navigation + LiveData-Migration). Zuerst 6.01 (Intents → AppNavigation), dann 6.02–6.06 (LiveData → StateFlow in den genannten ViewModels).
+4. **Regel:** Nur ein Plan pro Session; keine parallele Arbeit an UX Kundendetail Phase B.
+
+*Letzte Aktualisierung: 2026-02-14*

@@ -51,7 +51,7 @@ class AddCustomerActivity : AppCompatActivity() {
                                 getString(R.string.toast_customer_created_hint),
                                 Toast.LENGTH_LONG
                             ).show()
-                            startActivity(Intent(this@AddCustomerActivity, CustomerManagerActivity::class.java).apply {
+                            startActivity(com.example.we2026_5.util.AppNavigation.toCustomerManager(this@AddCustomerActivity).apply {
                                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                             })
                             finish()

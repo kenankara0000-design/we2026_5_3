@@ -6,16 +6,20 @@
 
 2. **Aktueller Stand:**
    - **Alle 9 Analysen abgeschlossen** (Design, Code, Kompatibilität, UX/Layout, User-Flow, Informationsarchitektur, Offline, Fehlerbehandlung, Performance).
-   - **Konsolidierter Maßnahmenplan** liegt vor: `2026-02-13_21-47.massnahmenplan.md` (73 Aufgaben, 8 Phasen, ~12–18 Wochen).
+   - **Konsolidierter Maßnahmenplan** liegt vor: `2026-02-13_21-47.massnahmenplan.md` (73 Aufgaben, 8 Phasen). Phasen 1–4 ✅, Phase 5 als Nächstes.
+   - **UX Kundendetail** (`2026-02-13_23-29.ux-kundendetail-analyse.plan.md`): Phase A ✅, Phase B nachrangig.
    - **Keine Umsetzung ohne ausdrückliche Freigabe.**
 
-3. **Dateien im `.cursor/plans/`-Ordner:**
+3. **Plan-Priorität (wichtig):** Nur **ein** Plan pro Session bearbeiten. **Massnahmenplan hat Vorrang** über UX Kundendetail. Erst Massnahmenplan Phase 5, dann UX Kundendetail Phase B. Parallele Arbeit an beiden Plänen würde die App durcheinanderbringen.
+
+4. **Dateien im `.cursor/plans/`-Ordner:**
    - `ANALYSE-INDEX.md` → Einstiegspunkt (Status, Top-Befunde, Reihenfolge)
    - `analyse-01` bis `analyse-09` → Befunde pro Thema
-   - `2026-02-13_21-47.massnahmenplan.md` → **Aktueller** konsolidierter Maßnahmenplan
+   - `2026-02-13_21-47.massnahmenplan.md` → **Aktueller** konsolidierter Maßnahmenplan (Höhere Prio)
+   - `2026-02-13_23-29.ux-kundendetail-analyse.plan.md` → UX Kundendetail (Nachrangig)
    - `2026-02-13_21-02.plan.md` → Original-Tiefenanalyse (Befunde Abschn. 1–16; Maßnahmenteil Abschn. 17 ersetzt)
    - `2026-02-13_21-44.plan.md` → Alter Einzelplan 04–09 (ersetzt)
 
-4. **Wenn der Nutzer „Phase 1 starten" o.ä. sagt:** Lies zuerst den Maßnahmenplan (`2026-02-13_21-47.massnahmenplan.md`), dann die betroffenen Analyse-Dateien, dann erst umsetzen.
+5. **Wenn der Nutzer „Phase 1 starten" o.ä. sagt:** Lies zuerst den Maßnahmenplan (`2026-02-13_21-47.massnahmenplan.md`), dann die betroffenen Analyse-Dateien, dann erst umsetzen.
 
 Diese Regel gilt immer.

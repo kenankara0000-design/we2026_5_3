@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import com.example.we2026_5.Customer
@@ -54,7 +56,6 @@ fun CustomerDetailStammdatenTab(
     onEdit: () -> Unit,
     onAdresseClick: () -> Unit,
     onTelefonClick: () -> Unit,
-    onErfassungClick: () -> Unit,
     onTakePhoto: () -> Unit,
     onPhotoClick: (String) -> Unit,
     onDeletePhoto: ((String) -> Unit)? = null,
@@ -118,16 +119,27 @@ fun CustomerDetailStammdatenTab(
                     append(plzStadt)
                 }
             }.trim()
-            Text(
-                text = fullAddress.ifEmpty { stringResource(R.string.label_not_set) },
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(AppColors.LightGray)
                     .padding(12.dp)
                     .clickable(onClick = onAdresseClick),
-                color = if (fullAddress.isNotEmpty()) textPrimary else textSecondary,
-                fontSize = DetailUiConstants.BodySp
-            )
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Text(
+                    text = fullAddress.ifEmpty { stringResource(R.string.label_not_set) },
+                    color = if (fullAddress.isNotEmpty()) textPrimary else textSecondary,
+                    fontSize = DetailUiConstants.BodySp,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = stringResource(R.string.content_desc_navigation),
+                    tint = textSecondary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
             Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
             Text(
                 stringResource(R.string.label_phone_label),
@@ -135,16 +147,27 @@ fun CustomerDetailStammdatenTab(
                 fontWeight = FontWeight.Bold,
                 color = textPrimary
             )
-            Text(
-                text = customer.telefon.ifEmpty { stringResource(R.string.label_not_set) },
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(AppColors.LightGray)
                     .padding(12.dp)
                     .clickable(onClick = onTelefonClick),
-                color = if (customer.telefon.isNotEmpty()) textPrimary else textSecondary,
-                fontSize = DetailUiConstants.BodySp
-            )
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Text(
+                    text = customer.telefon.ifEmpty { stringResource(R.string.label_not_set) },
+                    color = if (customer.telefon.isNotEmpty()) textPrimary else textSecondary,
+                    fontSize = DetailUiConstants.BodySp,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = Icons.Default.Phone,
+                    contentDescription = stringResource(R.string.label_phone_label),
+                    tint = textSecondary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
             Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
             Text(
                 stringResource(R.string.label_notes_label),
@@ -166,32 +189,6 @@ fun CustomerDetailStammdatenTab(
                 showTermineTourSection = false,
                 kundennummerReadOnly = true
             )
-            Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
-            Text(
-                stringResource(R.string.label_urlaub),
-                fontSize = DetailUiConstants.FieldLabelSp,
-                fontWeight = FontWeight.Bold,
-                color = textPrimary
-            )
-            Button(
-                onClick = onUrlaub,
-                modifier = Modifier.fillMaxWidth(),
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = colorResource(R.color.button_urlaub)
-                )
-            ) {
-                Text(stringResource(R.string.label_urlaub))
-            }
-            Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
-            Text(
-                stringResource(R.string.wasch_erfassungen),
-                fontSize = DetailUiConstants.FieldLabelSp,
-                fontWeight = FontWeight.Bold,
-                color = textPrimary
-            )
-            OutlinedButton(onClick = onErfassungClick, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.wasch_artikel_hinzufuegen))
-            }
             Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
             if (isUploading) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())

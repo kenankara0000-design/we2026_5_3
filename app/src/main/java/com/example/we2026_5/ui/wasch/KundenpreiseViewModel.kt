@@ -6,6 +6,7 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.data.repository.ArticleRepository
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenPreiseRepository
+import com.example.we2026_5.util.CustomerSearchHelper
 import com.example.we2026_5.wasch.KundenPreis
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,9 +63,7 @@ class KundenpreiseViewModel(
             if (customersSearchCache == null) {
                 customersSearchCache = customerRepository.getAllCustomers().sortedBy { it.displayName }
             }
-            val filtered = customersSearchCache!!.filter {
-                it.displayName.contains(query, ignoreCase = true)
-            }
+            val filtered = CustomerSearchHelper.filterByDisplayName(customersSearchCache!!, query)
             val now = _uiState.value
             if (now is KundenpreiseUiState.KundeSuchen && now.customerSearchQuery == query) {
                 _uiState.value = now.copy(customers = filtered)

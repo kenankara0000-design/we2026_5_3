@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T2.4 – Wochentag-Auswahl: Alternativen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; padding: 24px; }
+
+  h1 { font-size: 18px; color: #1565C0; margin-bottom: 8px; }
+  p { font-size: 13px; color: #616161; margin-bottom: 20px; }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 800px; }
+  @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+
+  .card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border: 1px solid #e8e8e8; }
+  .card-title { background: #f5f5f5; padding: 10px 14px; font-size: 13px; font-weight: 700; color: #424242; border-bottom: 1px solid #eee; }
+  .card-body { padding: 14px; font-size: 12px; }
+
+  .label { font-weight: 600; color: #616161; margin-bottom: 6px; font-size: 11px; }
+  .day-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .day-row:last-child { margin-bottom: 0; }
+  .day-btn { padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; background: #f5f5f5; color: #424242; border: 1.5px solid #e0e0e0; min-width: 38px; }
+  .day-btn.selected { background: #1976D2; color: #fff; border-color: #1976D2; }
+  .day-btn.weekend { color: #E53935; }
+
+  /* Kompakt */
+  .day-btn.compact { padding: 6px 10px; font-size: 11px; min-width: 32px; }
+
+  /* Dropdown */
+  .dropdown-wrap { margin-bottom: 12px; }
+  .dropdown { width: 100%; padding: 10px 12px; border: 1px solid #bdbdbd; border-radius: 8px; background: #fff; font-size: 13px; color: #212121; }
+  .dropdown::after { content: " ▼"; float: right; font-size: 10px; color: #757575; }
+
+  /* Inline A/L */
+  .inline-al { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .inline-al .tag { font-size: 10px; font-weight: 700; color: #757575; min-width: 20px; }
+  .inline-al .days { display: flex; gap: 4px; flex-wrap: wrap; }
+  .inline-al .day-btn { padding: 8px 12px; font-size: 12px; min-width: 34px; }
+
+  .note { font-size: 10px; color: #9e9e9e; margin-top: 10px; padding: 6px 8px; background: #fafafa; border-radius: 6px; }
+  .note strong { color: #616161; }
+</style>
+</head>
+<body>
+
+<h1>T2.4 – Wochentag-Auswahl: Alternativen</h1>
+<p>Problem: 2× 7 Buttons (Abholung + Auslieferung) ≈ 240px. Ziel: weniger Platz, gleiche Funktionalität.</p>
+
+<div class="grid">
+  <!-- 1. Ist-Zustand -->
+  <div class="card">
+    <div class="card-title">1. Ist-Zustand (aktuell)</div>
+    <div class="card-body">
+      <div class="label">Standard-Abholungstag (A)</div>
+      <div class="day-row">
+        <span class="day-btn selected">Mo</span>
+        <span class="day-btn">Di</span>
+        <span class="day-btn">Mi</span>
+        <span class="day-btn">Do</span>
+        <span class="day-btn">Fr</span>
+        <span class="day-btn weekend">Sa</span>
+        <span class="day-btn weekend">So</span>
+      </div>
+      <div class="label">Standard-Auslieferungstag (L)</div>
+      <div class="day-row">
+        <span class="day-btn">Mo</span>
+        <span class="day-btn selected">Di</span>
+        <span class="day-btn">Mi</span>
+        <span class="day-btn">Do</span>
+        <span class="day-btn">Fr</span>
+        <span class="day-btn weekend">Sa</span>
+        <span class="day-btn weekend">So</span>
+      </div>
+      <div class="note"><strong>≈ 240px.</strong> Klar, aber viel Platz.</div>
+    </div>
+  </div>
+
+  <!-- 2. Alternative A: Kompaktere Chips -->
+  <div class="card">
+    <div class="card-title">2. Alternative A: Kompaktere Chips</div>
+    <div class="card-body">
+      <div class="label">Standard-Abholungstag (A)</div>
+      <div class="day-row">
+        <span class="day-btn compact selected">Mo</span>
+        <span class="day-btn compact">Di</span>
+        <span class="day-btn compact">Mi</span>
+        <span class="day-btn compact">Do</span>
+        <span class="day-btn compact">Fr</span>
+        <span class="day-btn compact weekend">Sa</span>
+        <span class="day-btn compact weekend">So</span>
+      </div>
+      <div class="label">Standard-Auslieferungstag (L)</div>
+      <div class="day-row">
+        <span class="day-btn compact">Mo</span>
+        <span class="day-btn compact selected">Di</span>
+        <span class="day-btn compact">Mi</span>
+        <span class="day-btn compact">Do</span>
+        <span class="day-btn compact">Fr</span>
+        <span class="day-btn compact weekend">Sa</span>
+        <span class="day-btn compact weekend">So</span>
+      </div>
+      <div class="note"><strong>≈ 140px.</strong> Gleiches Layout, kleiner. Schnelle Umsetzung.</div>
+    </div>
+  </div>
+
+  <!-- 3. Alternative B: Dropdown -->
+  <div class="card">
+    <div class="card-title">3. Alternative B: Dropdown</div>
+    <div class="card-body">
+      <div class="label">Standard-Abholungstag (A)</div>
+      <div class="dropdown-wrap">
+        <div class="dropdown">Montag ▼</div>
+      </div>
+      <div class="label">Standard-Auslieferungstag (L)</div>
+      <div class="dropdown-wrap">
+        <div class="dropdown">Dienstag ▼</div>
+      </div>
+      <div class="note"><strong>≈ 100px.</strong> Sehr wenig Platz. Nachteil: Mehrfachauswahl (z.B. Mo + Mi) nicht möglich.</div>
+    </div>
+  </div>
+
+  <!-- 4. Alternative C: Inline A/L in einer Zeile (GEWÄHLT) -->
+  <div class="card" style="border: 2px solid #43A047;">
+    <div class="card-title" style="background: #E8F5E9; color: #2E7D32;">4. Alternative C: Inline A/L – GEWÄHLT ✓</div>
+    <div class="card-body">
+      <div class="label">Abholung / Auslieferung</div>
+      <div class="inline-al">
+        <span class="tag">A:</span>
+        <div class="days">
+          <span class="day-btn selected">Mo</span>
+          <span class="day-btn">Di</span>
+          <span class="day-btn">Mi</span>
+          <span class="day-btn">Do</span>
+          <span class="day-btn">Fr</span>
+          <span class="day-btn weekend">Sa</span>
+          <span class="day-btn weekend">So</span>
+        </div>
+      </div>
+      <div class="inline-al">
+        <span class="tag">L:</span>
+        <div class="days">
+          <span class="day-btn">Mo</span>
+          <span class="day-btn selected">Di</span>
+          <span class="day-btn">Mi</span>
+          <span class="day-btn">Do</span>
+          <span class="day-btn">Fr</span>
+          <span class="day-btn weekend">Sa</span>
+          <span class="day-btn weekend">So</span>
+        </div>
+      </div>
+      <div class="note"><strong>≈ 120px. GEWÄHLT.</strong> Übersichtlich, keine starke Verkleinerung – gut für große Finger. Dropdown = mehrere Klicks; zu kleine Felder = mehrfach tippen. Variante C bleibt gut bedienbar. Mehrfachauswahl möglich.</div>
+    </div>
+  </div>
+
+  <!-- 5. Alternative D: Segmented Button (nur ein Tag) -->
+  <div class="card" style="grid-column: 1 / -1;">
+    <div class="card-title">5. Alternative D: Nur Einzelauswahl (falls immer nur 1 Tag pro A/L)</div>
+    <div class="card-body">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:140px;">
+          <div class="label">Abholung (A)</div>
+          <div class="dropdown">Montag ▼</div>
+        </div>
+        <div style="flex:1;min-width:140px;">
+          <div class="label">Auslieferung (L)</div>
+          <div class="dropdown">Dienstag ▼</div>
+        </div>
+      </div>
+      <div class="note"><strong>≈ 80px.</strong> Wenn immer nur ein Wochentag pro A und L: 2 Dropdowns reichen. Keine Chips nötig.</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -65,7 +65,6 @@ fun CustomerDetailScreen(
     regelNameByRegelId: Map<String, String> = emptyMap(),
     onRegelClick: (String) -> Unit = {},
     onUrlaubStartActivity: (String) -> Unit = {},
-    onErfassungClick: () -> Unit = {},
     onAddMonthlyIntervall: ((CustomerIntervall) -> Unit)? = null,
     onAddAbholungTermin: (Customer) -> Unit = {},
     onAddAusnahmeTermin: (Customer) -> Unit = {},
@@ -108,6 +107,8 @@ fun CustomerDetailScreen(
                     name = customer.name,
                     alias = customer.alias,
                     adresse = customer.adresse,
+                    latitude = customer.latitude,
+                    longitude = customer.longitude,
                     stadt = customer.stadt,
                     plz = customer.plz,
                     telefon = customer.telefon,
@@ -294,7 +295,8 @@ fun CustomerDetailScreen(
                     )
                     Tab(
                         selected = selectedTabIndex == 2,
-                        onClick = { selectedTabIndex = 2 },
+                        onClick = { if (!isInEditMode) selectedTabIndex = 2 },
+                        enabled = !isInEditMode,
                         text = { Text(stringResource(R.string.tab_belege)) }
                     )
                 }
@@ -312,7 +314,6 @@ fun CustomerDetailScreen(
                         onEdit = onEdit,
                         onAdresseClick = onAdresseClick,
                         onTelefonClick = onTelefonClick,
-                        onErfassungClick = onErfassungClick,
                         onTakePhoto = onTakePhoto,
                         onPhotoClick = onPhotoClick,
                         onDeletePhoto = onDeletePhoto,

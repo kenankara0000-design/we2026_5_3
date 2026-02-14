@@ -52,13 +52,6 @@ fun CustomerDetailBelegeTab(
     val showNeueErfassungDialog = remember { mutableStateOf(false) }
     val belege = if (showErledigtTab) belegMonateErledigt else belegMonate
     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-        Text(
-            stringResource(R.string.tab_belege),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = textPrimary,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
             SegmentedButton(
                 selected = !showErledigtTab,

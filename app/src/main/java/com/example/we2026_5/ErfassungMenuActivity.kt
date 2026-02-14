@@ -1,6 +1,5 @@
 package com.example.we2026_5
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -18,10 +17,10 @@ class ErfassungMenuActivity : AppCompatActivity() {
             AppTheme {
             ErfassungMenuScreen(
                 onErfassungStarten = {
-                    startActivity(Intent(this, WaschenErfassungActivity::class.java))
+                    startActivity(com.example.we2026_5.util.AppNavigation.toWaschenErfassung(this))
                 },
                 onBelege = {
-                    startActivity(Intent(this, BelegeActivity::class.java))
+                    startActivity(com.example.we2026_5.util.AppNavigation.toBelege(this))
                 },
                 onBack = { finish() }
             )

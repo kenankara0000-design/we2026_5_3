@@ -1,10 +1,8 @@
 package com.example.we2026_5.tourplanner
 
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import com.example.we2026_5.Customer
-import com.example.we2026_5.CustomerDetailActivity
-import com.example.we2026_5.MapViewActivity
+import com.example.we2026_5.util.AppNavigation
 import com.example.we2026_5.R
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.adapter.CustomerDialogHelper
@@ -34,9 +32,7 @@ class TourPlannerCoordinator(
     val dialogHelper: TourPlannerDialogHelper = TourPlannerDialogHelper(
         activity = activity,
         onKundeAnzeigen = { customer ->
-            activity.startActivity(Intent(activity, CustomerDetailActivity::class.java).apply {
-                putExtra("CUSTOMER_ID", customer.id)
-            })
+            activity.startActivity(AppNavigation.toCustomerDetail(activity, customer.id))
         },
         onTerminLoeschen = { customer, terminDatum -> deleteTermin(customer, terminDatum) }
     )

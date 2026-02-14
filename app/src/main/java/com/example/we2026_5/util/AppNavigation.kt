@@ -99,10 +99,17 @@ object AppNavigation {
         return Intent(context, TourPlannerActivity::class.java)
     }
 
-    /** Kartenansicht (mit Tour-IDs) */
+    /** Kartenansicht (mit Tour-IDs; Legacy) */
     fun toMapView(context: Context, tourIds: ArrayList<String>? = null): Intent {
         return Intent(context, MapViewActivity::class.java).apply {
             tourIds?.let { putStringArrayListExtra("TOUR_IDS", it) }
+        }
+    }
+
+    /** Kartenansicht mit Adressen (z. B. vom Tourenplaner) */
+    fun toMapViewWithAddresses(context: Context, addresses: ArrayList<String>): Intent {
+        return Intent(context, MapViewActivity::class.java).apply {
+            putStringArrayListExtra(MapViewActivity.EXTRA_ADDRESSES, addresses)
         }
     }
 

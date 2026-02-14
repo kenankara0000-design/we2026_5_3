@@ -161,13 +161,21 @@ class TourPlannerViewModel(
 
     /** Nächster Tag. */
     fun nextDay() {
-        val current = selectedTimestampFlow.value ?: return
+        val current = selectedTimestampFlow.value
+        if (current == null) {
+            _error.value = "Kein Datum gewählt. Bitte zuerst Touren laden."
+            return
+        }
         selectedTimestampFlow.value = current + TimeUnit.DAYS.toMillis(1)
     }
 
     /** Vorheriger Tag. */
     fun prevDay() {
-        val current = selectedTimestampFlow.value ?: return
+        val current = selectedTimestampFlow.value
+        if (current == null) {
+            _error.value = "Kein Datum gewählt. Bitte zuerst Touren laden."
+            return
+        }
         selectedTimestampFlow.value = current - TimeUnit.DAYS.toMillis(1)
     }
 

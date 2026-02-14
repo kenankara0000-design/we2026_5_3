@@ -8,6 +8,9 @@ import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.ErfassungRepository
 import com.example.we2026_5.data.repository.KundenPreiseRepository
 import com.example.we2026_5.data.repository.ListenPrivatKundenpreiseRepository
+import com.example.we2026_5.util.CustomerSearchHelper
+import com.example.we2026_5.util.ErfassungFlowCollector
+import com.example.we2026_5.util.PriceLoadingUtils
 import com.example.we2026_5.wasch.WaschErfassung
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -143,7 +146,20 @@ class BelegeViewModel(
 
     fun setCustomerSearchQuery(query: String) {
         val s = _uiState.value
-        if (s is BelegeUiState.KundeSuchen) _uiState.value = s.copy(customerSearchQuery = query)
+        if (s !is BelegeUiState.KundeSuchen) return
+        if (query.isBlank()) {
+            _uiState.value = s.copy(customerSearchQuery = query, customers = emptyList())
+            return
+        }
+        _uiState.value = s.copy(customerSearchQuery = query)
+        viewModelScope.launch {
+            val all = _customersCache.value.values.sortedBy { it.displayName }
+            val filtered = CustomerSearchHelper.filterByDisplayName(all, query)
+            val now = _uiState.value
+            if (now is BelegeUiState.KundeSuchen && now.customerSearchQuery == query) {
+                _uiState.value = now.copy(customers = filtered)
+            }
+        }
     }
 
     /** Wechsel zur Kunde-suchen-Ansicht (Treffer nur bei Eingabe). */
@@ -169,16 +185,15 @@ class BelegeViewModel(
         erfassungenJob?.cancel()
         erfassungenErledigtJob?.cancel()
         _uiState.value = BelegeUiState.BelegListe(customer)
-        erfassungenJob = viewModelScope.launch {
-            erfassungRepository.getErfassungenByCustomerFlow(customer.id).collect {
-                _erfassungenList.value = it
-            }
-        }
-        erfassungenErledigtJob = viewModelScope.launch {
-            erfassungRepository.getErfassungenByCustomerFlowErledigt(customer.id).collect {
-                _erfassungenListErledigt.value = it
-            }
-        }
+        val (jobOffen, jobErledigt) = ErfassungFlowCollector.startCollecting(
+            viewModelScope,
+            customer.id,
+            erfassungRepository,
+            { _erfassungenList.value = it },
+            { _erfassungenListErledigt.value = it }
+        )
+        erfassungenJob = jobOffen
+        erfassungenErledigtJob = jobErledigt
     }
 
     fun openBelegDetail(beleg: BelegMonat) {
@@ -215,10 +230,11 @@ class BelegeViewModel(
     private fun loadBelegPreise(customer: Customer) {
         viewModelScope.launch {
             val map = withContext(Dispatchers.IO) {
-                val kunden = kundenPreiseRepository.getKundenPreiseForCustomer(customer.id)
-                    .associate { it.articleId to it.priceGross }
-                if (kunden.isNotEmpty()) kunden
-                else listenPrivatKundenpreiseRepository.getListenPrivatKundenpreise().associate { it.articleId to it.priceGross }
+                PriceLoadingUtils.loadBruttoPreiseForCustomer(
+                    customer.id,
+                    kundenPreiseRepository,
+                    listenPrivatKundenpreiseRepository
+                )
             }
             _belegPreiseGross.value = map
         }

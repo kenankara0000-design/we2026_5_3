@@ -132,4 +132,40 @@ abstract class BaseViewModel : ViewModel() {
             setLoading(false)
         }
     }
+
+    // =============================
+    // RESULT HANDLING
+    // =============================
+
+    /**
+     * Verarbeitet ein [Result]: bei Success optional [onSuccess], bei Error [showError].
+     * 
+     * @return Daten bei Success, sonst null.
+     * 
+     * Beispiel:
+     * ```
+     * when (val result = repository.updateCustomerResult(id, updates)) {
+     *     is Result.Success -> onComplete?.invoke(result.data)
+     *     is Result.Error -> showError(result.message)
+     *     is Result.Loading -> { }
+     * }
+     * ```
+     * Oder mit handleResult:
+     * ```
+     * handleResult(repository.updateCustomerResult(id, updates)) { success -> onComplete?.invoke(success) }
+     * ```
+     */
+    protected fun <T> handleResult(result: Result<T>, onSuccess: ((T) -> Unit)? = null): T? {
+        return when (result) {
+            is Result.Success -> {
+                onSuccess?.invoke(result.data)
+                result.data
+            }
+            is Result.Error -> {
+                showError(result.message)
+                null
+            }
+            is Result.Loading -> null
+        }
+    }
 }
