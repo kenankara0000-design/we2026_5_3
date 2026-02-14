@@ -1,10 +1,12 @@
 package com.example.we2026_5
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import com.example.we2026_5.ui.liste.ListeErstellenScreen
 import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.ui.liste.ListeErstellenState
@@ -21,7 +23,13 @@ class ListeErstellenActivity : AppCompatActivity() {
         viewModel
         setContent {
             AppTheme {
-                val state by viewModel.state.observeAsState(initial = ListeErstellenState())
+                val state by viewModel.state.collectAsState(initial = ListeErstellenState())
+                LaunchedEffect(state.errorMessage) {
+                    state.errorMessage?.let { msg ->
+                        Toast.makeText(this@ListeErstellenActivity, msg, Toast.LENGTH_SHORT).show()
+                        viewModel.clearErrorMessage()
+                    }
+                }
                 ListeErstellenScreen(
                     state = state,
                     onListNameChange = { viewModel.setListName(it) },

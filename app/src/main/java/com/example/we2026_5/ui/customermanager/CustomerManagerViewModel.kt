@@ -1,7 +1,6 @@
 package com.example.we2026_5.ui.customermanager
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
@@ -13,8 +12,10 @@ import com.example.we2026_5.util.Result
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -112,25 +113,24 @@ class CustomerManagerViewModel(
             }
         }
         queryFiltered.sortedBy { it.displayName.uppercase() }
-    }.asLiveData()
-    
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // Für Kompatibilität: customers ohne Filter
     val customers: LiveData<List<Customer>> = customersFlow.asLiveData()
-    
-    private val _isLoading = MutableLiveData<Boolean>(true)
-    val isLoading: LiveData<Boolean> = _isLoading
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     init {
-        // Loading-State beenden, sobald customersFlow erstmals emittiert
         viewModelScope.launch {
             customersFlow.collect {
-                if (_isLoading.value == true) _isLoading.postValue(false)
+                if (_isLoading.value) _isLoading.value = false
             }
         }
     }
-    
-    private val _error = MutableLiveData<String?>()
-    val error: LiveData<String?> = _error
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     // Bulk-Auswahl (für Compose-Screen)
     private val _isBulkMode = MutableStateFlow(false)

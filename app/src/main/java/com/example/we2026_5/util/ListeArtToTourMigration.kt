@@ -21,7 +21,11 @@ suspend fun runListeArtToTourMigration(context: Context, listeRepository: Kunden
         try {
             val ids = listeRepository.getListenIdsWithListeArtListe()
             ids.forEach { id ->
-                listeRepository.updateListe(id, mapOf("listeArt" to "Tour"))
+                when (val r = listeRepository.updateListe(id, mapOf("listeArt" to "Tour"))) {
+                    is Result.Success -> { }
+                    is Result.Error -> throw r.throwable ?: Exception(r.message)
+                    is Result.Loading -> { }
+                }
             }
             prefs.edit().putBoolean(KEY_DONE, true).apply()
         } catch (_: Exception) {

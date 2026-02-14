@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.we2026_5.Customer
 import com.example.we2026_5.FirebaseRetryHelper
 import com.example.we2026_5.KundenListe
+import com.example.we2026_5.util.Result
 import com.example.we2026_5.ListeIntervall
 import java.util.UUID
 import com.example.we2026_5.data.repository.CustomerRepository
@@ -159,32 +160,21 @@ class ListeBearbeitenCallbacks(
                     "intervalle" to intervalleMap
                 )
                 
-                val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                    operation = {
-                        listeRepository.updateListe(liste.id, updatedData)
-                    },
-                    context = activity,
-                    errorMessage = activity.getString(R.string.error_save_generic),
-                    maxRetries = 3
-                )
-                
-                if (success != null) {
-                    // Lokale Liste aktualisieren
-                    val updatedListe = liste.copy(
-                        name = name,
-                        listeArt = listeArt,
-                        intervalle = intervalle
-                    )
-                    
-                    Toast.makeText(activity, activity.getString(R.string.toast_liste_gespeichert), Toast.LENGTH_SHORT).show()
-                    onSuccess(updatedListe)
+                when (val r = withContext(Dispatchers.IO) { listeRepository.updateListe(liste.id, updatedData) }) {
+                    is Result.Success -> {
+                        val updatedListe = liste.copy(name = name, listeArt = listeArt, intervalle = intervalle)
+                        Toast.makeText(activity, activity.getString(R.string.toast_liste_gespeichert), Toast.LENGTH_SHORT).show()
+                        onSuccess(updatedListe)
+                    }
+                    is Result.Error -> Toast.makeText(activity, r.message, Toast.LENGTH_SHORT).show()
+                    is Result.Loading -> { }
                 }
             } catch (e: Exception) {
                 Toast.makeText(activity, activity.getString(R.string.error_message_generic, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }
-    
+
     /**
      * Zeigt Bestätigungsdialog zum Löschen
      */
@@ -209,16 +199,14 @@ class ListeBearbeitenCallbacks(
             )
             val newTermine = liste.listenTermine + KundenTermin(datum = aStart, typ = "A") + KundenTermin(datum = lStart, typ = "L")
             val updates = mapOf("listenTermine" to CustomerSnapshotParser.serializeKundenTermine(newTermine))
-            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                operation = { listeRepository.updateListe(liste.id, updates) },
-                context = activity,
-                errorMessage = activity.getString(R.string.error_save_generic),
-                maxRetries = 3
-            )
-            if (success != null) {
-                Toast.makeText(activity, activity.getString(R.string.toast_liste_gespeichert), Toast.LENGTH_SHORT).show()
-                onSuccess(liste.copy(listenTermine = newTermine))
-                syncTermineVonListeToKunden(liste.id, newTermine)
+            when (val r = withContext(Dispatchers.IO) { listeRepository.updateListe(liste.id, updates) }) {
+                is Result.Success -> {
+                    Toast.makeText(activity, activity.getString(R.string.toast_liste_gespeichert), Toast.LENGTH_SHORT).show()
+                    onSuccess(liste.copy(listenTermine = newTermine))
+                    syncTermineVonListeToKunden(liste.id, newTermine)
+                }
+                is Result.Error -> Toast.makeText(activity, r.message, Toast.LENGTH_SHORT).show()
+                is Result.Loading -> { }
             }
         }
     }
@@ -233,16 +221,14 @@ class ListeBearbeitenCallbacks(
             val startOfDay = com.example.we2026_5.util.TerminBerechnungUtils.getStartOfDay(datum)
             val newTermine = liste.listenTermine + KundenTermin(datum = startOfDay, typ = typ)
             val updates = mapOf("listenTermine" to CustomerSnapshotParser.serializeKundenTermine(newTermine))
-            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                operation = { listeRepository.updateListe(liste.id, updates) },
-                context = activity,
-                errorMessage = activity.getString(R.string.error_save_generic),
-                maxRetries = 3
-            )
-            if (success != null) {
-                Toast.makeText(activity, activity.getString(R.string.toast_liste_gespeichert), Toast.LENGTH_SHORT).show()
-                onSuccess(liste.copy(listenTermine = newTermine))
-                syncTermineVonListeToKunden(liste.id, newTermine)
+            when (val r = withContext(Dispatchers.IO) { listeRepository.updateListe(liste.id, updates) }) {
+                is Result.Success -> {
+                    Toast.makeText(activity, activity.getString(R.string.toast_liste_gespeichert), Toast.LENGTH_SHORT).show()
+                    onSuccess(liste.copy(listenTermine = newTermine))
+                    syncTermineVonListeToKunden(liste.id, newTermine)
+                }
+                is Result.Error -> Toast.makeText(activity, r.message, Toast.LENGTH_SHORT).show()
+                is Result.Loading -> { }
             }
         }
     }
@@ -325,16 +311,14 @@ class ListeBearbeitenCallbacks(
             val toRemoveSet = toRemove.toSet()
             val newTermine = liste.listenTermine.filter { t -> !toRemoveSet.any { it.datum == t.datum && it.typ == t.typ } }
             val updates = mapOf("listenTermine" to CustomerSnapshotParser.serializeKundenTermine(newTermine))
-            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                operation = { listeRepository.updateListe(liste.id, updates) },
-                context = activity,
-                errorMessage = activity.getString(R.string.error_delete_generic),
-                maxRetries = 3
-            )
-            if (success != null) {
-                Toast.makeText(activity, activity.getString(R.string.toast_liste_gespeichert), Toast.LENGTH_SHORT).show()
-                onSuccess(liste.copy(listenTermine = newTermine))
-                syncTermineVonListeToKunden(liste.id, newTermine)
+            when (val r = withContext(Dispatchers.IO) { listeRepository.updateListe(liste.id, updates) }) {
+                is Result.Success -> {
+                    Toast.makeText(activity, activity.getString(R.string.toast_liste_gespeichert), Toast.LENGTH_SHORT).show()
+                    onSuccess(liste.copy(listenTermine = newTermine))
+                    syncTermineVonListeToKunden(liste.id, newTermine)
+                }
+                is Result.Error -> Toast.makeText(activity, r.message, Toast.LENGTH_SHORT).show()
+                is Result.Loading -> { }
             }
         }
     }
@@ -344,20 +328,14 @@ class ListeBearbeitenCallbacks(
      */
     fun deleteListe(listeId: String, onSuccess: () -> Unit) {
         CoroutineScope(Dispatchers.Main).launch {
-            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                operation = {
-                    listeRepository.deleteListe(listeId)
-                },
-                context = activity,
-                errorMessage = activity.getString(R.string.error_delete_generic),
-                maxRetries = 3
-            )
-            
-            if (success != null) {
-                Toast.makeText(activity, activity.getString(R.string.toast_liste_geloescht), Toast.LENGTH_SHORT).show()
-                onSuccess()
+            when (val r = withContext(Dispatchers.IO) { listeRepository.deleteListe(listeId) }) {
+                is Result.Success -> {
+                    Toast.makeText(activity, activity.getString(R.string.toast_liste_geloescht), Toast.LENGTH_SHORT).show()
+                    onSuccess()
+                }
+                is Result.Error -> Toast.makeText(activity, r.message, Toast.LENGTH_SHORT).show()
+                is Result.Loading -> { }
             }
         }
     }
-    
 }

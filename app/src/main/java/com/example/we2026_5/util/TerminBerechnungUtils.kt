@@ -446,6 +446,15 @@ object TerminBerechnungUtils {
     }
     
     /**
+     * Eine Source of Truth: Kunde hat überfälligen Termin (nächstes Fälligkeitsdatum vor heute).
+     * Für Anzeige/Badge (Kundendetail, Statistiken). Bei Tour/Listen-Kontext: TourDataFilter.istKundeUeberfaellig nutzen.
+     */
+    fun istKundeUeberfaelligHeute(customer: Customer): Boolean {
+        val faellig = naechstesFaelligAmDatum(customer)
+        return faellig > 0 && faellig < getStartOfDay(System.currentTimeMillis())
+    }
+
+    /**
      * Nächstes fälliges Termin-Datum (A oder L) ab heute.
      * Berücksichtigt gelöschte Termine. Ersetzt Customer.getFaelligAm().
      */

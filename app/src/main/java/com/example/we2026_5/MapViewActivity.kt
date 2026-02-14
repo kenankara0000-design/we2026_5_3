@@ -8,7 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.collectAsState
 import com.example.we2026_5.ui.mapview.MapViewScreen
 import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.ui.mapview.MapViewState
@@ -34,7 +34,7 @@ class MapViewActivity : AppCompatActivity() {
         }
         setContent {
             AppTheme {
-                val state by viewModel.state.observeAsState(initial = MapViewState.Loading)
+                val state by viewModel.state.collectAsState(initial = MapViewState.Loading)
                 MapViewScreen(
                     state = state,
                     onBack = { finish() }

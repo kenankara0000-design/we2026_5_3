@@ -1,9 +1,10 @@
 package com.example.we2026_5.ui.statistics
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import com.example.we2026_5.Customer
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.util.AppErrorMapper
@@ -44,8 +45,8 @@ class StatisticsViewModel(
     private val repository: CustomerRepository
 ) : ViewModel() {
 
-    private val _state = MutableLiveData<StatisticsState>(StatisticsState(isLoading = true))
-    val state: LiveData<StatisticsState> = _state
+    private val _state = MutableStateFlow(StatisticsState(isLoading = true))
+    val state: StateFlow<StatisticsState> = _state.asStateFlow()
 
     init {
         loadStatistics()
@@ -57,7 +58,7 @@ class StatisticsViewModel(
                 _state.value = StatisticsState(isLoading = false, sleepMode = true)
                 return@launch
             }
-            _state.value = _state.value?.copy(isLoading = true, errorMessage = null) ?: StatisticsState(isLoading = true)
+            _state.value = _state.value.copy(isLoading = true, errorMessage = null)
             try {
                 // Nur Tour-Kunden für Statistik (Prio 1.1 PLAN_PERFORMANCE_OFFLINE – keine Doppelladung)
                 val result = withContext(Dispatchers.IO) {
@@ -66,7 +67,7 @@ class StatisticsViewModel(
                 }
                 _state.value = result.copy(isLoading = false)
             } catch (e: Exception) {
-                _state.value = (_state.value ?: StatisticsState()).copy(
+                _state.value = _state.value.copy(
                     isLoading = false,
                     errorMessage = AppErrorMapper.toLoadMessage(e)
                 )
@@ -118,8 +119,7 @@ class StatisticsViewModel(
 
         val overdueCount = activeCustomers.count { customer ->
             val isDone = customer.abholungErfolgt && customer.auslieferungErfolgt
-            val faelligAm = TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
-            !isDone && faelligAm < heuteStart
+            !isDone && TerminBerechnungUtils.istKundeUeberfaelligHeute(customer)
         }
 
         val doneTodayCount = activeCustomers.count { customer ->

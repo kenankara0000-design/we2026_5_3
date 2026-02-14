@@ -1,5 +1,7 @@
 package com.example.we2026_5.data.repository
 
+import com.example.we2026_5.util.FirebaseRetryHelper
+import com.example.we2026_5.util.Result
 import com.example.we2026_5.wasch.KundenPreis
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
@@ -8,7 +10,6 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withTimeout
 
 class KundenPreiseRepository(
     private val database: FirebaseDatabase
@@ -52,29 +53,33 @@ class KundenPreiseRepository(
         return KundenPreis(customerId = customerId, articleId = articleId, priceNet = priceNet, priceGross = priceGross)
     }
 
-    /** Einzelnen Kundenpreis speichern (für Import). */
-    suspend fun setKundenPreis(kundenPreis: KundenPreis): Boolean = try {
-        val ref = kundenPreiseRef.child(kundenPreis.customerId).child(kundenPreis.articleId)
-        withTimeout(2000) {
-            ref.setValue(mapOf(
-                "priceNet" to kundenPreis.priceNet,
-                "priceGross" to kundenPreis.priceGross
-            )).await()
+    /** Einzelnen Kundenpreis speichern (für Import). Nutzt FirebaseRetryHelper. */
+    suspend fun setKundenPreis(kundenPreis: KundenPreis): Boolean {
+        val value = mapOf("priceNet" to kundenPreis.priceNet, "priceGross" to kundenPreis.priceGross)
+        return when (val r = FirebaseRetryHelper.setValueWithRetry(
+            kundenPreiseRef.child(kundenPreis.customerId).child(kundenPreis.articleId), value)) {
+            is Result.Success -> true
+            is Result.Error -> {
+                android.util.Log.e("KundenPreiseRepository", "setKundenPreis failed", r.throwable)
+                false
+            }
+            is Result.Loading -> false
         }
-        true
-    } catch (e: Exception) {
-        android.util.Log.e("KundenPreiseRepository", "setKundenPreis failed", e)
-        false
     }
 
-    /** Alle Kundenpreise eines Kunden ersetzen (z. B. nach SevDesk-Import). */
-    suspend fun setKundenPreiseForCustomer(customerId: String, preise: List<KundenPreis>): Boolean = try {
-        val ref = kundenPreiseRef.child(customerId)
+    /** Alle Kundenpreise eines Kunden ersetzen (z. B. nach SevDesk-Import). Nutzt FirebaseRetryHelper. */
+    suspend fun setKundenPreiseForCustomer(customerId: String, preise: List<KundenPreis>): Boolean {
         val map = preise.associate { it.articleId to mapOf("priceNet" to it.priceNet, "priceGross" to it.priceGross) }
-        withTimeout(5000) { ref.setValue(map).await() }
-        true
-    } catch (e: Exception) {
-        android.util.Log.e("KundenPreiseRepository", "setKundenPreiseForCustomer failed", e)
-        false
+        return when (val r = FirebaseRetryHelper.executeWithRetry(timeoutMs = 5000) {
+            kundenPreiseRef.child(customerId).setValue(map).await()
+            Unit
+        }) {
+            is Result.Success -> true
+            is Result.Error -> {
+                android.util.Log.e("KundenPreiseRepository", "setKundenPreiseForCustomer failed", r.throwable)
+                false
+            }
+            is Result.Loading -> false
+        }
     }
 }

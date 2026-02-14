@@ -1,5 +1,7 @@
 package com.example.we2026_5.data.repository
 
+import com.example.we2026_5.util.FirebaseRetryHelper
+import com.example.we2026_5.util.Result
 import com.example.we2026_5.wasch.Article
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
@@ -9,7 +11,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import java.util.concurrent.TimeUnit
 
 class ArticleRepository(
@@ -66,31 +67,32 @@ class ArticleRepository(
     }
 
     suspend fun saveArticle(article: Article): Boolean {
-        return try {
-            val key = if (article.id.isNotBlank()) article.id else articlesRef.push().key ?: return false
-            val toSave = article.copy(id = key)
-            withTimeout(2000) { articlesRef.child(key).setValue(mapOf(
-                "name" to toSave.name,
-                "preis" to toSave.preis,
-                "einheit" to (toSave.einheit),
-                "sevDeskId" to (toSave.sevDeskId ?: "")
-            )).await() }
-            invalidateArticlesCache()
-            true
-        } catch (e: Exception) {
-            android.util.Log.e("ArticleRepository", "Save article failed", e)
-            false
+        val key = if (article.id.isNotBlank()) article.id else articlesRef.push().key ?: return false
+        val toSave = article.copy(id = key)
+        val value = mapOf(
+            "name" to toSave.name,
+            "preis" to toSave.preis,
+            "einheit" to toSave.einheit,
+            "sevDeskId" to (toSave.sevDeskId ?: "")
+        )
+        return when (val r = FirebaseRetryHelper.setValueWithRetry(articlesRef.child(key), value)) {
+            is Result.Success -> { invalidateArticlesCache(); true }
+            is Result.Error -> {
+                android.util.Log.e("ArticleRepository", "Save article failed", r.throwable)
+                false
+            }
+            is Result.Loading -> false
         }
     }
 
     suspend fun deleteArticle(articleId: String): Boolean {
-        return try {
-            withTimeout(2000) { articlesRef.child(articleId).removeValue().await() }
-            invalidateArticlesCache()
-            true
-        } catch (e: Exception) {
-            android.util.Log.e("ArticleRepository", "Delete article failed", e)
-            false
+        return when (val r = FirebaseRetryHelper.removeValueWithRetry(articlesRef.child(articleId))) {
+            is Result.Success -> { invalidateArticlesCache(); true }
+            is Result.Error -> {
+                android.util.Log.e("ArticleRepository", "Delete article failed", r.throwable)
+                false
+            }
+            is Result.Loading -> false
         }
     }
 

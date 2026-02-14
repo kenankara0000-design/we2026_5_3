@@ -7,6 +7,7 @@ import androidx.appcompat.app.AlertDialog
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
 import androidx.compose.runtime.mutableStateOf
@@ -84,8 +85,8 @@ class TourPlannerActivity : AppCompatActivity() {
             val erledigtCount by viewModel.erledigtCount.observeAsState(initial = 0)
             val erledigtSheetContent by viewModel.erledigtSheetContent.observeAsState(initial = null)
             val selectedTimestamp by viewModel.selectedTimestamp.observeAsState(initial = null)
-            val isLoading by viewModel.isLoading.observeAsState(initial = false)
-            val errorMessage by viewModel.error.observeAsState(initial = null)
+            val isLoading by viewModel.isLoading.collectAsState(initial = false)
+            val errorMessage by viewModel.error.collectAsState(initial = null)
             val isOnline by networkMonitor.isOnline.observeAsState(initial = true)
             val isOffline = !isOnline
             val isAdmin = adminChecker.isAdmin()

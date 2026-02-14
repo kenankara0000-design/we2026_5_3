@@ -1,9 +1,10 @@
 package com.example.we2026_5.ui.mapview
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import com.example.we2026_5.R
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.data.repository.CustomerRepository
@@ -29,8 +30,8 @@ class MapViewViewModel(
     private val listeRepository: KundenListeRepository
 ) : ViewModel() {
 
-    private val _state = MutableLiveData<MapViewState>(MapViewState.Loading)
-    val state: LiveData<MapViewState> = _state
+    private val _state = MutableStateFlow<MapViewState>(MapViewState.Loading)
+    val state: StateFlow<MapViewState> = _state.asStateFlow()
 
     fun loadCustomersForMap() {
         viewModelScope.launch {

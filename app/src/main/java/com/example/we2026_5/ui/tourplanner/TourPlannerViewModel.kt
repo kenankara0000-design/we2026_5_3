@@ -1,7 +1,6 @@
 package com.example.we2026_5.ui.tourplanner
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
@@ -22,6 +21,7 @@ import com.example.we2026_5.util.AppTimeZone
 import com.example.we2026_5.util.TerminBerechnungUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -131,20 +131,20 @@ class TourPlannerViewModel(
         ErledigtSheetContent(r.erledigtDoneOhneListen, r.erledigtTourListen)
     }.asLiveData()
     
-    private val _isLoading = MutableLiveData<Boolean>(true)
-    val isLoading: LiveData<Boolean> = _isLoading
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     // Loading-State beenden, sobald processResultFlow erstmals emittiert (muss nach processResultFlow-Deklaration stehen)
     init {
         viewModelScope.launch {
             processResultFlow.collect {
-                if (_isLoading.value == true) _isLoading.postValue(false)
+                if (_isLoading.value) _isLoading.value = false
             }
         }
     }
-    
-    private val _error = MutableLiveData<String?>()
-    val error: LiveData<String?> = _error
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     fun loadTourData(selectedTimestamp: Long, isSectionExpanded: (SectionType) -> Boolean) {
         // #region agent log
@@ -167,6 +167,7 @@ class TourPlannerViewModel(
             return
         }
         selectedTimestampFlow.value = current + TimeUnit.DAYS.toMillis(1)
+        _error.value = null
     }
 
     /** Vorheriger Tag. */
@@ -177,6 +178,7 @@ class TourPlannerViewModel(
             return
         }
         selectedTimestampFlow.value = current - TimeUnit.DAYS.toMillis(1)
+        _error.value = null
     }
 
     /** Springt auf heute (Berlin). */

@@ -29,6 +29,8 @@ class TourDataProcessor(
 
     private val categorizer = TourDataCategorizer()
     private val filter = TourDataFilter(categorizer, termincache)
+    private val erledigtDetector = TourErledigtDetector(categorizer)
+    private val overdueDetector = TourOverdueDetector(categorizer)
     private val wochentagslistenProcessor = WochentagslistenProcessorImpl(categorizer, filter)
     private val tourListenProcessor = TourListenProcessorImpl(categorizer, filter, termincache, this::wurdeAmTagVollstaendigErledigt)
 
@@ -69,12 +71,12 @@ class TourDataProcessor(
                 val termine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
                 val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
                 
-                val warUeberfaelligUndErledigtAmDatum = warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
+                val warUeberfaelligUndErledigtAmDatum = erledigtDetector.warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
                 
                 // Prüfe ob am Tag erledigt wurde (wenn A und L am Tag: beide müssen erledigt sein)
                 val hatAbholungAmTag = termineAmTag.any { it.typ == TerminTyp.ABHOLUNG }
                 val hatAuslieferungAmTag = termineAmTag.any { it.typ == TerminTyp.AUSLIEFERUNG }
-                val wurdeAmTagErledigt = wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTag, hatAuslieferungAmTag, kwErledigtAmTag)
+                val wurdeAmTagErledigt = erledigtDetector.wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTag, hatAuslieferungAmTag, kwErledigtAmTag)
                 
                 // Erledigte Kunden anzeigen wenn: überfällig war und erledigt, oder am Tag vollständig erledigt (bei A+L: beide)
                 if (warUeberfaelligUndErledigtAmDatum || wurdeAmTagErledigt) {
@@ -111,8 +113,8 @@ class TourDataProcessor(
             val termineAmTag = alleTermine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
             val hatAbholungAmTag = termineAmTag.any { it.typ == TerminTyp.ABHOLUNG }
             val hatAuslieferungAmTag = termineAmTag.any { it.typ == TerminTyp.AUSLIEFERUNG }
-            val hatUeberfaelligeAbholung = hatUeberfaelligeAbholung(customer, alleTermine, viewDateStart, heuteStart)
-            val hatUeberfaelligeAuslieferung = hatUeberfaelligeAuslieferung(customer, alleTermine, viewDateStart, heuteStart)
+            val hatUeberfaelligeAbholung = overdueDetector.hatUeberfaelligeAbholung(customer, alleTermine, viewDateStart, heuteStart)
+            val hatUeberfaelligeAuslieferung = overdueDetector.hatUeberfaelligeAuslieferung(customer, alleTermine, viewDateStart, heuteStart)
             
             val kwErledigtAmTag = customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 &&
                 TerminBerechnungUtils.isTimestampInBerlinDay(customer.keinerWäscheErledigtAm, viewDateStart)
@@ -124,14 +126,14 @@ class TourDataProcessor(
             val beideRelevantAmTag = hatAbholungRelevantAmTag && hatAuslieferungRelevantAmTag
             
             // Prüfe ob Kunde erledigt ist UND am angezeigten Tag einen Termin hat/hatte
-            val sollAlsErledigtAnzeigen = if (isDone) {
-                val wurdeAmTagErledigt = wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungRelevantAmTag, hatAuslieferungRelevantAmTag, kwErledigtAmTag)
+                val sollAlsErledigtAnzeigen = if (isDone) {
+                    val wurdeAmTagErledigt = erledigtDetector.wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungRelevantAmTag, hatAuslieferungRelevantAmTag, kwErledigtAmTag)
                 
                 // Wenn heute BEIDE A und L relevant (z. B. überfälliges A + fälliges L): nur vollständig erledigt zählt
                 if (beideRelevantAmTag) {
                     wurdeAmTagErledigt
                 } else {
-                    warUeberfaelligUndErledigtAmDatum(customer, viewDateStart) || wurdeAmTagErledigt
+                    erledigtDetector.warUeberfaelligUndErledigtAmDatum(customer, viewDateStart) || wurdeAmTagErledigt
                 }
             } else {
                 false
@@ -186,7 +188,7 @@ class TourDataProcessor(
             val ueberfaelligeDaten = alleTermine.filter { termin ->
                 if (viewDateStart > heuteStart) return@filter false
                 val terminStart = categorizer.getStartOfDay(termin.datum)
-                val istUeberfaellig = istTerminUeberfaellig(terminStart, viewDateStart, heuteStart)
+                val istUeberfaellig = overdueDetector.istTerminUeberfaellig(terminStart, viewDateStart, heuteStart)
                 val istNichtErledigt = (termin.typ == TerminTyp.ABHOLUNG && !customer.abholungErfolgt) ||
                     (termin.typ == TerminTyp.AUSLIEFERUNG && !customer.auslieferungErfolgt)
                 istUeberfaellig && istNichtErledigt
@@ -197,7 +199,8 @@ class TourDataProcessor(
         // 1. Überfällige Kunden ganz oben – einzeln mit Überfällig-Design (kein Container)
         overdueOhneListen.forEach { c ->
             val liste = allListen.find { it.id == c.listeId }
-            val overdueSuffix = getOverdueAlSuffix(c, viewDateStart, heuteStart, allListen)
+            val alleTermineC = berechneAlleTermineFuerKunde(c, allListen, viewDateStart, heuteStart)
+            val overdueSuffix = overdueDetector.getOverdueAlSuffix(c, alleTermineC, viewDateStart, heuteStart)
             items.add(ListItem.CustomerItem(c, statusBadgeText = TourPlannerStatusBadge.compute(c, viewDateStart, heuteStart, null, liste), isOverdue = true, overdueAlSuffix = overdueSuffix))
         }
         // Ein Kunde pro Tag nur einmal: bereits in Überfällig angezeigte nicht nochmal in Listen/Normal
@@ -222,10 +225,10 @@ class TourDataProcessor(
                     val sollAlsErledigtAnzeigen = if (isDone) {
                         val termine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
                         val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
-                        val warUeberfaelligUndErledigt = isDone && warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
+                        val warUeberfaelligUndErledigt = isDone && erledigtDetector.warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
                         val hatAbholungAmTagListe = termineAmTag.any { it.typ == TerminTyp.ABHOLUNG }
                         val hatAuslieferungAmTagListe = termineAmTag.any { it.typ == TerminTyp.AUSLIEFERUNG }
-                        wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTagListe, hatAuslieferungAmTagListe, kwErledigtAmTagListe) || warUeberfaelligUndErledigt
+                        erledigtDetector.wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTagListe, hatAuslieferungAmTagListe, kwErledigtAmTagListe) || warUeberfaelligUndErledigt
                     } else false
                     if (sollAlsErledigtAnzeigen) erledigteKundenInListe.add(customer)
                 }
@@ -250,14 +253,15 @@ class TourDataProcessor(
                         val sollAlsErledigtAnzeigen = if (isDone) {
                             val termine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
                             val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
-                            val warUeberfaelligUndErledigtAmDatum = isDone && warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
+                            val warUeberfaelligUndErledigtAmDatum = isDone && erledigtDetector.warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
                             val hatAbholungAmTagListe = termineAmTag.any { it.typ == TerminTyp.ABHOLUNG }
                             val hatAuslieferungAmTagListe = termineAmTag.any { it.typ == TerminTyp.AUSLIEFERUNG }
-                            wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTagListe, hatAuslieferungAmTagListe, kwErledigtAmTagListe) || warUeberfaelligUndErledigtAmDatum
+                            erledigtDetector.wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTagListe, hatAuslieferungAmTagListe, kwErledigtAmTagListe) || warUeberfaelligUndErledigtAmDatum
                         } else false
                         if (sollAlsErledigtAnzeigen) erledigteKundenInListe.add(customer)
                         else {
-                            val suffix = if (istUeberfaellig) getOverdueAlSuffix(customer, viewDateStart, heuteStart, allListen) else null
+                            val alleTermineCust = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
+                            val suffix = if (istUeberfaellig) overdueDetector.getOverdueAlSuffix(customer, alleTermineCust, viewDateStart, heuteStart) else null
                             nichtErledigteKunden.add(Triple(customer, istUeberfaellig, suffix))
                         }
                     }
@@ -293,10 +297,10 @@ class TourDataProcessor(
                         val sollAlsErledigtAnzeigen = if (isDone) {
                             val termine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
                             val termineAmTag = termine.filter { categorizer.getStartOfDay(it.datum) == viewDateStart }
-                            val warUeberfaelligUndErledigtAmDatum = isDone && warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
+                            val warUeberfaelligUndErledigtAmDatum = isDone && erledigtDetector.warUeberfaelligUndErledigtAmDatum(customer, viewDateStart)
                             val hatAbholungAmTagListe = termineAmTag.any { it.typ == TerminTyp.ABHOLUNG }
                             val hatAuslieferungAmTagListe = termineAmTag.any { it.typ == TerminTyp.AUSLIEFERUNG }
-                            wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTagListe, hatAuslieferungAmTagListe, kwErledigtAmTagListe) || warUeberfaelligUndErledigtAmDatum
+                            erledigtDetector.wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTagListe, hatAuslieferungAmTagListe, kwErledigtAmTagListe) || warUeberfaelligUndErledigtAmDatum
                         } else false
                         if (sollAlsErledigtAnzeigen) erledigteKundenInListe.add(customer)
                         else nichtErledigteKunden.add(customer to istUeberfaellig)
@@ -329,11 +333,11 @@ class TourDataProcessor(
         }
         // Erledigt-Daten für Button „Erledigte (N)“ und Bottom-Sheet: Sortierung neueste zuerst (zuletzt erledigt oben)
         val doneOhneListen = doneGewerblich.sortedWith(
-            compareByDescending<Customer> { erledigtZeitstempelAmTag(it, viewDateStart) }.thenBy { it.name }
+            compareByDescending<Customer> { erledigtDetector.erledigtZeitstempelAmTag(it, viewDateStart) }.thenBy { it.name }
         )
         val tourListenPairs = tourListenErledigt.map { (liste, kunden) ->
             liste.name to kunden.sortedWith(
-                compareByDescending<Customer> { erledigtZeitstempelAmTag(it, viewDateStart) }.thenBy { it.name }
+                compareByDescending<Customer> { erledigtDetector.erledigtZeitstempelAmTag(it, viewDateStart) }.thenBy { it.name }
             )
         }
         val erledigtGesamtCount = doneOhneListen.size + tourListenPairs.sumOf { it.second.size }
@@ -362,43 +366,14 @@ class TourDataProcessor(
         }
     }
     
-    /**
-     * Prüft ob der Termin am angezeigten Tag vollständig erledigt wurde.
-     * Regel: Wenn am Tag sowohl A (Abholung) als auch L (Auslieferung) fällig sind,
-     * müssen BEIDE gedrückt sein, damit der Termin als erledigt zählt.
-     * Keine Wäsche (KW) am Tag zählt ebenfalls als erledigt.
-     */
+    /** Wrapper für TourListenProcessorImpl-Callback (delegiert an TourErledigtDetector). */
     private fun wurdeAmTagVollstaendigErledigt(
         customer: Customer,
         viewDateStart: Long,
         hatAbholungAmTag: Boolean,
         hatAuslieferungAmTag: Boolean,
         kwErledigtAmTag: Boolean
-    ): Boolean {
-        val abholungErledigtAmTag = customer.abholungErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.abholungErledigtAm, viewDateStart)
-        val auslieferungErledigtAmTag = customer.auslieferungErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.auslieferungErledigtAm, viewDateStart)
-        return when {
-            hatAbholungAmTag && hatAuslieferungAmTag -> abholungErledigtAmTag && auslieferungErledigtAmTag
-            hatAbholungAmTag -> abholungErledigtAmTag
-            hatAuslieferungAmTag -> auslieferungErledigtAmTag
-            else -> kwErledigtAmTag
-        }
-    }
-
-    /** Liefert den spätesten Erledigungszeitstempel am viewDateStart (für Sortierung „neueste zuerst“). */
-    private fun erledigtZeitstempelAmTag(customer: Customer, viewDateStart: Long): Long {
-        var maxTs = 0L
-        if (customer.abholungErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.abholungErledigtAm, viewDateStart)) {
-            maxTs = maxOf(maxTs, if (customer.abholungZeitstempel > 0) customer.abholungZeitstempel else customer.abholungErledigtAm)
-        }
-        if (customer.auslieferungErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.auslieferungErledigtAm, viewDateStart)) {
-            maxTs = maxOf(maxTs, if (customer.auslieferungZeitstempel > 0) customer.auslieferungZeitstempel else customer.auslieferungErledigtAm)
-        }
-        if (customer.keinerWäscheErfolgt && customer.keinerWäscheErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.keinerWäscheErledigtAm, viewDateStart)) {
-            maxTs = maxOf(maxTs, customer.keinerWäscheErledigtAm)
-        }
-        return maxTs
-    }
+    ): Boolean = erledigtDetector.wurdeAmTagVollstaendigErledigt(customer, viewDateStart, hatAbholungAmTag, hatAuslieferungAmTag, kwErledigtAmTag)
 
     // Öffentliche Methoden für Zugriff auf Helper-Klassen (für TourPlannerWeekDataProcessor) (für TourPlannerWeekDataProcessor)
     fun getStartOfDay(ts: Long): Long = categorizer.getStartOfDay(ts)
@@ -414,56 +389,6 @@ class TourDataProcessor(
         filter.isIntervallFaelligInZukunft(intervall, abDatum)
     fun getNaechstesListeDatum(liste: KundenListe, abDatum: Long = System.currentTimeMillis(), geloeschteTermine: List<Long> = emptyList()): Long? = 
         categorizer.getNaechstesListeDatum(liste, abDatum, geloeschteTermine)
-
-    private fun warUeberfaelligUndErledigtAmDatum(customer: Customer, viewDateStart: Long): Boolean {
-        val effectiveFaellig = TerminBerechnungUtils.effectiveFaelligAmDatum(customer)
-        if (effectiveFaellig <= 0) return false
-        val faelligAmStart = categorizer.getStartOfDay(effectiveFaellig)
-        val erledigtAmViewDay = (customer.abholungErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.abholungErledigtAm, viewDateStart)) ||
-            (customer.auslieferungErledigtAm > 0 && TerminBerechnungUtils.isTimestampInBerlinDay(customer.auslieferungErledigtAm, viewDateStart))
-        return viewDateStart == faelligAmStart || erledigtAmViewDay
-    }
-
-    private fun istTerminUeberfaellig(terminStart: Long, viewDateStart: Long, heuteStart: Long): Boolean {
-        val warVorHeuteFaellig = terminStart < heuteStart
-        val istAmFaelligkeitstag = terminStart == viewDateStart
-        val istHeute = viewDateStart == heuteStart
-        val istHeuteFaellig = terminStart == heuteStart
-        return (istAmFaelligkeitstag || (warVorHeuteFaellig && istHeute)) && !istHeuteFaellig
-    }
-
-    private fun hatUeberfaelligeAbholung(customer: Customer, alleTermine: List<TerminInfo>, viewDateStart: Long, heuteStart: Long): Boolean {
-        val nurHeuteOderVergangenheit = viewDateStart <= heuteStart
-        return nurHeuteOderVergangenheit && alleTermine.any { termin ->
-            val terminStart = categorizer.getStartOfDay(termin.datum)
-            val istAbholung = termin.typ == TerminTyp.ABHOLUNG
-            val istNichtErledigt = !customer.abholungErfolgt
-            istAbholung && istNichtErledigt && istTerminUeberfaellig(terminStart, viewDateStart, heuteStart)
-        }
-    }
-
-    private fun hatUeberfaelligeAuslieferung(customer: Customer, alleTermine: List<TerminInfo>, viewDateStart: Long, heuteStart: Long): Boolean {
-        val nurHeuteOderVergangenheit = viewDateStart <= heuteStart
-        return nurHeuteOderVergangenheit && alleTermine.any { termin ->
-            val terminStart = categorizer.getStartOfDay(termin.datum)
-            val istAuslieferung = termin.typ == TerminTyp.AUSLIEFERUNG
-            val istNichtErledigt = !customer.auslieferungErfolgt
-            istAuslieferung && istNichtErledigt && istTerminUeberfaellig(terminStart, viewDateStart, heuteStart)
-        }
-    }
-
-    /** Liefert für überfällige Kunden den Badge-Suffix „A“, „L“ oder „AL“; sonst null. */
-    private fun getOverdueAlSuffix(customer: Customer, viewDateStart: Long, heuteStart: Long, allListen: List<KundenListe>): String? {
-        val alleTermine = berechneAlleTermineFuerKunde(customer, allListen, viewDateStart, heuteStart)
-        val hatA = hatUeberfaelligeAbholung(customer, alleTermine, viewDateStart, heuteStart)
-        val hatL = hatUeberfaelligeAuslieferung(customer, alleTermine, viewDateStart, heuteStart)
-        return when {
-            hatA && hatL -> "AL"
-            hatA -> "A"
-            hatL -> "L"
-            else -> null
-        }
-    }
 
     /**
      * Liefert Termine aus Cache (365 Tage) gefiltert auf das benötigte Fenster.

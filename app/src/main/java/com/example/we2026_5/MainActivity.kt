@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -67,10 +68,10 @@ class MainActivity : AppCompatActivity() {
         window.decorView.setBackgroundColor(ContextCompat.getColor(this, R.color.background_light))
         setContent {
             AppTheme {
-                val tourCount by viewModel.tourFälligCount.observeAsState(0)
+                val tourCount by viewModel.tourFälligCount.collectAsState(initial = 0)
                 val isOnline by networkMonitor.isOnline.observeAsState(true)
                 val isSyncing by networkMonitor.isSyncing.observeAsState(false)
-                val slotVorschlaege by viewModel.slotVorschlaege.observeAsState(emptyList())
+                val slotVorschlaege by viewModel.slotVorschlaege.collectAsState(initial = emptyList())
                 val isAdmin = adminChecker.isAdmin()
 
                 MainScreen(

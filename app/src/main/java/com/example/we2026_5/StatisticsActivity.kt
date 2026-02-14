@@ -5,8 +5,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import com.example.we2026_5.ui.statistics.StatisticsScreen
 import com.example.we2026_5.ui.theme.AppTheme
 import com.example.we2026_5.ui.statistics.StatisticsViewModel
@@ -39,7 +39,7 @@ class StatisticsActivity : AppCompatActivity() {
 
         setContent {
             AppTheme {
-                val state by viewModel.state.observeAsState(initial = null)
+                val state by viewModel.state.collectAsState(initial = com.example.we2026_5.ui.statistics.StatisticsState())
                 StatisticsScreen(
                     state = state,
                     onBack = { finish() }

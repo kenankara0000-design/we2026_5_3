@@ -3,11 +3,12 @@ package com.example.we2026_5.ui.liste
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.example.we2026_5.FirebaseRetryHelper
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import com.example.we2026_5.KundenListe
+import com.example.we2026_5.util.Result
 import com.example.we2026_5.R
 import com.example.we2026_5.ui.common.getWochentagFullResIds
 import com.example.we2026_5.data.repository.KundenListeRepository
@@ -33,19 +34,19 @@ class ListeErstellenViewModel(
 
     private val appContext: Context = context.applicationContext
 
-    private val _state = MutableLiveData(ListeErstellenState())
-    val state: LiveData<ListeErstellenState> = _state
+    private val _state = MutableStateFlow(ListeErstellenState())
+    val state: StateFlow<ListeErstellenState> = _state.asStateFlow()
 
     fun setListName(name: String) {
-        _state.value = _state.value?.copy(listName = name, errorMessage = null) ?: ListeErstellenState(listName = name)
+        _state.value = _state.value.copy(listName = name, errorMessage = null)
     }
 
     fun setSelectedType(type: String) {
-        _state.value = _state.value?.copy(selectedType = type) ?: ListeErstellenState(selectedType = type)
+        _state.value = _state.value.copy(selectedType = type)
     }
 
     fun setWochentagListe(isWochentagListe: Boolean) {
-        val current = _state.value ?: ListeErstellenState()
+        val current = _state.value
         _state.value = current.copy(
             isWochentagListe = isWochentagListe,
             wochentag = if (isWochentagListe && current.wochentag < 0) 0 else current.wochentag
@@ -53,11 +54,15 @@ class ListeErstellenViewModel(
     }
 
     fun setWochentag(tag: Int) {
-        _state.value = _state.value?.copy(wochentag = tag) ?: ListeErstellenState(wochentag = tag)
+        _state.value = _state.value.copy(wochentag = tag)
+    }
+
+    fun clearErrorMessage() {
+        _state.value = _state.value.copy(errorMessage = null)
     }
 
     fun save() {
-        val current = _state.value ?: return
+        val current = _state.value
         val name = current.listName.trim()
         val wochentag = if (current.isWochentagListe) current.wochentag else -1
         val weekdayNames = getWochentagFullResIds().map { appContext.getString(it) }
@@ -85,22 +90,12 @@ class ListeErstellenViewModel(
                 erstelltAm = System.currentTimeMillis()
             )
 
-            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                operation = {
-                    withContext(Dispatchers.IO) {
-                        repository.saveListe(neueListe)
-                    }
-                },
-                context = appContext,
-                errorMessage = appContext.getString(R.string.error_save_generic),
-                maxRetries = 3
-            )
-
-            val updated = _state.value ?: current
-            if (success != null) {
-                _state.value = updated.copy(isSaving = false, success = true)
-            } else {
-                _state.value = updated.copy(isSaving = false)
+            val result = withContext(Dispatchers.IO) { repository.saveListe(neueListe) }
+            val updated = _state.value
+            when (result) {
+                is Result.Success -> _state.value = updated.copy(isSaving = false, success = true)
+                is Result.Error -> _state.value = updated.copy(isSaving = false, errorMessage = result.message)
+                is Result.Loading -> _state.value = updated.copy(isSaving = false)
             }
         }
     }

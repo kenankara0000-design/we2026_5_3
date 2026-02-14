@@ -1,6 +1,8 @@
 package com.example.we2026_5.data.repository
 
 import com.example.we2026_5.TourSlot
+import com.example.we2026_5.util.FirebaseRetryHelper
+import com.example.we2026_5.util.Result
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -10,7 +12,6 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withTimeout
 
 /**
  * Repository zur Verwaltung fester Tour-Tage (Wochentag -> Stadt + Zeitfenster).
@@ -38,25 +39,25 @@ class TourPlanRepository(
     }
 
     suspend fun saveTourSlot(slot: TourSlot): Boolean {
-        return try {
-            val task = tourRef.child(slot.id).setValue(slot)
-            withTimeout(2000) { task.await() }
-            true
-        } catch (e: Exception) {
-            android.util.Log.e("TourPlanRepository", "Error saving tour slot", e)
-            false
+        return when (val r = FirebaseRetryHelper.setValueWithRetry(tourRef.child(slot.id), slot)) {
+            is Result.Success -> true
+            is Result.Error -> {
+                android.util.Log.e("TourPlanRepository", "Error saving tour slot", r.throwable)
+                false
+            }
+            is Result.Loading -> false
         }
     }
 
     suspend fun deleteTourSlot(slotId: String): Boolean {
         if (slotId.isBlank()) return true
-        return try {
-            val task = tourRef.child(slotId).removeValue()
-            withTimeout(2000) { task.await() }
-            true
-        } catch (e: Exception) {
-            android.util.Log.e("TourPlanRepository", "Error deleting tour slot", e)
-            false
+        return when (val r = FirebaseRetryHelper.removeValueWithRetry(tourRef.child(slotId))) {
+            is Result.Success -> true
+            is Result.Error -> {
+                android.util.Log.e("TourPlanRepository", "Error deleting tour slot", r.throwable)
+                false
+            }
+            is Result.Loading -> false
         }
     }
 

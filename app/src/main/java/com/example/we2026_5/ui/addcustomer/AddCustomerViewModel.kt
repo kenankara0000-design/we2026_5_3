@@ -1,9 +1,10 @@
 package com.example.we2026_5.ui.addcustomer
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.we2026_5.KundenTyp
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 data class AddCustomerState(
     val name: String = "",
@@ -43,116 +44,116 @@ data class AddCustomerState(
 
 class AddCustomerViewModel : ViewModel() {
 
-    private val _state = MutableLiveData(AddCustomerState())
-    val state: LiveData<AddCustomerState> = _state
+    private val _state = MutableStateFlow(AddCustomerState())
+    val state: StateFlow<AddCustomerState> = _state.asStateFlow()
 
     fun setInitialName(name: String) {
-        if (_state.value?.name?.isEmpty() != false) {
-            _state.value = (_state.value ?: AddCustomerState()).copy(name = name)
+        if (_state.value.name.isEmpty()) {
+            _state.value = _state.value.copy(name = name)
         }
     }
 
     fun setName(name: String) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(name = name, errorMessage = null)
+        _state.value = (_state.value).copy(name = name, errorMessage = null)
     }
 
     fun setAdresse(adresse: String) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(adresse = adresse)
+        _state.value = (_state.value).copy(adresse = adresse)
     }
 
     fun setStadt(stadt: String) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(stadt = stadt)
+        _state.value = (_state.value).copy(stadt = stadt)
     }
 
     fun setPlz(plz: String) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(plz = plz)
+        _state.value = (_state.value).copy(plz = plz)
     }
 
     fun setTelefon(telefon: String) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(telefon = telefon)
+        _state.value = (_state.value).copy(telefon = telefon)
     }
 
     fun setNotizen(notizen: String) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(notizen = notizen)
+        _state.value = (_state.value).copy(notizen = notizen)
     }
 
     fun setKundenArt(kundenArt: String) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(kundenArt = kundenArt)
+        _state.value = (_state.value).copy(kundenArt = kundenArt)
     }
 
     fun setKundenTyp(typ: KundenTyp) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(kundenTyp = typ)
+        _state.value = (_state.value).copy(kundenTyp = typ)
     }
 
     fun setTageAzuL(tage: Int?) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(tageAzuL = tage?.coerceIn(0, 365))
+        _state.value = (_state.value).copy(tageAzuL = tage?.coerceIn(0, 365))
     }
 
     fun setIntervallTage(tage: Int?) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(intervallTage = tage?.coerceIn(1, 365))
+        _state.value = (_state.value).copy(intervallTage = tage?.coerceIn(1, 365))
     }
 
     fun setKundennummer(nummer: String) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(kundennummer = nummer)
+        _state.value = (_state.value).copy(kundennummer = nummer)
     }
 
     fun toggleAbholungWochentag(tag: Int) {
         val list = (_state.value?.abholungWochentage ?: emptyList()).toMutableList()
         if (tag in list) list.remove(tag) else list.add(tag)
         list.sort()
-        _state.value = (_state.value ?: AddCustomerState()).copy(abholungWochentage = list)
+        _state.value = (_state.value).copy(abholungWochentage = list)
     }
 
     fun toggleAuslieferungWochentag(tag: Int) {
         val list = (_state.value?.auslieferungWochentage ?: emptyList()).toMutableList()
         if (tag in list) list.remove(tag) else list.add(tag)
         list.sort()
-        _state.value = (_state.value ?: AddCustomerState()).copy(auslieferungWochentage = list)
+        _state.value = (_state.value).copy(auslieferungWochentage = list)
     }
 
     fun setDefaultUhrzeit(uhrzeit: String) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(defaultUhrzeit = uhrzeit)
+        _state.value = (_state.value).copy(defaultUhrzeit = uhrzeit)
     }
 
     fun setTagsInput(tags: String) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(tagsInput = tags)
+        _state.value = (_state.value).copy(tagsInput = tags)
     }
 
     fun setTourWochentag(tag: Int) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(tourWochentag = tag)
+        _state.value = (_state.value).copy(tourWochentag = tag)
     }
 
     fun setTourStadt(stadt: String) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(tourStadt = stadt)
+        _state.value = (_state.value).copy(tourStadt = stadt)
     }
 
     fun setTourZeitStart(start: String) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(tourZeitStart = start)
+        _state.value = (_state.value).copy(tourZeitStart = start)
     }
 
     fun setTourZeitEnde(ende: String) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(tourZeitEnde = ende)
+        _state.value = (_state.value).copy(tourZeitEnde = ende)
     }
 
     fun setOhneTour(ohneTour: Boolean) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(ohneTour = ohneTour)
+        _state.value = (_state.value).copy(ohneTour = ohneTour)
     }
 
     fun setSaving(isSaving: Boolean) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(isSaving = isSaving)
+        _state.value = (_state.value).copy(isSaving = isSaving)
     }
 
     fun setError(message: String?) {
-        _state.value = (_state.value ?: AddCustomerState()).copy(errorMessage = message, isSaving = false)
+        _state.value = (_state.value).copy(errorMessage = message, isSaving = false)
     }
 
     fun setSuccess() {
-        _state.value = (_state.value ?: AddCustomerState()).copy(success = true, isSaving = false)
+        _state.value = (_state.value).copy(success = true, isSaving = false)
     }
 
     /** Setzt nur die Formularfelder (für gemeinsame CustomerStammdatenForm). */
     fun setStateFromForm(newState: AddCustomerState) {
-        val current = _state.value ?: AddCustomerState()
+        val current = _state.value
         _state.value = newState.copy(
             isSaving = current.isSaving,
             errorMessage = current.errorMessage,

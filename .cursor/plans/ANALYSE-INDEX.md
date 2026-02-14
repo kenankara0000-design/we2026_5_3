@@ -101,7 +101,7 @@ Alle Analysen wurden am 2026-02-13 durchgeführt. Screen-für-Screen-Ansatz: all
 ### Aktueller Stand
 
 - **Alle 9 Analysen erledigt** → Befunde stehen in den jeweiligen Dateien
-- **Konsolidierter Maßnahmenplan** (`2026-02-13_21-47.massnahmenplan.md`): Phasen 1–5 ✅, **Phase 6** als Nächstes
+- **Konsolidierter Maßnahmenplan** (`2026-02-13_21-47.massnahmenplan.md`): Phasen 1–6 ✅, Phase 7 ✅ bis auf 7.04/7.05 (optional)
 - **UX Kundendetail** (`2026-02-13_23-29.ux-kundendetail-analyse.plan.md`): Phase A ✅, Phase B nachrangig
 
 ### Plan-Priorität (wichtig)
@@ -110,7 +110,7 @@ Alle Analysen wurden am 2026-02-13 durchgeführt. Screen-für-Screen-Ansatz: all
 
 ### Nächster Schritt
 
-→ **Massnahmenplan Phase 6:** 6.01 ✅ erledigt. Als Nächstes: **6.02** LiveData → StateFlow in AddCustomerViewModel. Siehe `2026-02-13_21-47.massnahmenplan.md`.
+→ **Massnahmenplan Phase 7.04** ✅, **8.01** ✅. Nächster: 7.05 (optional) oder Phase 8.02+. Siehe `2026-02-13_21-47.massnahmenplan.md`.
 
 ---
 
@@ -120,7 +120,7 @@ Alle Analysen wurden am 2026-02-13 durchgeführt. Screen-für-Screen-Ansatz: all
 
 1. **Einstieg:** Diese Datei (`ANALYSE-INDEX.md`) lesen.
 2. **Plan:** `2026-02-13_21-47.massnahmenplan.md` öffnen → Abschnitt **Session-Handoff** (oben).
-3. **Nächster Schritt:** Phase 6 (Navigation + LiveData-Migration). Zuerst 6.01 (Intents → AppNavigation), dann 6.02–6.06 (LiveData → StateFlow in den genannten ViewModels).
+3. **Nächster Schritt:** Phase 8.01 ✅ (Migrations-Analyse). Phase 7.04/7.05 (optional) oder Phase 8.02+.
 4. **Regel:** Nur ein Plan pro Session; keine parallele Arbeit an UX Kundendetail Phase B.
 
 *Letzte Aktualisierung: 2026-02-14*

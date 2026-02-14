@@ -1,6 +1,8 @@
 package com.example.we2026_5.data.repository
 
 import com.example.we2026_5.util.FirebaseConstants
+import com.example.we2026_5.util.FirebaseRetryHelper
+import com.example.we2026_5.util.Result
 import com.example.we2026_5.wasch.ListenPrivatKundenpreis
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
@@ -9,7 +11,6 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withTimeout
 
 /** Repository für Listen- und Privat-Kundenpreise (Listenkunden + Privat). */
 class ListenPrivatKundenpreiseRepository(
@@ -48,29 +49,26 @@ class ListenPrivatKundenpreiseRepository(
 
     suspend fun setListenPrivatKundenpreis(preis: ListenPrivatKundenpreis): Boolean {
         if (preis.articleId.isBlank()) return false
-        return try {
-            val childRef = ref.child(preis.articleId)
-            withTimeout(2000) {
-                childRef.setValue(mapOf(
-                    "priceNet" to preis.priceNet,
-                    "priceGross" to preis.priceGross
-                )).await()
+        val value = mapOf("priceNet" to preis.priceNet, "priceGross" to preis.priceGross)
+        return when (val r = FirebaseRetryHelper.setValueWithRetry(ref.child(preis.articleId), value)) {
+            is Result.Success -> true
+            is Result.Error -> {
+                android.util.Log.e("ListenPrivatKundenpreiseRepository", "setListenPrivatKundenpreis failed", r.throwable)
+                false
             }
-            true
-        } catch (e: Exception) {
-            android.util.Log.e("ListenPrivatKundenpreiseRepository", "setListenPrivatKundenpreis failed", e)
-            false
+            is Result.Loading -> false
         }
     }
 
     suspend fun removeListenPrivatKundenpreis(articleId: String): Boolean {
         if (articleId.isBlank()) return false
-        return try {
-            withTimeout(2000) { ref.child(articleId).removeValue().await() }
-            true
-        } catch (e: Exception) {
-            android.util.Log.e("ListenPrivatKundenpreiseRepository", "removeListenPrivatKundenpreis failed", e)
-            false
+        return when (val r = FirebaseRetryHelper.removeValueWithRetry(ref.child(articleId))) {
+            is Result.Success -> true
+            is Result.Error -> {
+                android.util.Log.e("ListenPrivatKundenpreiseRepository", "removeListenPrivatKundenpreis failed", r.throwable)
+                false
+            }
+            is Result.Loading -> false
         }
     }
 }

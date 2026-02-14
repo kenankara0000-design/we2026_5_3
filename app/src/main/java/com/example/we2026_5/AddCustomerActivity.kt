@@ -7,8 +7,8 @@ import androidx.activity.compose.setContent
 import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.lifecycleScope
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.ui.addcustomer.AddCustomerScreen
@@ -38,7 +38,7 @@ class AddCustomerActivity : AppCompatActivity() {
 
         setContent {
             AppTheme {
-                val state by viewModel.state.observeAsState(initial = AddCustomerState())
+                val state by viewModel.state.collectAsState(initial = AddCustomerState())
                 LaunchedEffect(Unit) {
                     if (initialName.isNotEmpty()) viewModel.setInitialName(initialName)
                 }

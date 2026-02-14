@@ -1,7 +1,5 @@
 package com.example.we2026_5.ui.main
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.we2026_5.CustomerStatus
@@ -14,6 +12,9 @@ import com.example.we2026_5.util.CustomerTermFilter
 import com.example.we2026_5.util.TerminRegelManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -30,12 +31,12 @@ class MainViewModel(
     private val dataProcessor: TourDataProcessor
 ) : ViewModel() {
 
-    private val _tourFälligCount = MutableLiveData<Int>(0)
+    private val _tourFälligCount = MutableStateFlow(0)
     /** Anzahl fälliger/überfälliger Termine für heute (für Tour-Button-Text). */
-    val tourFälligCount: LiveData<Int> = _tourFälligCount
+    val tourFälligCount: StateFlow<Int> = _tourFälligCount.asStateFlow()
 
-    private val _slotVorschlaege = MutableLiveData<List<TerminSlotVorschlag>>(emptyList())
-    val slotVorschlaege: LiveData<List<TerminSlotVorschlag>> = _slotVorschlaege
+    private val _slotVorschlaege = MutableStateFlow<List<TerminSlotVorschlag>>(emptyList())
+    val slotVorschlaege: StateFlow<List<TerminSlotVorschlag>> = _slotVorschlaege.asStateFlow()
 
     private var collectJob: Job? = null
 

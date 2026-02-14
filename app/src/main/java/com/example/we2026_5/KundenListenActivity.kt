@@ -71,15 +71,14 @@ class KundenListenActivity : AppCompatActivity() {
                     .setMessage(getString(R.string.dialog_delete_list_message, liste.name))
                     .setPositiveButton(getString(R.string.dialog_loeschen)) { _, _ ->
                         CoroutineScope(Dispatchers.Main).launch {
-                            val success = FirebaseRetryHelper.executeSuspendWithRetryAndToast(
-                                operation = { listeRepository.deleteListe(liste.id) },
-                                context = this@KundenListenActivity,
-                                errorMessage = getString(R.string.error_delete_generic),
-                                maxRetries = 3
-                            )
-                            if (success != null) {
-                                viewModel.loadListen()
-                                Toast.makeText(this@KundenListenActivity, getString(R.string.toast_liste_geloescht), Toast.LENGTH_SHORT).show()
+                            when (val r = listeRepository.deleteListe(liste.id)) {
+                                is com.example.we2026_5.util.Result.Success -> {
+                                    viewModel.loadListen()
+                                    Toast.makeText(this@KundenListenActivity, getString(R.string.toast_liste_geloescht), Toast.LENGTH_SHORT).show()
+                                }
+                                is com.example.we2026_5.util.Result.Error ->
+                                    Toast.makeText(this@KundenListenActivity, r.message, Toast.LENGTH_SHORT).show()
+                                is com.example.we2026_5.util.Result.Loading -> { }
                             }
                         }
                     }
