@@ -1,5 +1,6 @@
 package com.example.we2026_5.ui.detail
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,6 +14,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -129,7 +133,46 @@ fun CustomerDetailScreen(
         )
     }
     var overflowMenuExpanded by remember { mutableStateOf(false) }
+    var showUnsavedChangesDialog by remember { mutableStateOf(false) }
     val validationNameMissing = stringResource(R.string.validation_name_missing)
+
+    val initialFormStateFromCustomer = remember(customer?.id) {
+        customer?.let { c ->
+            val tageAzuL = c.tageAzuLOrDefault(7)
+            val intervallTage = c.intervallTageOrDefault(7)
+            AddCustomerState(
+                name = c.name,
+                alias = c.alias,
+                adresse = c.adresse,
+                latitude = c.latitude,
+                longitude = c.longitude,
+                stadt = c.stadt,
+                plz = c.plz,
+                telefon = c.telefon,
+                notizen = c.notizen,
+                kundenArt = c.kundenArt,
+                kundenTyp = c.kundenTyp,
+                tageAzuL = tageAzuL,
+                intervallTage = intervallTage,
+                kundennummer = c.kundennummer,
+                abholungWochentage = c.effectiveAbholungWochentage,
+                auslieferungWochentage = c.effectiveAuslieferungWochentage,
+                defaultUhrzeit = c.defaultUhrzeit,
+                tagsInput = c.tags.joinToString(", "),
+                tourStadt = c.tourSlot?.stadt ?: "",
+                tourZeitStart = c.tourSlot?.zeitfenster?.start ?: "",
+                tourZeitEnde = c.tourSlot?.zeitfenster?.ende ?: "",
+                ohneTour = c.ohneTour,
+                erstelltAm = c.erstelltAm
+            )
+        }
+    }
+    val hasUnsavedChanges = isInEditMode && customer != null && initialFormStateFromCustomer != null &&
+        (editFormState ?: formState) != initialFormStateFromCustomer
+
+    BackHandler(enabled = hasUnsavedChanges) {
+        showUnsavedChangesDialog = true
+    }
 
     val typeLabel = when (customer?.kundenArt) {
         "Privat" -> stringResource(R.string.label_type_privat)
@@ -244,7 +287,7 @@ fun CustomerDetailScreen(
                 isInEditMode = isInEditMode,
                 isOffline = isOffline,
                 statusOverdue = statusOverdue,
-                onBack = onBack,
+                onBack = { if (hasUnsavedChanges) showUnsavedChangesDialog = true else onBack() },
                 onDelete = onDelete,
                 overflowMenuExpanded = overflowMenuExpanded,
                 onOverflowMenuDismiss = { overflowMenuExpanded = false },
@@ -374,6 +417,27 @@ fun CustomerDetailScreen(
                 }
             }
         }
+    }
+
+    if (showUnsavedChangesDialog) {
+        AlertDialog(
+            onDismissRequest = { showUnsavedChangesDialog = false },
+            title = { Text(stringResource(R.string.dialog_unsaved_changes_title)) },
+            text = { Text(stringResource(R.string.dialog_unsaved_changes_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showUnsavedChangesDialog = false
+                    onBack()
+                }) {
+                    Text(stringResource(R.string.dialog_unsaved_changes_discard), color = colorResource(R.color.status_overdue))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUnsavedChangesDialog = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            }
+        )
     }
 }
 

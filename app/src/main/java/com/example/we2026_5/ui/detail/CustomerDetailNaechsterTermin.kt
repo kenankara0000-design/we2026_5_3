@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.we2026_5.ui.common.DetailUiConstants
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.R
@@ -31,7 +32,9 @@ fun CustomerDetailNaechsterTermin(
     textPrimary: androidx.compose.ui.graphics.Color,
     textSecondary: androidx.compose.ui.graphics.Color,
     canDeleteNextTermin: Boolean = false,
-    onDeleteNextTermin: () -> Unit = {}
+    onDeleteNextTermin: () -> Unit = {},
+    /** B2: Intervall-Info unter „Nächster Termin“, z. B. „Intervall: 7 Tage (Mo A → Di L)“ */
+    intervallInfo: String? = null
 ) {
     Text(
         stringResource(R.string.label_next_termin),
@@ -65,6 +68,15 @@ fun CustomerDetailNaechsterTermin(
                 )
             }
         }
+    }
+    if (intervallInfo != null) {
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = intervallInfo,
+            fontSize = 13.sp,
+            color = textSecondary,
+            modifier = Modifier.padding(start = 4.dp)
+        )
     }
     Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
 }

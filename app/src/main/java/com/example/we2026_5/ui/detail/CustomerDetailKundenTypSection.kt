@@ -20,6 +20,10 @@ import com.example.we2026_5.ui.common.DetailUiConstants
 import com.example.we2026_5.R
 import com.example.we2026_5.ui.theme.AppColors
 
+/**
+ * Option C (UX-Kundendetail B1): Gemeinsame Überschrift „Termin-Info“, darunter 3 Bereiche,
+ * jeder mit eigenem Wert – keine Labels pro Bereich. Kontext aus Reihenfolge.
+ */
 @Composable
 fun CustomerDetailKundenTypSection(
     typeLabel: String,
@@ -29,76 +33,45 @@ fun CustomerDetailKundenTypSection(
     textPrimary: androidx.compose.ui.graphics.Color
 ) {
     val wochen = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+    val typLabel = when (kundenTyp) {
+        KundenTyp.REGELMAESSIG -> stringResource(R.string.label_kunden_typ_regelmaessig)
+        KundenTyp.UNREGELMAESSIG -> stringResource(R.string.label_kunden_typ_unregelmaessig)
+        KundenTyp.AUF_ABRUF -> stringResource(R.string.label_kunden_typ_auf_abruf)
+    }
+    val aLTagText = if (kundenTyp == KundenTyp.AUF_ABRUF) "–"
+    else {
+        val a = effectiveAbholungWochentage.map { wochen[it] }.joinToString(", ").takeIf { it.isNotEmpty() }?.let { "$it A" } ?: ""
+        val l = effectiveAuslieferungWochentage.map { wochen[it] }.joinToString(", ").takeIf { it.isNotEmpty() }?.let { "$it L" } ?: ""
+        listOf(a, l).filter { it.isNotEmpty() }.joinToString(" / ")
+    }
+    Text(
+        stringResource(R.string.label_termin_info),
+        fontSize = DetailUiConstants.FieldLabelSp,
+        fontWeight = FontWeight.Bold,
+        color = textPrimary
+    )
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(DetailUiConstants.FieldSpacing)
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                stringResource(R.string.label_customer_type),
-                fontSize = DetailUiConstants.FieldLabelSp,
-                fontWeight = FontWeight.Bold,
-                color = textPrimary
-            )
-            Text(
-                text = typeLabel,
-                modifier = Modifier.fillMaxWidth().background(AppColors.LightGray).padding(12.dp),
-                color = textPrimary,
-                fontSize = DetailUiConstants.BodySp
-            )
-        }
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                stringResource(R.string.label_kunden_typ),
-                fontSize = DetailUiConstants.FieldLabelSp,
-                fontWeight = FontWeight.Bold,
-                color = textPrimary
-            )
-            Text(
-                text = when (kundenTyp) {
-                    KundenTyp.REGELMAESSIG -> stringResource(R.string.label_kunden_typ_regelmaessig)
-                    KundenTyp.UNREGELMAESSIG -> stringResource(R.string.label_kunden_typ_unregelmaessig)
-                    KundenTyp.AUF_ABRUF -> stringResource(R.string.label_kunden_typ_auf_abruf)
-                },
-                modifier = Modifier.fillMaxWidth().background(AppColors.LightGray).padding(12.dp),
-                color = textPrimary,
-                fontSize = DetailUiConstants.BodySp
-            )
-        }
-        if (kundenTyp != KundenTyp.AUF_ABRUF && (effectiveAbholungWochentage.isNotEmpty() || effectiveAuslieferungWochentage.isNotEmpty())) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    stringResource(R.string.label_abholung_auslieferung_tag),
-                    fontSize = DetailUiConstants.FieldLabelSp,
-                    fontWeight = FontWeight.Bold,
-                    color = textPrimary
-                )
-                val a = effectiveAbholungWochentage.map { wochen[it] }.joinToString(", ").takeIf { it.isNotEmpty() }?.let { "$it A" } ?: ""
-                val l = effectiveAuslieferungWochentage.map { wochen[it] }.joinToString(", ").takeIf { it.isNotEmpty() }?.let { "$it L" } ?: ""
-                Text(
-                    text = listOf(a, l).filter { it.isNotEmpty() }.joinToString(" / "),
-                    modifier = Modifier.fillMaxWidth().background(AppColors.LightGray).padding(12.dp),
-                    color = textPrimary,
-                    fontSize = DetailUiConstants.BodySp
-                )
-            }
-        }
-        if (kundenTyp == KundenTyp.AUF_ABRUF) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    stringResource(R.string.label_abholung_auslieferung_tag),
-                    fontSize = DetailUiConstants.FieldLabelSp,
-                    fontWeight = FontWeight.Bold,
-                    color = textPrimary
-                )
-                Text(
-                    text = "–",
-                    modifier = Modifier.fillMaxWidth().background(AppColors.LightGray).padding(12.dp),
-                    color = textPrimary,
-                    fontSize = DetailUiConstants.BodySp
-                )
-            }
-        }
+        Text(
+            text = typeLabel,
+            modifier = Modifier.weight(1f).background(AppColors.LightGray).padding(12.dp),
+            color = textPrimary,
+            fontSize = DetailUiConstants.BodySp
+        )
+        Text(
+            text = typLabel,
+            modifier = Modifier.weight(1f).background(AppColors.LightGray).padding(12.dp),
+            color = textPrimary,
+            fontSize = DetailUiConstants.BodySp
+        )
+        Text(
+            text = aLTagText,
+            modifier = Modifier.weight(1f).background(AppColors.LightGray).padding(12.dp),
+            color = textPrimary,
+            fontSize = DetailUiConstants.BodySp
+        )
     }
     Spacer(Modifier.height(DetailUiConstants.FieldSpacing))
 }

@@ -13,6 +13,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -27,7 +31,9 @@ import com.example.we2026_5.R
 import com.example.we2026_5.TerminRegelTyp
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
 import com.example.we2026_5.ui.common.DetailUiConstants
+import com.example.we2026_5.ui.detail.AlleTermineFilter
 import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.intervallTageOrDefault
 import com.example.we2026_5.util.tageAzuLOrDefault
 import java.util.concurrent.TimeUnit
 
@@ -96,21 +102,26 @@ fun CustomerDetailTermineTab(
                 else if (t.typ == "L") add(Pair(0L, d))
             }
         }
+    val intervallTage = customer.intervallTageOrDefault(7)
+    val intervallInfoStr = if (customer.kundenTyp != KundenTyp.AUF_ABRUF &&
+        (customer.effectiveAbholungWochentage.isNotEmpty() || customer.effectiveAuslieferungWochentage.isNotEmpty())
+    ) {
+        val wochen = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+        val aTag = customer.effectiveAbholungWochentage.firstOrNull()?.let { wochen[it] + " A" } ?: ""
+        val lTag = customer.effectiveAuslieferungWochentage.firstOrNull()?.let { wochen[it] + " L" } ?: ""
+        when {
+            aTag.isNotEmpty() && lTag.isNotEmpty() -> stringResource(R.string.label_intervall_info_format, intervallTage, aTag, lTag)
+            aTag.isNotEmpty() -> stringResource(R.string.label_intervall_info_format, intervallTage, aTag, "–")
+            else -> null
+        }
+    } else null
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         ) {
-            if (isInEditMode) {
-                CustomerDetailTermineTourForm(
-                    state = currentFormState,
-                    onUpdate = onUpdateFormState,
-                    onStartDatumClick = onStartDatumClick,
-                    kundennummerReadOnly = true
-                )
-                Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
-            }
             if (tourListenName != null) {
                 Text(
                     text = stringResource(R.string.label_gehoert_zu_tour_liste, tourListenName),
@@ -120,6 +131,7 @@ fun CustomerDetailTermineTab(
                 )
                 Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
             }
+            // B3: StatusSection im Edit-Modus VOR das Formular
             CustomerDetailStatusSection(
                 customer = customer,
                 canChangeStatus = isAdmin,
@@ -140,12 +152,22 @@ fun CustomerDetailTermineTab(
                 } else null
             )
             Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+            if (isInEditMode) {
+                CustomerDetailTermineTourForm(
+                    state = currentFormState,
+                    onUpdate = onUpdateFormState,
+                    onStartDatumClick = onStartDatumClick,
+                    kundennummerReadOnly = true
+                )
+                Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+            }
             CustomerDetailNaechsterTermin(
                 nextTerminMillis = nextTermin,
                 textPrimary = textPrimary,
                 textSecondary = textSecondary,
                 canDeleteNextTermin = canDeleteNextTermin,
-                onDeleteNextTermin = { if (nextTermin > 0) onDeleteNextTermin(nextTermin) }
+                onDeleteNextTermin = { if (nextTermin > 0) onDeleteNextTermin(nextTermin) },
+                intervallInfo = intervallInfoStr
             )
             if (!isInEditMode) {
                 CustomerDetailKundenTypSection(
@@ -157,30 +179,22 @@ fun CustomerDetailTermineTab(
                 )
             }
             Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
-            CustomerDetailAusnahmeTermineSection(
-                ausnahmeTermine = ausnahmeTermine,
-                textPrimary = textPrimary,
-                textSecondary = textSecondary,
-                canDeleteTermin = isInEditMode,
-                onDeleteAusnahmeTermin = onDeleteAusnahmeTermin
-            )
-            Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
-            CustomerDetailKundenTermineSection(
-                kundenTermine = kundenTermine,
-                textPrimary = textPrimary,
-                textSecondary = textSecondary,
-                canDeleteTermin = isInEditMode,
-                onAddAbholungTermin = onAddAbholungTermin,
-                onDeleteKundenTermin = onDeleteKundenTermin,
-                showAddButton = !useCentralNeuerTermin
-            )
-            Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
+            // B4: Eine Sektion „Alle Termine“ mit Typ-Filter statt drei getrennter Sektionen
+            var alleTermineFilter by remember { mutableStateOf(AlleTermineFilter.ALLE) }
             AlleTermineBlock(
                 pairs = terminePairs365,
                 angelegtePairs = angelegtePairs,
                 graueMoeglicheTermine = customer.kundenTyp == KundenTyp.UNREGELMAESSIG,
                 textPrimary = textPrimary,
-                textSecondary = textSecondary
+                textSecondary = textSecondary,
+                selectedFilter = alleTermineFilter,
+                onFilterSelected = { alleTermineFilter = it },
+                ausnahmeTermine = ausnahmeTermine,
+                kundenTermine = kundenTermine,
+                canDeleteTermin = isInEditMode,
+                onDeleteAusnahmeTermin = onDeleteAusnahmeTermin,
+                onDeleteKundenTermin = onDeleteKundenTermin,
+                onAddAbholungTermin = if (!useCentralNeuerTermin) onAddAbholungTermin else null
             )
             AddMonthlyIntervallSheet(
                 visible = showAddMonthlySheet,

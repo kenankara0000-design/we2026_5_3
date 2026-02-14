@@ -543,6 +543,15 @@
     <string name="label_show_customer">Kunde anzeigen</string>
     <string name="label_delete_termin">Termin aussetzen</string>
     <string name="label_intervall">Intervall</string>
+    <string name="label_termin_info">Termin-Info</string>
+    <string name="label_intervall_info_format">Intervall: %1$d Tage (%2$s → %3$s)</string>
+    <string name="label_filter_all_termine">Alle</string>
+    <string name="label_filter_regulaer">Regulär</string>
+    <string name="label_filter_ausnahme">Ausnahme</string>
+    <string name="label_filter_kunden">Kunden</string>
+    <string name="dialog_unsaved_changes_title">Ungespeicherte Änderungen</string>
+    <string name="dialog_unsaved_changes_message">Änderungen verwerfen?</string>
+    <string name="dialog_unsaved_changes_discard">Verwerfen</string>
     <string name="label_abholung_date">Abholungsdatum:</string>
     <string name="label_auslieferung_date">Auslieferungsdatum:</string>
     <string name="label_not_set">Nicht gesetzt</string>
