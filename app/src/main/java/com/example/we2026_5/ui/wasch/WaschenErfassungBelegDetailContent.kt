@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
@@ -81,62 +81,63 @@ fun WaschenErfassungBelegDetailContent(
         }
     }
 
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .verticalScroll(rememberScrollState())
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    customerName,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textPrimary
-                )
-                Text(
-                    monthLabel,
-                    fontSize = 16.sp,
-                    color = textSecondary
-                )
-            }
-            IconButton(onClick = { kebabExpanded = true }) {
-                Icon(
-                    Icons.Filled.MoreVert,
-                    contentDescription = stringResource(R.string.content_desc_more_options),
-                    tint = textPrimary
-                )
-            }
-            DropdownMenu(
-                expanded = kebabExpanded,
-                onDismissRequest = { kebabExpanded = false }
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                if (onErledigt != null && erfassungen.isNotEmpty() && erfassungen.all { !it.erledigt }) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        customerName,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textPrimary
+                    )
+                    Text(
+                        monthLabel,
+                        fontSize = 16.sp,
+                        color = textSecondary
+                    )
+                }
+                IconButton(onClick = { kebabExpanded = true }) {
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = stringResource(R.string.content_desc_more_options),
+                        tint = textPrimary
+                    )
+                }
+                DropdownMenu(
+                    expanded = kebabExpanded,
+                    onDismissRequest = { kebabExpanded = false }
+                ) {
+                    if (onErledigt != null && erfassungen.isNotEmpty() && erfassungen.all { !it.erledigt }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.beleg_erledigt), color = textPrimary) },
+                            onClick = {
+                                kebabExpanded = false
+                                onErledigt()
+                            }
+                        )
+                    }
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.beleg_erledigt), color = textPrimary) },
+                        text = { Text(stringResource(R.string.beleg_loeschen), color = Color.Red) },
                         onClick = {
                             kebabExpanded = false
-                            onErledigt()
+                            onDeleteBeleg()
                         }
                     )
                 }
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.beleg_loeschen), color = Color.Red) },
-                    onClick = {
-                        kebabExpanded = false
-                        onDeleteBeleg()
-                    }
-                )
             }
+            Spacer(Modifier.height(16.dp))
         }
-        Spacer(Modifier.height(16.dp))
 
-        erfassungen.forEach { erfassung ->
+        items(erfassungen) { erfassung ->
             val datumStr = DateFormatter.formatDate(erfassung.datum)
             val zeitStr = erfassung.zeit.ifBlank { "-" }
             val positionenAnzeige = erfassung.positionen.map { pos ->
@@ -172,37 +173,41 @@ fun WaschenErfassungBelegDetailContent(
         }
 
         if (gesamtZeilen.isNotEmpty()) {
-            Spacer(Modifier.height(16.dp))
-            Text(
-                stringResource(R.string.wasch_gesamt),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = textPrimary,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    gesamtZeilen.forEach { z ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(z.artikelName, fontSize = 14.sp, color = textPrimary, modifier = Modifier.weight(1f))
-                            Text("${formatMenge(z.menge)} ${z.einheit}", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
+            item {
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    stringResource(R.string.wasch_gesamt),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = textPrimary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        gesamtZeilen.forEach { z ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(z.artikelName, fontSize = 14.sp, color = textPrimary, modifier = Modifier.weight(1f))
+                                Text("${formatMenge(z.menge)} ${z.einheit}", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
+                            }
                         }
-                    }
-                    if (gesamtPreisBrutto > 0.0) {
-                        Spacer(Modifier.height(12.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.wasch_gesamtpreis_brutto), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
-                            Text("%.2f €".format(Locale.GERMAN, gesamtPreisBrutto), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                        if (gesamtPreisBrutto > 0.0) {
+                            Spacer(Modifier.height(12.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(stringResource(R.string.wasch_gesamtpreis_brutto), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                                Text("%.2f €".format(Locale.GERMAN, gesamtPreisBrutto), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                            }
                         }
                     }
                 }

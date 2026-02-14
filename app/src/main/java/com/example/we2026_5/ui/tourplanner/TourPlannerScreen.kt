@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -251,37 +252,33 @@ private fun TourPlannerListContent(
     val lazyListState = rememberLazyListState()
     val density = LocalDensity.current
     val swipeThresholdPx = with(density) { 60.dp.toPx() }
-    var displayItems by remember { mutableStateOf(tourItems) }
+    // Phase 8.11: derivedStateOf reduziert Recomposition, wenn tourItems sich referenziell ändert aber inhaltlich gleich ist.
+    val derivedDisplayItems = derivedStateOf { tourItems }
+    var reorderItems by remember { mutableStateOf<List<ListItem>>(tourItems) }
+    val displayItems = if (reihenfolgeBearbeiten) reorderItems else derivedDisplayItems.value
+
+    androidx.compose.runtime.LaunchedEffect(reihenfolgeBearbeiten) {
+        reorderItems = tourItems
+    }
 
     val dragState = remember(lazyListState) {
         TourPlannerDragDropState(
             lazyListState = lazyListState,
             isCustomerItem = { idx -> idx in displayItems.indices && displayItems[idx] is ListItem.CustomerItem },
             onMove = { from, to ->
-                if (from != to && from in displayItems.indices && to in displayItems.indices &&
-                    displayItems[from] is ListItem.CustomerItem && displayItems[to] is ListItem.CustomerItem) {
-                    displayItems = displayItems.toMutableList().apply {
+                if (from != to && from in reorderItems.indices && to in reorderItems.indices &&
+                    reorderItems[from] is ListItem.CustomerItem && reorderItems[to] is ListItem.CustomerItem) {
+                    reorderItems = reorderItems.toMutableList().apply {
                         val el = removeAt(from)
                         add(to.coerceIn(0, size), el)
                     }
                 }
             },
             onDragEnd = {
-                val ids = displayItems.filterIsInstance<ListItem.CustomerItem>().map { it.customer.id }
+                val ids = reorderItems.filterIsInstance<ListItem.CustomerItem>().map { it.customer.id }
                 if (ids.isNotEmpty()) onReorder(ids)
             }
         )
-    }
-
-    if (!reihenfolgeBearbeiten && dragState.currentIndexOfDraggedItem == null && tourItems !== displayItems) {
-        displayItems = tourItems
-    }
-    androidx.compose.runtime.LaunchedEffect(reihenfolgeBearbeiten) {
-        if (reihenfolgeBearbeiten) displayItems = tourItems
-        else displayItems = tourItems
-    }
-    androidx.compose.runtime.LaunchedEffect(tourItems) {
-        if (!reihenfolgeBearbeiten) displayItems = tourItems
     }
 
     val scope = rememberCoroutineScope()

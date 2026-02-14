@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
@@ -67,26 +67,29 @@ fun UrlaubScreen(
             )
         }
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .background(backgroundLight)
                 .padding(paddingValues)
                 .padding(20.dp)
-                .verticalScroll(rememberScrollState())
         ) {
             if (customer == null) {
-                Text(stringResource(R.string.stat_loading), color = textSecondary)
+                item {
+                    Text(stringResource(R.string.stat_loading), color = textSecondary)
+                }
             } else {
                 if (urlaubEintraege.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.dialog_urlaub_new_hint),
-                        fontSize = 14.sp,
-                        color = textSecondary,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
-                    )
+                    item {
+                        Text(
+                            text = stringResource(R.string.dialog_urlaub_new_hint),
+                            fontSize = 14.sp,
+                            color = textSecondary,
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                        )
+                    }
                 }
-                urlaubEintraege.forEachIndexed { index, eintrag ->
+                itemsIndexed(urlaubEintraege) { index, eintrag ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -129,14 +132,16 @@ fun UrlaubScreen(
                         }
                     }
                 }
-                Spacer(Modifier.height(16.dp))
-                Button(
-                    onClick = onNeuerUrlaub,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = buttonUrlaub),
-                    enabled = !isSaving
-                ) {
-                    Text(stringResource(R.string.dialog_urlaub_add_new))
+                item {
+                    Spacer(Modifier.height(16.dp))
+                    Button(
+                        onClick = onNeuerUrlaub,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = buttonUrlaub),
+                        enabled = !isSaving
+                    ) {
+                        Text(stringResource(R.string.dialog_urlaub_add_new))
+                    }
                 }
             }
         }
