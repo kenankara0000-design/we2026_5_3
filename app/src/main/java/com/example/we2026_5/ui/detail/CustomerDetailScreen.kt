@@ -2,7 +2,9 @@ package com.example.we2026_5.ui.detail
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -31,6 +33,7 @@ import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.intervallTageOrDefault
 import com.example.we2026_5.util.tageAzuLOrDefault
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
+import com.example.we2026_5.ui.common.DetailUiConstants
 import com.example.we2026_5.ui.wasch.BelegMonat
 
 /** Phase C2: Screen nimmt gebündelten [CustomerDetailUiState] und [CustomerDetailActions]. */
@@ -166,6 +169,8 @@ fun CustomerDetailScreen(
                 statusOverdue = statusOverdue,
                 onBack = { if (hasUnsavedChanges) showUnsavedChangesDialog = true else onBack() },
                 onDelete = onDelete,
+                onEdit = if (isAdmin) onEdit else null,
+                isAdmin = isAdmin,
                 overflowMenuExpanded = overflowMenuExpanded,
                 onOverflowMenuDismiss = { overflowMenuExpanded = false },
                 onOverflowMenuExpand = { overflowMenuExpanded = true },
@@ -236,6 +241,7 @@ fun CustomerDetailScreen(
                         }
                     )
                 }
+                Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
                 when (selectedTabIndex) {
                     0 -> CustomerDetailStammdatenTab(
                         isAdmin = isAdmin,
@@ -246,7 +252,6 @@ fun CustomerDetailScreen(
                         primaryBlue = primaryBlue,
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
-                        onEdit = onEdit,
                         onAdresseClick = onAdresseClick,
                         onTelefonClick = onTelefonClick,
                         onTakePhoto = onTakePhoto,

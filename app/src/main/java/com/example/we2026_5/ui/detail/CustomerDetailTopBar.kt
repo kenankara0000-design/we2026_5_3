@@ -43,6 +43,8 @@ fun CustomerDetailTopBar(
     statusOverdue: androidx.compose.ui.graphics.Color,
     onBack: () -> Unit,
     onDelete: () -> Unit,
+    onEdit: (() -> Unit)? = null,
+    isAdmin: Boolean = false,
     overflowMenuExpanded: Boolean,
     onOverflowMenuDismiss: () -> Unit,
     onOverflowMenuExpand: () -> Unit,
@@ -101,7 +103,7 @@ fun CustomerDetailTopBar(
                     Text(stringResource(R.string.btn_save_and_next_customer), color = Color.White)
                 }
             }
-            if (isInEditMode) {
+            if (isInEditMode || (isAdmin && onEdit != null)) {
                 Box {
                     IconButton(onClick = onOverflowMenuExpand) {
                         Icon(
@@ -114,13 +116,24 @@ fun CustomerDetailTopBar(
                         expanded = overflowMenuExpanded,
                         onDismissRequest = onOverflowMenuDismiss
                     ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.label_delete), color = statusOverdue) },
-                            onClick = {
-                                onOverflowMenuDismiss()
-                                onDelete()
-                            }
-                        )
+                        if (!isInEditMode && onEdit != null) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.label_edit), color = colorResource(R.color.text_primary)) },
+                                onClick = {
+                                    onOverflowMenuDismiss()
+                                    onEdit()
+                                }
+                            )
+                        }
+                        if (isInEditMode) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.label_delete), color = statusOverdue) },
+                                onClick = {
+                                    onOverflowMenuDismiss()
+                                    onDelete()
+                                }
+                            )
+                        }
                     }
                 }
             }

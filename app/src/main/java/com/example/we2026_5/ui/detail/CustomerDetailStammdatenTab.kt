@@ -52,7 +52,6 @@ fun CustomerDetailStammdatenTab(
     primaryBlue: androidx.compose.ui.graphics.Color,
     textPrimary: androidx.compose.ui.graphics.Color,
     textSecondary: androidx.compose.ui.graphics.Color,
-    onEdit: () -> Unit,
     onAdresseClick: () -> Unit,
     onTelefonClick: () -> Unit,
     onTakePhoto: () -> Unit,
@@ -95,12 +94,12 @@ fun CustomerDetailStammdatenTab(
             Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
         }
         if (!isInEditMode) {
-            if (isAdmin) {
-                CustomerDetailActionsRow(
-                    primaryBlue = primaryBlue,
-                    onEdit = onEdit,
-                    isUploading = isUploading,
-                    textPrimary = textPrimary
+            if (isUploading) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                Text(
+                    stringResource(R.string.label_foto_uploading),
+                    fontSize = 12.sp,
+                    color = primaryBlue
                 )
                 Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
             }
