@@ -75,7 +75,8 @@ fun KundenListenScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = stringResource(R.string.list_screen_title)
+                title = stringResource(R.string.list_screen_title),
+                onBack = onBack
             )
         },
         floatingActionButton = {
@@ -110,7 +111,7 @@ fun KundenListenScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Add,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.content_desc_new_list),
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)
                     )

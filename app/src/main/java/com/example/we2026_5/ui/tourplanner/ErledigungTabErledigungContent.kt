@@ -88,7 +88,7 @@ fun ErledigungTabErledigungContent(
                 ),
                 enabled = true
             ) {
-                Icon(painter = painterResource(R.drawable.ic_pickup), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
+                Icon(painter = painterResource(R.drawable.ic_pickup), contentDescription = stringResource(R.string.content_desc_abholung), modifier = Modifier.size(22.dp), tint = Color.White)
                 Spacer(Modifier.size(10.dp))
                 Text(stringResource(R.string.sheet_abholung_erledigen), color = Color.White)
             }
@@ -115,7 +115,7 @@ fun ErledigungTabErledigungContent(
                 ),
                 enabled = true
             ) {
-                Icon(painter = painterResource(R.drawable.ic_delivery), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
+                Icon(painter = painterResource(R.drawable.ic_delivery), contentDescription = stringResource(R.string.content_desc_auslieferung), modifier = Modifier.size(22.dp), tint = Color.White)
                 Spacer(Modifier.size(10.dp))
                 Text(stringResource(R.string.sheet_auslieferung_erledigen), color = Color.White)
             }
@@ -137,7 +137,7 @@ fun ErledigungTabErledigungContent(
                 ),
                 enabled = true
             ) {
-                Icon(painter = painterResource(R.drawable.ic_pickup), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
+                Icon(painter = painterResource(R.drawable.ic_pickup), contentDescription = stringResource(R.string.content_desc_abholung), modifier = Modifier.size(22.dp), tint = Color.White)
                 Spacer(Modifier.size(10.dp))
                 Text(stringResource(R.string.sheet_ausnahme_abholung_erledigen), color = Color.White)
             }
@@ -163,7 +163,7 @@ fun ErledigungTabErledigungContent(
                 ),
                 enabled = true
             ) {
-                Icon(painter = painterResource(R.drawable.ic_delivery), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
+                Icon(painter = painterResource(R.drawable.ic_delivery), contentDescription = stringResource(R.string.content_desc_auslieferung), modifier = Modifier.size(22.dp), tint = Color.White)
                 Spacer(Modifier.size(10.dp))
                 Text(stringResource(R.string.sheet_ausnahme_auslieferung_erledigen), color = Color.White)
             }
@@ -177,7 +177,7 @@ fun ErledigungTabErledigungContent(
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = buttonRueckgaengig)
             ) {
-                Icon(painter = painterResource(R.drawable.ic_undo), contentDescription = null, modifier = Modifier.size(22.dp), tint = buttonRueckgaengig)
+                Icon(painter = painterResource(R.drawable.ic_undo), contentDescription = stringResource(R.string.content_desc_undo), modifier = Modifier.size(22.dp), tint = buttonRueckgaengig)
                 Spacer(Modifier.size(10.dp))
                 Text(stringResource(R.string.sheet_rueckgaengig), color = buttonRueckgaengig)
             }
@@ -204,7 +204,7 @@ fun ErledigungTabErledigungContent(
                 colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.status_warning)),
                 enabled = state.enableKw
             ) {
-                Icon(painter = painterResource(R.drawable.ic_checklist), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
+                Icon(painter = painterResource(R.drawable.ic_checklist), contentDescription = stringResource(R.string.content_desc_checklist), modifier = Modifier.size(22.dp), tint = Color.White)
                 Spacer(Modifier.size(10.dp))
                 Text(stringResource(R.string.sheet_keine_waesche), color = Color.White)
             }
@@ -222,7 +222,7 @@ fun ErledigungTabErledigungContent(
             colors = ButtonDefaults.buttonColors(containerColor = buttonVerschieben),
             enabled = state.showVerschieben
         ) {
-            Icon(painter = painterResource(R.drawable.ic_reschedule), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
+            Icon(painter = painterResource(R.drawable.ic_reschedule), contentDescription = stringResource(R.string.content_desc_reschedule), modifier = Modifier.size(22.dp), tint = Color.White)
             Spacer(Modifier.size(10.dp))
             Text(stringResource(R.string.sheet_termin_verschieben), color = Color.White)
         }

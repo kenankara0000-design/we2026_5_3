@@ -80,7 +80,7 @@ internal fun CustomerManagerCard(
                         ) {
                             AsyncImage(
                                 model = customer.fotoThumbUrls.firstOrNull() ?: customer.fotoUrls.first(),
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.content_desc_customer_photo),
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
                             )

@@ -110,7 +110,7 @@ Alle Analysen wurden am 2026-02-13 durchgeführt. Screen-für-Screen-Ansatz: all
 
 ### Nächster Schritt
 
-→ **Massnahmenplan Phase 8 teilweise erledigt** (8.01–8.05 ✅). **Build testen!** Phase 8 Rest (8.06–8.17) bei Bedarf. Siehe `2026-02-13_21-47.massnahmenplan.md`.
+→ **Phase 8 vollständig umgesetzt** (8.01–8.17). 8.06, 8.10, 8.11 bei Gelegenheit. **Build testen.**
 
 ---
 
@@ -120,7 +120,7 @@ Alle Analysen wurden am 2026-02-13 durchgeführt. Screen-für-Screen-Ansatz: all
 
 1. **Einstieg:** Diese Datei (`ANALYSE-INDEX.md`) lesen.
 2. **Plan:** `2026-02-13_21-47.massnahmenplan.md` öffnen → Abschnitt **Session-Handoff** (oben).
-3. **Nächster Schritt:** Phase 7 ✅, Phase 8 teilweise ✅ (8.01–8.05 erledigt). **Build testen!** Rest bei Bedarf.
+3. **Nächster Schritt:** Phase 8 ✅ umgesetzt. Build testen. Optional: 8.06 (Strings), 8.10 (LazyColumn), 8.11 (derivedStateOf).
 4. **Regel:** Nur ein Plan pro Session; keine parallele Arbeit an UX Kundendetail Phase B.
 
-*Letzte Aktualisierung: 2026-02-14 (Phase 7 ✅, Phase 8: 8.01–8.05 ✅)*
+*Letzte Aktualisierung: 2026-02-14 (Phase 8 vollständig)*

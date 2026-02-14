@@ -52,7 +52,8 @@ fun ArtikelVerwaltungScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = stringResource(R.string.wasch_artikel_verwalten)
+                title = stringResource(R.string.wasch_artikel_verwalten),
+                onBack = onBack
             )
         },
         containerColor = colorResource(R.color.background_light)
@@ -106,8 +107,7 @@ fun ArtikelVerwaltungScreen(
                                 }
                                 IconButton(
                                     onClick = { onDeleteArticle(article) },
-                                    modifier = Modifier.padding(start = 8.dp),
-                                    enabled = false
+                                    modifier = Modifier.padding(start = 8.dp)
                                 ) {
                                     Icon(
                                         Icons.Filled.Delete,

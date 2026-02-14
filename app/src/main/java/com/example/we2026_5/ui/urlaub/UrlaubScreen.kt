@@ -62,7 +62,8 @@ fun UrlaubScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = stringResource(R.string.label_urlaub)
+                title = stringResource(R.string.label_urlaub),
+                onBack = onBack
             )
         }
     ) { paddingValues ->

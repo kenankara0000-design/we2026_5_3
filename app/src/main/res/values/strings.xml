@@ -370,6 +370,14 @@
     <string name="content_desc_delete_list">Liste löschen</string>
     <string name="content_desc_fullscreen">Vollbild-Vorschau</string>
     <string name="content_desc_new_list">Neue Liste erstellen</string>
+    <string name="content_desc_offline">Offline</string>
+    <string name="content_desc_sync">Synchronisation</string>
+    <string name="content_desc_customer_photo">Kundenfoto</string>
+    <string name="content_desc_camera">Kamera</string>
+    <string name="content_desc_checklist">Checkliste</string>
+    <string name="content_desc_share">Teilen</string>
+    <string name="content_desc_undo">Rückgängig</string>
+    <string name="content_desc_reschedule">Termin verschieben</string>
     <string name="list_btn_new">Neue Liste</string>
 
     <!-- TourPlanner -->

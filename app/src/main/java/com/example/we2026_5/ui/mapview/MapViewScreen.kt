@@ -36,7 +36,8 @@ fun MapViewScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = stringResource(R.string.map_title)
+                title = stringResource(R.string.map_title),
+                onBack = onBack
             )
         }
     ) { paddingValues ->

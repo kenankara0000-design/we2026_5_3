@@ -66,6 +66,7 @@ fun SettingsScreen(
         topBar = {
             AppTopBar(
                 title = stringResource(R.string.settings_title),
+                onBack = onBack,
                 actions = {
                     IconButton(onClick = { menuExpanded = true }) {
                         Icon(
@@ -100,14 +101,14 @@ fun SettingsScreen(
         ) {
             OutlinedButton(
                 onClick = onOpenPreise,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth().height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(stringResource(R.string.settings_btn_preise), fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
             OutlinedButton(
                 onClick = onOpenDataImport,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth().height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(stringResource(R.string.settings_btn_data_import), fontSize = 15.sp, fontWeight = FontWeight.Bold)
@@ -167,7 +168,7 @@ fun SettingsScreen(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             OutlinedButton(
                 onClick = onAbmelden,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth().height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(stringResource(R.string.settings_abmelden), fontSize = 15.sp, fontWeight = FontWeight.Bold)

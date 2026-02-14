@@ -59,4 +59,7 @@ object AppSpacing {
 
     /** Minimum Touch-Target (Accessibility) */
     val MinTouchTarget = 48.dp
+
+    /** Standard Button-Höhe (einheitlich 48dp) */
+    val ButtonHeight = 48.dp
 }

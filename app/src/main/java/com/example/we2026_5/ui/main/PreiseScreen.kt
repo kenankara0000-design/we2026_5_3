@@ -47,21 +47,21 @@ fun PreiseScreen(
         ) {
             OutlinedButton(
                 onClick = onKundenpreise,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth().height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(stringResource(R.string.erfassung_menu_kundenpreise), fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
             OutlinedButton(
                 onClick = onListenPrivatKundenpreise,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth().height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(stringResource(R.string.erfassung_menu_standardpreise), fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
             OutlinedButton(
                 onClick = onArtikelVerwalten,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth().height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(stringResource(R.string.erfassung_menu_artikel), fontSize = 15.sp, fontWeight = FontWeight.Bold)

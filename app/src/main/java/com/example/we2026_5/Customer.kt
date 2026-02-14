@@ -166,4 +166,21 @@ data class Customer(
         get() = if (defaultAuslieferungWochentage.isNotEmpty()) defaultAuslieferungWochentage
         else if (defaultAuslieferungWochentag in 0..6) listOf(defaultAuslieferungWochentag)
         else emptyList()
+
+    /**
+     * Prüft Kundenstammdaten auf Plausibilität. Gibt leere Liste bei gültigen Daten,
+     * sonst Liste von Fehlermeldungen (z. B. für Save-Validierung).
+     */
+    fun validate(): List<String> {
+        val errors = mutableListOf<String>()
+        if (id.isBlank()) errors.add("Kunden-ID fehlt")
+        if (name.isBlank() && alias.isBlank()) errors.add("Name oder Alias erforderlich")
+        if (kundenArt !in listOf("Gewerblich", "Privat", "Listenkunden", "Tour", "Liste"))
+            errors.add("Ungültige Kundenart: $kundenArt")
+        if (defaultAbholungWochentag !in -1..6) errors.add("Ungültiger Abholungs-Wochentag")
+        if (defaultAuslieferungWochentag !in -1..6) errors.add("Ungültiger Auslieferungs-Wochentag")
+        if (pauseStart > 0 && pauseEnde > 0 && pauseStart > pauseEnde)
+            errors.add("Pause: Startdatum darf nicht nach Enddatum liegen")
+        return errors
+    }
 }

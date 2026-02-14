@@ -93,7 +93,7 @@ fun WaschenErfassungScreen(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_offline),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.content_desc_offline),
                         modifier = Modifier.size(14.dp),
                         tint = offlineYellow
                     )

@@ -64,7 +64,7 @@ fun WaschenErfassungDetailContent(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Icon(Icons.Filled.Delete, contentDescription = null, Modifier.size(18.dp))
+                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.label_delete), Modifier.size(18.dp))
                 Spacer(Modifier.widthIn(4.dp))
                 Text(stringResource(R.string.wasch_erfassung_loeschen), fontSize = 14.sp)
             }

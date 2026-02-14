@@ -80,7 +80,7 @@ fun CustomerDetailStammdatenTab(
             ) {
                 Icon(
                     imageVector = Icons.Default.Warning,
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.content_desc_overdue),
                     tint = overdueColor,
                     modifier = Modifier.size(20.dp)
                 )

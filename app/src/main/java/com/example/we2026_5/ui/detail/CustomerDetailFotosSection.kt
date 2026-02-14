@@ -90,7 +90,7 @@ fun CustomerDetailFotosSection(
                     ) {
                         AsyncImage(
                             model = displayUrl,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.content_desc_customer_photo),
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
                             placeholder = painterResource(R.drawable.ic_camera),
@@ -124,7 +124,7 @@ fun CustomerDetailFotosSection(
         Spacer(Modifier.height(8.dp))
     }
     OutlinedButton(onClick = onTakePhoto, modifier = Modifier.fillMaxWidth()) {
-        Icon(painter = painterResource(R.drawable.ic_camera), contentDescription = null, Modifier.size(20.dp))
+        Icon(painter = painterResource(R.drawable.ic_camera), contentDescription = stringResource(R.string.content_desc_camera), Modifier.size(20.dp))
         Spacer(Modifier.size(8.dp))
         Text(stringResource(R.string.label_add_photo))
     }

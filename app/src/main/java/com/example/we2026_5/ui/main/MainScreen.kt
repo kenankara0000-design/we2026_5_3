@@ -91,7 +91,7 @@ fun MainScreen(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_offline),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.content_desc_offline),
                         modifier = Modifier.padding(end = 4.dp).size(14.dp),
                         tint = offlineYellow
                     )
@@ -108,7 +108,7 @@ fun MainScreen(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_offline),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.content_desc_sync),
                         modifier = Modifier.padding(end = 4.dp).size(14.dp),
                         tint = primaryBlue
                     )
@@ -170,7 +170,7 @@ fun MainScreen(
                 Spacer(Modifier.height(16.dp))
                 Button(
                     onClick = onTouren,
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    modifier = Modifier.fillMaxWidth().height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -192,7 +192,7 @@ fun MainScreen(
         ) {
             Button(
                 onClick = onKunden,
-                modifier = Modifier.weight(1f).height(72.dp),
+                modifier = Modifier.weight(1f).height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                 colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -201,7 +201,7 @@ fun MainScreen(
             if (isAdmin) {
                 Button(
                     onClick = onNeuKunde,
-                    modifier = Modifier.weight(1f).height(72.dp),
+                    modifier = Modifier.weight(1f).height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                     colors = ButtonDefaults.buttonColors(containerColor = primaryBlueDark),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -223,14 +223,14 @@ fun MainScreen(
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedButton(
                         onClick = onKundenListen,
-                        modifier = Modifier.fillMaxWidth().height(64.dp),
+                        modifier = Modifier.fillMaxWidth().height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(stringResource(R.string.main_btn_listen), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                     OutlinedButton(
                         onClick = onStatistiken,
-                        modifier = Modifier.fillMaxWidth().height(64.dp),
+                        modifier = Modifier.fillMaxWidth().height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(stringResource(R.string.main_btn_statistiken), fontSize = 14.sp, fontWeight = FontWeight.Bold)
@@ -239,14 +239,14 @@ fun MainScreen(
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedButton(
                         onClick = onErfassung,
-                        modifier = Modifier.fillMaxWidth().height(64.dp),
+                        modifier = Modifier.fillMaxWidth().height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(stringResource(R.string.main_btn_erfassung), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                     OutlinedButton(
                         onClick = onSettings,
-                        modifier = Modifier.fillMaxWidth().height(64.dp),
+                        modifier = Modifier.fillMaxWidth().height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(stringResource(R.string.settings_title), fontSize = 14.sp, fontWeight = FontWeight.Bold)

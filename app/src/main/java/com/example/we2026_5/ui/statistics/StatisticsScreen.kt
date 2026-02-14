@@ -50,7 +50,8 @@ fun StatisticsScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = stringResource(R.string.stat_title)
+                title = stringResource(R.string.stat_title),
+                onBack = onBack
             )
         },
         containerColor = backgroundLight

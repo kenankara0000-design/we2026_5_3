@@ -50,7 +50,7 @@ fun ErfassungMenuScreen(
         ) {
             Button(
                 onClick = onErfassungStarten,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                 colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -58,7 +58,7 @@ fun ErfassungMenuScreen(
             }
             OutlinedButton(
                 onClick = onBelege,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(stringResource(R.string.erfassung_menu_belege), fontSize = 14.sp, fontWeight = FontWeight.Bold)

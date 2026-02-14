@@ -60,7 +60,7 @@ internal fun ListeBearbeitenKundeInListeItem(
                 ) {
                     AsyncImage(
                         model = kunde.fotoThumbUrls.firstOrNull() ?: kunde.fotoUrls.first(),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.content_desc_customer_photo),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )

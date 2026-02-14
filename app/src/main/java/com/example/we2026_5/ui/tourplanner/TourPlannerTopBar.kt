@@ -154,7 +154,7 @@ fun TourPlannerTopBar(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_offline),
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.content_desc_offline),
                     modifier = Modifier.size(14.dp),
                     tint = colorResource(R.color.status_offline_yellow)
                 )

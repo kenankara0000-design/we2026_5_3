@@ -47,7 +47,7 @@ fun DataImportScreen(
         ) {
             Button(
                 onClick = onSevDeskImport,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth().height(com.example.we2026_5.ui.theme.AppSpacing.ButtonHeight),
                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = primaryBlue),
                 shape = RoundedCornerShape(12.dp)
             ) {

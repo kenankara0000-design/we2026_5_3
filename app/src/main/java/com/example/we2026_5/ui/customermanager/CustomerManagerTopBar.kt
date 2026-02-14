@@ -76,7 +76,7 @@ fun CustomerManagerTopBar(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_offline),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.content_desc_offline),
                             modifier = Modifier.size(14.dp),
                             tint = offlineYellow
                         )
@@ -108,7 +108,7 @@ fun CustomerManagerTopBar(
                     colors = ButtonDefaults.buttonColors(containerColor = if (auswaehlenOrange) statusWarning else buttonBlue),
                     shape = RoundedCornerShape(20.dp)
                 ) {
-                    Icon(painter = painterResource(R.drawable.ic_checklist), contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(painter = painterResource(R.drawable.ic_checklist), contentDescription = stringResource(R.string.content_desc_checklist), modifier = Modifier.size(18.dp))
                     Spacer(Modifier.size(8.dp))
                     Text(stringResource(R.string.cm_btn_select), fontSize = 14.sp)
                 }
@@ -119,7 +119,7 @@ fun CustomerManagerTopBar(
                     colors = ButtonDefaults.buttonColors(containerColor = if (exportOrange) statusWarning else buttonBlue),
                     shape = RoundedCornerShape(20.dp)
                 ) {
-                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Share, contentDescription = stringResource(R.string.content_desc_share), modifier = Modifier.size(18.dp))
                     Spacer(Modifier.size(8.dp))
                     Text(stringResource(R.string.content_desc_export), fontSize = 14.sp)
                 }
