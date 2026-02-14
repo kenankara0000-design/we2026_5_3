@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.R
@@ -203,18 +204,36 @@ fun CustomerDetailScreen(
                     Tab(
                         selected = selectedTabIndex == 0,
                         onClick = { selectedTabIndex = 0 },
-                        text = { Text(stringResource(R.string.tab_stammdaten)) }
+                        text = {
+                            Text(
+                                stringResource(R.string.tab_stammdaten),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     )
                     Tab(
                         selected = selectedTabIndex == 1,
                         onClick = { selectedTabIndex = 1 },
-                        text = { Text(stringResource(R.string.tab_termine_tour)) }
+                        text = {
+                            Text(
+                                stringResource(R.string.tab_termine_tour),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     )
                     Tab(
                         selected = selectedTabIndex == 2,
                         onClick = { if (!isInEditMode) selectedTabIndex = 2 },
                         enabled = !isInEditMode,
-                        text = { Text(stringResource(R.string.tab_belege)) }
+                        text = {
+                            Text(
+                                stringResource(R.string.tab_belege),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     )
                 }
                 when (selectedTabIndex) {
@@ -227,7 +246,6 @@ fun CustomerDetailScreen(
                         primaryBlue = primaryBlue,
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
-                        onUrlaub = { customer.id?.let { onUrlaubStartActivity(it) } },
                         onEdit = onEdit,
                         onAdresseClick = onAdresseClick,
                         onTelefonClick = onTelefonClick,

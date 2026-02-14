@@ -329,8 +329,8 @@
     <string name="save_in_progress">Speichere…</string>
     <string name="btn_save">Speichern</string>
     <string name="btn_save_and_next_customer">Speichern und nächster Kunde</string>
-    <string name="tab_stammdaten">Stammdaten</string>
-    <string name="tab_termine_tour">Termine &amp; Tour</string>
+    <string name="tab_stammdaten">Stamm</string>
+    <string name="tab_termine_tour">Termine</string>
     <string name="tab_belege">Belege</string>
     <string name="content_desc_save">Speichern</string>
     <string name="toast_gespeichert">Änderungen gespeichert</string>

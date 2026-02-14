@@ -52,7 +52,6 @@ fun CustomerDetailStammdatenTab(
     primaryBlue: androidx.compose.ui.graphics.Color,
     textPrimary: androidx.compose.ui.graphics.Color,
     textSecondary: androidx.compose.ui.graphics.Color,
-    onUrlaub: () -> Unit,
     onEdit: () -> Unit,
     onAdresseClick: () -> Unit,
     onTelefonClick: () -> Unit,
@@ -99,9 +98,9 @@ fun CustomerDetailStammdatenTab(
             if (isAdmin) {
                 CustomerDetailActionsRow(
                     primaryBlue = primaryBlue,
-                    onUrlaub = onUrlaub,
                     onEdit = onEdit,
-                    isUploading = isUploading
+                    isUploading = isUploading,
+                    textPrimary = textPrimary
                 )
                 Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
             }
