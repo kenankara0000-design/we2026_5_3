@@ -11,6 +11,7 @@ import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.util.AppErrorMapper
 import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.TerminCalculator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,8 +45,8 @@ class MapViewViewModel(
                     val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
                     customersWithAddress = withContext(Dispatchers.IO) {
                         customersWithAddress.filter { customer ->
-                            TerminBerechnungUtils.hatTerminAmDatum(customer, null, heuteStart, TerminTyp.ABHOLUNG) ||
-                                TerminBerechnungUtils.hatTerminAmDatum(customer, null, heuteStart, TerminTyp.AUSLIEFERUNG)
+                            TerminCalculator.hatTerminAmDatum(customer, null, heuteStart, TerminTyp.ABHOLUNG) ||
+                                TerminCalculator.hatTerminAmDatum(customer, null, heuteStart, TerminTyp.AUSLIEFERUNG)
                         }
                     }
                     filteredToToday = true

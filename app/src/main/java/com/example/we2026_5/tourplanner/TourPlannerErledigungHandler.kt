@@ -8,6 +8,7 @@ import com.example.we2026_5.R
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.KundenListeRepository
 import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.TerminCalculator
 import com.example.we2026_5.util.TerminFilterUtils
 import com.example.we2026_5.FirebaseRetryHelper
 import kotlinx.coroutines.CoroutineScope
@@ -270,10 +271,10 @@ internal class TourPlannerErledigungHandler(
         }
 
     private fun istTerminHeuteFaellig(customer: Customer, terminTyp: com.example.we2026_5.TerminTyp, heuteStart: Long, liste: KundenListe?): Boolean {
-        if (TerminBerechnungUtils.hatTerminAmDatum(customer, liste, heuteStart, terminTyp)) return true
+        if (TerminCalculator.hatTerminAmDatum(customer, liste, heuteStart, terminTyp)) return true
         val istErledigt = if (terminTyp == com.example.we2026_5.TerminTyp.ABHOLUNG) customer.abholungErfolgt else customer.auslieferungErfolgt
         if (istErledigt) return false
-        val vergangeneTermine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+        val vergangeneTermine = TerminCalculator.berechneAlleTermineFuerKunde(
             customer = customer,
             liste = null,
             startDatum = heuteStart - TimeUnit.DAYS.toMillis(60),

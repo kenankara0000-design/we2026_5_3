@@ -4,6 +4,7 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.TerminCalculator
 import com.example.we2026_5.util.TerminInfo
 import com.example.we2026_5.util.tageAzuLOrDefault
 import java.util.concurrent.ConcurrentHashMap
@@ -34,7 +35,7 @@ class TerminCache {
             val cached = cache[customer.id]
             if (cached != null && cached.windowStartDay == heuteStart) return cached.termine
         }
-        val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+        val termine = TerminCalculator.berechneAlleTermineFuerKunde(
             customer = customer,
             liste = effectiveListe,
             startDatum = heuteStart,
@@ -59,7 +60,7 @@ class TerminCache {
         val heuteStart = TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
         val termine = if (start < heuteStart) {
             // Vergangenheit: Cache deckt nur ab heute ab → direkt berechnen für den gewünschten Bereich
-            TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+            TerminCalculator.berechneAlleTermineFuerKunde(
                 customer = customer,
                 liste = if (liste != null && customer.listeId == liste.id) liste else null,
                 startDatum = start,

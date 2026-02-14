@@ -5,6 +5,7 @@ import com.example.we2026_5.KundenListe
 import com.example.we2026_5.ListeIntervall
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.TerminCalculator
 import com.example.we2026_5.util.TerminFilterUtils
 import com.example.we2026_5.util.tageAzuLOrDefault
 import java.util.concurrent.TimeUnit
@@ -28,7 +29,7 @@ class TourPlannerDateUtils(
         heuteStart: Long
     ): Long {
         // Term-Daten nur aus Kunde (liste nur Gruppierung; kein liste.intervalle).
-        val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+        val termine = TerminCalculator.berechneAlleTermineFuerKunde(
             customer = customer,
             liste = null,
             startDatum = viewDateStart,
@@ -50,7 +51,7 @@ class TourPlannerDateUtils(
         // Term-Daten nur aus Kunde (liste nur Gruppierung; kein liste.intervalle).
         val tageAzuL = getTageAzuL(customer)
         val aDatumStart = viewDateStart - TimeUnit.DAYS.toMillis(tageAzuL.toLong())
-        val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+        val termine = TerminCalculator.berechneAlleTermineFuerKunde(
             customer = customer,
             liste = null,
             startDatum = aDatumStart,
@@ -90,7 +91,7 @@ class TourPlannerDateUtils(
     
     fun getFaelligAmDatumFuerAbholung(customer: Customer, heuteStart: Long): Long {
         // 60 Tage Überfällig-Fenster (PLAN_TOURPLANNER_PERFORMANCE_3TAGE)
-        val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+        val termine = TerminCalculator.berechneAlleTermineFuerKunde(
             customer = customer,
             startDatum = heuteStart - TimeUnit.DAYS.toMillis(60),
             tageVoraus = 63
@@ -107,7 +108,7 @@ class TourPlannerDateUtils(
     
     fun getFaelligAmDatumFuerAuslieferung(customer: Customer, heuteStart: Long): Long {
         // 60 Tage Überfällig-Fenster (PLAN_TOURPLANNER_PERFORMANCE_3TAGE)
-        val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+        val termine = TerminCalculator.berechneAlleTermineFuerKunde(
             customer = customer,
             startDatum = heuteStart - TimeUnit.DAYS.toMillis(60),
             tageVoraus = 63
@@ -131,7 +132,7 @@ class TourPlannerDateUtils(
         val heuteStart = getStartOfDay(System.currentTimeMillis())
         val geloeschte = customer.geloeschteTermine
         // 14 Tage für "Nächste Tour" (PLAN_TOURPLANNER_PERFORMANCE_3TAGE)
-        val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+        val termine = TerminCalculator.berechneAlleTermineFuerKunde(
             customer = customer,
             liste = null,
             startDatum = heuteStart,

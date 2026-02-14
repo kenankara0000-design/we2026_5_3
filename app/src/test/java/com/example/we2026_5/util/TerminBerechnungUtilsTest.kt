@@ -34,7 +34,7 @@ class TerminBerechnungUtilsTest {
                 )
             )
         )
-        val termine = TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+        val termine = TerminCalculator.berechneAlleTermineFuerKunde(
             customer = customer,
             liste = null,
             startDatum = start,

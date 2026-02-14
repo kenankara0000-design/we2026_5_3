@@ -4,6 +4,7 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.TerminTyp
 import com.example.we2026_5.util.TerminBerechnungUtils
+import com.example.we2026_5.util.TerminCalculator
 import com.example.we2026_5.util.TerminFilterUtils
 import com.example.we2026_5.util.TerminInfo
 import com.example.we2026_5.util.tageAzuLOrDefault
@@ -40,7 +41,7 @@ object TourPlannerStatusBadge {
                 val tage = tageAzuL + 3
                 Pair(start, tage)
             }
-            TerminBerechnungUtils.berechneAlleTermineFuerKunde(
+            TerminCalculator.berechneAlleTermineFuerKunde(
                 customer = customer,
                 liste = effectiveListe,
                 startDatum = startDatum,
