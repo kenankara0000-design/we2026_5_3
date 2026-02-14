@@ -1,32 +1,29 @@
 package com.example.we2026_5.ui.tourplanner
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
@@ -35,11 +32,14 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.ListItem
 import com.example.we2026_5.R
 import com.example.we2026_5.SectionType
-import com.example.we2026_5.ui.tourplanner.ErledigtSheetContent
 import com.example.we2026_5.util.DateFormatter
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.TerminFilterUtils
 import kotlinx.coroutines.launch
+import org.burnoutcrew.reorderable.ReorderableItem
+import org.burnoutcrew.reorderable.detectReorderAfterLongPress
+import org.burnoutcrew.reorderable.rememberReorderableLazyListState
+import org.burnoutcrew.reorderable.reorderable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -249,140 +249,139 @@ private fun TourPlannerListContent(
     cardShowPhone: Boolean = false,
     cardShowNotes: Boolean = false
 ) {
-    val lazyListState = rememberLazyListState()
     val density = LocalDensity.current
     val swipeThresholdPx = with(density) { 60.dp.toPx() }
-    // Phase 8.11: derivedStateOf reduziert Recomposition, wenn tourItems sich referenziell ändert aber inhaltlich gleich ist.
-    val derivedDisplayItems = derivedStateOf { tourItems }
-    var reorderItems by remember { mutableStateOf<List<ListItem>>(tourItems) }
-    val displayItems = if (reihenfolgeBearbeiten) reorderItems else derivedDisplayItems.value
 
-    androidx.compose.runtime.LaunchedEffect(reihenfolgeBearbeiten) {
-        reorderItems = tourItems
+    // Flache Kundenliste für den Bearbeiten-Modus
+    var reorderCustomers by remember { mutableStateOf<List<ListItem.CustomerItem>>(emptyList()) }
+
+    // Beim Einschalten des Bearbeiten-Modus: Kunden extrahieren
+    LaunchedEffect(reihenfolgeBearbeiten) {
+        if (reihenfolgeBearbeiten) {
+            reorderCustomers = tourItems.filterIsInstance<ListItem.CustomerItem>()
+        }
     }
 
-    val dragState = remember(lazyListState) {
-        TourPlannerDragDropState(
-            lazyListState = lazyListState,
-            isCustomerItem = { idx -> idx in displayItems.indices && displayItems[idx] is ListItem.CustomerItem },
-            onMove = { from, to ->
-                if (from != to && from in reorderItems.indices && to in reorderItems.indices &&
-                    reorderItems[from] is ListItem.CustomerItem && reorderItems[to] is ListItem.CustomerItem) {
-                    reorderItems = reorderItems.toMutableList().apply {
-                        val el = removeAt(from)
-                        add(to.coerceIn(0, size), el)
-                    }
-                }
-            },
-            onDragEnd = {
-                val ids = reorderItems.filterIsInstance<ListItem.CustomerItem>().map { it.customer.id }
-                if (ids.isNotEmpty()) onReorder(ids)
+    // Beim Ausschalten: Reihenfolge speichern (nur wenn es Kunden gibt)
+    val savedOnReorder by rememberUpdatedState(onReorder)
+    LaunchedEffect(reihenfolgeBearbeiten) {
+        if (!reihenfolgeBearbeiten && reorderCustomers.isNotEmpty()) {
+            savedOnReorder(reorderCustomers.map { it.customer.id })
+        }
+    }
+
+    if (reihenfolgeBearbeiten) {
+        // ── BEARBEITEN-MODUS: Flache Kundenliste mit Drag & Drop ──
+        val reorderState = rememberReorderableLazyListState(onMove = { from, to ->
+            reorderCustomers = reorderCustomers.toMutableList().apply {
+                add(to.index, removeAt(from.index))
             }
-        )
-    }
+        })
 
-    val scope = rememberCoroutineScope()
-
-    LazyColumn(
-        state = lazyListState,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colorResource(R.color.background_light))
-            .padding(16.dp)
-            .then(
-                if (reihenfolgeBearbeiten) {
-                    Modifier
-                } else {
-                    Modifier.pointerInput(Unit) {
-                        var totalDragX = 0f
-                        detectHorizontalDragGestures(
-                            onDragStart = { totalDragX = 0f },
-                            onHorizontalDrag = { change, dragAmount ->
-                                change.consume()
-                                totalDragX += dragAmount
-                            },
-                            onDragEnd = {
-                                when {
-                                    totalDragX > swipeThresholdPx -> onSwipeToNextDay()
-                                    totalDragX < -swipeThresholdPx -> onSwipeToPrevDay()
-                                }
-                            }
-                        )
-                    }
-                }
-            ),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        itemsIndexed(
-            items = displayItems,
-            key = { index: Int, listItem: ListItem ->
-                when (listItem) {
-                    is ListItem.CustomerItem -> "c-${listItem.customer.id}"
-                    is ListItem.SectionHeader -> "h-${listItem.sectionType}-$index"
-                    is ListItem.ListeHeader -> "l-${listItem.listeId}-$index"
-                    is ListItem.TourListeCard -> "tc-${listItem.liste.id}-$index"
-                    is ListItem.TourListeErledigt -> "t-${listItem.listeName}-$index"
-                    is ListItem.ErledigtSection -> "e-$index"
-                }
-            },
-            itemContent = { index, item ->
-            val dragOffset = if (index == dragState.currentIndexOfDraggedItem) dragState.elementDisplacement ?: 0f else 0f
-            val cardDragModifier = if (reihenfolgeBearbeiten && item is ListItem.CustomerItem) {
-                Modifier.pointerInput(reihenfolgeBearbeiten, index) {
-                    detectDragGesturesAfterLongPress(
-                        onDragStart = { dragState.onDragStartWithIndex(index) },
-                        onDrag = { change: PointerInputChange, offset: Offset ->
-                            change.consume()
-                            dragState.onDrag(dragAmount = offset)
-                            dragState.checkForOverScroll().takeIf { it != 0f }?.let { delta ->
-                                scope.launch { lazyListState.scroll { scrollBy(delta) } }
-                            }
-                        },
-                        onDragEnd = { dragState.onDragInterrupted() },
-                        onDragCancel = { dragState.onDragInterrupted() }
+        LazyColumn(
+            state = reorderState.listState,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colorResource(R.color.background_light))
+                .padding(16.dp)
+                .reorderable(reorderState)
+                .detectReorderAfterLongPress(reorderState),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(reorderCustomers, key = { "c-${it.customer.id}" }) { item ->
+                ReorderableItem(reorderState, key = "c-${item.customer.id}") { isDragging ->
+                    CustomerItemContent(
+                        item = item,
+                        viewDateMillis = viewDateMillis,
+                        isDragging = isDragging,
+                        onCustomerClick = onCustomerClick,
+                        onAktionenClick = onAktionenClick,
+                        cardShowAddress = cardShowAddress,
+                        cardShowPhone = cardShowPhone,
+                        cardShowNotes = cardShowNotes
                     )
                 }
-            } else null
-            Box(modifier = Modifier.graphicsLayer { translationY = dragOffset }) {
+            }
+        }
+    } else {
+        // ── NORMALER MODUS: Volle Liste mit Headern + Swipe-Gesten ──
+        val lazyListState = rememberLazyListState()
+
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colorResource(R.color.background_light))
+                .padding(16.dp)
+                .pointerInput(Unit) {
+                    var totalDragX = 0f
+                    detectHorizontalDragGestures(
+                        onDragStart = { totalDragX = 0f },
+                        onHorizontalDrag = { change, dragAmount ->
+                            change.consume()
+                            totalDragX += dragAmount
+                        },
+                        onDragEnd = {
+                            when {
+                                totalDragX > swipeThresholdPx -> onSwipeToNextDay()
+                                totalDragX < -swipeThresholdPx -> onSwipeToPrevDay()
+                            }
+                        }
+                    )
+                },
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            itemsIndexed(
+                items = tourItems,
+                key = { index, listItem ->
+                    when (listItem) {
+                        is ListItem.CustomerItem -> "c-${listItem.customer.id}"
+                        is ListItem.SectionHeader -> "h-${listItem.sectionType}-$index"
+                        is ListItem.ListeHeader -> "l-${listItem.listeId}-$index"
+                        is ListItem.TourListeCard -> "tc-${listItem.liste.id}-$index"
+                        is ListItem.TourListeErledigt -> "t-${listItem.listeName}-$index"
+                        is ListItem.ErledigtSection -> "e-$index"
+                    }
+                }
+            ) { index, item ->
                 when (item) {
-                    is ListItem.ErledigtSection -> { }
+                    is ListItem.ErledigtSection -> { /* leer */ }
                     is ListItem.SectionHeader -> SectionHeaderRow(
-                    title = item.title,
-                    countText = when (item.sectionType) {
-                        SectionType.OVERDUE -> "(${item.count})"
-                        else -> "${item.erledigtCount}/${item.count}"
-                    },
-                    isExpanded = isSectionExpanded(item.sectionType),
-                    sectionType = item.sectionType,
-                    sectionOverdueBg = sectionOverdueBg,
-                    sectionOverdueText = sectionOverdueText,
-                    sectionDoneBg = sectionDoneBg,
-                    sectionDoneText = sectionDoneText,
-                    onToggle = { onToggleSection(item.sectionType) }
-                )
-                is ListItem.ListeHeader -> ListeHeaderRow(
-                    listeName = item.listeName,
-                    countText = "${item.erledigtCount}/${item.kundenCount}",
-                    isExpanded = false,
-                    sectionDoneBg = sectionDoneBg,
-                    sectionDoneText = sectionDoneText,
-                    onToggle = { }
-                )
-                is ListItem.TourListeCard -> TourListeCardRow(
-                    liste = item.liste,
-                    kunden = item.kunden,
-                    aCount = item.aCount,
-                    lCount = item.lCount,
-                    viewDateMillis = viewDateMillis ?: 0L,
-                    getStatusBadgeText = getStatusBadgeText,
-                    onCustomerClick = onCustomerClick,
-                    onAktionenClick = onAktionenClick,
-                    cardShowAddress = cardShowAddress,
-                    cardShowPhone = cardShowPhone,
-                    cardShowNotes = cardShowNotes
-                )
-                is ListItem.TourListeErledigt -> {
-                    TourListeErledigtRow(
+                        title = item.title,
+                        countText = when (item.sectionType) {
+                            SectionType.OVERDUE -> "(${item.count})"
+                            else -> "${item.erledigtCount}/${item.count}"
+                        },
+                        isExpanded = isSectionExpanded(item.sectionType),
+                        sectionType = item.sectionType,
+                        sectionOverdueBg = sectionOverdueBg,
+                        sectionOverdueText = sectionOverdueText,
+                        sectionDoneBg = sectionDoneBg,
+                        sectionDoneText = sectionDoneText,
+                        onToggle = { onToggleSection(item.sectionType) }
+                    )
+                    is ListItem.ListeHeader -> ListeHeaderRow(
+                        listeName = item.listeName,
+                        countText = "${item.erledigtCount}/${item.kundenCount}",
+                        isExpanded = false,
+                        sectionDoneBg = sectionDoneBg,
+                        sectionDoneText = sectionDoneText,
+                        onToggle = { }
+                    )
+                    is ListItem.TourListeCard -> TourListeCardRow(
+                        liste = item.liste,
+                        kunden = item.kunden,
+                        aCount = item.aCount,
+                        lCount = item.lCount,
+                        viewDateMillis = viewDateMillis ?: 0L,
+                        getStatusBadgeText = getStatusBadgeText,
+                        onCustomerClick = onCustomerClick,
+                        onAktionenClick = onAktionenClick,
+                        cardShowAddress = cardShowAddress,
+                        cardShowPhone = cardShowPhone,
+                        cardShowNotes = cardShowNotes
+                    )
+                    is ListItem.TourListeErledigt -> TourListeErledigtRow(
                         listeName = item.listeName,
                         erledigteKunden = item.erledigteKunden,
                         viewDateMillis = viewDateMillis,
@@ -390,56 +389,72 @@ private fun TourPlannerListContent(
                         onCustomerClick = onCustomerClick,
                         onAktionenClick = onAktionenClick
                     )
-                }
-                is ListItem.CustomerItem -> {
-                    val isInUrlaub = viewDateMillis != null &&
-                        TerminFilterUtils.istTerminInUrlaubEintraege(viewDateMillis!!, item.customer)
-                    val viewDate = viewDateMillis ?: 0L
-                    val urlaubInfo = if (isInUrlaub) {
-                        val viewStart = TerminBerechnungUtils.getStartOfDay(viewDate)
-                        val urlaubEntry = TerminFilterUtils.getEffectiveUrlaubEintraege(item.customer)
-                            .firstOrNull { e ->
-                                val vonStart = TerminBerechnungUtils.getStartOfDay(e.von)
-                                val bisStart = TerminBerechnungUtils.getStartOfDay(e.bis)
-                                viewStart in vonStart..bisStart
-                            }
-                        urlaubEntry?.let { "${DateFormatter.formatDate(it.von)} – ${DateFormatter.formatDate(it.bis)}" }
-                            ?: if (item.customer.urlaubVon > 0 && item.customer.urlaubBis > 0)
-                                "${DateFormatter.formatDate(item.customer.urlaubVon)} – ${DateFormatter.formatDate(item.customer.urlaubBis)}"
-                            else ""
-                    } else null
-                    val payload = CustomerOverviewPayload(
-                        customer = item.customer,
-                        urlaubInfo = urlaubInfo?.takeIf { it.isNotEmpty() },
-                        verschobenInfo = item.verschobenInfo?.takeIf { it.isNotEmpty() },
-                        verschobenVonInfo = item.verschobenVonInfo?.takeIf { it.isNotEmpty() },
-                        ueberfaelligInfo = null
-                    )
-                    TourCustomerRow(
-                        customer = item.customer,
-                        isOverdue = item.isOverdue,
-                        isInUrlaub = isInUrlaub,
-                        isVerschobenAmFaelligkeitstag = item.isVerschobenAmFaelligkeitstag,
-                        verschobenInfo = item.verschobenInfo,
-                        verschobenVonInfo = item.verschobenVonInfo,
-                        statusBadgeText = item.statusBadgeText,
-                        overdueAlSuffix = item.overdueAlSuffix,
-                        viewDateMillis = viewDate,
-                        onCustomerClick = { onCustomerClick(payload) },
-                        onAktionenClick = { onAktionenClick(item.customer) },
-                        dragHandleModifier = null,
-                        dragHandleContent = null,
-                        cardDragModifier = cardDragModifier,
-                        cardInteractionSource = null,
-                        isDragging = index == dragState.currentIndexOfDraggedItem,
-                        showAddress = cardShowAddress,
-                        showPhone = cardShowPhone,
-                        showNotes = cardShowNotes
+                    is ListItem.CustomerItem -> CustomerItemContent(
+                        item = item,
+                        viewDateMillis = viewDateMillis,
+                        isDragging = false,
+                        onCustomerClick = onCustomerClick,
+                        onAktionenClick = onAktionenClick,
+                        cardShowAddress = cardShowAddress,
+                        cardShowPhone = cardShowPhone,
+                        cardShowNotes = cardShowNotes
                     )
                 }
             }
         }
-        }
-        )
     }
+}
+
+/** Gemeinsame Darstellung einer Kundenkarte (Normal- und Bearbeiten-Modus). */
+@Composable
+private fun CustomerItemContent(
+    item: ListItem.CustomerItem,
+    viewDateMillis: Long?,
+    isDragging: Boolean,
+    onCustomerClick: (CustomerOverviewPayload) -> Unit,
+    onAktionenClick: (Customer) -> Unit,
+    cardShowAddress: Boolean,
+    cardShowPhone: Boolean,
+    cardShowNotes: Boolean
+) {
+    val isInUrlaub = viewDateMillis != null &&
+        TerminFilterUtils.istTerminInUrlaubEintraege(viewDateMillis!!, item.customer)
+    val viewDate = viewDateMillis ?: 0L
+    val urlaubInfo = if (isInUrlaub) {
+        val viewStart = TerminBerechnungUtils.getStartOfDay(viewDate)
+        val urlaubEntry = TerminFilterUtils.getEffectiveUrlaubEintraege(item.customer)
+            .firstOrNull { e ->
+                val vonStart = TerminBerechnungUtils.getStartOfDay(e.von)
+                val bisStart = TerminBerechnungUtils.getStartOfDay(e.bis)
+                viewStart in vonStart..bisStart
+            }
+        urlaubEntry?.let { "${DateFormatter.formatDate(it.von)} – ${DateFormatter.formatDate(it.bis)}" }
+            ?: if (item.customer.urlaubVon > 0 && item.customer.urlaubBis > 0)
+                "${DateFormatter.formatDate(item.customer.urlaubVon)} – ${DateFormatter.formatDate(item.customer.urlaubBis)}"
+            else ""
+    } else null
+    val payload = CustomerOverviewPayload(
+        customer = item.customer,
+        urlaubInfo = urlaubInfo?.takeIf { it.isNotEmpty() },
+        verschobenInfo = item.verschobenInfo?.takeIf { it.isNotEmpty() },
+        verschobenVonInfo = item.verschobenVonInfo?.takeIf { it.isNotEmpty() },
+        ueberfaelligInfo = null
+    )
+    TourCustomerRow(
+        customer = item.customer,
+        isOverdue = item.isOverdue,
+        isInUrlaub = isInUrlaub,
+        isVerschobenAmFaelligkeitstag = item.isVerschobenAmFaelligkeitstag,
+        verschobenInfo = item.verschobenInfo,
+        verschobenVonInfo = item.verschobenVonInfo,
+        statusBadgeText = item.statusBadgeText,
+        overdueAlSuffix = item.overdueAlSuffix,
+        viewDateMillis = viewDate,
+        onCustomerClick = { onCustomerClick(payload) },
+        onAktionenClick = { onAktionenClick(item.customer) },
+        isDragging = isDragging,
+        showAddress = cardShowAddress,
+        showPhone = cardShowPhone,
+        showNotes = cardShowNotes
+    )
 }

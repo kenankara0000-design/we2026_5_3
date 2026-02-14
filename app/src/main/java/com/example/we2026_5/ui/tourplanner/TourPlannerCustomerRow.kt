@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -24,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
@@ -62,13 +62,7 @@ internal fun TourCustomerRow(
     showErledigtBadge: Boolean = false,
     onCustomerClick: () -> Unit,
     onAktionenClick: () -> Unit,
-    dragHandleModifier: Modifier? = null,
-    dragHandleContent: @Composable (() -> Unit)? = null,
-    /** Wenn gesetzt: wird auf die Card angewendet (z. B. longPressDraggableHandle). */
-    cardDragModifier: Modifier? = null,
-    /** Muss mit cardDragModifier zusammen verwendet werden (gleiche Instance wie beim Handle). */
-    cardInteractionSource: MutableInteractionSource? = null,
-    /** true wenn die Karte gerade gezogen wird (Long-Press Drag) – visueller Hinweis. */
+    /** true wenn die Karte gerade gezogen wird – visueller Hinweis (Elevation, Alpha). */
     isDragging: Boolean = false,
     /** Phase 4: Kartenanzeige-Optionen aus AppPreferences. */
     showAddress: Boolean = true,
@@ -107,17 +101,19 @@ internal fun TourCustomerRow(
     }
     val clickModifier = if (isDeaktiviert) Modifier else Modifier.clickable(
         onClick = onCustomerClick,
-        interactionSource = cardInteractionSource ?: remember { MutableInteractionSource() },
+        interactionSource = remember { MutableInteractionSource() },
         indication = null
     )
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .then(clickModifier)
-            .then(cardDragModifier ?: Modifier),
+            .alpha(if (isDragging) 0.85f else 1f)
+            .then(clickModifier),
         colors = CardDefaults.cardColors(containerColor = cardBg),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isDragging) 12.dp else 4.dp
+        )
     ) {
         Row(
             modifier = Modifier
@@ -229,10 +225,6 @@ internal fun TourCustomerRow(
                         }
                     }
                 }
-            }
-            if (dragHandleModifier != null && dragHandleContent != null) {
-                Box(modifier = dragHandleModifier) { dragHandleContent() }
-                Spacer(Modifier.size(4.dp))
             }
             Spacer(Modifier.size(12.dp))
             Button(

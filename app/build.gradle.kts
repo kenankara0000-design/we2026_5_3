@@ -103,6 +103,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.compose.runtime:runtime-livedata")
     implementation("io.coil-kt:coil-compose:2.5.0")
+    
+    // Reorderable für Drag & Drop in LazyColumn
+    implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
 
     // Paging (für 500+ Kunden vorbereitet – bei Bedarf aktivieren)
     implementation("androidx.paging:paging-runtime:3.3.5")

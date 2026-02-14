@@ -26,6 +26,7 @@ import com.example.we2026_5.ui.theme.AppColors
 enum class NeuerTerminArt {
     REGELMAESSIG,
     MONATLICH,
+    WOECHENTLICH,
     EINMALIG_KUNDEN_TERMIN,
     EINMALIG_AUSNAHME,
     URLAUB
@@ -36,6 +37,8 @@ private val colorRegelBg = Color(0x401976D2)      // Blau
 private val colorRegelText = Color(0xFF0D47A1)
 private val colorMonatlichBg = Color(0x351976D2)  // Blau etwas kräftiger
 private val colorMonatlichText = Color(0xFF0D47A1)
+private val colorWoechentlichBg = Color(0x400097A7) // Teal
+private val colorWoechentlichText = Color(0xFF00695C)
 private val colorKundenBg = Color(0x40258E3C)     // Grün
 private val colorKundenText = Color(0xFF1B5E20)
 private val colorAusnahmeBg = Color(0x59F9A825)   // Gelb/Amber
@@ -45,7 +48,7 @@ private val colorUrlaubText = Color(0xFFBF360C)
 
 /** Erlaubte Termin-Arten pro KundenTyp: Regelmäßig nur Regel/Monatlich/Ausnahme/Urlaub; Unregelmäßig nur Einmalig-Kunde/Ausnahme/Urlaub; Abruf Ausnahme/Einmalig/Urlaub. */
 private fun allowedArtsFor(kundenTyp: KundenTyp): Set<NeuerTerminArt> = when (kundenTyp) {
-    KundenTyp.REGELMAESSIG -> setOf(NeuerTerminArt.REGELMAESSIG, NeuerTerminArt.MONATLICH, NeuerTerminArt.EINMALIG_AUSNAHME, NeuerTerminArt.URLAUB)
+    KundenTyp.REGELMAESSIG -> setOf(NeuerTerminArt.REGELMAESSIG, NeuerTerminArt.MONATLICH, NeuerTerminArt.WOECHENTLICH, NeuerTerminArt.EINMALIG_AUSNAHME, NeuerTerminArt.URLAUB)
     KundenTyp.UNREGELMAESSIG -> setOf(NeuerTerminArt.EINMALIG_KUNDEN_TERMIN, NeuerTerminArt.EINMALIG_AUSNAHME, NeuerTerminArt.URLAUB)
     KundenTyp.AUF_ABRUF -> setOf(NeuerTerminArt.EINMALIG_AUSNAHME, NeuerTerminArt.EINMALIG_KUNDEN_TERMIN, NeuerTerminArt.URLAUB)
 }
@@ -93,6 +96,15 @@ fun NeuerTerminArtSheet(
                     backgroundColor = colorMonatlichBg,
                     textColor = colorMonatlichText,
                     onClick = { onArtSelected(NeuerTerminArt.MONATLICH); onDismiss() }
+                )
+            }
+            if (NeuerTerminArt.WOECHENTLICH in allowed) {
+                SheetOptionColored(
+                    title = stringResource(R.string.label_termin_art_woechentlich),
+                    subtitle = stringResource(R.string.label_termin_art_woechentlich_sub),
+                    backgroundColor = colorWoechentlichBg,
+                    textColor = colorWoechentlichText,
+                    onClick = { onArtSelected(NeuerTerminArt.WOECHENTLICH); onDismiss() }
                 )
             }
             if (NeuerTerminArt.EINMALIG_KUNDEN_TERMIN in allowed) {

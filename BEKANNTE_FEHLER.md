@@ -19,3 +19,12 @@ Keine Änderung am Verhalten (Bug-Fix) ohne ausdrückliche Freigabe (vgl. `.curs
 - **Symptom:** Im Erfassung-Menü führt „Kamera / Foto“ nicht direkt in den Kamera/Formular-Flow wie im Kundendetail-Tab „Belege“; es ist zuerst eine Kundenauswahl nötig, danach öffnet sich das Formular inkl. Kamera/Foto.
 - **Ursache:** Die WaschenErfassungActivity kann das Wäscheliste-Formular nur für einen bereits ausgewählten Kunden öffnen. Das Intent-Flag für „Kamera sofort“ wird erst verarbeitet, sobald der Zustand „ErfassungenListe (Kunde)“ erreicht ist.
 - **Relevante Stellen:** ErfassungMenuActivity, WaschenErfassungActivity, WaschenErfassungViewModel.
+
+---
+
+## Behoben
+
+### Tourenplaner: Drag-Drop funktionierte nur für erste 2 Termine
+
+- **Behoben [2026-02-14]:** Ursache war eine fehlerhafte Custom-Drag-Drop-Implementierung, die auf `LazyListItemInfo` basierte und bei gemischten Item-Typen (Header + Kunden) nicht korrekt funktionierte. Fix: Integration der `org.burnoutcrew.reorderable`-Bibliothek mit separater flacher Kundenliste im Bearbeiten-Modus. Toter Code (TourPlannerDragDrop.kt, ungenutzte Drag-Parameter) entfernt.
+- **Relevante Stellen:** TourPlannerScreen.kt, TourPlannerCustomerRow.kt.

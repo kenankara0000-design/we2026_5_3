@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.we2026_5.AusnahmeTermin
 import com.example.we2026_5.Customer
@@ -71,7 +72,12 @@ fun CustomerDetailTermineTab(
     onDeleteAusnahmeTermin: (AusnahmeTermin) -> Unit = {},
     kundenTermine: List<KundenTermin> = emptyList(),
     onAddAbholungTermin: () -> Unit = {},
-    onDeleteKundenTermin: (List<KundenTermin>) -> Unit = {}
+    onDeleteKundenTermin: (List<KundenTermin>) -> Unit = {},
+    editIntervalle: List<CustomerIntervall> = emptyList(),
+    onDeleteIntervall: ((Int) -> Unit)? = null,
+    showAddWeeklySheet: Boolean = false,
+    onDismissAddWeeklySheet: () -> Unit = {},
+    onConfirmAddWeekly: (CustomerIntervall) -> Unit = {}
 ) {
     val useCentralNeuerTermin = isAdmin
     val nextTermin = TerminBerechnungUtils.naechstesFaelligAmDatum(customer)
@@ -159,6 +165,33 @@ fun CustomerDetailTermineTab(
                     onStartDatumClick = onStartDatumClick,
                     kundennummerReadOnly = true
                 )
+                // Zusätzliche Intervalle (manuell angelegte Weekly / Monthly)
+                val zusaetzliche = editIntervalle.filter {
+                    it.terminRegelId.isNotBlank() || it.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY
+                }
+                if (zusaetzliche.isNotEmpty()) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.label_intervall),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textPrimary,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    zusaetzliche.forEachIndexed { _, intervall ->
+                        val globalIndex = editIntervalle.indexOf(intervall)
+                        CustomerDetailIntervallRow(
+                            intervall = intervall,
+                            isEditMode = true,
+                            onAbholungClick = { },
+                            onAuslieferungClick = { },
+                            onDeleteClick = if (onDeleteIntervall != null && globalIndex >= 0) {
+                                { onDeleteIntervall(globalIndex) }
+                            } else null
+                        )
+                        Spacer(Modifier.height(4.dp))
+                    }
+                }
                 Spacer(Modifier.height(DetailUiConstants.SectionSpacing))
             }
             CustomerDetailNaechsterTermin(
@@ -201,6 +234,12 @@ fun CustomerDetailTermineTab(
                 tourSlotId = tourSlotId,
                 onDismiss = onDismissAddMonthlySheet,
                 onAdd = onConfirmAddMonthly
+            )
+            AddWeeklyIntervallSheet(
+                visible = showAddWeeklySheet,
+                tourSlotId = tourSlotId,
+                onDismiss = onDismissAddWeeklySheet,
+                onAdd = onConfirmAddWeekly
             )
             NeuerTerminArtSheet(
                 visible = showNeuerTerminArtSheet,

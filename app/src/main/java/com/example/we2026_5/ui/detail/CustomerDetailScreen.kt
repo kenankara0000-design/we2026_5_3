@@ -188,6 +188,7 @@ fun CustomerDetailScreen(
         } else {
             val context = LocalContext.current
             var showAddMonthlySheet by remember { mutableStateOf(false) }
+            var showAddWeeklySheet by remember { mutableStateOf(false) }
             var showNeuerTerminArtSheet by remember { mutableStateOf(false) }
             // C4: Nur ViewModel-State; bei customer != null ist initialFormStateFromCustomer gesetzt
             val currentFormState: AddCustomerState = editFormState ?: initialFormStateFromCustomer!!
@@ -288,6 +289,7 @@ fun CustomerDetailScreen(
                             when (art) {
                                 NeuerTerminArt.REGELMAESSIG -> onEdit()
                                 NeuerTerminArt.MONATLICH -> showAddMonthlySheet = true
+                                NeuerTerminArt.WOECHENTLICH -> showAddWeeklySheet = true
                                 NeuerTerminArt.EINMALIG_KUNDEN_TERMIN -> customer?.let { onAddAbholungTermin(it) }
                                 NeuerTerminArt.EINMALIG_AUSNAHME -> customer?.let { onAddAusnahmeTermin(it) }
                                 NeuerTerminArt.URLAUB -> customer?.id?.let { onUrlaubStartActivity(it) }
@@ -301,7 +303,15 @@ fun CustomerDetailScreen(
                         onDeleteAusnahmeTermin = onDeleteAusnahmeTermin,
                         kundenTermine = customer?.kundenTermine ?: emptyList(),
                         onAddAbholungTermin = { customer?.let { onAddAbholungTermin(it) } },
-                        onDeleteKundenTermin = onDeleteKundenTermin
+                        onDeleteKundenTermin = onDeleteKundenTermin,
+                        editIntervalle = editIntervalle,
+                        onDeleteIntervall = onDeleteIntervall,
+                        showAddWeeklySheet = showAddWeeklySheet,
+                        onDismissAddWeeklySheet = { showAddWeeklySheet = false },
+                        onConfirmAddWeekly = {
+                            onAddMonthlyIntervall?.invoke(it)
+                            showAddWeeklySheet = false
+                        }
                     )
                     2 -> CustomerDetailBelegeTab(
                         customer = customer,

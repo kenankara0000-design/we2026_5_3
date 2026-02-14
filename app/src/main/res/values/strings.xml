@@ -500,6 +500,11 @@
     <string name="label_termin_art_regelmaessig_sub">Wöchentlich, alle 2 Wo, … · A- und L-Tage</string>
     <string name="label_termin_art_monatlich">Monatlich (n-ter Wochentag)</string>
     <string name="label_termin_art_monatlich_sub">z.B. 2. Donnerstag im Monat</string>
+    <string name="label_termin_art_woechentlich">Wöchentlich (A-Tag → L-Tag)</string>
+    <string name="label_termin_art_woechentlich_sub">z.B. Di Abholung → So Auslieferung</string>
+    <string name="label_weekly_sheet_title">Wöchentliches Intervall</string>
+    <string name="label_abholung_wochentag_waehlen">Abholung am:</string>
+    <string name="label_auslieferung_wochentag_waehlen">Auslieferung am:</string>
     <string name="label_termin_art_einmalig_kunde">Einmalig – Kunden-Termin</string>
     <string name="label_termin_art_einmalig_kunde_sub">Vom Kunden vorgegebenes Datum</string>
     <string name="label_termin_art_einmalig_ausnahme">Einmalig – Ausnahme</string>
