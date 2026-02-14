@@ -8,6 +8,7 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
 import com.example.we2026_5.KundenListe
 import com.example.we2026_5.KundenTyp
+import com.example.we2026_5.TerminRegelTyp
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.data.repository.CustomerSnapshotParser
 import com.example.we2026_5.data.repository.ErfassungRepository
@@ -253,6 +254,114 @@ class CustomerDetailViewModel(
     fun updateEditFormState(state: AddCustomerState) {
         _editFormState.value = state
     }
+
+    /**
+     * Phase C3: Baut aus aktuellem Kunden-, Form- und Intervall-State die Speicher-Payload.
+     * @return Payload oder null bei Validierungsfehler (Name leer); dann wird [editFormState] mit Fehlermeldung aktualisiert.
+     */
+    fun buildSavePayload(validationNameMissing: String): SavePayload? {
+        val c = currentCustomer.value ?: return null
+        val stateForSave = _editFormState.value ?: return null
+        val name = stateForSave.name.trim()
+        if (name.isEmpty()) {
+            _editFormState.value = stateForSave.copy(errorMessage = validationNameMissing)
+            return null
+        }
+        val editIntervalle = _editIntervalle.value
+        val hasTour = stateForSave.abholungWochentage.isNotEmpty() || stateForSave.tourStadt.isNotBlank() || stateForSave.tourZeitStart.isNotBlank() || stateForSave.tourZeitEnde.isNotBlank()
+        val slotId = if (hasTour) (c.tourSlot?.id ?: "customer-${c.id}") else ""
+        val startDatumA = stateForSave.erstelltAm.takeIf { it > 0 } ?: TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
+        val tageAzuLForSave = stateForSave.tageAzuL?.coerceIn(0, 365) ?: 7
+        val intervalleToSaveRaw = if (stateForSave.kundenTyp == KundenTyp.REGELMAESSIG && stateForSave.abholungWochentage.isNotEmpty()) {
+            val customerForIntervall = c.copy(
+                defaultAbholungWochentag = stateForSave.abholungWochentage.firstOrNull() ?: -1,
+                defaultAuslieferungWochentag = stateForSave.auslieferungWochentage.firstOrNull() ?: -1,
+                defaultAbholungWochentage = stateForSave.abholungWochentage,
+                defaultAuslieferungWochentage = stateForSave.auslieferungWochentage,
+                sameDayLStrategy = stateForSave.sameDayLStrategy,
+                tourSlotId = slotId
+            )
+            val mainFromForm = TerminAusKundeUtils.erstelleIntervalleAusKunde(customerForIntervall, startDatumA, tageAzuLForSave, stateForSave.intervallTage ?: 7)
+            val fromRules = editIntervalle.filter { it.terminRegelId.isNotBlank() || it.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY }
+            mainFromForm + fromRules
+        } else editIntervalle
+        val intervalleToSave = intervalleToSaveRaw.map { iv ->
+            if (iv.regelTyp == TerminRegelTyp.WEEKLY && iv.abholungDatum > 0) iv
+            else if (iv.abholungDatum > 0) iv.copy(
+                auslieferungDatum = TerminBerechnungUtils.getStartOfDay(iv.abholungDatum + TimeUnit.DAYS.toMillis(tageAzuLForSave.toLong()))
+            ) else iv
+        }
+        val updates = buildMap<String, Any> {
+            put("name", name)
+            put("alias", stateForSave.alias.trim())
+            put("adresse", stateForSave.adresse.trim())
+            stateForSave.latitude?.let { put("latitude", it) }
+            stateForSave.longitude?.let { put("longitude", it) }
+            put("stadt", stateForSave.stadt.trim())
+            put("plz", stateForSave.plz.trim())
+            put("telefon", stateForSave.telefon.trim())
+            put("notizen", stateForSave.notizen.trim())
+            put("kundenArt", stateForSave.kundenArt)
+            put("kundenTyp", stateForSave.kundenTyp.name)
+            put("defaultAbholungWochentag", stateForSave.abholungWochentage.firstOrNull() ?: -1)
+            put("defaultAuslieferungWochentag", stateForSave.auslieferungWochentage.firstOrNull() ?: -1)
+            put("defaultAbholungWochentage", stateForSave.abholungWochentage)
+            put("defaultAuslieferungWochentage", stateForSave.auslieferungWochentage)
+            put("tageAzuL", tageAzuLForSave)
+            stateForSave.sameDayLStrategy?.let { put("sameDayLStrategy", it) }
+            put("kundennummer", stateForSave.kundennummer.trim())
+            put("defaultUhrzeit", stateForSave.defaultUhrzeit.trim())
+            put("tags", stateForSave.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } })
+            put("ohneTour", stateForSave.ohneTour)
+            put("erstelltAm", startDatumA)
+            put("tourSlotId", slotId)
+            put("tourSlot", if (hasTour) mapOf<String, Any>(
+                "id" to slotId,
+                "wochentag" to (stateForSave.abholungWochentage.firstOrNull() ?: -1),
+                "stadt" to stateForSave.tourStadt.trim(),
+                "zeitfenster" to mapOf(
+                    "start" to stateForSave.tourZeitStart.trim(),
+                    "ende" to stateForSave.tourZeitEnde.trim()
+                )
+            ) else emptyMap<String, Any>())
+            put("intervalle", intervalleToSave.map {
+                mapOf(
+                    "id" to it.id,
+                    "abholungDatum" to it.abholungDatum,
+                    "auslieferungDatum" to it.auslieferungDatum,
+                    "wiederholen" to it.wiederholen,
+                    "intervallTage" to it.intervallTage,
+                    "intervallAnzahl" to it.intervallAnzahl,
+                    "erstelltAm" to it.erstelltAm,
+                    "terminRegelId" to it.terminRegelId,
+                    "regelTyp" to it.regelTyp.name,
+                    "tourSlotId" to it.tourSlotId,
+                    "zyklusTage" to it.zyklusTage,
+                    "monthWeekOfMonth" to it.monthWeekOfMonth,
+                    "monthWeekday" to it.monthWeekday
+                )
+            })
+        }
+        return SavePayload(updates, intervalleToSave, tageAzuLForSave)
+    }
+
+    /**
+     * Phase C3: Führt Speichern aus (Payload bauen + saveCustomer). Bei Validierungsfehler wird [onComplete](false) aufgerufen.
+     */
+    fun performSave(validationNameMissing: String, onComplete: (Boolean) -> Unit) {
+        val payload = buildSavePayload(validationNameMissing) ?: run {
+            onComplete(false)
+            return
+        }
+        saveCustomer(payload.updates, payload.intervalle, payload.tageAzuL, onComplete)
+    }
+
+    /** Phase C3: Ergebnis von [buildSavePayload] für [performSave] / [saveCustomer]. */
+    data class SavePayload(
+        val updates: Map<String, Any>,
+        val intervalle: List<CustomerIntervall>,
+        val tageAzuL: Int
+    )
 
     /**
      * Setzt bei Tour-Kunden kundenTyp=UNREGELMAESSIG sowie Wochentag A, Wochentag L und tageAzuL von der Liste,

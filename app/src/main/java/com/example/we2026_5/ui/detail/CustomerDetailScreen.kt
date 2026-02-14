@@ -24,69 +24,64 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.example.we2026_5.Customer
 import com.example.we2026_5.CustomerIntervall
-import com.example.we2026_5.KundenTyp
-import com.example.we2026_5.TerminRegelTyp
 import com.example.we2026_5.R
-import com.example.we2026_5.util.TerminAusKundeUtils
 import com.example.we2026_5.util.DialogBaseHelper
 import com.example.we2026_5.util.TerminBerechnungUtils
 import com.example.we2026_5.util.intervallTageOrDefault
 import com.example.we2026_5.util.tageAzuLOrDefault
 import com.example.we2026_5.ui.addcustomer.AddCustomerState
 import com.example.we2026_5.ui.wasch.BelegMonat
-import java.util.concurrent.TimeUnit
 
+/** Phase C2: Screen nimmt gebündelten [CustomerDetailUiState] und [CustomerDetailActions]. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerDetailScreen(
-    isAdmin: Boolean,
-    customer: Customer?,
-    isInEditMode: Boolean,
-    editIntervalle: List<CustomerIntervall>,
-    editFormState: AddCustomerState?,
-    onUpdateEditFormState: (AddCustomerState) -> Unit,
-    isLoading: Boolean,
-    isUploading: Boolean = false,
-    isOffline: Boolean = false,
-    onBack: () -> Unit,
-    onEdit: () -> Unit,
-    onSave: (Map<String, Any>, List<CustomerIntervall>, Int?) -> Unit,
-    showSaveAndNext: Boolean = false,
-    onSaveAndNext: ((Map<String, Any>, List<CustomerIntervall>, Int?) -> Unit)? = null,
-    onDelete: () -> Unit,
-    onTerminAnlegen: () -> Unit,
-    onPauseCustomer: (pauseEndeWochen: Int?) -> Unit,
-    onResumeCustomer: () -> Unit,
-    onTakePhoto: () -> Unit,
-    onAdresseClick: () -> Unit,
-    onTelefonClick: () -> Unit,
-    onPhotoClick: (String) -> Unit,
-    onDeletePhoto: ((String) -> Unit)? = null,
-    onDatumSelected: (Int, Boolean) -> Unit,
-    onDeleteIntervall: ((Int) -> Unit)? = null,
-    onRemoveRegel: ((String) -> Unit)? = null,
-    onResetToAutomatic: () -> Unit = {},
-    regelNameByRegelId: Map<String, String> = emptyMap(),
-    onRegelClick: (String) -> Unit = {},
-    onUrlaubStartActivity: (String) -> Unit = {},
-    onAddMonthlyIntervall: ((CustomerIntervall) -> Unit)? = null,
-    onAddAbholungTermin: (Customer) -> Unit = {},
-    onAddAusnahmeTermin: (Customer) -> Unit = {},
-    /** A/L-Paare für „Alle Termine“-Block (Termine-Tab). */
-    terminePairs365: List<Pair<Long, Long>> = emptyList(),
-    /** Name der Liste (ohne Wochentag), zu der der Kunde gehört (nur bei Listenkunden). Hinweis „Gehört zu Liste: …“. */
-    tourListenName: String? = null,
-    onDeleteNextTermin: (Long) -> Unit = {},
-    onDeleteAusnahmeTermin: (com.example.we2026_5.AusnahmeTermin) -> Unit = {},
-    onDeleteKundenTermin: (List<com.example.we2026_5.KundenTermin>) -> Unit = {},
-    /** Belege für Tab Belege (vom ViewModel): offen und erledigt. */
-    belegMonateForCustomer: List<BelegMonat> = emptyList(),
-    belegMonateErledigtForCustomer: List<BelegMonat> = emptyList(),
-    onNeueErfassungKameraFotoBelege: () -> Unit = {},
-    onNeueErfassungFormularBelege: () -> Unit = {},
-    onNeueErfassungManuellBelege: () -> Unit = {},
-    onBelegClick: (BelegMonat) -> Unit = {}
+    state: CustomerDetailUiState,
+    actions: CustomerDetailActions
 ) {
+    val isAdmin = state.isAdmin
+    val customer = state.customer
+    val isInEditMode = state.isInEditMode
+    val editIntervalle = state.editIntervalle
+    val editFormState = state.editFormState
+    val isLoading = state.isLoading
+    val isUploading = state.isUploading
+    val isOffline = state.isOffline
+    val showSaveAndNext = state.showSaveAndNext
+    val terminePairs365 = state.terminePairs365
+    val tourListenName = state.tourListenName
+    val belegMonateForCustomer = state.belegMonateForCustomer
+    val belegMonateErledigtForCustomer = state.belegMonateErledigtForCustomer
+    val onUpdateEditFormState = actions.onUpdateEditFormState
+    val onBack = actions.onBack
+    val onEdit = actions.onEdit
+    val onPerformSave = actions.onPerformSave
+    val onDelete = actions.onDelete
+    val onTerminAnlegen = actions.onTerminAnlegen
+    val onPauseCustomer = actions.onPauseCustomer
+    val onResumeCustomer = actions.onResumeCustomer
+    val onTakePhoto = actions.onTakePhoto
+    val onAdresseClick = actions.onAdresseClick
+    val onTelefonClick = actions.onTelefonClick
+    val onPhotoClick = actions.onPhotoClick
+    val onDeletePhoto = actions.onDeletePhoto
+    val onDatumSelected = actions.onDatumSelected
+    val onDeleteIntervall = actions.onDeleteIntervall
+    val onRemoveRegel = actions.onRemoveRegel
+    val onResetToAutomatic = actions.onResetToAutomatic
+    val onRegelClick = actions.onRegelClick
+    val onUrlaubStartActivity = actions.onUrlaubStartActivity
+    val onAddMonthlyIntervall = actions.onAddMonthlyIntervall
+    val onAddAbholungTermin = actions.onAddAbholungTermin
+    val onAddAusnahmeTermin = actions.onAddAusnahmeTermin
+    val onDeleteNextTermin = actions.onDeleteNextTermin
+    val onDeleteAusnahmeTermin = actions.onDeleteAusnahmeTermin
+    val onDeleteKundenTermin = actions.onDeleteKundenTermin
+    val onNeueErfassungKameraFotoBelege = actions.onNeueErfassungKameraFotoBelege
+    val onNeueErfassungFormularBelege = actions.onNeueErfassungFormularBelege
+    val onNeueErfassungManuellBelege = actions.onNeueErfassungManuellBelege
+    val onBelegClick = actions.onBelegClick
+
     val context = LocalContext.current
     val primaryBlue = colorResource(R.color.primary_blue)
     val textPrimary = colorResource(R.color.text_primary)
@@ -102,7 +97,6 @@ fun CustomerDetailScreen(
     // C4: Einzige State-Quelle für Formular = ViewModel (editFormState). Kein lokales formState mehr.
     var overflowMenuExpanded by remember { mutableStateOf(false) }
     var showUnsavedChangesDialog by remember { mutableStateOf(false) }
-    val validationNameMissing = stringResource(R.string.validation_name_missing)
 
     val initialFormStateFromCustomer = remember(customer?.id) {
         customer?.let { c ->
@@ -159,91 +153,6 @@ fun CustomerDetailScreen(
     }
 
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val performSave = performSave@ { andNext: Boolean ->
-        val c = customer ?: return@performSave
-        val stateForSave = editFormState ?: return@performSave
-        val name = stateForSave.name.trim()
-        if (name.isEmpty()) {
-            onUpdateEditFormState(stateForSave.copy(errorMessage = validationNameMissing))
-        } else {
-            val updates = buildMap<String, Any> {
-                put("name", name)
-                put("alias", stateForSave.alias.trim())
-                put("adresse", stateForSave.adresse.trim())
-                stateForSave.latitude?.let { put("latitude", it) }
-                stateForSave.longitude?.let { put("longitude", it) }
-                put("stadt", stateForSave.stadt.trim())
-                put("plz", stateForSave.plz.trim())
-                put("telefon", stateForSave.telefon.trim())
-                put("notizen", stateForSave.notizen.trim())
-                put("kundenArt", stateForSave.kundenArt)
-                put("kundenTyp", stateForSave.kundenTyp.name)
-                put("defaultAbholungWochentag", stateForSave.abholungWochentage.firstOrNull() ?: -1)
-                put("defaultAuslieferungWochentag", stateForSave.auslieferungWochentage.firstOrNull() ?: -1)
-                put("defaultAbholungWochentage", stateForSave.abholungWochentage)
-                put("defaultAuslieferungWochentage", stateForSave.auslieferungWochentage)
-                put("tageAzuL", stateForSave.tageAzuL?.coerceIn(0, 365) ?: 7)
-                stateForSave.sameDayLStrategy?.let { put("sameDayLStrategy", it) }
-                put("kundennummer", stateForSave.kundennummer.trim())
-                put("defaultUhrzeit", stateForSave.defaultUhrzeit.trim())
-                put("tags", stateForSave.tagsInput.split(",").mapNotNull { it.trim().ifEmpty { null } })
-                put("ohneTour", stateForSave.ohneTour)
-                put("erstelltAm", stateForSave.erstelltAm.takeIf { it > 0 } ?: TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis()))
-                val hasTour = stateForSave.abholungWochentage.isNotEmpty() || stateForSave.tourStadt.isNotBlank() || stateForSave.tourZeitStart.isNotBlank() || stateForSave.tourZeitEnde.isNotBlank()
-                val slotId = if (hasTour) (c.tourSlot?.id ?: "customer-${c.id}") else ""
-                put("tourSlotId", slotId)
-                put("tourSlot", if (hasTour) mapOf<String, Any>(
-                    "id" to slotId,
-                    "wochentag" to (stateForSave.abholungWochentage.firstOrNull() ?: -1),
-                    "stadt" to stateForSave.tourStadt.trim(),
-                    "zeitfenster" to mapOf(
-                        "start" to stateForSave.tourZeitStart.trim(),
-                        "ende" to stateForSave.tourZeitEnde.trim()
-                    )
-                ) else emptyMap<String, Any>())
-                val startDatumA = stateForSave.erstelltAm.takeIf { it > 0 } ?: TerminBerechnungUtils.getStartOfDay(System.currentTimeMillis())
-                val tageAzuLForSave = stateForSave.tageAzuL?.coerceIn(0, 365) ?: 7
-                val intervalleToSaveRaw = if (stateForSave.kundenTyp == KundenTyp.REGELMAESSIG && stateForSave.abholungWochentage.isNotEmpty()) {
-                    val customerForIntervall = c.copy(
-                        defaultAbholungWochentag = stateForSave.abholungWochentage.firstOrNull() ?: -1,
-                        defaultAuslieferungWochentag = stateForSave.auslieferungWochentage.firstOrNull() ?: -1,
-                        defaultAbholungWochentage = stateForSave.abholungWochentage,
-                        defaultAuslieferungWochentage = stateForSave.auslieferungWochentage,
-                        sameDayLStrategy = stateForSave.sameDayLStrategy,
-                        tourSlotId = slotId
-                    )
-                    val mainFromForm = TerminAusKundeUtils.erstelleIntervalleAusKunde(customerForIntervall, startDatumA, tageAzuLForSave, stateForSave.intervallTage ?: 7)
-                    val fromRules = editIntervalle.filter { it.terminRegelId.isNotBlank() || it.regelTyp == TerminRegelTyp.MONTHLY_WEEKDAY }
-                    mainFromForm + fromRules
-                } else editIntervalle
-                val intervalleToSave = intervalleToSaveRaw.map { iv ->
-                    if (iv.regelTyp == TerminRegelTyp.WEEKLY && iv.abholungDatum > 0) iv
-                    else if (iv.abholungDatum > 0) iv.copy(
-                        auslieferungDatum = TerminBerechnungUtils.getStartOfDay(iv.abholungDatum + TimeUnit.DAYS.toMillis(tageAzuLForSave.toLong()))
-                    ) else iv
-                }
-                put("intervalle", intervalleToSave.map {
-                    mapOf(
-                        "id" to it.id,
-                        "abholungDatum" to it.abholungDatum,
-                        "auslieferungDatum" to it.auslieferungDatum,
-                        "wiederholen" to it.wiederholen,
-                        "intervallTage" to it.intervallTage,
-                        "intervallAnzahl" to it.intervallAnzahl,
-                        "erstelltAm" to it.erstelltAm,
-                        "terminRegelId" to it.terminRegelId,
-                        "regelTyp" to it.regelTyp.name,
-                        "tourSlotId" to it.tourSlotId,
-                        "zyklusTage" to it.zyklusTage,
-                        "monthWeekOfMonth" to it.monthWeekOfMonth,
-                        "monthWeekday" to it.monthWeekday
-                    )
-                })
-            }
-            if (andNext && onSaveAndNext != null) onSaveAndNext(updates, editIntervalle, stateForSave.tageAzuL)
-            else onSave(updates, editIntervalle, stateForSave.tageAzuL)
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -259,9 +168,9 @@ fun CustomerDetailScreen(
                 overflowMenuExpanded = overflowMenuExpanded,
                 onOverflowMenuDismiss = { overflowMenuExpanded = false },
                 onOverflowMenuExpand = { overflowMenuExpanded = true },
-                onSave = if (customer != null && isInEditMode) {{ performSave(false) }} else null,
+                onSave = if (customer != null && isInEditMode) {{ onPerformSave(false) }} else null,
                 showSaveAndNext = showSaveAndNext,
-                onSaveAndNext = if (customer != null && isInEditMode && showSaveAndNext && onSaveAndNext != null) {{ performSave(true) }} else null
+                onSaveAndNext = if (customer != null && isInEditMode && showSaveAndNext) {{ onPerformSave(true) }} else null
             )
         }
     ) { paddingValues ->

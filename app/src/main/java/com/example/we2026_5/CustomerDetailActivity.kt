@@ -27,7 +27,9 @@ import com.example.we2026_5.auth.AdminChecker
 import com.example.we2026_5.data.repository.CustomerRepository
 import com.example.we2026_5.detail.CustomerPhotoManager
 import com.example.we2026_5.ui.theme.AppTheme
+import com.example.we2026_5.ui.detail.CustomerDetailActions
 import com.example.we2026_5.ui.detail.CustomerDetailScreen
+import com.example.we2026_5.ui.detail.CustomerDetailUiState
 import com.example.we2026_5.ui.detail.CustomerDetailViewModel
 import com.example.we2026_5.ui.urlaub.UrlaubActivity
 import com.example.we2026_5.sevdesk.SevDeskDeletedIds
@@ -100,36 +102,38 @@ class CustomerDetailActivity : AppCompatActivity() {
             val belegMonateErledigtForCustomer by viewModel.belegMonateErledigtForCustomer.collectAsState(initial = emptyList())
             val isOnline by networkMonitor.isOnline.observeAsState(initial = true)
 
-            CustomerDetailScreen(
+            val detailState = CustomerDetailUiState(
                 isAdmin = adminChecker.isAdmin(),
                 customer = customer,
                 isInEditMode = isInEditMode,
                 editIntervalle = editIntervalle,
                 editFormState = editFormState,
-                onUpdateEditFormState = { viewModel.updateEditFormState(it) },
                 isLoading = isLoading,
                 isUploading = isUploading,
                 isOffline = !isOnline,
+                showSaveAndNext = showSaveAndNext,
+                terminePairs365 = terminePairs365,
+                tourListenName = tourListenName,
+                belegMonateForCustomer = belegMonateForCustomer,
+                belegMonateErledigtForCustomer = belegMonateErledigtForCustomer,
+                regelNameByRegelId = emptyMap()
+            )
+            val detailActions = CustomerDetailActions(
+                onUpdateEditFormState = { viewModel.updateEditFormState(it) },
                 onBack = { finish() },
                 onEdit = { viewModel.setEditMode(true, customer) },
-                onSave = { updates, newIntervalle, tageAzuL ->
-                    viewModel.saveCustomer(updates, newIntervalle, tageAzuL) { success ->
+                onPerformSave = { andNext ->
+                    viewModel.performSave(getString(R.string.validation_name_missing)) { success ->
                         if (success) {
                             viewModel.setEditMode(false, null)
                             Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
+                            if (andNext) {
+                                setResult(NextCustomerHelper.RESULT_OPEN_NEXT, Intent().putExtra(NextCustomerHelper.RESULT_EXTRA_INDEX, nextCustomerIndex))
+                                finish()
+                            }
                         }
                     }
                 },
-                showSaveAndNext = showSaveAndNext,
-                onSaveAndNext = if (showSaveAndNext) { updates, newIntervalle, tageAzuL ->
-                    viewModel.saveCustomer(updates, newIntervalle, tageAzuL) { success ->
-                        if (success) {
-                            setResult(NextCustomerHelper.RESULT_OPEN_NEXT, Intent().putExtra(NextCustomerHelper.RESULT_EXTRA_INDEX, nextCustomerIndex))
-                            Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
-                            finish()
-                        }
-                    }
-                } else null,
                 onDelete = {
                     AlertDialog.Builder(this@CustomerDetailActivity)
                         .setTitle(getString(R.string.dialog_delete_customer_title))
@@ -148,8 +152,7 @@ class CustomerDetailActivity : AppCompatActivity() {
                         .show()
                 },
                 onTerminAnlegen = {
-                    val c = customer ?: return@CustomerDetailScreen
-                    handleTerminAnlegen(c, id)
+                    customer?.let { handleTerminAnlegen(it, id) }
                 },
                 onPauseCustomer = { weeks ->
                     customer?.let { pauseCustomer(it, weeks) } ?: showCustomerActionError()
@@ -196,25 +199,6 @@ class CustomerDetailActivity : AppCompatActivity() {
                         } else Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_keine_telefonnummer), Toast.LENGTH_SHORT).show()
                     }
                 },
-                onDeleteIntervall = { index -> viewModel.removeIntervallAt(index) },
-                onRemoveRegel = { regelId ->
-                    AlertDialog.Builder(this@CustomerDetailActivity)
-                        .setTitle(R.string.dialog_regel_vom_kunden_entfernen_titel)
-                        .setMessage(R.string.dialog_regel_vom_kunden_entfernen_message)
-                        .setPositiveButton(R.string.dialog_loeschen) { _, _ -> viewModel.removeRegelFromEdit(regelId) }
-                        .setNegativeButton(R.string.btn_cancel, null)
-                        .show()
-                },
-                onResetToAutomatic = { viewModel.resetToAutomaticIntervall(customer, editFormState) },
-                onAddAbholungTermin = { c ->
-                    startActivity(AppNavigation.toAusnahmeTermin(this, customerId = c.id).apply {
-                        putExtra(AusnahmeTerminActivity.EXTRA_ADD_ABHOLUNG_MIT_LIEFERUNG, true)
-                    })
-                },
-                onAddAusnahmeTermin = { c ->
-                    startActivity(AppNavigation.toAusnahmeTermin(this, customerId = c.id))
-                },
-                terminePairs365 = terminePairs365,
                 onPhotoClick = { url -> photoManager?.showImageInDialog(url) },
                 onDeletePhoto = { url ->
                     AlertDialog.Builder(this@CustomerDetailActivity)
@@ -239,13 +223,29 @@ class CustomerDetailActivity : AppCompatActivity() {
                         onDatumSelected = { viewModel.updateEditIntervalle(intervalle) }
                     )
                 },
-                regelNameByRegelId = emptyMap(),
+                onDeleteIntervall = { index -> viewModel.removeIntervallAt(index) },
+                onRemoveRegel = { regelId ->
+                    AlertDialog.Builder(this@CustomerDetailActivity)
+                        .setTitle(R.string.dialog_regel_vom_kunden_entfernen_titel)
+                        .setMessage(R.string.dialog_regel_vom_kunden_entfernen_message)
+                        .setPositiveButton(R.string.dialog_loeschen) { _, _ -> viewModel.removeRegelFromEdit(regelId) }
+                        .setNegativeButton(R.string.btn_cancel, null)
+                        .show()
+                },
+                onResetToAutomatic = { viewModel.resetToAutomaticIntervall(customer, editFormState) },
                 onRegelClick = { },
                 onUrlaubStartActivity = { customerId ->
                     startActivity(AppNavigation.toUrlaub(this, customerId = customerId))
                 },
                 onAddMonthlyIntervall = { viewModel.addMonthlyIntervall(it) },
-                tourListenName = tourListenName,
+                onAddAbholungTermin = { c ->
+                    startActivity(AppNavigation.toAusnahmeTermin(this, customerId = c.id).apply {
+                        putExtra(AusnahmeTerminActivity.EXTRA_ADD_ABHOLUNG_MIT_LIEFERUNG, true)
+                    })
+                },
+                onAddAusnahmeTermin = { c ->
+                    startActivity(AppNavigation.toAusnahmeTermin(this, customerId = c.id))
+                },
                 onDeleteNextTermin = { terminDatum ->
                     viewModel.deleteNaechstenTermin(terminDatum) { success ->
                         if (success) Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_gespeichert), Toast.LENGTH_SHORT).show()
@@ -263,8 +263,6 @@ class CustomerDetailActivity : AppCompatActivity() {
                         else Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_save_generic), Toast.LENGTH_SHORT).show()
                     }
                 },
-                belegMonateForCustomer = belegMonateForCustomer,
-                belegMonateErledigtForCustomer = belegMonateErledigtForCustomer,
                 onNeueErfassungKameraFotoBelege = {
                     startActivity(AppNavigation.toWaschenErfassung(this@CustomerDetailActivity, customerId = id, openFormularWithCamera = true))
                 },
@@ -278,6 +276,7 @@ class CustomerDetailActivity : AppCompatActivity() {
                     startActivity(AppNavigation.toWaschenErfassung(this@CustomerDetailActivity, customerId = id, belegMonthKey = beleg.monthKey))
                 }
             )
+            CustomerDetailScreen(state = detailState, actions = detailActions)
             }
         }
 

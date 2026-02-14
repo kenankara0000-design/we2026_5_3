@@ -102,15 +102,15 @@ Alle Analysen wurden am 2026-02-13 durchgeführt. Screen-für-Screen-Ansatz: all
 
 - **Alle 9 Analysen erledigt** → Befunde stehen in den jeweiligen Dateien
 - **Konsolidierter Maßnahmenplan** (`2026-02-13_21-47.massnahmenplan.md`): Phasen 1–8 ✅ (8.06, 8.10, 8.11 optional)
-- **UX Kundendetail** (`2026-02-13_23-29.ux-kundendetail-analyse.plan.md`): Phase A+B ✅, Phase C/D offen
+- **UX Kundendetail** (`2026-02-13_23-29.ux-kundendetail-analyse.plan.md`): Phase A+B ✅, Phase C teilweise ✅ (C1, C4, C5); C2/C3 und Phase D offen
 
 ### Plan-Priorität (wichtig)
 
-**Nur ein Plan pro Session.** Massnahmenplan hat Vorrang. UX Kundendetail Phase B ist erledigt; Phase C (Code-Duplizierung, Parameter-Reduktion) nur mit Freigabe.
+**Nur ein Plan pro Session.** Massnahmenplan hat Vorrang. UX Kundendetail Phase C (C1, C4, C5) umgesetzt; C2/C3 optional.
 
 ### Nächster Schritt
 
-→ **Build testen.** Danach optional: Massnahmenplan 8.06/8.10/8.11 oder UX Kundendetail Phase C (Freigabe erforderlich).
+→ **Build testen.** Danach optional: Massnahmenplan 8.06/8.10/8.11 oder UX Kundendetail C2/C3 (UiState, performSave) bzw. Phase D.
 
 ---
 
@@ -118,7 +118,7 @@ Alle Analysen wurden am 2026-02-13 durchgeführt. Screen-für-Screen-Ansatz: all
 
 1. **Einstieg:** Diese Datei (`ANALYSE-INDEX.md`) lesen.
 2. **Pläne:** `2026-02-13_21-47.massnahmenplan.md` und `2026-02-13_23-29.ux-kundendetail-analyse.plan.md` → Abschnitt **Session-Handoff** (oben).
-3. **Nächster Schritt:** Build testen. Massnahmenplan Phase 8 optional (8.06 Strings, 8.10 LazyColumn, 8.11 derivedStateOf). UX Kundendetail Phase C nur mit Freigabe.
+3. **Nächster Schritt:** Build testen. Massnahmenplan Phase 8 optional (8.06 Strings, 8.10 LazyColumn, 8.11 derivedStateOf). UX Kundendetail Phase C: C1/C4/C5 ✅; C2/C3 optional.
 4. **Regel:** Nur ein Plan pro Session; keine parallele Arbeit.
 
-*Letzte Aktualisierung: 2026-02-14 (Phase 8 + UX Phase B vollständig)*
+*Letzte Aktualisierung: 2026-02-14 (Phase 8 + UX Phase B + UX Phase C teilweise: C1, C4, C5)*
