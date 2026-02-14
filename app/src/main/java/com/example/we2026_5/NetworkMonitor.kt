@@ -7,7 +7,6 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.we2026_5.util.FirebaseSyncManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,19 +26,12 @@ class NetworkMonitor(
         override fun onAvailable(network: Network) {
             _isOnline.postValue(true)
             // Realtime Database synchronisiert automatisch
-            scope.launch(Dispatchers.IO) {
-                FirebaseSyncManager.setNetworkEnabled(true)
-                // Prüfe auf ausstehende Schreibvorgänge
-                checkPendingWrites()
-            }
+            checkSyncStatus()
         }
 
         override fun onLost(network: Network) {
             _isOnline.postValue(false)
             // Realtime Database arbeitet automatisch offline
-            scope.launch(Dispatchers.IO) {
-                FirebaseSyncManager.setNetworkEnabled(false)
-            }
         }
 
         override fun onCapabilitiesChanged(
@@ -51,23 +43,17 @@ class NetworkMonitor(
             _isOnline.postValue(hasInternet)
             
             if (hasInternet) {
-                scope.launch(Dispatchers.IO) {
-                    FirebaseSyncManager.setNetworkEnabled(true)
-                    checkPendingWrites()
-                }
-            } else {
-                scope.launch(Dispatchers.IO) {
-                    FirebaseSyncManager.setNetworkEnabled(false)
-                }
+                checkSyncStatus()
             }
         }
     }
     
-    private suspend fun checkPendingWrites() {
-        _isSyncing.postValue(true)
-        try {
-            FirebaseSyncManager.waitForSync()
-        } finally {
+    private fun checkSyncStatus() {
+        scope.launch(Dispatchers.IO) {
+            _isSyncing.postValue(true)
+            // Realtime Database synchronisiert automatisch im Hintergrund
+            // Kurze Verzögerung für UI-Feedback, dann Status zurücksetzen
+            kotlinx.coroutines.delay(500)
             _isSyncing.postValue(false)
         }
     }
@@ -94,11 +80,8 @@ class NetworkMonitor(
         _isOnline.postValue(isConnected)
         
         // Realtime Database synchronisiert automatisch
-        scope.launch(Dispatchers.IO) {
-            FirebaseSyncManager.setNetworkEnabled(isConnected)
-            if (isConnected) {
-                checkPendingWrites()
-            }
+        if (isConnected) {
+            checkSyncStatus()
         }
     }
 }

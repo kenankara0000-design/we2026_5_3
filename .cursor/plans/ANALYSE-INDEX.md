@@ -110,7 +110,7 @@ Alle Analysen wurden am 2026-02-13 durchgeführt. Screen-für-Screen-Ansatz: all
 
 ### Nächster Schritt
 
-→ **Massnahmenplan Phase 7.05** ✅ (TerminBerechnungUtils aufgeteilt in TerminCalculator). **Phase 7 komplett erledigt**. Nächster: Phase 8. Build testen! Siehe `2026-02-13_21-47.massnahmenplan.md`.
+→ **Massnahmenplan Phase 8 teilweise erledigt** (8.01–8.05 ✅). **Build testen!** Phase 8 Rest (8.06–8.17) bei Bedarf. Siehe `2026-02-13_21-47.massnahmenplan.md`.
 
 ---
 
@@ -120,7 +120,7 @@ Alle Analysen wurden am 2026-02-13 durchgeführt. Screen-für-Screen-Ansatz: all
 
 1. **Einstieg:** Diese Datei (`ANALYSE-INDEX.md`) lesen.
 2. **Plan:** `2026-02-13_21-47.massnahmenplan.md` öffnen → Abschnitt **Session-Handoff** (oben).
-3. **Nächster Schritt:** Phase 7 ✅ komplett erledigt (inkl. 7.05 TerminBerechnungUtils → TerminCalculator). Phase 8 starten. Build testen!
+3. **Nächster Schritt:** Phase 7 ✅, Phase 8 teilweise ✅ (8.01–8.05 erledigt). **Build testen!** Rest bei Bedarf.
 4. **Regel:** Nur ein Plan pro Session; keine parallele Arbeit an UX Kundendetail Phase B.
 
-*Letzte Aktualisierung: 2026-02-14 (Phase 7 ✅ komplett: 7.05 TerminBerechnungUtils → TerminCalculator)*
+*Letzte Aktualisierung: 2026-02-14 (Phase 7 ✅, Phase 8: 8.01–8.05 ✅)*

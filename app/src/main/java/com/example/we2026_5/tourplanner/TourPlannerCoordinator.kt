@@ -29,13 +29,6 @@ class TourPlannerCoordinator(
     private val viewDate = AppTimeZone.newCalendar()
 
     val dateUtils: TourPlannerDateUtils = TourPlannerDateUtils { viewModel.getListen() }
-    val dialogHelper: TourPlannerDialogHelper = TourPlannerDialogHelper(
-        activity = activity,
-        onKundeAnzeigen = { customer ->
-            activity.startActivity(AppNavigation.toCustomerDetail(activity, customer.id))
-        },
-        onTerminLoeschen = { customer, terminDatum -> deleteTermin(customer, terminDatum) }
-    )
     val callbackHandler: TourPlannerCallbackHandler = TourPlannerCallbackHandler(
         context = activity,
         repository = repository,
