@@ -117,6 +117,12 @@
 55. **Crashlytics/Analytics konsequent:** Alle catch-Blöcke und optional Nutzungs-Analytics nutzen.
 56. **Echtzeit-Sync-Status:** „X Änderungen ausstehend“ oder Fortschrittsbalken bei großer Sync-Queue.
 
+### Kundendetail UX (optional, aus abgeschlossener Analyse Feb 2026)
+
+61. **Stammdaten in Cards:** Kundendetail Stammdaten-Tab mit visueller Gruppierung in Cards (moderneres Design).
+62. **Wochentag-Auswahl Inline A/L:** Im Termine-Tab Variante „Wochentag-Auswahl Inline" für Abholung/Auslieferung (übersichtlich, große Touch-Targets).
+63. **Geocoding aus Adresse:** Koordinaten automatisch aus Adresse ermitteln statt manueller Eingabe (praktischer für Fahrer). Vgl. auch Punkt 51 (Adress-Validierung).
+
 ---
 
 ## Drucker für Belege (Klebestreifen / Etiketten)

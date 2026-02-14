@@ -185,6 +185,7 @@ Hinweis: Strings für „Regel-Vorlagen“ (main_btn_termin_regeln) existieren; 
 
 - History-Log, Optionale Features (Karten-UI, Tour-Reihenfolge, Benachrichtigungen, Paging), Benutzer und Rollen (Admin/Wäscherei/Fahrer), Kalender-Export, Onboarding.
 - Benachrichtigungen, Berichte & Export, Technik & UX (Paging, Accessibility, Dark Mode), Sonstiges (Vertragsende, Bulk-Import, Adress-Validierung, Mehrsprachigkeit), Tourenplaner-Filter, Erledigungsquote pro Zeitraum.
+- **Kundendetail UX (optional):** Stammdaten-Cards, Wochentag-Auswahl Inline A/L, Geocoding aus Adresse (Nr. 61–63 in ZUKUNFTSPLAENE.md).
 
 ---
 
@@ -234,25 +235,11 @@ Dort werden Symptom, Ursache und relevante Code-Stellen geführt. Keine Änderun
 
 ---
 
-## 18. Tiefenanalyse & Maßnahmenplan (Stand Feb 2026)
+## 18. Tiefenanalyse & Maßnahmenplan (abgeschlossen Feb 2026)
 
-- **Analyse-Index:** `.cursor/plans/ANALYSE-INDEX.md` – Übersicht aller 9 Analysen (alle ✅ erledigt)
-- **Konsolidierter Maßnahmenplan:** `.cursor/plans/2026-02-13_21-47.massnahmenplan.md` – 73 Aufgaben, 8 Phasen (~12–18 Wochen)
-- **Status:** Phase 1 (Sofort-Fixes) umgesetzt (9/9 Aufgaben, 2026-02-13). Phase 2 (Design-System) umgesetzt (10/10 Aufgaben, 2026-02-13). Phase 3 (Composables + Error-Handling) umgesetzt (11/11 Aufgaben, 2026-02-13). Phase 4 (Karten-Infos + User-Flow) umgesetzt (8/8 Aufgaben, 2026-02-13). Phase 5+ noch offen. Keine Änderung ohne Freigabe.
-
-**Analysen im Überblick:**
-
-| Nr. | Thema | Datei |
-|-----|-------|-------|
-| 01 | Design-Konsistenz | `analyse-01-design-konsistenz.md` |
-| 02 | Code-Architektur | `analyse-02-code-architektur.md` |
-| 03 | Kompatibilität | `analyse-03-kompatibilitaet.md` |
-| 04 | UX/Layout (24 Screens) | `analyse-04-ux-layout.md` |
-| 05 | User-Flow (15 Klick-Pfade) | `analyse-05-user-flow.md` |
-| 06 | Informationsarchitektur | `analyse-06-informationsarchitektur.md` |
-| 07 | Offline-Verhalten | `analyse-07-offline-verhalten.md` |
-| 08 | Fehlerbehandlung UX | `analyse-08-fehlerbehandlung-ux.md` |
-| 09 | Performance | `analyse-09-performance.md` |
+- **Status:** Die 9 Analysen (Design, Code, Kompatibilität, UX, User-Flow, Informationsarchitektur, Offline, Fehlerbehandlung, Performance) und der konsolidierte Maßnahmenplan (73 Aufgaben, 8 Phasen) sind **vollständig umgesetzt**. Die zugehörigen Plan- und Analyse-Dateien in `.cursor/plans/` wurden entfernt.
+- **Offene optionale Punkte** aus den Plänen (z. B. Kundendetail UX Phase D) stehen in **ZUKUNFTSPLAENE.md** (Nr. 61–63). Übersicht aller Zukunfts-Ideen: ZUKUNFTSPLAENE.md.
+- **Referenz-Dokumentation** (falls benötigt): DOKUMENTATION_REFERENZ_INDEX.md, REFERENZ_ANALYSEN_UND_BERICHTE.md.
 
 ---
 
