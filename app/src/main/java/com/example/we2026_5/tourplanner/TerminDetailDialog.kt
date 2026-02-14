@@ -14,7 +14,6 @@ import com.example.we2026_5.Customer
 import com.example.we2026_5.R
 import com.example.we2026_5.ui.theme.AppColors
 import com.example.we2026_5.ui.theme.AppSpacing
-import com.example.we2026_5.ui.CustomerTypeButtonHelper
 import com.example.we2026_5.util.DateFormatter
 
 /**
@@ -32,7 +31,7 @@ fun TerminDetailDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = MaterialTheme.shapes.medium,
-            color = AppColors.surfaceWhite,
+            color = AppColors.SurfaceWhite,
             tonalElevation = 8.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -45,7 +44,7 @@ fun TerminDetailDialog(
                     text = stringResource(R.string.label_termin_detail),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = AppColors.primaryBlueDark,
+                    color = AppColors.PrimaryBlueDark,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
@@ -65,8 +64,12 @@ fun TerminDetailDialog(
                         "Listenkunden" -> "L"
                         else -> "?"
                     }
-                    val typeColor = CustomerTypeButtonHelper.getButtonColor(customer)
-                    
+                    val typeColor = when (customer.kundenArt) {
+                        "Geschäftskunden", "Gewerblich" -> AppColors.ButtonGewerblichGlossy
+                        "Privatkunden", "Privat" -> AppColors.ButtonPrivatGlossy
+                        "Listenkunden" -> AppColors.ButtonListeGlossy
+                        else -> AppColors.PrimaryBlue
+                    }
                     Text(
                         text = typeText,
                         fontSize = 14.sp,
@@ -74,7 +77,7 @@ fun TerminDetailDialog(
                         color = androidx.compose.ui.graphics.Color.White,
                         modifier = Modifier
                             .background(
-                                androidx.compose.ui.graphics.Color(typeColor),
+                                typeColor,
                                 shape = MaterialTheme.shapes.small
                             )
                             .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -84,7 +87,7 @@ fun TerminDetailDialog(
                         text = customer.name,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = AppColors.primaryBlueDark,
+                        color = AppColors.PrimaryBlueDark,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -115,16 +118,16 @@ fun TerminDetailDialog(
                         text = stringResource(R.string.label_notes_label),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = AppColors.textSecondary,
+                        color = AppColors.TextSecondary,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                     Text(
                         text = customer.notizen.ifEmpty { stringResource(R.string.label_no_notes) },
                         fontSize = 14.sp,
-                        color = AppColors.textPrimary,
+                        color = AppColors.TextPrimary,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(AppColors.surfaceLight, MaterialTheme.shapes.small)
+                            .background(AppColors.SurfaceLight, MaterialTheme.shapes.small)
                             .padding(8.dp)
                             .heightIn(min = 48.dp)
                     )
@@ -140,7 +143,7 @@ fun TerminDetailDialog(
                     Button(
                         onClick = onKundeAnzeigen,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = AppColors.buttonBlue
+                            containerColor = AppColors.ButtonBlue
                         ),
                         modifier = Modifier
                             .padding(end = 8.dp)
@@ -155,7 +158,7 @@ fun TerminDetailDialog(
                     Button(
                         onClick = onTerminLoeschen,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = AppColors.buttonActive
+                            containerColor = AppColors.ButtonActive
                         ),
                         modifier = Modifier.height(48.dp)
                     ) {
@@ -181,13 +184,13 @@ private fun InfoRow(label: String, value: String) {
             text = label,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = AppColors.textSecondary,
+            color = AppColors.TextSecondary,
             modifier = Modifier.padding(end = 8.dp)
         )
         Text(
             text = value,
             fontSize = 14.sp,
-            color = AppColors.textPrimary,
+            color = AppColors.TextPrimary,
             modifier = Modifier.weight(1f)
         )
     }
