@@ -138,6 +138,10 @@
     <string name="dialog_foto_add_title">Foto hinzufügen</string>
     <string name="dialog_delete_photo_title">Foto löschen</string>
     <string name="dialog_delete_photo_message">Dieses Foto wirklich löschen?</string>
+    <string name="dialog_anrufen_title">Anrufen?</string>
+    <string name="dialog_anrufen_message">Möchten Sie anrufen?</string>
+    <string name="dialog_navigation_title">Navigation öffnen?</string>
+    <string name="dialog_navigation_message">Möchten Sie die Navigation bzw. Karte öffnen?</string>
     <string name="foto_source_camera">Kamera</string>
     <string name="foto_source_gallery">Galerie</string>
     <!-- TerminRegelManager Dialoge -->

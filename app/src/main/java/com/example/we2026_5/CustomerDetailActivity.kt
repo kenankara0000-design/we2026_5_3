@@ -179,23 +179,37 @@ class CustomerDetailActivity : AppCompatActivity() {
                             else -> null
                         }
                         if (dest != null) {
-                            try {
-                                val uri = if (c.latitude != null && c.longitude != null) {
-                                    Uri.parse("google.navigation:q=${c.latitude},${c.longitude}")
-                                } else {
-                                    Uri.parse("https://www.google.com/maps/dir/?api=1&destination=${Uri.encode(dest)}&dir_action=navigate")
+                            AlertDialog.Builder(this@CustomerDetailActivity)
+                                .setTitle(getString(R.string.dialog_navigation_title))
+                                .setMessage(getString(R.string.dialog_navigation_message))
+                                .setPositiveButton(getString(R.string.dialog_yes)) { _, _ ->
+                                    try {
+                                        val uri = if (c.latitude != null && c.longitude != null) {
+                                            Uri.parse("google.navigation:q=${c.latitude},${c.longitude}")
+                                        } else {
+                                            Uri.parse("https://www.google.com/maps/dir/?api=1&destination=${Uri.encode(dest)}&dir_action=navigate")
+                                        }
+                                        startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage("com.google.android.apps.maps"))
+                                    } catch (_: android.content.ActivityNotFoundException) {
+                                        Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_maps_not_installed), Toast.LENGTH_SHORT).show()
+                                    }
                                 }
-                                startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage("com.google.android.apps.maps"))
-                            } catch (_: android.content.ActivityNotFoundException) {
-                                Toast.makeText(this@CustomerDetailActivity, getString(R.string.error_maps_not_installed), Toast.LENGTH_SHORT).show()
-                            }
+                                .setNegativeButton(getString(R.string.btn_cancel), null)
+                                .show()
                         } else Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_keine_adresse), Toast.LENGTH_SHORT).show()
                     }
                 },
                 onTelefonClick = {
                     customer?.let { c ->
                         if (c.telefon.isNotBlank()) {
-                            startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:${c.telefon}")))
+                            AlertDialog.Builder(this@CustomerDetailActivity)
+                                .setTitle(getString(R.string.dialog_anrufen_title))
+                                .setMessage(getString(R.string.dialog_anrufen_message))
+                                .setPositiveButton(getString(R.string.dialog_yes)) { _, _ ->
+                                    startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:${c.telefon}")))
+                                }
+                                .setNegativeButton(getString(R.string.btn_cancel), null)
+                                .show()
                         } else Toast.makeText(this@CustomerDetailActivity, getString(R.string.toast_keine_telefonnummer), Toast.LENGTH_SHORT).show()
                     }
                 },

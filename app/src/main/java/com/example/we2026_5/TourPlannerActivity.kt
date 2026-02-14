@@ -255,7 +255,16 @@ class TourPlannerActivity : AppCompatActivity() {
                     termincache.getTerminePairs365(customer, liste)
                 },
                 showToast = { msg -> Toast.makeText(this@TourPlannerActivity, msg, Toast.LENGTH_LONG).show() },
-                onTelefonClick = { tel -> startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$tel"))) },
+                onTelefonClick = { tel ->
+                    AlertDialog.Builder(this@TourPlannerActivity)
+                        .setTitle(getString(R.string.dialog_anrufen_title))
+                        .setMessage(getString(R.string.dialog_anrufen_message))
+                        .setPositiveButton(getString(R.string.dialog_yes)) { _, _ ->
+                            startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$tel")))
+                        }
+                        .setNegativeButton(getString(R.string.btn_cancel), null)
+                        .show()
+                },
                 overviewPayload = overviewPayload,
                 overviewRegelNamen = overviewRegelNamen,
                 onDismissOverview = { overviewPayload = null; overviewRegelNamen = null },
@@ -290,16 +299,23 @@ class TourPlannerActivity : AppCompatActivity() {
                         else -> null
                     }
                     if (dest != null) {
-                        try {
-                            val uri = if (customer.latitude != null && customer.longitude != null) {
-                                Uri.parse("google.navigation:q=${customer.latitude},${customer.longitude}")
-                            } else {
-                                Uri.parse("https://www.google.com/maps/dir/?api=1&destination=${Uri.encode(dest)}&dir_action=navigate")
+                        AlertDialog.Builder(this@TourPlannerActivity)
+                            .setTitle(getString(R.string.dialog_navigation_title))
+                            .setMessage(getString(R.string.dialog_navigation_message))
+                            .setPositiveButton(getString(R.string.dialog_yes)) { _, _ ->
+                                try {
+                                    val uri = if (customer.latitude != null && customer.longitude != null) {
+                                        Uri.parse("google.navigation:q=${customer.latitude},${customer.longitude}")
+                                    } else {
+                                        Uri.parse("https://www.google.com/maps/dir/?api=1&destination=${Uri.encode(dest)}&dir_action=navigate")
+                                    }
+                                    startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage("com.google.android.apps.maps"))
+                                } catch (_: android.content.ActivityNotFoundException) {
+                                    Toast.makeText(this@TourPlannerActivity, getString(R.string.error_maps_not_installed), Toast.LENGTH_SHORT).show()
+                                }
                             }
-                            startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage("com.google.android.apps.maps"))
-                        } catch (_: android.content.ActivityNotFoundException) {
-                            Toast.makeText(this@TourPlannerActivity, getString(R.string.error_maps_not_installed), Toast.LENGTH_SHORT).show()
-                        }
+                            .setNegativeButton(getString(R.string.btn_cancel), null)
+                            .show()
                     } else {
                         Toast.makeText(this@TourPlannerActivity, getString(R.string.toast_keine_adresse), Toast.LENGTH_SHORT).show()
                     }
